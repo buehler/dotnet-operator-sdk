@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <OutputType>exe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <Nullable>enable</Nullable>
+        <LangVersion>8</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <PackageId>DotnetOperatorSdk</PackageId>
+        <PackageTags>Kubernetes Operator SDK CustomResourceDefinition</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CompareNETObjects" Version="4.66.0" />
+        <PackageReference Include="KubernetesClient" Version="2.0.18" />
+        <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
+        <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="3.0.0" />
+        <PackageReference Include="YamlDotNet" Version="8.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="Build\DotnetOperatorSdk.props">
+          <PackagePath>build\</PackagePath>
+      </Content>
+      <Content Include="Build\DotnetOperatorSdk.targets">
+          <PackagePath>build\</PackagePath>
+      </Content>
+    </ItemGroup>
+
+</Project>

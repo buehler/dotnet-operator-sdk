@@ -1,0 +1,39 @@
+﻿<Project>
+    <PropertyGroup>
+        <!-- Configuration for Docker related commands-->
+        <DosDockerfilePath Condition="'$(DosDockerfilePath)' == '' And '$(SolutionDir)' != '' ">$(SolutionDir)Dockerfile</DosDockerfilePath>
+        <DosDockerfilePath Condition="'$(DosDockerfilePath)' == '' And '$(SolutionDir)' == '' ">$(MSBuildProjectDirectory)\Dockerfile</DosDockerfilePath>
+        <DosDockerTag Condition="'$(DosDockerTag)' == ''">latest</DosDockerTag>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!-- Configuration for the pathes where to store the generated yamls and elements -->
+        <DosConfigRoot Condition="'$(DosConfigRoot)' == '' And '$(SolutionDir)' != '' ">$(SolutionDir)config</DosConfigRoot>
+        <DosConfigRoot Condition="'$(DosConfigRoot)' == '' And '$(SolutionDir)' == '' ">$(MSBuildProjectDirectory)\config</DosConfigRoot>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!-- Configuration for the crd generation -->
+        <DosCrdDir Condition="'$(DosCrdDir)' == ''">$(DosConfigRoot)\crds</DosCrdDir>
+        <DosCrdFormat Condition="'$(DosCrdFormat)' == ''">Yaml</DosCrdFormat>
+        <DosCrdUseOldCrds Condition="'$(DosCrdUseOldCrds)' == ''">false</DosCrdUseOldCrds>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!-- Configuration for the rbac generation -->
+        <DosRbacDir Condition="'$(DosRbacDir)' == ''">$(DosConfigRoot)\rbac</DosRbacDir>
+        <DosRbacFormat Condition="'$(DosRbacFormat)' == ''">Yaml</DosRbacFormat>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!-- Configuration for the operator manifest generation -->
+        <DosOperatorDir Condition="'$(DosOperatorDir)' == ''">$(DosConfigRoot)\operator</DosOperatorDir>
+        <DosOperatorFormat Condition="'$(DosOperatorFormat)' == ''">Yaml</DosOperatorFormat>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!-- Configuration for the installer manifest generation -->
+        <DosInstallerDir Condition="'$(DosInstallerDir)' == ''">$(DosConfigRoot)\install</DosInstallerDir>
+        <DosInstallerFormat Condition="'$(DosInstallerFormat)' == ''">Yaml</DosInstallerFormat>
+    </PropertyGroup>
+</Project>

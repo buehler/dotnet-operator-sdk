@@ -1,0 +1,49 @@
+﻿<Project DefaultTargets="GenerateAfterBuild">
+    <Target Name="GenerateDockerfile">
+        <Message Text="Generating Dockerfile" Importance="high"/>
+        <Message Text="Dockerfile path: $(DosDockerfilePath)" Importance="normal"/>
+
+        <Message Condition="Exists('$(DosDockerfilePath)')" Text="Dockerfile already exists. Don't overwrite." Importance="high"/>
+        <Exec Condition="!Exists('$(DosDockerfilePath)')"
+              Command="dotnet $(OutputPath)$(TargetFileName) generator docker --out $(DosDockerfilePath) --dotnet-tag $(DosDockerTag) --solution-dir $(SolutionDir) --target-file $(TargetFileName) --project-path $(ProjectPath)"/>
+    </Target>
+
+    <Target Name="GenerateCrds">
+        <Message Text="Generating CRDs" Importance="high"/>
+        <Message Text="Configuration path: $(DosCrdDir)" Importance="normal"/>
+
+        <Exec Condition="'$(DosCrdUseOldCrds)' == 'false'" Command="dotnet $(OutputPath)$(TargetFileName) generator crds --out $(DosCrdDir) --format $(DosCrdFormat)"/>
+        <Exec Condition="'$(DosCrdUseOldCrds)' == 'true'" Command="dotnet $(OutputPath)$(TargetFileName) generator crds --out $(DosCrdDir) --format $(DosCrdFormat) --use-old-crds"/>
+    </Target>
+
+    <Target Name="GenerateRbac">
+        <Message Text="Generating Rbac roles" Importance="high"/>
+        <Message Text="Configuration path: $(DosRbacDir)" Importance="normal"/>
+
+        <Exec Command="dotnet $(OutputPath)$(TargetFileName) generator rbac --out $(DosRbacDir) --format $(DosRbacFormat)"/>
+    </Target>
+
+    <Target Name="GenerateOperator">
+        <Message Text="Generating Operator yamls" Importance="high"/>
+        <Message Text="Configuration path: $(DosOperatorDir)" Importance="normal"/>
+
+        <Exec Command="dotnet $(OutputPath)$(TargetFileName) generator operator --out $(DosOperatorDir) --format $(DosOperatorFormat)"/>
+    </Target>
+
+    <Target Name="GenerateInstaller">
+        <Message Text="Generating Installer yamls" Importance="high"/>
+        <Message Text="Configuration path: $(DosInstallerDir)" Importance="normal"/>
+
+        <Message Condition="Exists('$(DosInstallerDir)')" Text="Installer dir exists, don't overwrite contents." Importance="high"/>
+        <Exec Condition="!Exists('$(DosInstallerDir)')"
+              Command="dotnet $(OutputPath)$(TargetFileName) generator installer --out $(DosInstallerDir) --format $(DosInstallerFormat) --crds-dir $(DosCrdDir) --rbac-dir $(DosRbacDir) --operator-dir $(DosOperatorDir)"/>
+    </Target>
+
+    <Target Name="GenerateAfterBuild" AfterTargets="Build">
+        <CallTarget Condition="'$(DosSkipDockerfile)' == ''" Targets="GenerateDockerfile"/>
+        <CallTarget Condition="'$(DosSkipCrds)' == ''" Targets="GenerateCrds"/>
+        <CallTarget Condition="'$(DosSkipRbac)' == ''" Targets="GenerateRbac"/>
+        <CallTarget Condition="'$(DosSkipOperator)' == ''" Targets="GenerateOperator"/>
+        <CallTarget Condition="'$(DosSkipInstaller)' == ''" Targets="GenerateInstaller"/>
+    </Target>
+</Project>
