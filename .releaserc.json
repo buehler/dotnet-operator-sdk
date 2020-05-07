@@ -1,0 +1,26 @@
+{
+  "verifyConditions": ["@semantic-release/github"],
+  "addChannel": ["@semantic-release/github"],
+  "prepare": [
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "./build.sh --no-logo --version ${nextRelease.version} --release-notes \"${nextRelease.notes}\" --target Pack"
+      }
+    ]
+  ],
+  "publish": [
+    [
+      "@semantic-release/github",
+      {
+        "assets": [{ "path": "artifacts/*.nupkg" }]
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "publishCmd": "./build.sh --no-logo --target Publish"
+      }
+    ]
+  ]
+}
