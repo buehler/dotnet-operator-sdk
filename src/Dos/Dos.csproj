@@ -5,12 +5,20 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <Nullable>enable</Nullable>
         <LangVersion>8</LangVersion>
+        <Authors>Christoph Bühler</Authors>
     </PropertyGroup>
 
     <PropertyGroup>
         <IsPackable>true</IsPackable>
         <PackageId>DotnetOperatorSdk</PackageId>
         <PackageTags>Kubernetes Operator SDK CustomResourceDefinition</PackageTags>
+        <PackageProjectUrl>https://github.com/buehler/dotnet-operator-sdk</PackageProjectUrl>
+        <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
+        <PackageDescription>
+            This is an operator sdk written in c#.
+            It enables a developer to create a custom controller for CRDs
+            (CustomResourceDefinitions) that runs on kubernetes.
+        </PackageDescription>
     </PropertyGroup>
 
     <ItemGroup>
