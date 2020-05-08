@@ -74,7 +74,7 @@ class Build : NukeBuild
         .Requires(
             () => !string.IsNullOrWhiteSpace(EnvironmentInfo.GetVariable<string>("NUGET_KEY", null)))
         .Executes(() => DotNetNuGetPush(s => s
-            .SetSource("https://www.nuget.org/api/v2/package")
+            .SetSource("https://api.nuget.org/v3/index.json")
             .SetApiKey(EnvironmentInfo.GetVariable<string>("NUGET_KEY", null))
             .CombineWith(Glob.Files(ArtifactsDirectory, "*.nupkg"), (ss, package) => ss
                 .SetTargetPath(ArtifactsDirectory / package))));
