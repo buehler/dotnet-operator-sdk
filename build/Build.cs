@@ -78,6 +78,5 @@ class Build : NukeBuild
             .SetSource(EnvironmentInfo.GetVariable<string>("NUGET_SERVER", null))
             .SetApiKey(EnvironmentInfo.GetVariable<string>("NUGET_KEY", null))
             .CombineWith(Glob.Files(ArtifactsDirectory, "*.nupkg"), (ss, package) => ss
-                .SetTargetPath(package))));
-
+                .SetTargetPath(ArtifactsDirectory / package))));
 }
