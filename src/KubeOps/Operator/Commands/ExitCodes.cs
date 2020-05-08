@@ -1,4 +1,4 @@
-﻿namespace Dos.Operator.Commands
+﻿namespace KubeOps.Operator.Commands
 {
     internal static class ExitCodes
     {

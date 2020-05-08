@@ -8,7 +8,6 @@
         <Authors>Christoph Bühler</Authors>
         <Company>smartive AG</Company>
         <Owner>cbuehler</Owner>
-        <RootNamespace>Dos</RootNamespace>
     </PropertyGroup>
 
     <PropertyGroup>

@@ -4,15 +4,15 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Dos.Operator.Caching;
-using Dos.Operator.DependencyInjection;
-using Dos.Operator.Watcher;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.Caching;
+using KubeOps.Operator.DependencyInjection;
+using KubeOps.Operator.Watcher;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Dos.Operator.Queue
+namespace KubeOps.Operator.Queue
 {
     internal class EntityEventQueue<TEntity> : IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>

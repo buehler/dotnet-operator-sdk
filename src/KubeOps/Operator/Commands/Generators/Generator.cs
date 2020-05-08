@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace Dos.Operator.Commands.Generators
+namespace KubeOps.Operator.Commands.Generators
 {
     [Command("generator", "gen", "g", Description = "Generates elements related to this operator.")]
     [Subcommand(typeof(CrdGenerator))]

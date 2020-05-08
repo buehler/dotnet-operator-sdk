@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Dos.Operator.Client
+namespace KubeOps.Operator.Client
 {
     internal class ClientUrlFixer : DelegatingHandler
     {

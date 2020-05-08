@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 using k8s.Models;
 
-namespace Dos.Operator.KubernetesEntities
+namespace KubeOps.Operator.KubernetesEntities
 {
     public static class KubernetesEntityExtensions
     {

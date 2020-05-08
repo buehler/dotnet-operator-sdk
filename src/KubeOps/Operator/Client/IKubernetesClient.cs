@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Dos.Operator.Client.LabelSelectors;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.Client.LabelSelectors;
 
-namespace Dos.Operator.Client
+namespace KubeOps.Operator.Client
 {
     public interface IKubernetesClient
     {

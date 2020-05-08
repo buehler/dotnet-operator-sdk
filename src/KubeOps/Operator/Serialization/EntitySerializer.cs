@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
-namespace Dos.Operator.Serialization
+namespace KubeOps.Operator.Serialization
 {
     internal class EntitySerializer
     {

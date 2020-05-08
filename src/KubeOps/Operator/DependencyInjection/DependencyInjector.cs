@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Dos.Operator.DependencyInjection
+namespace KubeOps.Operator.DependencyInjection
 {
     internal static class DependencyInjector
     {

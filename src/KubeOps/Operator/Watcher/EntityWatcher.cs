@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Dos.Operator.Client;
-using Dos.Operator.DependencyInjection;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.Client;
+using KubeOps.Operator.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Dos.Operator.Watcher
+namespace KubeOps.Operator.Watcher
 {
     internal class EntityWatcher<TEntity> : IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>

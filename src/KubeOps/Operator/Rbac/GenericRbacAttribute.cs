@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Dos.Operator.Rbac
+namespace KubeOps.Operator.Rbac
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class GenericRbacAttribute : Attribute

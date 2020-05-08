@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Dos.Operator.Rbac
+namespace KubeOps.Operator.Rbac
 {
     [Flags]
     public enum RbacVerb

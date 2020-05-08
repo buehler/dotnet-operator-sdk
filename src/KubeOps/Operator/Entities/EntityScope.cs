@@ -1,4 +1,4 @@
-﻿namespace Dos.Operator.Entities
+﻿namespace KubeOps.Operator.Entities
 {
     public enum EntityScope
     {

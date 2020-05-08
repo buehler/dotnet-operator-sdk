@@ -1,4 +1,4 @@
-﻿namespace Dos.Operator.Entities.Kustomize
+﻿namespace KubeOps.Operator.Entities.Kustomize
 {
     public class KustomizationImage
     {

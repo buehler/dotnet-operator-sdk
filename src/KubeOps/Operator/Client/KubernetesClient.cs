@@ -4,14 +4,14 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Dos.Operator.Client.LabelSelectors;
-using Dos.Operator.Entities;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.Client.LabelSelectors;
+using KubeOps.Operator.Entities;
 using Microsoft.Rest;
 using Newtonsoft.Json.Linq;
 
-namespace Dos.Operator.Client
+namespace KubeOps.Operator.Client
 {
     internal class KubernetesClient : IKubernetesClient
     {

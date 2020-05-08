@@ -2,7 +2,7 @@
 using k8s;
 using k8s.Models;
 
-namespace Dos.Operator.Entities
+namespace KubeOps.Operator.Entities
 {
     public abstract class CustomKubernetesEntity : KubernetesObject, IKubernetesObject<V1ObjectMeta>
     {

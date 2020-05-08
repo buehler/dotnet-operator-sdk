@@ -1,10 +1,10 @@
-﻿using Dos.Operator.Controller;
-using Dos.Operator.Finalizer;
-using k8s;
+﻿using k8s;
 using k8s.Models;
+using KubeOps.Operator.Controller;
+using KubeOps.Operator.Finalizer;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Dos.Operator
+namespace KubeOps.Operator
 {
     public static class ServiceCollectionExtensions
     {

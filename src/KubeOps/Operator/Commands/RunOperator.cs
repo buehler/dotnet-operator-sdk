@@ -1,10 +1,10 @@
 ﻿using System.Threading.Tasks;
-using Dos.Operator.Commands.Generators;
-using Dos.Operator.Commands.Management;
+using KubeOps.Operator.Commands.Generators;
+using KubeOps.Operator.Commands.Management;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Hosting;
 
-namespace Dos.Operator.Commands
+namespace KubeOps.Operator.Commands
 {
     [Command(Description = "Runs the operator.")]
     [Subcommand(typeof(Generator))]

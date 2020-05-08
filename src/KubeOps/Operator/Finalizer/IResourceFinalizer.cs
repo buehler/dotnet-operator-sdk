@@ -2,7 +2,7 @@
 using k8s;
 using k8s.Models;
 
-namespace Dos.Operator.Finalizer
+namespace KubeOps.Operator.Finalizer
 {
     public interface IResourceFinalizer<in TResource>
         where TResource : IKubernetesObject<V1ObjectMeta>

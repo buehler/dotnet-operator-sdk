@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Dos.Operator.Comparing
+namespace KubeOps.Operator.Comparing
 {
     internal static class ArrayExtensions
     {

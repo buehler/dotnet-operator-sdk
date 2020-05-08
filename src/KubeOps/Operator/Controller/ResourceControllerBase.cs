@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Dos.Operator.Client;
-using Dos.Operator.DependencyInjection;
-using Dos.Operator.Finalizer;
-using Dos.Operator.Queue;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.Client;
+using KubeOps.Operator.DependencyInjection;
+using KubeOps.Operator.Finalizer;
+using KubeOps.Operator.Queue;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Dos.Operator.Controller
+namespace KubeOps.Operator.Controller
 {
     // TODO: namespaced controller (only watch resource of a specific namespace)
     // TODO: Webhooks?

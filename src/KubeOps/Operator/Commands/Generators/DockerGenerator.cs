@@ -3,7 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace Dos.Operator.Commands.Generators
+namespace KubeOps.Operator.Commands.Generators
 {
     [Command("docker", Description = "Generates the docker file for building.")]
     internal class DockerGenerator : GeneratorBase

@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using Dos.Operator;
+using KubeOps.Operator;
 
-namespace Dos.Build
+namespace KubeOps.Build
 {
     internal static class Program
     {

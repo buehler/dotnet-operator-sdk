@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Dos.Operator.Comparing;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.Comparing;
 
-namespace Dos.Operator.Entities
+namespace KubeOps.Operator.Entities
 {
     internal static class EntityExtensions
     {

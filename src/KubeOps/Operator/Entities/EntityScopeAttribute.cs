@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Dos.Operator.Entities
+namespace KubeOps.Operator.Entities
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class EntityScopeAttribute : Attribute

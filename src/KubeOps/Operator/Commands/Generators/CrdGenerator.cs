@@ -6,15 +6,15 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Dos.Operator.Entities;
-using Dos.Operator.Entities.Kustomize;
-using Dos.Operator.KubernetesEntities;
-using Dos.Operator.Serialization;
 using k8s.Models;
+using KubeOps.Operator.Entities;
+using KubeOps.Operator.Entities.Kustomize;
+using KubeOps.Operator.KubernetesEntities;
+using KubeOps.Operator.Serialization;
 using McMaster.Extensions.CommandLineUtils;
 using V1JSONSchemaProps = k8s.Models.V1JSONSchemaProps;
 
-namespace Dos.Operator.Commands.Generators
+namespace KubeOps.Operator.Commands.Generators
 {
     [Command("crd", "crds", Description = "Generates the needed CRD for kubernetes.")]
     internal class CrdGenerator : GeneratorBase

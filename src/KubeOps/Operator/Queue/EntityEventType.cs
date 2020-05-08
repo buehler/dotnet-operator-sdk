@@ -1,4 +1,4 @@
-﻿namespace Dos.Operator.Queue
+﻿namespace KubeOps.Operator.Queue
 {
     internal enum EntityEventType
     {

@@ -2,12 +2,12 @@
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Dos.Operator.Entities.Kustomize;
-using Dos.Operator.Serialization;
 using k8s.Models;
+using KubeOps.Operator.Entities.Kustomize;
+using KubeOps.Operator.Serialization;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace Dos.Operator.Commands.Generators
+namespace KubeOps.Operator.Commands.Generators
 {
     [Command("operator", Description = "Generates the needed yamls to run the operator.")]
     internal class OperatorGenerator : GeneratorBase

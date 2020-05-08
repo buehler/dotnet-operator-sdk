@@ -1,12 +1,12 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using Dos.Operator.DependencyInjection;
-using Dos.Operator.Finalizer;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.DependencyInjection;
+using KubeOps.Operator.Finalizer;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Dos.Operator.Entities
+namespace KubeOps.Operator.Entities
 {
     public static class ResourceExtensions
     {

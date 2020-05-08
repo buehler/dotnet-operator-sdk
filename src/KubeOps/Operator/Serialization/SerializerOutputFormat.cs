@@ -1,4 +1,4 @@
-﻿namespace Dos.Operator.Serialization
+﻿namespace KubeOps.Operator.Serialization
 {
     internal enum SerializerOutputFormat
     {

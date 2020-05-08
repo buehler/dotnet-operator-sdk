@@ -1,4 +1,4 @@
-﻿namespace Dos.Operator
+﻿namespace KubeOps.Operator
 {
     public sealed class OperatorSettings
     {

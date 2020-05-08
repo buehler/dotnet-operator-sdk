@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using k8s;
 
-namespace Dos.Operator.Entities.Kustomize
+namespace KubeOps.Operator.Entities.Kustomize
 {
     public class KustomizationConfig : KubernetesObject
     {

@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-using Dos.Operator.Client;
-using Dos.Operator.Commands;
-using Dos.Operator.Commands.Generators;
-using Dos.Operator.Commands.Management;
-using Dos.Operator.DependencyInjection;
-using Dos.Operator.Serialization;
 using k8s;
+using KubeOps.Operator.Client;
+using KubeOps.Operator.Commands;
+using KubeOps.Operator.DependencyInjection;
+using KubeOps.Operator.Serialization;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,7 +16,7 @@ using Newtonsoft.Json.Serialization;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Dos.Operator
+namespace KubeOps.Operator
 {
     public sealed class KubernetesOperator
     {

@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
-namespace Dos.Operator.KubernetesEntities
+namespace KubeOps.Operator.KubernetesEntities
 {
     public class V1JSONSchemaProps : k8s.Models.V1JSONSchemaProps
     {

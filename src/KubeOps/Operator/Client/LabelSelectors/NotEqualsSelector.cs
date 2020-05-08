@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Dos.Operator.Client.LabelSelectors
+namespace KubeOps.Operator.Client.LabelSelectors
 {
     public class NotEqualsSelector : ILabelSelector
     {

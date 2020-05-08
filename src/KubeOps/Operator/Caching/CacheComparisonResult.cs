@@ -1,4 +1,4 @@
-﻿namespace Dos.Operator.Caching
+﻿namespace KubeOps.Operator.Caching
 {
     internal enum CacheComparisonResult
     {

@@ -4,7 +4,7 @@ using System.Timers;
 using k8s;
 using k8s.Models;
 
-namespace Dos.Operator.Queue
+namespace KubeOps.Operator.Queue
 {
     internal class EntityTimer<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>

@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Dos.Operator.Entities;
 using k8s.Models;
+using KubeOps.Operator.Entities;
 
-namespace Dos.Operator.Rbac
+namespace KubeOps.Operator.Rbac
 {
     internal static class RbacAttributeExtensions
     {

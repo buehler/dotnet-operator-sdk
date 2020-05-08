@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Dos.Operator.Rbac
+namespace KubeOps.Operator.Rbac
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class EntityRbacAttribute : Attribute

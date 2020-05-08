@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Dos.Operator.Entities;
 using k8s;
 using k8s.Models;
 using KellermanSoftware.CompareNetObjects;
+using KubeOps.Operator.Entities;
 
-namespace Dos.Operator.Caching
+namespace KubeOps.Operator.Caching
 {
     internal class EntityCache<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>

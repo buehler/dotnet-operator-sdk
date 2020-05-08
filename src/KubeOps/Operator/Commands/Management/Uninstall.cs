@@ -2,13 +2,13 @@
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Dos.Operator.Client;
-using Dos.Operator.Commands.Generators;
-using Dos.Operator.KubernetesEntities;
+using KubeOps.Operator.Client;
+using KubeOps.Operator.Commands.Generators;
+using KubeOps.Operator.KubernetesEntities;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Rest;
 
-namespace Dos.Operator.Commands.Management
+namespace KubeOps.Operator.Commands.Management
 {
     [Command(
         "uninstall",

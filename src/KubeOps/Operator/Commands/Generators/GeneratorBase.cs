@@ -1,7 +1,7 @@
-﻿using Dos.Operator.Serialization;
+﻿using KubeOps.Operator.Serialization;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace Dos.Operator.Commands.Generators
+namespace KubeOps.Operator.Commands.Generators
 {
     internal abstract class GeneratorBase
     {

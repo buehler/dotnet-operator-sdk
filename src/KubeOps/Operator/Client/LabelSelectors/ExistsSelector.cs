@@ -1,4 +1,4 @@
-﻿namespace Dos.Operator.Client.LabelSelectors
+﻿namespace KubeOps.Operator.Client.LabelSelectors
 {
     public class ExistsSelector : ILabelSelector
     {
