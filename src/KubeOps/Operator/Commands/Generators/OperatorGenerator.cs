@@ -22,12 +22,13 @@ namespace KubeOps.Operator.Commands.Generators
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
             var output = _serializer.Serialize(new V1Deployment(
-                V1Deployment.KubeApiVersion,
+                $"{V1Deployment.KubeGroup}/{V1Deployment.KubeApiVersion}",
                 V1Deployment.KubeKind,
                 new V1ObjectMeta(name: "operator"),
                 new V1DeploymentSpec
                 {
                     Replicas = 1,
+                    RevisionHistoryLimit = 0,
                     Template = new V1PodTemplateSpec
                     {
                         Spec = new V1PodSpec
