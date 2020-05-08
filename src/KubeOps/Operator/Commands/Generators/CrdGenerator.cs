@@ -58,7 +58,7 @@ namespace KubeOps.Operator.Commands.Generators
                     },
                 }, Format));
                 await using var kustomizationFile =
-                    File.OpenWrite(Path.Join(OutputPath, $"kustomization.{Format.ToString().ToLower()}"));
+                    File.Open(Path.Join(OutputPath, $"kustomization.{Format.ToString().ToLower()}"), FileMode.Create);
                 await kustomizationFile.WriteAsync(kustomizeOutput);
             }
 
@@ -70,8 +70,8 @@ namespace KubeOps.Operator.Commands.Generators
 
                 if (!string.IsNullOrWhiteSpace(OutputPath))
                 {
-                    await using var file = File.OpenWrite(Path.Join(OutputPath,
-                        $"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLower()}"));
+                    await using var file = File.Open(Path.Join(OutputPath,
+                        $"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLower()}"), FileMode.Create);
                     await file.WriteAsync(Encoding.UTF8.GetBytes(output));
                 }
                 else

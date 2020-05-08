@@ -71,11 +71,11 @@ namespace KubeOps.Operator.Commands.Generators
             if (!string.IsNullOrWhiteSpace(OutputPath))
             {
                 Directory.CreateDirectory(OutputPath);
-                await using var nsFile = File.OpenWrite(Path.Join(OutputPath,
-                    $"namespace.{Format.ToString().ToLower()}"));
+                await using var nsFile = File.Open(Path.Join(OutputPath,
+                    $"namespace.{Format.ToString().ToLower()}"), FileMode.Create);
                 await nsFile.WriteAsync(Encoding.UTF8.GetBytes(ns));
-                await using var kustomizeFile = File.OpenWrite(Path.Join(OutputPath,
-                    $"kustomization.{Format.ToString().ToLower()}"));
+                await using var kustomizeFile = File.Open(Path.Join(OutputPath,
+                    $"kustomization.{Format.ToString().ToLower()}"), FileMode.Create);
                 await kustomizeFile.WriteAsync(Encoding.UTF8.GetBytes(kustomize));
             }
             else

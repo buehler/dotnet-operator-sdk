@@ -29,7 +29,7 @@ namespace KubeOps.Operator.Commands.Generators
             var dockerfile = GenerateDockerfile();
             if (!string.IsNullOrWhiteSpace(OutputPath))
             {
-                await using var file = File.OpenWrite(OutputPath);
+                await using var file = File.Open(OutputPath, FileMode.Create);
                 await file.WriteAsync(Encoding.UTF8.GetBytes(dockerfile));
             }
             else
