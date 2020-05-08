@@ -33,6 +33,5 @@ jobs:
           extra_plugins: |
             @semantic-release/exec
         env:
-          NUGET_SERVER: ${{ secrets.NUGET_SERVER }}
           NUGET_KEY: ${{ secrets.NUGET_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
