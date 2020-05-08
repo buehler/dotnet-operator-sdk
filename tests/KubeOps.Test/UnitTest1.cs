@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace Dos.Test
+namespace KubeOps.Test
 {
     public class UnitTest1
     {

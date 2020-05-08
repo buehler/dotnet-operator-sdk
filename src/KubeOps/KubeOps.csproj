@@ -7,11 +7,13 @@
         <LangVersion>8</LangVersion>
         <Authors>Christoph Bühler</Authors>
         <Company>smartive AG</Company>
+        <Owner>cbuehler</Owner>
+        <RootNamespace>Dos</RootNamespace>
     </PropertyGroup>
 
     <PropertyGroup>
         <IsPackable>true</IsPackable>
-        <PackageId>DotnetOperatorSdk</PackageId>
+        <PackageId>KubeOps</PackageId>
         <PackageTags>Kubernetes Operator SDK CustomResourceDefinition</PackageTags>
         <PackageProjectUrl>https://github.com/buehler/dotnet-operator-sdk</PackageProjectUrl>
         <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
@@ -31,12 +33,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="Build\DotnetOperatorSdk.props">
-          <PackagePath>build\</PackagePath>
-      </Content>
-      <Content Include="Build\DotnetOperatorSdk.targets">
-          <PackagePath>build\</PackagePath>
-      </Content>
+        <Content Include="Build\KubeOps.props">
+            <PackagePath>build\</PackagePath>
+        </Content>
+        <Content Include="Build\KubeOps.targets">
+            <PackagePath>build\</PackagePath>
+        </Content>
     </ItemGroup>
 
 </Project>
