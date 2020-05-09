@@ -17,7 +17,6 @@ class Build : NukeBuild
     public static int Main() => Execute<Build>(x => x.Test);
 
     [Parameter("Version of the nuget package to build.")] readonly string Version = string.Empty;
-    [Parameter("Release notes to append.")] readonly string ReleaseNotes = string.Empty;
 
     string NugetVersion => Version.StartsWith("v") ? Version.Substring(1) : Version;
 
@@ -65,7 +64,6 @@ class Build : NukeBuild
         .Executes(() => DotNetPack(s => s
             .SetConfiguration(Configuration.Release)
             .SetVersion(NugetVersion)
-            .SetPackageReleaseNotes(ReleaseNotes)
             .SetOutputDirectory(ArtifactsDirectory)
             .CombineWith(Projects, (ss, proj) => ss
                 .SetProject(proj))));
