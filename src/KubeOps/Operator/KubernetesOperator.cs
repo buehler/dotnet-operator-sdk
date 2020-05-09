@@ -46,12 +46,15 @@ namespace KubeOps.Operator
         public Task<int> Run(string[] args)
         {
             ConfigureRequiredServices();
+
             var app = new CommandLineApplication<RunOperator>();
             var host = _builder.Build();
+
             app
                 .Conventions
                 .UseDefaultConventions()
                 .UseConstructorInjection(host.Services);
+
             DependencyInjector.Services = host.Services;
             JsonConvert.DefaultSettings = () => host.Services.GetRequiredService<JsonSerializerSettings>();
 
