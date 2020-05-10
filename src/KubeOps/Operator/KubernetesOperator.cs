@@ -75,14 +75,14 @@ namespace KubeOps.Operator
                 services.AddTransient(
                     _ => new JsonSerializerSettings
                     {
-                        ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                        ContractResolver = new NamingConvention(),
                         Converters = new List<JsonConverter>
                             {new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()}},
                     });
                 services.AddTransient(
                     _ => new SerializerBuilder()
                         .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
-                        .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                        .WithNamingConvention(new NamingConvention())
                         .Build());
 
                 services.AddTransient<EntitySerializer>();
@@ -97,13 +97,13 @@ namespace KubeOps.Operator
                         {
                             SerializationSettings =
                             {
-                                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                                ContractResolver = new NamingConvention(),
                                 Converters = new List<JsonConverter>
                                     {new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()}}
                             },
                             DeserializationSettings =
                             {
-                                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                                ContractResolver = new NamingConvention(),
                                 Converters = new List<JsonConverter>
                                     {new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()}}
                             }
