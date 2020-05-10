@@ -115,6 +115,7 @@ namespace KubeOps.Operator.Commands.Generators
                 var version = new V1CustomResourceDefinitionVersion();
                 spec.Versions = new[] {version};
 
+                // TODO: versions?
                 version.Name = entityDefinition.Version;
                 version.Served = true;
                 version.Storage = true;
