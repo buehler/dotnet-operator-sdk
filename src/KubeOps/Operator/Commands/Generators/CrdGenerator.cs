@@ -12,7 +12,6 @@ using KubeOps.Operator.Entities.Kustomize;
 using KubeOps.Operator.KubernetesEntities;
 using KubeOps.Operator.Serialization;
 using McMaster.Extensions.CommandLineUtils;
-using V1JSONSchemaProps = k8s.Models.V1JSONSchemaProps;
 
 namespace KubeOps.Operator.Commands.Generators
 {
@@ -145,7 +144,7 @@ namespace KubeOps.Operator.Commands.Generators
 
         private static V1JSONSchemaProps MapType(Type type)
         {
-            var props = new KubernetesEntities.V1JSONSchemaProps();
+            var props = new V1JSONSchemaProps();
 
             // this description is on the class
             props.Description = type.GetCustomAttributes<DisplayAttribute>(true).FirstOrDefault()?.Description;
