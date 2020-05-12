@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using k8s;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Commands;
 using KubeOps.Operator.DependencyInjection;
+using KubeOps.Operator.Logging;
 using KubeOps.Operator.Serialization;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -19,6 +22,7 @@ namespace KubeOps.Operator
 {
     public sealed class KubernetesOperator
     {
+        internal const string NoStructuredLogs = "--no-structured-logs";
         private const string DefaultOperatorName = "KubernetesOperator";
         private readonly OperatorSettings _operatorSettings;
 
@@ -47,6 +51,28 @@ namespace KubeOps.Operator
             ConfigureRequiredServices();
 
             var app = new CommandLineApplication<RunOperator>();
+
+            _builder.ConfigureLogging(builder =>
+            {
+                builder.ClearProviders();
+#if DEBUG
+                builder.AddConsole(options => options.TimestampFormat = @"[hh:mm:ss] ");
+#else
+                if (args.Contains(NoStructuredLogs))
+                {
+                    builder.AddConsole(options =>
+                    {
+                        options.TimestampFormat = @"[dd.MM.yyyy - hh:mm:ss] ";
+                        options.DisableColors = true;
+                    });
+                }
+                else
+                {
+                    builder.AddStructuredConsole();
+                }
+#endif
+            });
+
             var host = _builder.Build();
 
             app

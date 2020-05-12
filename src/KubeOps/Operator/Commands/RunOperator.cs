@@ -19,6 +19,11 @@ namespace KubeOps.Operator.Commands
             _host = host;
         }
 
+        [Option(
+            KubernetesOperator.NoStructuredLogs,
+            Description = "If set, the normal .net logging output appears instead of structured json output.")]
+        public bool NoStructuredLogs { get; set; }
+
         public Task OnExecuteAsync() => _host.RunAsync();
     }
 }
