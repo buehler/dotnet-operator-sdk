@@ -7,6 +7,11 @@ that provides the same and more functions for kubernetes operators in go.
 The goal was to learn about resource watching in .net and provide a neat way of writing a
 custom operator yourself.
 
+## Terminology
+
+- `Entity`: A model - an entity - that is used in kubernetes. An entity defines the CRD.
+- `Resource`: An instance of an entity.
+
 ## How To Use
 
 Using this sdk is pretty simple:
