@@ -13,7 +13,7 @@ namespace KubeOps.TestOperator.Entities
         public string Status { get; set; } = string.Empty;
     }
 
-    [KubernetesEntity(Group = "testing", ApiVersion = "v1")]
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", PluralName = "testentities")]
     public class TestEntity : CustomKubernetesEntity<TestEntitySpec, TestEntityStatus>
     {
     }

@@ -9,4 +9,10 @@
       <ProjectReference Include="..\..\src\KubeOps\KubeOps.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="appsettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>
