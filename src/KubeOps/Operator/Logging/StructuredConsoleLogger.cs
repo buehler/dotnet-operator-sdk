@@ -42,7 +42,7 @@ namespace KubeOps.Operator.Logging
 
             if (exception != null)
             {
-                message.ExceptionMessage = exception.Message;
+                message.Exception = exception.ToString();
             }
 
             Console.WriteLine(JsonConvert.SerializeObject(message, _jsonSettings));
@@ -56,7 +56,7 @@ namespace KubeOps.Operator.Logging
 
             public string Message { get; set; }
 
-            public string ExceptionMessage { get; set; }
+            public string Exception { get; set; }
 
             public IDictionary<string, object> Parameters { get; set; }
         }
