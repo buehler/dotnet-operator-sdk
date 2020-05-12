@@ -15,12 +15,6 @@ namespace KubeOps.Operator.Client
         Task<TResource?> Get<TResource>(string name, string? @namespace = null)
             where TResource : class, IKubernetesObject<V1ObjectMeta>;
 
-        // Task<TResource?> Get<TResource>(string name, string? @namespace = null, TResource? requireClass = null)
-        // where TResource : class, IKubernetesObject<V1ObjectMeta>;
-
-        // Task<TResource> Get<TResource>(string name, string? @namespace = null, TResource? requireStruct = null)
-        //     where TResource : struct, IKubernetesObject<V1ObjectMeta>;
-
         Task<IList<TResource>> List<TResource>(
             string? @namespace = null,
             string? labelSelector = null)

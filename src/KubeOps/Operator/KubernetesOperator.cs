@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using k8s;
+using KubeOps.Operator.Caching;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Commands;
 using KubeOps.Operator.DependencyInjection;
-using KubeOps.Operator.Logging;
+using KubeOps.Operator.Queue;
 using KubeOps.Operator.Serialization;
+using KubeOps.Operator.Watcher;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -32,9 +33,8 @@ namespace KubeOps.Operator
 
         public KubernetesOperator(string? operatorName = null)
         {
-            operatorName ??= (operatorName
-                              ?? Assembly.GetEntryAssembly()?.GetName().Name
-                              ?? DefaultOperatorName).ToLowerInvariant();
+            operatorName ??= (operatorName ?? Assembly.GetEntryAssembly()?.GetName().Name ?? DefaultOperatorName)
+                .ToLowerInvariant();
             _operatorSettings = new OperatorSettings
             {
                 Name = operatorName,
@@ -52,26 +52,27 @@ namespace KubeOps.Operator
 
             var app = new CommandLineApplication<RunOperator>();
 
-            _builder.ConfigureLogging(builder =>
-            {
-                builder.ClearProviders();
+            _builder.ConfigureLogging(
+                builder =>
+                {
+                    builder.ClearProviders();
 #if DEBUG
-                builder.AddConsole(options => options.TimestampFormat = @"[hh:mm:ss] ");
+                    builder.AddConsole(options => options.TimestampFormat = @"[HH:mm:ss] ");
 #else
-                if (args.Contains(NoStructuredLogs))
-                {
-                    builder.AddConsole(options =>
+                    if (args.Contains(NoStructuredLogs))
                     {
-                        options.TimestampFormat = @"[dd.MM.yyyy - hh:mm:ss] ";
-                        options.DisableColors = true;
-                    });
-                }
-                else
-                {
-                    builder.AddStructuredConsole();
-                }
+                        builder.AddConsole(options =>
+                        {
+                            options.TimestampFormat = @"[dd.MM.yyyy - HH:mm:ss] ";
+                            options.DisableColors = true;
+                        });
+                    }
+                    else
+                    {
+                        builder.AddStructuredConsole();
+                    }
 #endif
-            });
+                });
 
             var host = _builder.Build();
 
@@ -93,47 +94,51 @@ namespace KubeOps.Operator
         }
 
         private void ConfigureRequiredServices() =>
-            _builder.ConfigureServices(services =>
-            {
-                services.AddSingleton(_operatorSettings);
+            _builder.ConfigureServices(
+                services =>
+                {
+                    services.AddSingleton(_operatorSettings);
 
-                services.AddTransient(
-                    _ => new JsonSerializerSettings
-                    {
-                        ContractResolver = new NamingConvention(),
-                        Converters = new List<JsonConverter>
-                            {new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()}},
-                    });
-                services.AddTransient(
-                    _ => new SerializerBuilder()
-                        .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
-                        .WithNamingConvention(new NamingConvention())
-                        .Build());
-
-                services.AddTransient<EntitySerializer>();
-
-                services.AddTransient<IKubernetesClient, KubernetesClient>();
-                services.AddSingleton<IKubernetes>(
-                    _ =>
-                    {
-                        var config = KubernetesClientConfiguration.BuildDefaultConfig();
-
-                        return new Kubernetes(config, new ClientUrlFixer())
+                    services.AddTransient(
+                        _ => new JsonSerializerSettings
                         {
-                            SerializationSettings =
+                            ContractResolver = new NamingConvention(),
+                            Converters = new List<JsonConverter>
+                                { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
+                        });
+                    services.AddTransient(
+                        _ => new SerializerBuilder()
+                            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
+                            .WithNamingConvention(new NamingConvention())
+                            .Build());
+                    services.AddTransient<EntitySerializer>();
+
+                    services.AddTransient<IKubernetesClient, KubernetesClient>();
+                    services.AddSingleton<IKubernetes>(
+                        _ =>
+                        {
+                            var config = KubernetesClientConfiguration.BuildDefaultConfig();
+
+                            return new Kubernetes(config, new ClientUrlFixer())
                             {
-                                ContractResolver = new NamingConvention(),
-                                Converters = new List<JsonConverter>
-                                    {new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()}}
-                            },
-                            DeserializationSettings =
-                            {
-                                ContractResolver = new NamingConvention(),
-                                Converters = new List<JsonConverter>
-                                    {new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()}}
-                            }
-                        };
-                    });
-            });
+                                SerializationSettings =
+                                {
+                                    ContractResolver = new NamingConvention(),
+                                    Converters = new List<JsonConverter>
+                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } }
+                                },
+                                DeserializationSettings =
+                                {
+                                    ContractResolver = new NamingConvention(),
+                                    Converters = new List<JsonConverter>
+                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } }
+                                }
+                            };
+                        });
+
+                    services.AddTransient(typeof(IResourceCache<>), typeof(ResourceCache<>));
+                    services.AddTransient(typeof(IResourceWatcher<>), typeof(ResourceWatcher<>));
+                    services.AddTransient(typeof(IResourceEventQueue<>), typeof(ResourceEventQueue<>));
+                });
     }
 }

@@ -4,21 +4,21 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Client;
-using KubeOps.Operator.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
 
 namespace KubeOps.Operator.Watcher
 {
-    internal class EntityWatcher<TEntity> : IDisposable
+    internal class ResourceWatcher<TEntity> : IResourceWatcher<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private const double MaxRetrySeconds = 64;
 
-        private int _errorCount = 0;
+        private int _errorCount;
 
-        private readonly ILogger<EntityWatcher<TEntity>> _logger;
+        private readonly ILogger<ResourceWatcher<TEntity>> _logger;
+        private readonly IKubernetesClient _client;
+
         private readonly Random _rnd = new Random();
         private CancellationTokenSource? _cancellation;
         private Watcher<TEntity>? _watcher;
@@ -26,14 +26,12 @@ namespace KubeOps.Operator.Watcher
         private Timer? _reconnectTimer;
         private Timer? _resetErrCountTimer;
 
-        private readonly Lazy<IKubernetesClient> _client =
-            new Lazy<IKubernetesClient>(() => DependencyInjector.Services.GetRequiredService<IKubernetesClient>());
-
         public event EventHandler<(WatchEventType type, TEntity resource)>? WatcherEvent;
 
-        public EntityWatcher()
+        public ResourceWatcher(ILogger<ResourceWatcher<TEntity>> logger, IKubernetesClient client)
         {
-            _logger = DependencyInjector.Services.GetRequiredService<ILogger<EntityWatcher<TEntity>>>();
+            _logger = logger;
+            _client = client;
         }
 
         public Task Start()
@@ -42,10 +40,11 @@ namespace KubeOps.Operator.Watcher
             return WatchResource();
         }
 
-        public void Stop()
+        public Task Stop()
         {
             _logger.LogTrace(@"Resource Watcher shutdown for type ""{type}"".", typeof(TEntity));
             _cancellation?.Cancel();
+            return Task.CompletedTask;
         }
 
         public void Dispose()
@@ -97,7 +96,7 @@ namespace KubeOps.Operator.Watcher
 
             _cancellation = new CancellationTokenSource();
             // TODO: namespaced resources
-            _watcher = await _client.Value.Watch<TEntity>(
+            _watcher = await _client.Watch<TEntity>(
                 TimeSpan.FromHours(1),
                 OnWatcherEvent,
                 OnException,

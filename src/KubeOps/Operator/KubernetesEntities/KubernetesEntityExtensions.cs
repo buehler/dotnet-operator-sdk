@@ -47,7 +47,7 @@ namespace KubeOps.Operator.KubernetesEntities
             return betaCrd;
         }
 
-        private static V1beta1JSONSchemaProps Convert(this k8s.Models.V1JSONSchemaProps props)
+        private static V1beta1JSONSchemaProps Convert(this V1JSONSchemaProps props)
         {
             var betaProps = new V1beta1JSONSchemaProps();
 

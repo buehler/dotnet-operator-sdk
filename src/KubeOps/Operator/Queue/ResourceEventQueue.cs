@@ -7,43 +7,45 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Caching;
-using KubeOps.Operator.DependencyInjection;
 using KubeOps.Operator.Watcher;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Queue
 {
-    internal class EntityEventQueue<TEntity> : IDisposable
+    internal class ResourceEventQueue<TEntity> : IResourceEventQueue<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         // TODO: Make configurable
         private const int QueueLimit = 512;
         private const double MaxRetrySeconds = 64;
 
-        private readonly Channel<(EntityEventType type, TEntity resource)> _queue =
-            Channel.CreateBounded<(EntityEventType type, TEntity resource)>(QueueLimit);
+        private readonly Channel<(ResourceEventType type, TEntity resource)> _queue =
+            Channel.CreateBounded<(ResourceEventType type, TEntity resource)>(QueueLimit);
 
-        private static readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
         private readonly Random _rnd = new Random();
-        private readonly ILogger<EntityEventQueue<TEntity>> _logger;
-        private readonly EntityCache<TEntity> _cache = new EntityCache<TEntity>();
-        private readonly EntityWatcher<TEntity> _watcher;
+        private readonly ILogger<ResourceEventQueue<TEntity>> _logger;
+        private readonly IResourceCache<TEntity> _cache;
+        private readonly IResourceWatcher<TEntity> _watcher;
 
-        private readonly IDictionary<string, EntityTimer<TEntity>> _delayedEnqueue =
-            new ConcurrentDictionary<string, EntityTimer<TEntity>>();
+        private readonly IDictionary<string, ResourceTimer<TEntity>> _delayedEnqueue =
+            new ConcurrentDictionary<string, ResourceTimer<TEntity>>();
 
         private readonly IDictionary<string, int> _erroredEventsCounter =
             new ConcurrentDictionary<string, int>();
 
         private CancellationTokenSource? _cancellation;
 
-        public event EventHandler<(EntityEventType type, TEntity resource)>? ResourceEvent;
+        public event EventHandler<(ResourceEventType type, TEntity resource)>? ResourceEvent;
 
-        public EntityEventQueue()
+        public ResourceEventQueue(
+            ILogger<ResourceEventQueue<TEntity>> logger,
+            IResourceCache<TEntity> cache,
+            IResourceWatcher<TEntity> watcher)
         {
-            _logger = DependencyInjector.Services.GetRequiredService<ILogger<EntityEventQueue<TEntity>>>();
-            _watcher = new EntityWatcher<TEntity>();
+            _logger = logger;
+            _cache = cache;
+            _watcher = watcher;
         }
 
         public async Task Start()
@@ -57,11 +59,11 @@ namespace KubeOps.Operator.Queue
 #pragma warning restore 4014
         }
 
-        public void Stop()
+        public async Task Stop()
         {
             _logger.LogTrace(@"Event queue shutdown for type ""{type}"".", typeof(TEntity));
             _cancellation?.Cancel();
-            _watcher.Stop();
+            await _watcher.Stop();
             _watcher.WatcherEvent -= OnWatcherEvent;
             foreach (var timer in _delayedEnqueue.Values)
             {
@@ -89,7 +91,7 @@ namespace KubeOps.Operator.Queue
             _delayedEnqueue.Clear();
             foreach (var handler in ResourceEvent?.GetInvocationList() ?? new Delegate[] { })
             {
-                ResourceEvent -= (EventHandler<(EntityEventType type, TEntity resource)>) handler;
+                ResourceEvent -= (EventHandler<(ResourceEventType type, TEntity resource)>) handler;
             }
         }
 
@@ -97,10 +99,10 @@ namespace KubeOps.Operator.Queue
         {
             try
             {
-                await Semaphore.WaitAsync();
+                await _semaphore.WaitAsync();
                 if (enqueueDelay != null && enqueueDelay != TimeSpan.Zero)
                 {
-                    var timer = new EntityTimer<TEntity>(
+                    var timer = new ResourceTimer<TEntity>(
                         resource,
                         enqueueDelay.Value,
                         async delayedResource =>
@@ -146,29 +148,29 @@ namespace KubeOps.Operator.Queue
                     case CacheComparisonResult.New when resource.Metadata.DeletionTimestamp != null:
                     case CacheComparisonResult.Modified when resource.Metadata.DeletionTimestamp != null:
                     case CacheComparisonResult.NotModified when resource.Metadata.DeletionTimestamp != null:
-                        await EnqueueEvent(EntityEventType.Finalizing, resource);
+                        await EnqueueEvent(ResourceEventType.Finalizing, resource);
                         break;
                     case CacheComparisonResult.New:
-                        await EnqueueEvent(EntityEventType.Created, resource);
+                        await EnqueueEvent(ResourceEventType.Created, resource);
                         break;
                     case CacheComparisonResult.Modified:
-                        await EnqueueEvent(EntityEventType.Updated, resource);
+                        await EnqueueEvent(ResourceEventType.Updated, resource);
                         break;
                     case CacheComparisonResult.StatusModified:
-                        await EnqueueEvent(EntityEventType.StatusUpdated, resource);
+                        await EnqueueEvent(ResourceEventType.StatusUpdated, resource);
                         break;
                     case CacheComparisonResult.NotModified:
-                        await EnqueueEvent(EntityEventType.NotModified, resource);
+                        await EnqueueEvent(ResourceEventType.NotModified, resource);
                         break;
                 }
             }
             finally
             {
-                Semaphore.Release();
+                _semaphore.Release();
             }
         }
 
-        public void EnqueueErrored(EntityEventType type, TEntity resource)
+        public void EnqueueErrored(ResourceEventType type, TEntity resource)
         {
             if (!_erroredEventsCounter.ContainsKey(resource.Metadata.Uid))
             {
@@ -187,7 +189,7 @@ namespace KubeOps.Operator.Queue
                 resource.Kind,
                 resource.Metadata.Name);
 
-            var timer = new EntityTimer<TEntity>(
+            var timer = new ResourceTimer<TEntity>(
                 resource,
                 backoff,
                 async delayedResource =>
@@ -230,18 +232,18 @@ namespace KubeOps.Operator.Queue
                 resource.Metadata.Name);
             try
             {
-                await Semaphore.WaitAsync();
+                await _semaphore.WaitAsync();
                 _cache.Remove(resource);
             }
             finally
             {
-                Semaphore.Release();
+                _semaphore.Release();
             }
 
-            await EnqueueEvent(EntityEventType.Deleted, resource);
+            await EnqueueEvent(ResourceEventType.Deleted, resource);
         }
 
-        private async Task EnqueueEvent(EntityEventType type, TEntity resource)
+        private async Task EnqueueEvent(ResourceEventType type, TEntity resource)
         {
             _logger.LogTrace(
                 @"Enqueue event ""{type}"" for resource ""{kind}/{name}"".",

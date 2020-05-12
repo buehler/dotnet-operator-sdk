@@ -14,14 +14,19 @@ namespace KubeOps.Operator.Finalizer
     public abstract class ResourceFinalizerBase<TResource> : IResourceFinalizer<TResource>
         where TResource : IKubernetesObject<V1ObjectMeta>
     {
-        private readonly Lazy<IKubernetesClient> _client =
-            new Lazy<IKubernetesClient>(() => DependencyInjector.Services.GetRequiredService<IKubernetesClient>());
-
         private readonly ILogger<ResourceFinalizerBase<TResource>> _logger;
 
         protected ResourceFinalizerBase()
+            : this(
+                DependencyInjector.Services.GetRequiredService<ILogger<ResourceFinalizerBase<TResource>>>(),
+                DependencyInjector.Services.GetRequiredService<IKubernetesClient>())
         {
-            _logger = DependencyInjector.Services.GetRequiredService<ILogger<ResourceFinalizerBase<TResource>>>();
+        }
+
+        protected ResourceFinalizerBase(ILogger<ResourceFinalizerBase<TResource>> logger, IKubernetesClient client)
+        {
+            _logger = logger;
+            Client = client;
         }
 
         public virtual string Identifier
@@ -33,7 +38,7 @@ namespace KubeOps.Operator.Finalizer
             }
         }
 
-        protected IKubernetesClient Client => _client.Value;
+        protected IKubernetesClient Client { get; }
 
         public async Task Register(TResource resource)
         {

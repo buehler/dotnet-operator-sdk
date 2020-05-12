@@ -7,7 +7,7 @@ using KubeOps.Operator.Entities;
 
 namespace KubeOps.Operator.Caching
 {
-    internal class EntityCache<TEntity>
+    internal class ResourceCache<TEntity> : IResourceCache<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private const string ResourceVersion = "ResourceVersion";

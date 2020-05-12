@@ -10,7 +10,6 @@ using KubeOps.Operator.DependencyInjection;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Controller
@@ -18,33 +17,42 @@ namespace KubeOps.Operator.Controller
     // TODO: namespaced controller (only watch resource of a specific namespace)
     // TODO: Webhooks?
 
-    public abstract class ResourceControllerBase<TResource> : IHostedService
-        where TResource : IKubernetesObject<V1ObjectMeta>
+    public abstract class ResourceControllerBase<TEntity> : IResourceController<TEntity>
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        private readonly IReadOnlyList<EntityEventType> _requeueableEvents = new[]
+        private readonly IReadOnlyList<ResourceEventType> _requeueableEvents = new[]
         {
-            EntityEventType.Created,
-            EntityEventType.Updated,
-            EntityEventType.NotModified,
+            ResourceEventType.Created,
+            ResourceEventType.Updated,
+            ResourceEventType.NotModified,
         };
 
-        private readonly ILogger<ResourceControllerBase<TResource>> _logger;
-        private readonly EntityEventQueue<TResource> _eventQueue;
-
-        private readonly Lazy<IKubernetesClient> _client =
-            new Lazy<IKubernetesClient>(() => DependencyInjector.Services.GetRequiredService<IKubernetesClient>());
+        private readonly ILogger<ResourceControllerBase<TEntity>> _logger;
+        private readonly IResourceEventQueue<TEntity> _eventQueue;
 
         protected ResourceControllerBase()
+            : this(
+                DependencyInjector.Services.GetRequiredService<ILogger<ResourceControllerBase<TEntity>>>(),
+                DependencyInjector.Services.GetRequiredService<IKubernetesClient>(),
+                DependencyInjector.Services.GetRequiredService<IResourceEventQueue<TEntity>>())
         {
-            _logger = DependencyInjector.Services.GetRequiredService<ILogger<ResourceControllerBase<TResource>>>();
-            _eventQueue = new EntityEventQueue<TResource>();
         }
 
-        protected IKubernetesClient Client => _client.Value;
+        protected ResourceControllerBase(
+            ILogger<ResourceControllerBase<TEntity>> logger,
+            IKubernetesClient client,
+            IResourceEventQueue<TEntity> eventQueue)
+        {
+            _logger = logger;
+            _eventQueue = eventQueue;
+            Client = client;
+        }
+
+        protected IKubernetesClient Client { get; }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation(@"Startup CRD Controller for ""{resource}"".", typeof(TResource));
+            _logger.LogInformation(@"Startup CRD Controller for ""{resource}"".", typeof(TEntity));
 
             _eventQueue.ResourceEvent += OnResourceEvent;
             await _eventQueue.Start();
@@ -52,7 +60,7 @@ namespace KubeOps.Operator.Controller
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation(@"Shutdown CRD Controller for ""{resource}"".", typeof(TResource));
+            _logger.LogInformation(@"Shutdown CRD Controller for ""{resource}"".", typeof(TEntity));
 
             _eventQueue.Stop();
             _eventQueue.ResourceEvent -= OnResourceEvent;
@@ -60,7 +68,7 @@ namespace KubeOps.Operator.Controller
             return Task.CompletedTask;
         }
 
-        protected virtual Task<TimeSpan?> Created(TResource resource)
+        protected virtual Task<TimeSpan?> Created(TEntity resource)
         {
             _logger.LogDebug(
                 @"Object ""{kind}/{name}"" fired ""created"" event.",
@@ -69,7 +77,7 @@ namespace KubeOps.Operator.Controller
             return Task.FromResult(default(TimeSpan?));
         }
 
-        protected virtual Task<TimeSpan?> Updated(TResource resource)
+        protected virtual Task<TimeSpan?> Updated(TEntity resource)
         {
             _logger.LogDebug(
                 @"Object ""{kind}/{name}"" fired ""updated"" event.",
@@ -78,7 +86,7 @@ namespace KubeOps.Operator.Controller
             return Task.FromResult(default(TimeSpan?));
         }
 
-        protected virtual Task<TimeSpan?> NotModified(TResource resource)
+        protected virtual Task<TimeSpan?> NotModified(TEntity resource)
         {
             _logger.LogDebug(
                 @"Object ""{kind}/{name}"" fired ""not modified"" event.",
@@ -87,7 +95,7 @@ namespace KubeOps.Operator.Controller
             return Task.FromResult(default(TimeSpan?));
         }
 
-        protected virtual Task StatusModified(TResource resource)
+        protected virtual Task StatusModified(TEntity resource)
         {
             _logger.LogDebug(
                 @"Object ""{kind}/{name}"" fired ""status modified"" event.",
@@ -96,7 +104,7 @@ namespace KubeOps.Operator.Controller
             return Task.CompletedTask;
         }
 
-        protected virtual Task Deleted(TResource resource)
+        protected virtual Task Deleted(TEntity resource)
         {
             _logger.LogDebug(
                 @"Object ""{kind}/{name}"" fired ""deleted"" event.",
@@ -105,7 +113,7 @@ namespace KubeOps.Operator.Controller
             return Task.FromResult(default(TimeSpan?));
         }
 
-        private async void OnResourceEvent(object? _, (EntityEventType type, TResource resource) args)
+        private async void OnResourceEvent(object? _, (ResourceEventType type, TEntity resource) args)
         {
             var (type, resource) = args;
 
@@ -117,7 +125,7 @@ namespace KubeOps.Operator.Controller
                     resource.Kind,
                     resource.Metadata.Name);
 
-                if (type == EntityEventType.Finalizing)
+                if (type == ResourceEventType.Finalizing)
                 {
                     if (resource.Metadata.Finalizers == null || resource.Metadata.Finalizers.Count == 0)
                     {
@@ -125,7 +133,7 @@ namespace KubeOps.Operator.Controller
                     }
 
                     var finalizer = DependencyInjector.Services
-                        .GetServices<IResourceFinalizer<TResource>>()
+                        .GetServices<IResourceFinalizer<TEntity>>()
                         .FirstOrDefault(f => f.Identifier == resource.Metadata.Finalizers.First());
                     if (finalizer == null)
                     {
@@ -152,10 +160,10 @@ namespace KubeOps.Operator.Controller
                 {
                     switch (type)
                     {
-                        case EntityEventType.StatusUpdated:
+                        case ResourceEventType.StatusUpdated:
                             await StatusModified(resource);
                             break;
-                        case EntityEventType.Deleted:
+                        case ResourceEventType.Deleted:
                             await Deleted(resource);
                             break;
                     }
@@ -172,9 +180,9 @@ namespace KubeOps.Operator.Controller
 
                 var requeue = type switch
                 {
-                    EntityEventType.Created => await Created(resource),
-                    EntityEventType.Updated => await Updated(resource),
-                    EntityEventType.NotModified => await NotModified(resource),
+                    ResourceEventType.Created => await Created(resource),
+                    ResourceEventType.Updated => await Updated(resource),
+                    ResourceEventType.NotModified => await NotModified(resource),
                     _ => throw new ArgumentOutOfRangeException(),
                 };
 

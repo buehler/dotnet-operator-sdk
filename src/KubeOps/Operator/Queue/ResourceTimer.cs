@@ -6,14 +6,14 @@ using k8s.Models;
 
 namespace KubeOps.Operator.Queue
 {
-    internal class EntityTimer<TEntity>
+    internal class ResourceTimer<TEntity> : IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private readonly TEntity _resource;
         private readonly Func<TEntity, Task> _elapsedHandler;
         private readonly Timer _timer;
 
-        public EntityTimer(TEntity resource, TimeSpan delay, Func<TEntity, Task> elapsedHandler)
+        public ResourceTimer(TEntity resource, TimeSpan delay, Func<TEntity, Task> elapsedHandler)
         {
             _resource = resource;
             _elapsedHandler = elapsedHandler;
@@ -33,6 +33,8 @@ namespace KubeOps.Operator.Queue
             _timer.Elapsed -= TimerElapsed;
             _timer.Dispose();
         }
+
+        public void Dispose() => Destroy();
 
         private async void TimerElapsed(object sender, ElapsedEventArgs e)
         {

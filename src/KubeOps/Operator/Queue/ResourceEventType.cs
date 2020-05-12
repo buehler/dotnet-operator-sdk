@@ -1,6 +1,6 @@
 ﻿namespace KubeOps.Operator.Queue
 {
-    internal enum EntityEventType
+    public enum ResourceEventType
     {
         /// <summary>
         /// Fired when a resource (even requeued) is new to the system.
