@@ -1,0 +1,6 @@
+﻿apiVersion: testing.dev/v1
+kind: TestEntity
+metadata:
+  name: my-test-entity
+spec:
+  spec: string

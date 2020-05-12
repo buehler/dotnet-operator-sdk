@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Caching;
+using KubeOps.Operator.Errors;
 using KubeOps.Operator.Watcher;
 using Microsoft.Extensions.Logging;
 
@@ -17,13 +18,11 @@ namespace KubeOps.Operator.Queue
     {
         // TODO: Make configurable
         private const int QueueLimit = 512;
-        private const double MaxRetrySeconds = 64;
 
         private readonly Channel<(ResourceEventType type, TEntity resource)> _queue =
             Channel.CreateBounded<(ResourceEventType type, TEntity resource)>(QueueLimit);
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
-        private readonly Random _rnd = new Random();
         private readonly ILogger<ResourceEventQueue<TEntity>> _logger;
         private readonly IResourceCache<TEntity> _cache;
         private readonly IResourceWatcher<TEntity> _watcher;
@@ -31,8 +30,8 @@ namespace KubeOps.Operator.Queue
         private readonly IDictionary<string, ResourceTimer<TEntity>> _delayedEnqueue =
             new ConcurrentDictionary<string, ResourceTimer<TEntity>>();
 
-        private readonly IDictionary<string, int> _erroredEventsCounter =
-            new ConcurrentDictionary<string, int>();
+        private readonly ConcurrentDictionary<string, ExponentialBackoffHandler> _errorHandlers =
+            new ConcurrentDictionary<string, ExponentialBackoffHandler>();
 
         private CancellationTokenSource? _cancellation;
 
@@ -70,7 +69,13 @@ namespace KubeOps.Operator.Queue
                 timer.Destroy();
             }
 
+            foreach (var errorBackoff in _errorHandlers.Values)
+            {
+                errorBackoff.Dispose();
+            }
+
             _delayedEnqueue.Clear();
+            _errorHandlers.Clear();
         }
 
         public void Dispose()
@@ -92,6 +97,11 @@ namespace KubeOps.Operator.Queue
             foreach (var handler in ResourceEvent?.GetInvocationList() ?? new Delegate[] { })
             {
                 ResourceEvent -= (EventHandler<(ResourceEventType type, TEntity resource)>) handler;
+            }
+
+            foreach (var errorBackoff in _errorHandlers.Values)
+            {
+                errorBackoff.Dispose();
             }
         }
 
@@ -172,40 +182,38 @@ namespace KubeOps.Operator.Queue
 
         public void EnqueueErrored(ResourceEventType type, TEntity resource)
         {
-            if (!_erroredEventsCounter.ContainsKey(resource.Metadata.Uid))
-            {
-                _erroredEventsCounter[resource.Metadata.Uid] = 0;
-            }
-            else
-            {
-                _erroredEventsCounter[resource.Metadata.Uid]++;
-            }
+            var handler = _errorHandlers.GetOrAdd(
+                resource.Metadata.Uid,
+                _ =>
+                {
+                    return new ExponentialBackoffHandler(
+                        async () =>
+                        {
+                            _logger.LogTrace(
+                                @"Backoff (error) requeue timer elapsed for ""{kind}/{name}"".",
+                                resource.Kind,
+                                resource.Metadata.Name);
+                            await EnqueueEvent(type, resource);
+                        });
+                });
 
-            var backoff = ExponentialBackoff(_erroredEventsCounter[resource.Metadata.Uid]);
+
+            var backoff = handler.Retry();
             _logger.LogDebug(
                 @"Requeue event ""{eventType}"" with backoff ""{backoff}"" for resource ""{kind}/{name}"".",
                 type,
                 backoff,
                 resource.Kind,
                 resource.Metadata.Name);
-
-            var timer = new ResourceTimer<TEntity>(
-                resource,
-                backoff,
-                async delayedResource =>
-                {
-                    _logger.LogTrace(
-                        @"Backoff (error) requeue timer elapsed for ""{kind}/{name}"".",
-                        delayedResource.Kind,
-                        delayedResource.Metadata.Name);
-                    _delayedEnqueue.Remove(delayedResource.Metadata.Uid);
-                    await EnqueueEvent(type, delayedResource);
-                });
-            _delayedEnqueue.Add(resource.Metadata.Uid, timer);
-            timer.Start();
         }
 
-        public void ClearError(TEntity resource) => _erroredEventsCounter.Remove(resource.Metadata.Uid);
+        public void ClearError(TEntity resource)
+        {
+            if (_errorHandlers.Remove(resource.Metadata.Uid, out var handler))
+            {
+                handler.Dispose();
+            }
+        }
 
         private async void OnWatcherEvent(object? _, (WatchEventType type, TEntity resource) args)
         {
@@ -292,9 +300,5 @@ namespace KubeOps.Operator.Queue
                 ResourceEvent?.Invoke(this, message);
             }
         }
-
-        private TimeSpan ExponentialBackoff(int retryCount) => TimeSpan
-            .FromSeconds(Math.Min(Math.Pow(2, retryCount), MaxRetrySeconds))
-            .Add(TimeSpan.FromMilliseconds(_rnd.Next(0, 1000)));
     }
 }

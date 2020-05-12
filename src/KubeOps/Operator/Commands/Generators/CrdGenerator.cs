@@ -150,8 +150,6 @@ namespace KubeOps.Operator.Commands.Generators
             // this description is on the class
             props.Description = type.GetCustomAttributes<DisplayAttribute>(true).FirstOrDefault()?.Description;
 
-            // TODO: validator attributes
-
             if (type == typeof(V1ObjectMeta))
             {
                 // TODO(check): is this correct? should metadata be filtered?
@@ -210,6 +208,8 @@ namespace KubeOps.Operator.Commands.Generators
             {
                 props.Nullable = true;
             }
+
+            // TODO: validator attributes
 
             return props;
         }

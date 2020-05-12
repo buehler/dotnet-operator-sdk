@@ -4,27 +4,20 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Client;
+using KubeOps.Operator.Errors;
 using Microsoft.Extensions.Logging;
-using Timer = System.Timers.Timer;
 
 namespace KubeOps.Operator.Watcher
 {
     internal class ResourceWatcher<TEntity> : IResourceWatcher<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        private const double MaxRetrySeconds = 64;
-
-        private int _errorCount;
-
         private readonly ILogger<ResourceWatcher<TEntity>> _logger;
         private readonly IKubernetesClient _client;
+        private readonly ExponentialBackoffHandler _reconnectHandler;
 
-        private readonly Random _rnd = new Random();
         private CancellationTokenSource? _cancellation;
         private Watcher<TEntity>? _watcher;
-
-        private Timer? _reconnectTimer;
-        private Timer? _resetErrCountTimer;
 
         public event EventHandler<(WatchEventType type, TEntity resource)>? WatcherEvent;
 
@@ -32,6 +25,7 @@ namespace KubeOps.Operator.Watcher
         {
             _logger = logger;
             _client = client;
+            _reconnectHandler = new ExponentialBackoffHandler(async () => await WatchResource());
         }
 
         public Task Start()
@@ -59,8 +53,7 @@ namespace KubeOps.Operator.Watcher
                 WatcherEvent -= (EventHandler<(WatchEventType type, TEntity resource)>) handler;
             }
 
-            _reconnectTimer?.Dispose();
-            _resetErrCountTimer?.Dispose();
+            _reconnectHandler.Dispose();
             _cancellation?.Dispose();
             _watcher?.Dispose();
             _logger.LogTrace(@"Disposed resource watcher for type ""{type}"".", typeof(TEntity));
@@ -80,19 +73,6 @@ namespace KubeOps.Operator.Watcher
                     return;
                 }
             }
-
-            _resetErrCountTimer = new Timer(TimeSpan.FromSeconds(10).TotalMilliseconds);
-            _resetErrCountTimer.Elapsed += (_, __) =>
-            {
-                _logger.LogTrace("Reset error count in resource watcher.");
-                _errorCount = 0;
-                _resetErrCountTimer.Dispose();
-                _resetErrCountTimer = null;
-                _reconnectTimer?.Stop();
-                _reconnectTimer?.Dispose();
-                _reconnectTimer = null;
-            };
-            _resetErrCountTimer.Start();
 
             _cancellation = new CancellationTokenSource();
             // TODO: namespaced resources
@@ -144,15 +124,8 @@ namespace KubeOps.Operator.Watcher
             _watcher?.Dispose();
             _watcher = null;
 
-            _logger.LogInformation("Trying to reconnect with exponential backoff.");
-            _resetErrCountTimer?.Stop();
-            _resetErrCountTimer?.Dispose();
-            _resetErrCountTimer = null;
-            _reconnectTimer?.Stop();
-            _reconnectTimer?.Dispose();
-            _reconnectTimer = new Timer(ExponentialBackoff(++_errorCount).TotalMilliseconds);
-            _reconnectTimer.Elapsed += (_, __) => RestartWatcher();
-            _reconnectTimer.Start();
+            var backoff = _reconnectHandler.Retry(TimeSpan.FromSeconds(5));
+            _logger.LogInformation("Trying to reconnect with exponential backoff {backoff}.", backoff);
         }
 
         private void OnClose()
@@ -163,9 +136,5 @@ namespace KubeOps.Operator.Watcher
                 RestartWatcher();
             }
         }
-
-        private TimeSpan ExponentialBackoff(int retryCount) => TimeSpan
-            .FromSeconds(Math.Min(Math.Pow(2, retryCount), MaxRetrySeconds))
-            .Add(TimeSpan.FromMilliseconds(_rnd.Next(0, 1000)));
     }
 }
