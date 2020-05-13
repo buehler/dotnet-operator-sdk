@@ -68,6 +68,22 @@ public class Foo : CustomKubernetesEntity<FooSpec>
 
 Now a CRD for your "Foo" class is generated on build.
 
+#### Validation
+
+You can use the various validator attributes to customize your crd:
+
+(all attributes are on properties with the exception of the Description)
+
+- `Description`: Describe the property or class
+- `ExternalDocs`: Add a link to an external documentation
+- `Items`: Customize MinItems / MaxItems and if the items should be unique
+- `Lenght`: Customize the length of something
+- `MultipleOf`: A number should be a multiple of
+- `Pattern`: A valid ECMA script regex (e.g. `/\d*/`)
+- `RangeMaximum`: The maximum of a value (with option to exclude the max itself)
+- `RangeMinimum`: The minimum of a value (with option to exclude the min itself)
+- `Required`: The field is listed in the required fields
+
 ### Write Controllers
 
 ```csharp
