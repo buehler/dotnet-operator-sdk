@@ -19,6 +19,11 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using YamlDotNet.Serialization;
 
+#if !DEBUG
+using System.Linq;
+using KubeOps.Operator.Logging;
+#endif
+
 namespace KubeOps.Operator
 {
     public sealed class KubernetesOperator
