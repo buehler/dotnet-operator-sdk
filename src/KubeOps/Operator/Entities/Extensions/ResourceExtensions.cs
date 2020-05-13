@@ -6,7 +6,7 @@ using KubeOps.Operator.DependencyInjection;
 using KubeOps.Operator.Finalizer;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace KubeOps.Operator.Entities
+namespace KubeOps.Operator.Entities.Extensions
 {
     public static class ResourceExtensions
     {

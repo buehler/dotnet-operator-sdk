@@ -2,6 +2,7 @@
 using System.Linq;
 using k8s.Models;
 using KubeOps.Operator.Entities;
+using KubeOps.Operator.Entities.Extensions;
 
 namespace KubeOps.Operator.Rbac
 {
@@ -18,7 +19,7 @@ namespace KubeOps.Operator.Rbac
 
         public static V1PolicyRule CreateRbacPolicy(this EntityRbacAttribute attribute)
         {
-            var crds = attribute.Entities.Select(EntityExtensions.CreateResourceDefinition).ToList();
+            var crds = attribute.Entities.Select(CustomEntityDefinitionExtensions.CreateResourceDefinition).ToList();
             var policy = new V1PolicyRule
             {
                 ApiGroups = crds.Select(crd => crd.Group).Distinct().ToList(),
@@ -33,7 +34,7 @@ namespace KubeOps.Operator.Rbac
         {
             var crds = attribute.Entities
                 .Where(type => type.GetProperty("Status") != null)
-                .Select(EntityExtensions.CreateResourceDefinition)
+                .Select(CustomEntityDefinitionExtensions.CreateResourceDefinition)
                 .ToList();
             if (crds.Count == 0)
             {

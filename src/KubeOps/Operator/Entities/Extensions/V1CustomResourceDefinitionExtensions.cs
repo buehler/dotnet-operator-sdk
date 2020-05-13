@@ -1,18 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using k8s.Models;
 
-namespace KubeOps.Operator.KubernetesEntities
+namespace KubeOps.Operator.Entities.Extensions
 {
-    public static class KubernetesEntityExtensions
+    public static class V1CustomResourceDefinitionExtensions
     {
-        public static string ReadData(this V1Secret secret, string key)
-            => Encoding.UTF8.GetString(secret.Data[key]);
-
-        public static void WriteData(this V1Secret secret, string key, string value)
-            => secret.Data[key] = Encoding.UTF8.GetBytes(value);
-
         internal static V1beta1CustomResourceDefinition Convert(this V1CustomResourceDefinition crd)
         {
             var crdVersion = crd.Spec.Versions.First();

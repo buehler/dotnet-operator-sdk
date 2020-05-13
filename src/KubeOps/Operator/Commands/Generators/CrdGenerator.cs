@@ -8,8 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using k8s.Models;
 using KubeOps.Operator.Entities;
+using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Entities.Kustomize;
-using KubeOps.Operator.KubernetesEntities;
 using KubeOps.Operator.Serialization;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -93,7 +93,7 @@ namespace KubeOps.Operator.Commands.Generators
             var result = new List<V1CustomResourceDefinition>();
             foreach (var entityType in GetTypesWithAttribute<KubernetesEntityAttribute>(assembly))
             {
-                var entityDefinition = EntityExtensions.CreateResourceDefinition(entityType);
+                var entityDefinition = CustomEntityDefinitionExtensions.CreateResourceDefinition(entityType);
 
                 var crd = new V1CustomResourceDefinition(
                     new V1CustomResourceDefinitionSpec(),

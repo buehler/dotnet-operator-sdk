@@ -4,6 +4,7 @@ using k8s;
 using k8s.Models;
 using KellermanSoftware.CompareNetObjects;
 using KubeOps.Operator.Entities;
+using KubeOps.Operator.Entities.Extensions;
 
 namespace KubeOps.Operator.Caching
 {

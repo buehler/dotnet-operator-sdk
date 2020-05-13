@@ -5,37 +5,20 @@ using k8s;
 using k8s.Models;
 using KubeOps.Operator.Comparing;
 
-namespace KubeOps.Operator.Entities
+namespace KubeOps.Operator.Entities.Extensions
 {
-    internal static class EntityExtensions
+    internal static class DeepCloneExtensions
     {
-        internal static CustomEntityDefinition CreateResourceDefinition(
-            this IKubernetesObject<V1ObjectMeta> kubernetesEntity) =>
-            CreateResourceDefinition(kubernetesEntity.GetType());
-
-        internal static CustomEntityDefinition CreateResourceDefinition<TResource>()
-            where TResource : IKubernetesObject<V1ObjectMeta> =>
-            CreateResourceDefinition(typeof(TResource));
-
-        internal static CustomEntityDefinition CreateResourceDefinition(Type resourceType)
+        /// <summary>
+        /// Returns a Deep Clone / Deep Copy of an object of type T using a recursive call to the CloneMethod specified above.
+        /// </summary>
+        internal static TResource DeepClone<TResource>(this TResource obj)
+            where TResource : IKubernetesObject<V1ObjectMeta>
         {
-            var attribute = resourceType.GetCustomAttribute<KubernetesEntityAttribute>();
-            if (attribute == null)
-            {
-                throw new ArgumentException($"The Type {resourceType} does not have the kubernetes entity attribute.");
-            }
-
-            var scopeAttribute = resourceType.GetCustomAttribute<EntityScopeAttribute>();
-            var kind = string.IsNullOrWhiteSpace(attribute.Kind) ? resourceType.Name : attribute.Kind;
-
-            return new CustomEntityDefinition(
-                kind,
-                $"{kind}List",
-                attribute.Group,
-                attribute.ApiVersion,
-                kind.ToLower(),
-                string.IsNullOrWhiteSpace(attribute.PluralName) ? $"{kind.ToLower()}s" : attribute.PluralName,
-                scopeAttribute?.Scope ?? default);
+            return (TResource) (DeepClone_Internal(
+                                    obj,
+                                    new Dictionary<object, object>(new ReferenceEqualityComparer())) ??
+                                throw new InvalidCastException());
         }
 
         /// <summary>
@@ -53,18 +36,6 @@ namespace KubeOps.Operator.Entities
         {
             if (type == typeof(string)) return true;
             return (type.IsValueType & type.IsPrimitive);
-        }
-
-        /// <summary>
-        /// Returns a Deep Clone / Deep Copy of an object of type T using a recursive call to the CloneMethod specified above.
-        /// </summary>
-        internal static TResource DeepClone<TResource>(this TResource obj)
-            where TResource : IKubernetesObject<V1ObjectMeta>
-        {
-            return (TResource) (DeepClone_Internal(
-                                    obj,
-                                    new Dictionary<object, object>(new ReferenceEqualityComparer())) ??
-                                throw new InvalidCastException());
         }
 
         private static object? DeepClone_Internal(object? obj, IDictionary<object, object> visited)

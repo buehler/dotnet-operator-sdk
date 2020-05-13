@@ -8,6 +8,7 @@ using k8s;
 using k8s.Models;
 using KubeOps.Operator.Client.LabelSelectors;
 using KubeOps.Operator.Entities;
+using KubeOps.Operator.Entities.Extensions;
 using Microsoft.Rest;
 using Newtonsoft.Json.Linq;
 
@@ -27,7 +28,7 @@ namespace KubeOps.Operator.Client
             string? @namespace = null)
             where TResource : class, IKubernetesObject<V1ObjectMeta>
         {
-            var crd = EntityExtensions.CreateResourceDefinition<TResource>();
+            var crd = CustomEntityDefinitionExtensions.CreateResourceDefinition<TResource>();
             try
             {
                 var result = await (string.IsNullOrWhiteSpace(@namespace)
@@ -51,7 +52,7 @@ namespace KubeOps.Operator.Client
             string? labelSelector = null)
             where TResource : IKubernetesObject<V1ObjectMeta>
         {
-            var crd = EntityExtensions.CreateResourceDefinition<TResource>();
+            var crd = CustomEntityDefinitionExtensions.CreateResourceDefinition<TResource>();
             var result = await (string.IsNullOrWhiteSpace(@namespace)
                 ? ApiClient.ListClusterCustomObjectAsync(
                     crd.Group,
@@ -194,7 +195,7 @@ namespace KubeOps.Operator.Client
         public async Task Delete<TResource>(string name, string? @namespace = null)
             where TResource : IKubernetesObject<V1ObjectMeta>
         {
-            var crd = EntityExtensions.CreateResourceDefinition<TResource>();
+            var crd = CustomEntityDefinitionExtensions.CreateResourceDefinition<TResource>();
             await (string.IsNullOrWhiteSpace(@namespace)
                 ? ApiClient.DeleteClusterCustomObjectAsync(
                     crd.Group,
@@ -218,7 +219,7 @@ namespace KubeOps.Operator.Client
             CancellationToken cancellationToken = default)
             where TResource : IKubernetesObject<V1ObjectMeta>
         {
-            var crd = EntityExtensions.CreateResourceDefinition<TResource>();
+            var crd = CustomEntityDefinitionExtensions.CreateResourceDefinition<TResource>();
             var result = string.IsNullOrWhiteSpace(@namespace)
                 ? ApiClient.ListClusterCustomObjectWithHttpMessagesAsync(
                     crd.Group,
