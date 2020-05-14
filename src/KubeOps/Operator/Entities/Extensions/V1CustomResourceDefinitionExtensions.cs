@@ -44,16 +44,44 @@ namespace KubeOps.Operator.Entities.Extensions
         {
             var betaProps = new V1beta1JSONSchemaProps();
 
-            betaProps.Description = props.Description;
-            betaProps.Type = props.Type;
-            betaProps.Format = props.Format;
-            betaProps.EnumProperty = props.EnumProperty;
             betaProps.Nullable = props.Nullable;
+            betaProps.Description = props.Description;
+
+            if (props.ExternalDocs != null)
+            {
+                betaProps.ExternalDocs = new V1beta1ExternalDocumentation(
+                    props.ExternalDocs.Description,
+                    props.ExternalDocs.Url);
+            }
+
+            betaProps.MaxItems = props.MaxItems;
+            betaProps.MinItems = props.MinItems;
+            betaProps.UniqueItems = props.UniqueItems;
+
+            betaProps.MaxLength = props.MaxLength;
+            betaProps.MinLength = props.MinLength;
+
+            betaProps.MultipleOf = props.MultipleOf;
+
+            betaProps.Pattern = props.Pattern;
+
+            betaProps.Maximum = props.Maximum;
+            betaProps.ExclusiveMaximum = props.ExclusiveMaximum;
+
+            betaProps.Minimum = props.Minimum;
+            betaProps.ExclusiveMinimum = props.ExclusiveMinimum;
+
             if (props.Properties != null)
             {
                 betaProps.Properties = new Dictionary<string, V1beta1JSONSchemaProps>(
                     props.Properties.Select(p => KeyValuePair.Create(p.Key, p.Value.Convert())));
             }
+
+            betaProps.Type = props.Type;
+            betaProps.Format = props.Format;
+            betaProps.Items = (props.Items as V1JSONSchemaProps)?.Convert();
+            betaProps.Required = props.Required;
+            betaProps.EnumProperty = props.EnumProperty;
 
             return betaProps;
         }
