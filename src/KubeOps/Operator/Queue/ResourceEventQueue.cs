@@ -121,7 +121,16 @@ namespace KubeOps.Operator.Queue
                                 @"Delayed event timer elapsed for ""{kind}/{name}"".",
                                 delayedResource.Kind,
                                 delayedResource.Metadata.Name);
-                            _delayedEnqueue.Remove(delayedResource.Metadata.Uid);
+                            try
+                            {
+                                await _semaphore.WaitAsync();
+                                _delayedEnqueue.Remove(delayedResource.Metadata.Uid);
+                            }
+                            finally
+                            {
+                                _semaphore.Release();
+                            }
+
                             var cachedResource = _cache.Get(delayedResource.Metadata.Uid);
                             if (cachedResource == null)
                             {
