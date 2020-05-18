@@ -49,7 +49,7 @@ namespace KubeOps.Operator.Queue
 
         public async Task Start()
         {
-            _logger.LogTrace(@"Event queue startup for type ""{type}"".", typeof(TEntity));
+            _logger.LogDebug(@"Event queue startup for type ""{type}"".", typeof(TEntity));
             _cancellation ??= new CancellationTokenSource();
             _watcher.WatcherEvent += OnWatcherEvent;
             await _watcher.Start();

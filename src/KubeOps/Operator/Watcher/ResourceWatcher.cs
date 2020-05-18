@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using k8s;
@@ -30,7 +31,7 @@ namespace KubeOps.Operator.Watcher
 
         public Task Start()
         {
-            _logger.LogTrace(@"Resource Watcher startup for type ""{type}"".", typeof(TEntity));
+            _logger.LogDebug(@"Resource Watcher startup for type ""{type}"".", typeof(TEntity));
             return WatchResource();
         }
 
@@ -69,7 +70,7 @@ namespace KubeOps.Operator.Watcher
                 }
                 else
                 {
-                    _logger.LogDebug(@"Watcher for type ""{type}"" already running.", typeof(TEntity));
+                    _logger.LogTrace(@"Watcher for type ""{type}"" already running.", typeof(TEntity));
                     return;
                 }
             }
@@ -77,7 +78,7 @@ namespace KubeOps.Operator.Watcher
             _cancellation = new CancellationTokenSource();
             // TODO: namespaced resources
             _watcher = await _client.Watch<TEntity>(
-                TimeSpan.FromHours(1),
+                TimeSpan.FromMinutes(1),
                 OnWatcherEvent,
                 OnException,
                 OnClose,
@@ -119,11 +120,20 @@ namespace KubeOps.Operator.Watcher
 
         private void OnException(Exception e)
         {
-            _logger.LogError(e, @"There was an error while watching the resource ""{resource}"".", typeof(TEntity));
             _cancellation?.Cancel();
             _watcher?.Dispose();
             _watcher = null;
 
+            if (e is TaskCanceledException && e.InnerException is IOException)
+            {
+                _logger.LogTrace(
+                    @"Either the server or the client did close the connection on watcher for resource ""{resource}"". Restart.",
+                    typeof(TEntity));
+                WatchResource().ConfigureAwait(false);
+                return;
+            }
+
+            _logger.LogError(e, @"There was an error while watching the resource ""{resource}"".", typeof(TEntity));
             var backoff = _reconnectHandler.Retry(TimeSpan.FromSeconds(5));
             _logger.LogInformation("Trying to reconnect with exponential backoff {backoff}.", backoff);
         }
@@ -132,7 +142,7 @@ namespace KubeOps.Operator.Watcher
         {
             if (_cancellation != null && !_cancellation.IsCancellationRequested)
             {
-                _logger.LogInformation("The server closed the connection. Trying to reconnect.");
+                _logger.LogDebug("The server closed the connection. Trying to reconnect.");
                 RestartWatcher();
             }
         }
