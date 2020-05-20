@@ -154,7 +154,7 @@ namespace KubeOps.Operator.Client
         {
             if (!(resource is IKubernetesObject<V1ObjectMeta> kubernetesObject))
             {
-                throw new ArgumentException("Resource is not a propper kubernetes object");
+                throw new ArgumentException("Resource is not a proper kubernetes object");
             }
 
             var crd = kubernetesObject.CreateResourceDefinition();
@@ -176,7 +176,10 @@ namespace KubeOps.Operator.Client
             if (result?.ToObject(resource.GetType()) is IKubernetesObject<V1ObjectMeta> parsed)
             {
                 kubernetesObject.Metadata.ResourceVersion = parsed.Metadata.ResourceVersion;
+                return;
             }
+
+            throw new ArgumentException("Could not parse result");
         }
 
         public Task Delete<TResource>(TResource resource)

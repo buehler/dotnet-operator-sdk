@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using k8s;
@@ -7,6 +8,7 @@ using KubeOps.Operator.Caching;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Commands;
 using KubeOps.Operator.DependencyInjection;
+using KubeOps.Operator.Logging;
 using KubeOps.Operator.Queue;
 using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Watcher;
@@ -18,11 +20,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using YamlDotNet.Serialization;
-
-#if !DEBUG
-using System.Linq;
-using KubeOps.Operator.Logging;
-#endif
 
 namespace KubeOps.Operator
 {
@@ -58,25 +55,29 @@ namespace KubeOps.Operator
             var app = new CommandLineApplication<RunOperator>();
 
             _builder.ConfigureLogging(
-                builder =>
+                (hostContext, logging) =>
                 {
-                    builder.ClearProviders();
-#if DEBUG
-                    builder.AddConsole(options => options.TimestampFormat = @"[HH:mm:ss] ");
-#else
-                    if (args.Contains(NoStructuredLogs))
+                    logging.ClearProviders();
+
+                    if (hostContext.HostingEnvironment.IsProduction())
                     {
-                        builder.AddConsole(options =>
+                        if (args.Contains(NoStructuredLogs))
                         {
-                            options.TimestampFormat = @"[dd.MM.yyyy - HH:mm:ss] ";
-                            options.DisableColors = true;
-                        });
+                            logging.AddConsole(options =>
+                            {
+                                options.TimestampFormat = @"[dd.MM.yyyy - HH:mm:ss] ";
+                                options.DisableColors = true;
+                            });
+                        }
+                        else
+                        {
+                            logging.AddStructuredConsole();
+                        }
                     }
                     else
                     {
-                        builder.AddStructuredConsole();
+                        logging.AddConsole(options => options.TimestampFormat = @"[HH:mm:ss] ");
                     }
-#endif
                 });
 
             var host = _builder.Build();
@@ -109,7 +110,7 @@ namespace KubeOps.Operator
                         {
                             ContractResolver = new NamingConvention(),
                             Converters = new List<JsonConverter>
-                                { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
+                                {new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()}},
                         });
                     services.AddTransient(
                         _ => new SerializerBuilder()
@@ -130,13 +131,13 @@ namespace KubeOps.Operator
                                 {
                                     ContractResolver = new NamingConvention(),
                                     Converters = new List<JsonConverter>
-                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } }
+                                        {new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()}}
                                 },
                                 DeserializationSettings =
                                 {
                                     ContractResolver = new NamingConvention(),
                                     Converters = new List<JsonConverter>
-                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } }
+                                        {new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()}}
                                 }
                             };
                         });
