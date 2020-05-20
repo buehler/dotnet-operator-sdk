@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Caching;
+using KubeOps.Operator.Client;
 using KubeOps.Operator.Errors;
 using KubeOps.Operator.Watcher;
 using Microsoft.Extensions.Logging;
@@ -14,7 +15,7 @@ using Microsoft.Extensions.Logging;
 namespace KubeOps.Operator.Queue
 {
     internal class ResourceEventQueue<TEntity> : IResourceEventQueue<TEntity>
-        where TEntity : IKubernetesObject<V1ObjectMeta>
+        where TEntity : class, IKubernetesObject<V1ObjectMeta>
     {
         // TODO: Make configurable
         private const int QueueLimit = 512;
@@ -24,6 +25,7 @@ namespace KubeOps.Operator.Queue
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
         private readonly ILogger<ResourceEventQueue<TEntity>> _logger;
+        private readonly IKubernetesClient _client;
         private readonly IResourceCache<TEntity> _cache;
         private readonly IResourceWatcher<TEntity> _watcher;
 
@@ -39,10 +41,12 @@ namespace KubeOps.Operator.Queue
 
         public ResourceEventQueue(
             ILogger<ResourceEventQueue<TEntity>> logger,
+            IKubernetesClient client,
             IResourceCache<TEntity> cache,
             IResourceWatcher<TEntity> watcher)
         {
             _logger = logger;
+            _client = client;
             _cache = cache;
             _watcher = watcher;
         }
@@ -131,17 +135,20 @@ namespace KubeOps.Operator.Queue
                                 _semaphore.Release();
                             }
 
-                            var cachedResource = _cache.Get(delayedResource.Metadata.Uid);
-                            if (cachedResource == null)
+                            var newResource = await _client.Get<TEntity>(
+                                delayedResource.Metadata.Name,
+                                delayedResource.Metadata.NamespaceProperty);
+
+                            if (newResource == null)
                             {
                                 _logger.LogDebug(
-                                    @"Resource ""{kind}/{name}"" was not present in the cache anymore. Don't execute delayed timer.",
-                                    delayedResource.Kind,
-                                    delayedResource.Metadata.Name);
+                                    @"Resource ""{kind}/{name}"" for enqueued event was not present anymore.",
+                                    resource.Kind,
+                                    resource.Metadata.Name);
                                 return;
                             }
 
-                            await Enqueue(cachedResource);
+                            await Enqueue(newResource);
                         });
                     _delayedEnqueue.Add(resource.Metadata.Uid, timer);
 
