@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Entities.Annotations;
 using Namotion.Reflection;
-using RequiredAttribute = KubeOps.Operator.Entities.Annotations.RequiredAttribute;
 
 namespace KubeOps.Operator.Entities.Extensions
 {
@@ -187,6 +184,10 @@ namespace KubeOps.Operator.Entities.Extensions
                     .Where(prop => prop.GetCustomAttribute<RequiredAttribute>() != null)
                     .Select(prop => CamelCase(prop.Name))
                     .ToList();
+                if (props.Required.Count == 0)
+                {
+                    props.Required = null;
+                }
             }
             else if (type == typeof(int) || Nullable.GetUnderlyingType(type) == typeof(int))
             {
