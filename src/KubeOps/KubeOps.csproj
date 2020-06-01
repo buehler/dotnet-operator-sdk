@@ -28,7 +28,7 @@
         <PackageReference Include="KubernetesClient" Version="2.0.25" />
         <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
         <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="3.0.0" />
-        <PackageReference Include="Namotion.Reflection" Version="1.0.11" />
+        <PackageReference Include="Namotion.Reflection" Version="1.0.12" />
         <PackageReference Include="YamlDotNet" Version="8.1.2" />
     </ItemGroup>
 
