@@ -104,11 +104,6 @@ namespace KubeOps.Operator.Entities.Extensions
                 props.MinItems = items.MinItems;
             }
 
-            if (items != null)
-            {
-                props.UniqueItems = items.UniqueItems;
-            }
-
             // Get length description
             var length = info.GetCustomAttribute<LengthAttribute>();
             if (length != null && length.MaxLength != -1)

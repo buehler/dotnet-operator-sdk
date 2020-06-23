@@ -139,7 +139,6 @@ namespace KubeOps.Test.Operator.Entities
             (field.Items as V1JSONSchemaProps)?.Type?.Should().Be("string");
             field.MaxItems.Should().Be(42);
             field.MinItems.Should().Be(13);
-            field.UniqueItems.Should().BeTrue();
         }
 
         [Fact]

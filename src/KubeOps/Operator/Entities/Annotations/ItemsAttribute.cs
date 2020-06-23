@@ -8,7 +8,5 @@ namespace KubeOps.Operator.Entities.Annotations
         public long MinItems { get; set; } = -1;
 
         public long MaxItems { get; set; } = -1;
-
-        public bool UniqueItems { get; set; }
     }
 }

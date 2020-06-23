@@ -53,7 +53,7 @@ namespace KubeOps.Test.Operator.Entities.TestEntities
         [ExternalDocs("https://google.ch", "Description")]
         public string ExternalDocsWithDescription { get; set; } = string.Empty;
 
-        [Items(MaxItems = 42, MinItems = 13, UniqueItems = true)]
+        [Items(MaxItems = 42, MinItems = 13)]
         public string[] Items { get; set; } = new string[0];
 
         [Length(MinLength = 2, MaxLength = 42)]
