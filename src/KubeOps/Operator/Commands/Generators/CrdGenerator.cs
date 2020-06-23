@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using k8s.Models;
+using KubeOps.Operator.Entities.Annotations;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Entities.Kustomize;
 using KubeOps.Operator.Serialization;
@@ -75,15 +76,16 @@ namespace KubeOps.Operator.Commands.Generators
             return ExitCodes.Success;
         }
 
-        public static IEnumerable<V1CustomResourceDefinition> GenerateCrds()
+        public static IEnumerable<V1CustomResourceDefinition> GenerateCrds(Assembly? assembly = null)
         {
-            var assembly = Assembly.GetEntryAssembly();
+            assembly ??= Assembly.GetEntryAssembly();
             if (assembly == null)
             {
                 throw new Exception("No Entry Assembly found.");
             }
 
             return GetTypesWithAttribute<KubernetesEntityAttribute>(assembly)
+                .Where(type => !type.GetCustomAttributes<IgnoreEntityAttribute>().Any())
                 .Select(EntityToCrdExtensions.CreateCrd);
         }
 

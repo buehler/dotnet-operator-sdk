@@ -47,4 +47,8 @@
         </AssemblyAttribute>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Testing" />
+    </ItemGroup>
+
 </Project>
