@@ -12,6 +12,7 @@ using KubeOps.Operator.Logging;
 using KubeOps.Operator.Queue;
 using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Watcher;
+using KubeOps.Testing;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,64 +24,65 @@ using YamlDotNet.Serialization;
 
 namespace KubeOps.Operator
 {
-    public sealed class KubernetesOperator
+    public class KubernetesOperator
     {
         internal const string NoStructuredLogs = "--no-structured-logs";
         private const string DefaultOperatorName = "KubernetesOperator";
-        private readonly OperatorSettings _operatorSettings;
 
-        private readonly IHostBuilder _builder = Host
+        protected readonly OperatorSettings OperatorSettings;
+
+        protected readonly IList<Action<IServiceCollection>> ServiceConfigurations =
+            new List<Action<IServiceCollection>>();
+
+        protected readonly IHostBuilder Builder = Host
             .CreateDefaultBuilder()
             .UseConsoleLifetime();
 
-        public KubernetesOperator(string? operatorName = null)
+        public KubernetesOperator()
+            : this((Assembly.GetEntryAssembly()?.GetName().Name ?? DefaultOperatorName).ToLowerInvariant())
         {
-            operatorName ??= (operatorName ?? Assembly.GetEntryAssembly()?.GetName().Name ?? DefaultOperatorName)
-                .ToLowerInvariant();
-            _operatorSettings = new OperatorSettings
-            {
-                Name = operatorName,
-            };
+        }
+
+        public KubernetesOperator(string operatorName)
+            : this(
+                new OperatorSettings
+                {
+                    Name = operatorName,
+                })
+        {
         }
 
         public KubernetesOperator(OperatorSettings settings)
         {
-            _operatorSettings = settings;
+            OperatorSettings = settings;
         }
 
-        public Task<int> Run(string[] args)
+        public KubernetesTestOperator ToKubernetesTestOperator()
         {
-            ConfigureRequiredServices();
+            var op = new KubernetesTestOperator
+            {
+                OperatorSettings = { Name = OperatorSettings.Name }
+            };
+
+            foreach (var config in ServiceConfigurations)
+            {
+                op.ConfigureServices(config);
+            }
+
+            return op;
+        }
+
+        public Task<int> Run() => Run(new string[0]);
+
+        public virtual Task<int> Run(string[] args)
+        {
+            ConfigureOperatorServices();
 
             var app = new CommandLineApplication<RunOperator>();
 
-            _builder.ConfigureLogging(
-                (hostContext, logging) =>
-                {
-                    logging.ClearProviders();
+            ConfigureOperatorLogging(args);
 
-                    if (hostContext.HostingEnvironment.IsProduction())
-                    {
-                        if (args.Contains(NoStructuredLogs))
-                        {
-                            logging.AddConsole(options =>
-                            {
-                                options.TimestampFormat = @"[dd.MM.yyyy - HH:mm:ss] ";
-                                options.DisableColors = true;
-                            });
-                        }
-                        else
-                        {
-                            logging.AddStructuredConsole();
-                        }
-                    }
-                    else
-                    {
-                        logging.AddConsole(options => options.TimestampFormat = @"[HH:mm:ss] ");
-                    }
-                });
-
-            var host = _builder.Build();
+            var host = Builder.Build();
 
             app
                 .Conventions
@@ -95,22 +97,59 @@ namespace KubeOps.Operator
 
         public KubernetesOperator ConfigureServices(Action<IServiceCollection> configuration)
         {
-            _builder.ConfigureServices(configuration);
+            ServiceConfigurations.Add(configuration);
             return this;
         }
 
+        protected virtual void ConfigureOperatorServices()
+        {
+            ConfigureRequiredServices();
+            foreach (var config in ServiceConfigurations)
+            {
+                Builder.ConfigureServices(config);
+            }
+        }
+
+        protected virtual void ConfigureOperatorLogging(IEnumerable<string> args) =>
+            Builder.ConfigureLogging(
+                (hostContext, logging) =>
+                {
+                    logging.ClearProviders();
+
+                    if (hostContext.HostingEnvironment.IsProduction())
+                    {
+                        if (args.Contains(NoStructuredLogs))
+                        {
+                            logging.AddConsole(
+                                options =>
+                                {
+                                    options.TimestampFormat = @"[dd.MM.yyyy - HH:mm:ss] ";
+                                    options.DisableColors = true;
+                                });
+                        }
+                        else
+                        {
+                            logging.AddStructuredConsole();
+                        }
+                    }
+                    else
+                    {
+                        logging.AddConsole(options => options.TimestampFormat = @"[HH:mm:ss] ");
+                    }
+                });
+
         private void ConfigureRequiredServices() =>
-            _builder.ConfigureServices(
+            Builder.ConfigureServices(
                 services =>
                 {
-                    services.AddSingleton(_operatorSettings);
+                    services.AddSingleton(OperatorSettings);
 
                     services.AddTransient(
                         _ => new JsonSerializerSettings
                         {
                             ContractResolver = new NamingConvention(),
                             Converters = new List<JsonConverter>
-                                {new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()}},
+                                { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
                         });
                     services.AddTransient(
                         _ => new SerializerBuilder()
@@ -131,13 +170,13 @@ namespace KubeOps.Operator
                                 {
                                     ContractResolver = new NamingConvention(),
                                     Converters = new List<JsonConverter>
-                                        {new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()}}
+                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } }
                                 },
                                 DeserializationSettings =
                                 {
                                     ContractResolver = new NamingConvention(),
                                     Converters = new List<JsonConverter>
-                                        {new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()}}
+                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } }
                                 }
                             };
                         });
