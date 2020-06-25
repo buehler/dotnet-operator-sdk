@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
 using KubeOps.Operator.Controller;
+using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Rbac;
 using KubeOps.TestOperator.Entities;
+using KubeOps.TestOperator.Finalizer;
 using KubeOps.TestOperator.TestManager;
 
 namespace KubeOps.TestOperator.Controller
@@ -20,6 +22,7 @@ namespace KubeOps.TestOperator.Controller
         protected override async Task<TimeSpan?> Created(TestEntity resource)
         {
             _manager.Created(resource);
+            await resource.RegisterFinalizer<TestEntityFinalizer, TestEntity>();
             return await base.Created(resource);
         }
 

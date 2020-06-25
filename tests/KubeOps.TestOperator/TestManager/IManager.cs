@@ -13,5 +13,7 @@ namespace KubeOps.TestOperator.TestManager
         void NotModified(TestEntity entity);
 
         void Deleted(TestEntity entity);
+
+        void Finalized(TestEntity entity);
     }
 }

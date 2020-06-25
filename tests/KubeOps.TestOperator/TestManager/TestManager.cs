@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using KubeOps.TestOperator.Entities;
+﻿using KubeOps.TestOperator.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace KubeOps.TestOperator.TestManager
@@ -37,6 +35,11 @@ namespace KubeOps.TestOperator.TestManager
         public void Deleted(TestEntity entity)
         {
             _logger.LogDebug(nameof(Deleted));
+        }
+
+        public void Finalized(TestEntity entity)
+        {
+            _logger.LogDebug(nameof(Finalized));
         }
     }
 }

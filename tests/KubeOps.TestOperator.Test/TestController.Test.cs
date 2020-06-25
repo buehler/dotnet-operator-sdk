@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using KubeOps.Testing;
 using KubeOps.TestOperator.Entities;
 using KubeOps.TestOperator.TestManager;
@@ -9,9 +7,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 using Xunit;
 
-namespace KubeOps.TestOperator.Test.Controller
+namespace KubeOps.TestOperator.Test
 {
-    public class TestControllerTest : IDisposable
+    public class TestControllerTest
     {
         private readonly Mock<IManager> _mock = new Mock<IManager>();
 
@@ -35,6 +33,7 @@ namespace KubeOps.TestOperator.Test.Controller
             await _operator.Run();
             _mock.Setup(o => o.Created(It.IsAny<TestEntity>()));
             _mock.Verify(o => o.Created(It.IsAny<TestEntity>()), Times.Never);
+            _operator.MockedClient.UpdateResult = new TestEntity();
             var queue = _operator.GetMockedEventQueue<TestEntity>();
             queue.Created(new TestEntity());
             _mock.Verify(o => o.Created(It.IsAny<TestEntity>()), Times.Once);
@@ -82,11 +81,6 @@ namespace KubeOps.TestOperator.Test.Controller
             var queue = _operator.GetMockedEventQueue<TestEntity>();
             queue.StatusUpdated(new TestEntity());
             _mock.Verify(o => o.StatusModified(It.IsAny<TestEntity>()), Times.Once);
-        }
-
-        public void Dispose()
-        {
-            _operator.Dispose();
         }
     }
 }

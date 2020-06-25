@@ -38,6 +38,8 @@ namespace KubeOps.Operator
             .CreateDefaultBuilder()
             .UseConsoleLifetime();
 
+        protected IHost? OperatorHost { get; set; }
+
         public KubernetesOperator()
             : this((Assembly.GetEntryAssembly()?.GetName().Name ?? DefaultOperatorName).ToLowerInvariant())
         {
@@ -82,15 +84,15 @@ namespace KubeOps.Operator
 
             ConfigureOperatorLogging(args);
 
-            var host = Builder.Build();
+            OperatorHost = Builder.Build();
 
             app
                 .Conventions
                 .UseDefaultConventions()
-                .UseConstructorInjection(host.Services);
+                .UseConstructorInjection(OperatorHost.Services);
 
-            DependencyInjector.Services = host.Services;
-            JsonConvert.DefaultSettings = () => host.Services.GetRequiredService<JsonSerializerSettings>();
+            DependencyInjector.Services = OperatorHost.Services;
+            JsonConvert.DefaultSettings = () => OperatorHost.Services.GetRequiredService<JsonSerializerSettings>();
 
             return app.ExecuteAsync(args);
         }
