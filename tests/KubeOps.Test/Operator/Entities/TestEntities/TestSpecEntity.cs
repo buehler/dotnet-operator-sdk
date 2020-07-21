@@ -2,9 +2,13 @@
 using k8s.Models;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
+using KubeOps.Operator.Rbac;
+
+[assembly: RbacRole("test-operator")]
 
 namespace KubeOps.Test.Operator.Entities.TestEntities
 {
+
     [Description("This is the Spec Class Description")]
     public class TestSpecEntitySpec
     {

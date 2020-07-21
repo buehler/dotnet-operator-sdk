@@ -15,4 +15,12 @@ namespace KubeOps.Operator.Rbac
 
         public RbacVerb Verbs { get; set; }
     }
+
+    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
+    public class RbacRoleAttribute : Attribute
+    {
+        public RbacRoleAttribute(string prefix) => Prefix = prefix;
+
+        public string Prefix { get; }
+    }
 }
