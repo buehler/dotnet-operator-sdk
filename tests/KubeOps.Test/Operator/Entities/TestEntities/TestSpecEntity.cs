@@ -4,7 +4,8 @@ using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
 using KubeOps.Operator.Rbac;
 
-[assembly: RbacRole("test-operator")]
+//[assembly: RbacRole("test-operator")]
+[assembly: OperatorName("test")]
 
 namespace KubeOps.Test.Operator.Entities.TestEntities
 {

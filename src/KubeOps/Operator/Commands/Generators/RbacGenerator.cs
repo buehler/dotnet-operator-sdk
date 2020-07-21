@@ -69,7 +69,9 @@ namespace KubeOps.Operator.Commands.Generators
             return ExitCodes.Success;
         }
 
-        public static string GetRbacRole(Assembly? assembly) => assembly?.GetCustomAttribute<RbacRoleAttribute>()?.Prefix ?? "operator-role";
+        public static string GetRbacRole(Assembly? assembly) => 
+            assembly?.GetCustomAttribute<RbacRoleAttribute>()?.Prefix 
+            ?? OperatorGenerator.OperatorName(assembly) + "-role";
 
         public static V1ClusterRoleBinding GenerateRoleBinding(string rbacRole)
         {

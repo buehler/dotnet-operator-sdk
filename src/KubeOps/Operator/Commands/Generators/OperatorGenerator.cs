@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using k8s.Models;
 using KubeOps.Operator.Entities.Kustomize;
+using KubeOps.Operator.Rbac;
 using KubeOps.Operator.Serialization;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -19,12 +21,16 @@ namespace KubeOps.Operator.Commands.Generators
             _serializer = serializer;
         }
 
+        public static string OperatorName(Assembly? assembly) => assembly?.GetCustomAttribute<OperatorNameAttribute>()?.Name ?? "operator";
+
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
+            var name = OperatorName(Assembly.GetEntryAssembly());
+
             var output = _serializer.Serialize(new V1Deployment(
                 $"{V1Deployment.KubeGroup}/{V1Deployment.KubeApiVersion}",
                 V1Deployment.KubeKind,
-                new V1ObjectMeta(name: "operator"),
+                new V1ObjectMeta(name: name),
                 new V1DeploymentSpec
                 {
                     Replicas = 1,
@@ -38,8 +44,8 @@ namespace KubeOps.Operator.Commands.Generators
                             {
                                 new V1Container
                                 {
-                                    Image = "operator",
-                                    Name = "operator",
+                                    Image = name,
+                                    Name = "operator", // this name is just the container name, which makes sense to be a fixed string
                                     Resources = new V1ResourceRequirements
                                     {
                                         Requests = new Dictionary<string, ResourceQuantity>

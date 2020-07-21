@@ -16,6 +16,22 @@ namespace KubeOps.Operator.Rbac
         public RbacVerb Verbs { get; set; }
     }
 
+
+
+    /// <summary>
+    /// This attribute controls the operator's role name, primarily for the generation of kubernetes yamls
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
+    public class OperatorNameAttribute : Attribute
+    {
+        public OperatorNameAttribute(string name) => Name = name;
+
+        public string Name { get; }
+    }
+
+    /// <summary>
+    /// This attribute controls the operator's role name
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
     public class RbacRoleAttribute : Attribute
     {
