@@ -14,6 +14,7 @@ using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Watcher;
 using KubeOps.Testing;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -95,6 +96,12 @@ namespace KubeOps.Operator
             JsonConvert.DefaultSettings = () => OperatorHost.Services.GetRequiredService<JsonSerializerSettings>();
 
             return app.ExecuteAsync(args);
+        }
+
+        public KubernetesOperator ConfigureWebHost(Action<IWebHostBuilder> builder)
+        {
+            Builder.ConfigureWebHostDefaults(builder);
+            return this;
         }
 
         public KubernetesOperator ConfigureServices(Action<IServiceCollection> configuration)
