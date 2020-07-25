@@ -17,7 +17,7 @@ namespace KubeOps.Test.Operator.Entities
         {
             var result = RbacGenerator.GetRbacRole(_testSpecAssembly);
 
-            Assert.Equal("test-role", result);
+            Assert.Equal("test-operator-role", result);
         }
 
         [Fact]

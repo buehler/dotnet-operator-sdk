@@ -48,6 +48,7 @@ namespace KubeOps.Operator.Entities.Extensions
                 ListKind = entityDefinition.ListKind,
                 Singular = entityDefinition.Singular,
                 Plural = entityDefinition.Plural,
+                ShortNames = entityDefinition.ShortNames
             };
             spec.Scope = entityDefinition.Scope.ToString();
 

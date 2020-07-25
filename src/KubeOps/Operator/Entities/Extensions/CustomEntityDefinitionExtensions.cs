@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using k8s;
 using k8s.Models;
@@ -26,6 +27,9 @@ namespace KubeOps.Operator.Entities.Extensions
             var scopeAttribute = resourceType.GetCustomAttribute<EntityScopeAttribute>();
             var kind = string.IsNullOrWhiteSpace(attribute.Kind) ? resourceType.Name : attribute.Kind;
 
+            var shortNames = resourceType.GetCustomAttributes<EntityShortNameAttribute>()
+                .Select(a => a.ShortName).ToList();
+
             return new CustomEntityDefinition(
                 kind,
                 $"{kind}List",
@@ -33,7 +37,8 @@ namespace KubeOps.Operator.Entities.Extensions
                 attribute.ApiVersion,
                 kind.ToLower(),
                 string.IsNullOrWhiteSpace(attribute.PluralName) ? $"{kind.ToLower()}s" : attribute.PluralName,
-                scopeAttribute?.Scope ?? default);
+                scopeAttribute?.Scope ?? default,
+                shortNames);
         }
     }
 }

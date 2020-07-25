@@ -28,6 +28,7 @@ namespace KubeOps.Test.Operator.Entities
             crd.Spec.Names.Singular.Should().Be(ced.Singular);
             crd.Spec.Names.Plural.Should().Be(ced.Plural);
             crd.Spec.Scope.Should().Be(ced.Scope.ToString());
+            crd.Spec.Names.ShortNames.Should().Equal(ced.ShortNames);
         }
 
         [Fact]

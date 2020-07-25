@@ -4,8 +4,7 @@ using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
 using KubeOps.Operator.Rbac;
 
-//[assembly: RbacRole("test-operator")]
-[assembly: OperatorName("test")]
+[assembly: OperatorSpec("test-operator", ImagePullSecretName = "test-secret-name", ContainerRegistry = "some.azurecr.io")]
 
 namespace KubeOps.Test.Operator.Entities.TestEntities
 {
@@ -87,6 +86,7 @@ namespace KubeOps.Test.Operator.Entities.TestEntities
     }
 
     [KubernetesEntity(Group = "kubeops.test.dev", ApiVersion = "V1")]
+    [EntityShortName("t")]
     public class TestSpecEntity : CustomKubernetesEntity<TestSpecEntitySpec>
     {
     }

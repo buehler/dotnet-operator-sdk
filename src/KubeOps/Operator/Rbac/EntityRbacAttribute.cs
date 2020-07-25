@@ -22,11 +22,17 @@ namespace KubeOps.Operator.Rbac
     /// This attribute controls the operator's role name, primarily for the generation of kubernetes yamls
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
-    public class OperatorNameAttribute : Attribute
+    public class OperatorSpecAttribute : Attribute
     {
-        public OperatorNameAttribute(string name) => Name = name;
+        public OperatorSpecAttribute(string name) => Name = name;
 
         public string Name { get; }
+
+        /// <summary>
+        /// For custom container registries, like something.azurecr.io this will be prefixed on the image name for the generated deployment
+        /// </summary>
+        public string? ContainerRegistry { get; set; }
+        public string? ImagePullSecretName { get; set; }
     }
 
     /// <summary>

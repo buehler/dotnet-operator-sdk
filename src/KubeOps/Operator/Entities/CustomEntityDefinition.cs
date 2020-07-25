@@ -1,4 +1,6 @@
-﻿namespace KubeOps.Operator.Entities
+﻿using System.Collections.Generic;
+
+namespace KubeOps.Operator.Entities
 {
     internal readonly struct CustomEntityDefinition
     {
@@ -16,6 +18,8 @@
 
         public readonly EntityScope Scope;
 
+        public readonly IList<string>? ShortNames;
+
         public CustomEntityDefinition(
             string kind,
             string listKind,
@@ -23,7 +27,8 @@
             string version,
             string singular,
             string plural,
-            EntityScope scope)
+            EntityScope scope,
+            IList<string>? shortNames = null)
         {
             Kind = kind;
             ListKind = listKind;
@@ -32,6 +37,7 @@
             Singular = singular;
             Plural = plural;
             Scope = scope;
+            ShortNames = shortNames;
         }
     }
 }
