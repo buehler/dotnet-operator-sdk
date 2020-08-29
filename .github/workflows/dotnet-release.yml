@@ -13,7 +13,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 3.1.101
+          dotnet-version: 3.1.401
       - name: Test
         run: ./build.sh --target test --no-logo
   semantic-release:
@@ -26,7 +26,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 3.1.101
+          dotnet-version: 3.1.401
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v2
         with:
