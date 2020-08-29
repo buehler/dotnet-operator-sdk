@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using k8s;
 using k8s.Models;
 using KellermanSoftware.CompareNetObjects;
-using KubeOps.Operator.Entities;
+using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Entities.Extensions;
 
 namespace KubeOps.Operator.Caching
@@ -23,7 +24,9 @@ namespace KubeOps.Operator.Caching
                 MembersToIgnore = new List<string> { ResourceVersion },
             });
 
-        private readonly IDictionary<string, TEntity> _cache = new Dictionary<string, TEntity>();
+        private readonly IDictionary<string, TEntity> _cache = new ConcurrentDictionary<string, TEntity>();
+
+        private readonly ResourceCacheMetrics<TEntity> _metrics = new ResourceCacheMetrics<TEntity>();
 
         public TEntity Get(string id) => _cache[id];
 
@@ -40,6 +43,8 @@ namespace KubeOps.Operator.Caching
                 _cache[resource.Metadata.Uid] = resource.DeepClone();
             }
 
+            _metrics.CachedItemsSize.Set(_cache.Count);
+            _metrics.CachedItemsSummary.Observe(_cache.Count);
             return resource;
         }
 
@@ -72,12 +77,22 @@ namespace KubeOps.Operator.Caching
 
         public void Remove(TEntity resource) => Remove(resource.Metadata.Uid);
 
-        public void Clear() => _cache.Clear();
+        public void Clear()
+        {
+            _cache.Clear();
+            _metrics.CachedItemsSize.Set(_cache.Count);
+            _metrics.CachedItemsSummary.Observe(_cache.Count);
+        }
 
         private bool Exists(TEntity resource) => _cache.ContainsKey(resource.Metadata.Uid);
 
         private bool Exists(string id) => _cache.ContainsKey(id);
 
-        private void Remove(string resourceUid) => _cache.Remove(resourceUid);
+        private void Remove(string resourceUid)
+        {
+            _cache.Remove(resourceUid);
+            _metrics.CachedItemsSize.Set(_cache.Count);
+            _metrics.CachedItemsSummary.Observe(_cache.Count);
+        }
     }
 }

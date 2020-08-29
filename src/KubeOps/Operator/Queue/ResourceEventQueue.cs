@@ -8,6 +8,7 @@ using k8s;
 using k8s.Models;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Client;
+using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Errors;
 using KubeOps.Operator.Watcher;
 using Microsoft.Extensions.Logging;
@@ -17,8 +18,9 @@ namespace KubeOps.Operator.Queue
     internal class ResourceEventQueue<TEntity> : IResourceEventQueue<TEntity>
         where TEntity : class, IKubernetesObject<V1ObjectMeta>
     {
-        // TODO: Make configurable
         private const int QueueLimit = 512;
+
+        private int _queueSize;
 
         private readonly Channel<(ResourceEventType type, TEntity resource)> _queue =
             Channel.CreateBounded<(ResourceEventType type, TEntity resource)>(QueueLimit);
@@ -34,6 +36,8 @@ namespace KubeOps.Operator.Queue
 
         private readonly ConcurrentDictionary<string, ExponentialBackoffHandler> _errorHandlers =
             new ConcurrentDictionary<string, ExponentialBackoffHandler>();
+
+        private readonly ResourceEventQueueMetrics<TEntity> _metrics = new ResourceEventQueueMetrics<TEntity>();
 
         private CancellationTokenSource? _cancellation;
 
@@ -80,6 +84,7 @@ namespace KubeOps.Operator.Queue
 
             _delayedEnqueue.Clear();
             _errorHandlers.Clear();
+            _metrics.Running.Set(0);
         }
 
         public void Dispose()
@@ -129,12 +134,15 @@ namespace KubeOps.Operator.Queue
                             {
                                 await _semaphore.WaitAsync();
                                 _delayedEnqueue.Remove(delayedResource.Metadata.Uid);
+                                _metrics.DelayedQueueSize.Set(_delayedEnqueue.Count);
+                                _metrics.DelayedQueueSizeSummary.Observe(_delayedEnqueue.Count);
                             }
                             finally
                             {
                                 _semaphore.Release();
                             }
 
+                            // TODO: is this really necessary?
                             var newResource = await _client.Get<TEntity>(
                                 delayedResource.Metadata.Name,
                                 delayedResource.Metadata.NamespaceProperty);
@@ -159,6 +167,10 @@ namespace KubeOps.Operator.Queue
                         resource.Metadata.Name);
                     timer.Start();
 
+                    _metrics.RequeuedEvents.Inc();
+                    _metrics.DelayedQueueSize.Set(_delayedEnqueue.Count);
+                    _metrics.DelayedQueueSizeSummary.Observe(_delayedEnqueue.Count);
+
                     return;
                 }
 
@@ -174,18 +186,23 @@ namespace KubeOps.Operator.Queue
                     case CacheComparisonResult.New when resource.Metadata.DeletionTimestamp != null:
                     case CacheComparisonResult.Modified when resource.Metadata.DeletionTimestamp != null:
                     case CacheComparisonResult.NotModified when resource.Metadata.DeletionTimestamp != null:
+                        _metrics.FinalizingEvents.Inc();
                         await EnqueueEvent(ResourceEventType.Finalizing, resource);
                         break;
                     case CacheComparisonResult.New:
+                        _metrics.CreatedEvents.Inc();
                         await EnqueueEvent(ResourceEventType.Created, resource);
                         break;
                     case CacheComparisonResult.Modified:
+                        _metrics.UpdatedEvents.Inc();
                         await EnqueueEvent(ResourceEventType.Updated, resource);
                         break;
                     case CacheComparisonResult.StatusModified:
+                        _metrics.StatusUpdatedEvents.Inc();
                         await EnqueueEvent(ResourceEventType.StatusUpdated, resource);
                         break;
                     case CacheComparisonResult.NotModified:
+                        _metrics.NotModifiedEvents.Inc();
                         await EnqueueEvent(ResourceEventType.NotModified, resource);
                         break;
                 }
@@ -198,6 +215,7 @@ namespace KubeOps.Operator.Queue
 
         public void EnqueueErrored(ResourceEventType type, TEntity resource)
         {
+            _metrics.ErroredEvents.Inc();
             var handler = _errorHandlers.GetOrAdd(
                 resource.Metadata.Uid,
                 _ =>
@@ -212,7 +230,8 @@ namespace KubeOps.Operator.Queue
                             await EnqueueEvent(type, resource);
                         });
                 });
-
+            _metrics.ErrorQueueSize.Set(_errorHandlers.Count);
+            _metrics.ErrorQueueSizeSummary.Observe(_errorHandlers.Count);
 
             var backoff = handler.Retry();
             _logger.LogDebug(
@@ -225,10 +244,14 @@ namespace KubeOps.Operator.Queue
 
         public void ClearError(TEntity resource)
         {
-            if (_errorHandlers.Remove(resource.Metadata.Uid, out var handler))
+            if (!_errorHandlers.Remove(resource.Metadata.Uid, out var handler))
             {
-                handler.Dispose();
+                return;
             }
+
+            _metrics.ErrorQueueSize.Set(_errorHandlers.Count);
+            _metrics.ErrorQueueSizeSummary.Observe(_errorHandlers.Count);
+            handler.Dispose();
         }
 
         private async void OnWatcherEvent(object? _, (WatchEventType type, TEntity resource) args)
@@ -264,6 +287,7 @@ namespace KubeOps.Operator.Queue
                 _semaphore.Release();
             }
 
+            _metrics.DeletedEvents.Inc();
             await EnqueueEvent(ResourceEventType.Deleted, resource);
         }
 
@@ -294,12 +318,17 @@ namespace KubeOps.Operator.Queue
                     @"Queue for type ""{type}"" could not write into output channel.",
                     typeof(TEntity));
             }
+
+            _metrics.WrittenQueueEvents.Inc();
+            _metrics.QueueSizeSummary.Observe(++_queueSize);
+            _metrics.QueueSize.Set(_queueSize);
         }
 
         private async Task ReadQueue()
         {
             _logger.LogTrace(@"Start queue reader for type ""{type}"".", typeof(TEntity));
 
+            _metrics.Running.Set(1);
             while (_cancellation != null &&
                    !_cancellation.IsCancellationRequested &&
                    await _queue.Reader.WaitToReadAsync(_cancellation.Token))
@@ -313,6 +342,9 @@ namespace KubeOps.Operator.Queue
                     @"Read event ""{type}"" for resource ""{resource}"".",
                     message.type,
                     message.resource);
+                _metrics.ReadQueueEvents.Inc();
+                _metrics.QueueSizeSummary.Observe(--_queueSize);
+                _metrics.QueueSize.Set(_queueSize);
                 ResourceEvent?.Invoke(this, message);
             }
         }

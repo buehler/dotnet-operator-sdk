@@ -15,6 +15,11 @@ namespace KubeOps.Testing
 {
     public class KubernetesTestOperator : KubernetesOperator
     {
+        public KubernetesTestOperator(OperatorSettings settings)
+            : base(settings)
+        {
+        }
+
         public IServiceProvider Services { get; private set; } = new ServiceCollection().BuildServiceProvider();
 
         public MockKubernetesClient MockedClient =>

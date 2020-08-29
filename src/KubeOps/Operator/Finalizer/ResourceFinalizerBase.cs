@@ -5,7 +5,6 @@ using k8s;
 using k8s.Models;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.DependencyInjection;
-using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

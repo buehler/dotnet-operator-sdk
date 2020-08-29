@@ -29,6 +29,7 @@ namespace KubeOps.Operator.Controller
 
         private readonly ILogger<ResourceControllerBase<TEntity>> _logger;
         private readonly IResourceEventQueue<TEntity> _eventQueue;
+        private bool _running;
 
         protected ResourceControllerBase()
             : this(
@@ -48,6 +49,8 @@ namespace KubeOps.Operator.Controller
             Client = client;
         }
 
+        bool IResourceController.Running => _running;
+
         protected IKubernetesClient Client { get; }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -56,6 +59,7 @@ namespace KubeOps.Operator.Controller
 
             _eventQueue.ResourceEvent += OnResourceEvent;
             await _eventQueue.Start();
+            _running = true;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
@@ -64,7 +68,7 @@ namespace KubeOps.Operator.Controller
 
             _eventQueue.Stop();
             _eventQueue.ResourceEvent -= OnResourceEvent;
-
+            _running = false;
             return Task.CompletedTask;
         }
 

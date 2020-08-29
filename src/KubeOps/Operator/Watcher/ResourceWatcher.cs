@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Client;
+using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Errors;
 using Microsoft.Extensions.Logging;
 
@@ -16,6 +17,7 @@ namespace KubeOps.Operator.Watcher
         private readonly ILogger<ResourceWatcher<TEntity>> _logger;
         private readonly IKubernetesClient _client;
         private readonly ExponentialBackoffHandler _reconnectHandler;
+        private readonly ResourceWatcherMetrics<TEntity> _metrics = new ResourceWatcherMetrics<TEntity>();
 
         private CancellationTokenSource? _cancellation;
         private Watcher<TEntity>? _watcher;
@@ -84,6 +86,7 @@ namespace KubeOps.Operator.Watcher
                 OnClose,
                 null,
                 _cancellation.Token);
+            _metrics.Running.Set(1);
         }
 
         private async void RestartWatcher()
@@ -102,6 +105,8 @@ namespace KubeOps.Operator.Watcher
                 type,
                 resource.Kind,
                 resource.Metadata.Name);
+
+            _metrics.WatchedEvents.Inc();
 
             switch (type)
             {
@@ -124,6 +129,9 @@ namespace KubeOps.Operator.Watcher
             _watcher?.Dispose();
             _watcher = null;
 
+            _metrics.Running.Set(0);
+            _metrics.WatcherExceptions.Inc();
+
             if (e is TaskCanceledException && e.InnerException is IOException)
             {
                 _logger.LogTrace(
@@ -140,6 +148,9 @@ namespace KubeOps.Operator.Watcher
 
         private void OnClose()
         {
+            _metrics.Running.Set(0);
+            _metrics.WatcherClosed.Inc();
+
             if (_cancellation != null && !_cancellation.IsCancellationRequested)
             {
                 _logger.LogDebug("The server closed the connection. Trying to reconnect.");

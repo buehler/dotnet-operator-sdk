@@ -14,6 +14,7 @@ using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Watcher;
 using KubeOps.Testing;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -61,10 +62,7 @@ namespace KubeOps.Operator
 
         public KubernetesTestOperator ToKubernetesTestOperator()
         {
-            var op = new KubernetesTestOperator
-            {
-                OperatorSettings = { Name = OperatorSettings.Name }
-            };
+            var op = new KubernetesTestOperator(OperatorSettings);
 
             foreach (var config in ServiceConfigurations)
             {
@@ -84,7 +82,16 @@ namespace KubeOps.Operator
 
             ConfigureOperatorLogging(args);
 
-            OperatorHost = Builder.Build();
+            OperatorHost = Builder
+                .ConfigureWebHostDefaults(webBuilder => webBuilder
+                    .UseStartup<OperatorStartup>()
+                    .ConfigureKestrel(
+                        kestrel =>
+                        {
+                            kestrel.AddServerHeader = false;
+                            kestrel.ListenAnyIP(OperatorSettings.Port);
+                        }))
+                .Build();
 
             app
                 .Conventions
