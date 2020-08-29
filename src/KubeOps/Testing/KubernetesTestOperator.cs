@@ -32,8 +32,10 @@ namespace KubeOps.Testing
 
         public override Task<int> Run(string[] args)
         {
-            base.Run(args).ConfigureAwait(false);
-            Services = OperatorHost?.Services ?? throw new ArgumentException("Host not built.");
+            base.Run(
+                args,
+                () => Services = OperatorHost?.Services ?? throw new ArgumentException("Host not built."))
+                .ConfigureAwait(false);
             return Task.FromResult(0);
         }
 

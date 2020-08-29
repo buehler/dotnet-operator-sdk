@@ -55,7 +55,6 @@ class Build : NukeBuild
         .Executes(() => DotNetTest(s => s
             .SetProjectFile(Solution)
             .SetConfiguration(Configuration)
-            .SetVerbosity(DotNetVerbosity.Detailed)
             .SetProperty("CollectCoverage", true)
             .EnableNoBuild()));
 

@@ -37,7 +37,6 @@ namespace KubeOps.TestOperator.Test
             var queue = _operator.GetMockedEventQueue<TestEntity>();
             queue.Created(new TestEntity());
             _mock.Verify(o => o.Created(It.IsAny<TestEntity>()), Times.Once);
-            await _operator.DisposeAsync();
         }
 
         [Fact]
@@ -49,7 +48,6 @@ namespace KubeOps.TestOperator.Test
             var queue = _operator.GetMockedEventQueue<TestEntity>();
             queue.Updated(new TestEntity());
             _mock.Verify(o => o.Updated(It.IsAny<TestEntity>()), Times.Once);
-            await _operator.DisposeAsync();
         }
 
         [Fact]

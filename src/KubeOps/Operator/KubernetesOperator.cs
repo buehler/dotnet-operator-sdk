@@ -75,6 +75,9 @@ namespace KubeOps.Operator
         public Task<int> Run() => Run(new string[0]);
 
         public virtual Task<int> Run(string[] args)
+            => Run(args, null);
+
+        protected Task<int> Run(string[] args, Action? onHostBuilt)
         {
             ConfigureOperatorServices();
 
@@ -100,6 +103,8 @@ namespace KubeOps.Operator
 
             DependencyInjector.Services = OperatorHost.Services;
             JsonConvert.DefaultSettings = () => OperatorHost.Services.GetRequiredService<JsonSerializerSettings>();
+
+            onHostBuilt?.Invoke();
 
             return app.ExecuteAsync(args);
         }
