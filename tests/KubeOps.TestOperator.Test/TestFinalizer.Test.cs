@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using k8s.Models;
 using KubeOps.Testing;
 using KubeOps.TestOperator.Entities;
@@ -11,7 +12,7 @@ using Xunit;
 
 namespace KubeOps.TestOperator.Test
 {
-    public class TestFinalizerTest
+    public class TestFinalizerTest : IDisposable
     {
         private readonly Mock<IManager> _mock = new Mock<IManager>();
 
@@ -46,6 +47,11 @@ namespace KubeOps.TestOperator.Test
                     }
                 });
             _mock.Verify(o => o.Finalized(It.IsAny<TestEntity>()), Times.Once);
+        }
+
+        public void Dispose()
+        {
+            _operator.Dispose();
         }
     }
 }

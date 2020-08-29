@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using KubeOps.Testing;
 using KubeOps.TestOperator.Entities;
 using KubeOps.TestOperator.TestManager;
@@ -9,7 +10,7 @@ using Xunit;
 
 namespace KubeOps.TestOperator.Test
 {
-    public class TestControllerTest
+    public class TestControllerTest: IDisposable
     {
         private readonly Mock<IManager> _mock = new Mock<IManager>();
 
@@ -81,6 +82,11 @@ namespace KubeOps.TestOperator.Test
             var queue = _operator.GetMockedEventQueue<TestEntity>();
             queue.StatusUpdated(new TestEntity());
             _mock.Verify(o => o.StatusModified(It.IsAny<TestEntity>()), Times.Once);
+        }
+
+        public void Dispose()
+        {
+            _operator.Dispose();
         }
     }
 }
