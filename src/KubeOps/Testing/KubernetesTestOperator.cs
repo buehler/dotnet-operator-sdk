@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Testing
 {
-    public class KubernetesTestOperator : KubernetesOperator, IDisposable
+    public class KubernetesTestOperator : KubernetesOperator, IAsyncDisposable
     {
         public KubernetesTestOperator(OperatorSettings settings)
             : base(settings)
@@ -32,18 +32,21 @@ namespace KubeOps.Testing
 
         public override Task<int> Run(string[] args)
         {
-            base.Run(args).ConfigureAwait(false);
-            Services = OperatorHost?.Services ?? throw new ArgumentException("Host not built.");
+            base.Run(
+                args,
+                () => Services = OperatorHost?.Services ?? throw new ArgumentException("Host not built."))
+                .ConfigureAwait(false);
             return Task.FromResult(0);
         }
 
-        public async void Dispose()
+        public async ValueTask DisposeAsync()
         {
             if (OperatorHost != null)
             {
                 await OperatorHost.StopAsync();
+                OperatorHost.Dispose();
             }
-            OperatorHost?.Dispose();
+            Services = new ServiceCollection().BuildServiceProvider();
         }
 
         protected override void ConfigureOperatorServices()
