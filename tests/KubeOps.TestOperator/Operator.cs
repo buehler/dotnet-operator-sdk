@@ -15,7 +15,7 @@ namespace KubeOps.TestOperator
                 services =>
                 {
                     services.AddTransient<IManager, TestManager.TestManager>();
-                    services.AddResourceController<TestController, TestEntity>();
+                    services.AddResourceController<TestController>();
                     services.AddResourceFinalizer<TestEntityFinalizer, TestEntity>();
                 });
         }

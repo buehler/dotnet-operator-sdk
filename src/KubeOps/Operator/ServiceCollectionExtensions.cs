@@ -9,13 +9,17 @@ namespace KubeOps.Operator
 {
     public static class ServiceCollectionExtensions
     {
+        public static IServiceCollection AddResourceController<TController>(this IServiceCollection services)
+            where TController : class, IResourceController =>
+            services.AddHostedService<TController>();
+
         public static IServiceCollection AddResourceController<TController, TEntity>(this IServiceCollection services)
-            where TController : ResourceControllerBase<TEntity>
+            where TController : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta> =>
             services.AddHostedService<TController>();
 
         public static IServiceCollection AddResourceFinalizer<TFinalizer, TEntity>(this IServiceCollection services)
-            where TFinalizer : ResourceFinalizerBase<TEntity>
+            where TFinalizer : class, IResourceFinalizer<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta> =>
             services.AddTransient<IResourceFinalizer<TEntity>, TFinalizer>();
 
