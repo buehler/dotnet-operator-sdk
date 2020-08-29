@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using KubeOps.Testing;
 using KubeOps.TestOperator.Entities;
 using KubeOps.TestOperator.TestManager;
@@ -10,7 +9,7 @@ using Xunit;
 
 namespace KubeOps.TestOperator.Test
 {
-    public class TestControllerTest: IDisposable
+    public class TestControllerTest : IAsyncLifetime
     {
         private readonly Mock<IManager> _mock = new Mock<IManager>();
 
@@ -38,6 +37,7 @@ namespace KubeOps.TestOperator.Test
             var queue = _operator.GetMockedEventQueue<TestEntity>();
             queue.Created(new TestEntity());
             _mock.Verify(o => o.Created(It.IsAny<TestEntity>()), Times.Once);
+            await _operator.DisposeAsync();
         }
 
         [Fact]
@@ -49,6 +49,7 @@ namespace KubeOps.TestOperator.Test
             var queue = _operator.GetMockedEventQueue<TestEntity>();
             queue.Updated(new TestEntity());
             _mock.Verify(o => o.Updated(It.IsAny<TestEntity>()), Times.Once);
+            await _operator.DisposeAsync();
         }
 
         [Fact]
@@ -84,9 +85,12 @@ namespace KubeOps.TestOperator.Test
             _mock.Verify(o => o.StatusModified(It.IsAny<TestEntity>()), Times.Once);
         }
 
-        public void Dispose()
+        public Task InitializeAsync()
+            => Task.CompletedTask;
+
+        public async Task DisposeAsync()
         {
-            _operator.Dispose();
+            await _operator.DisposeAsync();
         }
     }
 }

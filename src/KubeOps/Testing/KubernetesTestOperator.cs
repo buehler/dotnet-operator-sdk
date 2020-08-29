@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Testing
 {
-    public class KubernetesTestOperator : KubernetesOperator, IDisposable
+    public class KubernetesTestOperator : KubernetesOperator, IAsyncDisposable
     {
         public KubernetesTestOperator(OperatorSettings settings)
             : base(settings)
@@ -37,13 +37,14 @@ namespace KubeOps.Testing
             return Task.FromResult(0);
         }
 
-        public async void Dispose()
+        public async ValueTask DisposeAsync()
         {
             if (OperatorHost != null)
             {
                 await OperatorHost.StopAsync();
+                OperatorHost.Dispose();
             }
-            OperatorHost?.Dispose();
+            Services = new ServiceCollection().BuildServiceProvider();
         }
 
         protected override void ConfigureOperatorServices()
