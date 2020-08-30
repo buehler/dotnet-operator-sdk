@@ -19,9 +19,10 @@ namespace KubeOps.GenericTest
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddKubernetes(s => s.Name = "test-operator");
+            services.AddKubernetesOperator(s => s.Name = "test-operator")
+                .AddController<TestController>();
+
             services.AddTransient<IManager, TestManager>();
-            services.AddResourceController<TestController>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

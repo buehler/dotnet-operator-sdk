@@ -143,6 +143,6 @@ namespace KubeOps.Operator
                 });
 
         private void ConfigureRequiredServices() => Builder.ConfigureServices(
-                services => services.AddKubernetes(OperatorSettings));
+                services => services.AddKubernetesOperator(OperatorSettings));
     }
 }

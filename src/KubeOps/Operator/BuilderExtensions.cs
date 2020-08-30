@@ -17,14 +17,14 @@ namespace KubeOps.Operator
 {
     public static class BuilderExtensions
     {
-        public static IServiceCollection AddKubernetes(this IServiceCollection services, Action<OperatorSettings> configure)
+        public static IOperatorBuilder AddKubernetesOperator(this IServiceCollection services, Action<OperatorSettings> configure)
         {
             var settings = new OperatorSettings();
             configure(settings);
-            return AddKubernetes(services, settings);
+            return AddKubernetesOperator(services, settings);
         }
 
-        public static IServiceCollection AddKubernetes(this IServiceCollection services, OperatorSettings settings)
+        public static IOperatorBuilder AddKubernetesOperator(this IServiceCollection services, OperatorSettings settings)
         {
             services.AddSingleton(settings);
 
@@ -77,7 +77,7 @@ namespace KubeOps.Operator
             services.AddTransient(typeof(IResourceEventQueue<>), typeof(ResourceEventQueue<>));
             services.AddTransient(typeof(ResourceServices<>));
 
-            return services;
+            return new OperatorBuilder(services);
         }
     }
 }
