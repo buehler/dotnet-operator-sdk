@@ -27,6 +27,19 @@ namespace KubeOps.Operator.Commands.Generators
         [Option("--use-old-crds", Description = "Defines that the old crd definitions (V1Beta1) should be used.")]
         public bool UseOldCrds { get; set; }
 
+        public static IEnumerable<V1CustomResourceDefinition> GenerateCrds(Assembly? assembly = null)
+        {
+            assembly ??= Assembly.GetEntryAssembly();
+            if (assembly == null)
+            {
+                throw new Exception("No Entry Assembly found.");
+            }
+
+            return GetTypesWithAttribute<KubernetesEntityAttribute>(assembly)
+                .Where(type => !type.GetCustomAttributes<IgnoreEntityAttribute>().Any())
+                .Select(EntityToCrdExtensions.CreateCrd);
+        }
+
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
             var crds = GenerateCrds().ToList();
@@ -74,19 +87,6 @@ namespace KubeOps.Operator.Commands.Generators
             }
 
             return ExitCodes.Success;
-        }
-
-        public static IEnumerable<V1CustomResourceDefinition> GenerateCrds(Assembly? assembly = null)
-        {
-            assembly ??= Assembly.GetEntryAssembly();
-            if (assembly == null)
-            {
-                throw new Exception("No Entry Assembly found.");
-            }
-
-            return GetTypesWithAttribute<KubernetesEntityAttribute>(assembly)
-                .Where(type => !type.GetCustomAttributes<IgnoreEntityAttribute>().Any())
-                .Select(EntityToCrdExtensions.CreateCrd);
         }
 
         private static IEnumerable<Type> GetTypesWithAttribute<TAttribute>(Assembly assembly)

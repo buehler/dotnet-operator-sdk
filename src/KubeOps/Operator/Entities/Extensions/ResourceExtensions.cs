@@ -18,7 +18,7 @@ namespace KubeOps.Operator.Entities.Extensions
             var finalizer = DependencyInjector.Services
                 .GetServices<IResourceFinalizer<TResource>>()
                 .First(f => f.GetType() == typeof(TFinalizer));
-            return finalizer.Register((TResource) resource);
+            return finalizer.Register((TResource)resource);
         }
     }
 }

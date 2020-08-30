@@ -16,7 +16,7 @@ namespace KubeOps.Operator.DevOps
             "kind",
             "group",
             "version",
-            "scope"
+            "scope",
         };
 
         public ResourceEventQueueMetrics()
@@ -29,7 +29,7 @@ namespace KubeOps.Operator.DevOps
                 crd.Kind,
                 crd.Group,
                 crd.Version,
-                crd.Scope.ToString()
+                crd.Scope.ToString(),
             };
 
             Running = Metrics

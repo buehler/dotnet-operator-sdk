@@ -16,7 +16,6 @@ namespace KubeOps.Operator.Controller
 {
     // TODO: namespaced controller (only watch resource of a specific namespace)
     // TODO: Webhooks?
-
     public abstract class ResourceControllerBase<TEntity> : IResourceController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
@@ -117,7 +116,7 @@ namespace KubeOps.Operator.Controller
             return Task.FromResult(default(TimeSpan?));
         }
 
-        private async void OnResourceEvent(object? _, (ResourceEventType type, TEntity resource) args)
+        private async void OnResourceEvent(object? _, (ResourceEventType Type, TEntity Resource) args)
         {
             var (type, resource) = args;
 

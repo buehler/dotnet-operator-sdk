@@ -8,7 +8,7 @@ namespace KubeOps.Operator.Watcher
     internal interface IResourceWatcher<TEntity> : IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        event EventHandler<(WatchEventType type, TEntity resource)>? WatcherEvent;
+        event EventHandler<(WatchEventType Type, TEntity Resource)>? WatcherEvent;
 
         Task Start();
 

@@ -30,17 +30,6 @@ namespace KubeOps.Operator
         internal const string NoStructuredLogs = "--no-structured-logs";
         private const string DefaultOperatorName = "KubernetesOperator";
 
-        protected readonly OperatorSettings OperatorSettings;
-
-        protected readonly IList<Action<IServiceCollection>> ServiceConfigurations =
-            new List<Action<IServiceCollection>>();
-
-        protected readonly IHostBuilder Builder = Host
-            .CreateDefaultBuilder()
-            .UseConsoleLifetime();
-
-        protected IHost? OperatorHost { get; set; }
-
         public KubernetesOperator()
             : this((Assembly.GetEntryAssembly()?.GetName().Name ?? DefaultOperatorName).ToLowerInvariant())
         {
@@ -60,6 +49,17 @@ namespace KubeOps.Operator
             OperatorSettings = settings;
         }
 
+        protected OperatorSettings OperatorSettings { get; }
+
+        protected IList<Action<IServiceCollection>> ServiceConfigurations { get; } =
+            new List<Action<IServiceCollection>>();
+
+        protected IHostBuilder Builder { get; } = Host
+            .CreateDefaultBuilder()
+            .UseConsoleLifetime();
+
+        protected IHost? OperatorHost { get; set; }
+
         public KubernetesTestOperator ToKubernetesTestOperator()
         {
             var op = new KubernetesTestOperator(OperatorSettings);
@@ -77,6 +77,12 @@ namespace KubeOps.Operator
         public virtual Task<int> Run(string[] args)
             => Run(args, null);
 
+        public KubernetesOperator ConfigureServices(Action<IServiceCollection> configuration)
+        {
+            ServiceConfigurations.Add(configuration);
+            return this;
+        }
+
         protected Task<int> Run(string[] args, Action? onHostBuilt)
         {
             ConfigureOperatorServices();
@@ -86,14 +92,15 @@ namespace KubeOps.Operator
             ConfigureOperatorLogging(args);
 
             OperatorHost = Builder
-                .ConfigureWebHostDefaults(webBuilder => webBuilder
-                    .UseStartup<OperatorStartup>()
-                    .ConfigureKestrel(
-                        kestrel =>
-                        {
-                            kestrel.AddServerHeader = false;
-                            kestrel.ListenAnyIP(OperatorSettings.Port);
-                        }))
+                .ConfigureWebHostDefaults(
+                    webBuilder => webBuilder
+                        .UseStartup<OperatorStartup>()
+                        .ConfigureKestrel(
+                            kestrel =>
+                            {
+                                kestrel.AddServerHeader = false;
+                                kestrel.ListenAnyIP(OperatorSettings.Port);
+                            }))
                 .Build();
 
             app
@@ -107,12 +114,6 @@ namespace KubeOps.Operator
             onHostBuilt?.Invoke();
 
             return app.ExecuteAsync(args);
-        }
-
-        public KubernetesOperator ConfigureServices(Action<IServiceCollection> configuration)
-        {
-            ServiceConfigurations.Add(configuration);
-            return this;
         }
 
         protected virtual void ConfigureOperatorServices()
@@ -184,14 +185,14 @@ namespace KubeOps.Operator
                                 {
                                     ContractResolver = new NamingConvention(),
                                     Converters = new List<JsonConverter>
-                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } }
+                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
                                 },
                                 DeserializationSettings =
                                 {
                                     ContractResolver = new NamingConvention(),
                                     Converters = new List<JsonConverter>
-                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } }
-                                }
+                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
+                                },
                             };
                         });
 

@@ -42,11 +42,11 @@ namespace KubeOps.Testing
 
         public Task<TResource> Create<TResource>(TResource resource)
             where TResource : IKubernetesObject<V1ObjectMeta>
-            => Task.FromResult((TResource) CreateResult!)!;
+            => Task.FromResult((TResource)CreateResult!)!;
 
         public Task<TResource> Update<TResource>(TResource resource)
             where TResource : IKubernetesObject<V1ObjectMeta>
-            => Task.FromResult((TResource) UpdateResult!)!;
+            => Task.FromResult((TResource)UpdateResult!)!;
 
         public Task UpdateStatus<TStatus>(IStatus<TStatus> resource)
             => Task.CompletedTask;
