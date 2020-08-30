@@ -1,9 +1,9 @@
-﻿using k8s;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using k8s;
 using k8s.Models;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Finalizer;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace KubeOps.Operator.Entities.Extensions
 {

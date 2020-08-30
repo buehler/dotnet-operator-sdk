@@ -1,11 +1,11 @@
-﻿using k8s;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using k8s;
 using k8s.Models;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Entities.Extensions;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace KubeOps.Operator.Finalizer
 {

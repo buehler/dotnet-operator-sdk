@@ -5,51 +5,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
-using KubeOps.Operator.Caching;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
-using KubeOps.Operator.Watcher;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Controller
 {
-
-    public class ResourceServices<TEntity> where TEntity : IKubernetesObject<V1ObjectMeta>
-    {
-        public ResourceServices(ILoggerFactory loggerFactory,
-            IKubernetesClient client,
-            IResourceCache<TEntity> resourceCache,
-            IResourceEventQueue<TEntity> eventQueue,
-            Lazy<IEnumerable<IResourceFinalizer<TEntity>>> finalizers,
-            OperatorSettings settings)
-        {
-            LoggerFactory = loggerFactory;
-            Client = client;
-            ResourceCache = resourceCache;
-            EventQueue = eventQueue;
-            Finalizers = finalizers;
-            Settings = settings;
-        }
-
-        public ILoggerFactory LoggerFactory { get; }
-        public IKubernetesClient Client { get; }
-        public IResourceCache<TEntity> ResourceCache { get; }
-        public IResourceEventQueue<TEntity> EventQueue { get; }
-        public Lazy<IResourceWatcher<TEntity>> ResourceWatcher { get; }
-        public Lazy<IEnumerable<IResourceFinalizer<TEntity>>> Finalizers { get; }
-        public OperatorSettings Settings { get; }
-    }
-
-    public class LazyService<T> : Lazy<T> where T : class
-    {
-        public LazyService(IServiceProvider provider)
-            : base(() => provider.GetRequiredService<T>())
-        {
-        }
-    }
-
     // TODO: namespaced controller (only watch resource of a specific namespace)
     // TODO: Webhooks?
     public abstract class ResourceControllerBase<TEntity> : IResourceController<TEntity>
@@ -69,7 +32,7 @@ namespace KubeOps.Operator.Controller
 
         protected ResourceControllerBase(ResourceServices<TEntity> services)
         {
-            _logger = services.LoggerFactory.CreateLogger< ResourceControllerBase<TEntity>>();
+            _logger = services.LoggerFactory.CreateLogger<ResourceControllerBase<TEntity>>();
             _eventQueue = services.EventQueue;
             _finalizers = services.Finalizers;
             Services = services;
@@ -78,6 +41,7 @@ namespace KubeOps.Operator.Controller
         bool IResourceController.Running => _running;
 
         protected IKubernetesClient Client => Services.Client;
+
         protected ResourceServices<TEntity> Services { get; }
 
         public async Task StartAsync(CancellationToken cancellationToken)

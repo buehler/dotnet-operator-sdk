@@ -1,4 +1,9 @@
-﻿using KubeOps.Operator.Commands;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using KubeOps.Operator.Commands;
 using KubeOps.Operator.Logging;
 using KubeOps.Testing;
 using McMaster.Extensions.CommandLineUtils;
@@ -7,11 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace KubeOps.Operator
 {

@@ -1,4 +1,6 @@
-﻿using k8s;
+﻿using System;
+using System.Collections.Generic;
+using k8s;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Controller;
@@ -9,8 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using System;
-using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
 namespace KubeOps.Operator
@@ -36,9 +36,11 @@ namespace KubeOps.Operator
                 {
                     ContractResolver = new NamingConvention(),
                     Converters = new List<JsonConverter>
-                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() }
-                    },
+                        {
+                            new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() },
+                        },
                 });
+
             services.AddTransient(
                 _ => new SerializerBuilder()
                     .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
@@ -59,14 +61,14 @@ namespace KubeOps.Operator
                         {
                                     ContractResolver = new NamingConvention(),
                                     Converters = new List<JsonConverter>
-                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } }
+                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
                         },
                         DeserializationSettings =
                         {
                                     ContractResolver = new NamingConvention(),
                                     Converters = new List<JsonConverter>
-                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } }
-                        }
+                                        { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
+                        },
                     };
                 });
 
