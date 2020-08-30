@@ -14,7 +14,7 @@ namespace KubeOps.Operator.DevOps
             "kind",
             "group",
             "version",
-            "scope"
+            "scope",
         };
 
         public ResourceCacheMetrics(OperatorSettings settings)
@@ -26,7 +26,7 @@ namespace KubeOps.Operator.DevOps
                 crd.Kind,
                 crd.Group,
                 crd.Version,
-                crd.Scope.ToString()
+                crd.Scope.ToString(),
             };
 
             CachedItemsSummary = Metrics

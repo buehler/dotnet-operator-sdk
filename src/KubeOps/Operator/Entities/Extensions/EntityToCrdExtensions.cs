@@ -73,7 +73,6 @@ namespace KubeOps.Operator.Entities.Extensions
         {
             // TODO: get description somehow.
             // TODO: support description via XML fields -> but describe how (generate xml file stuff)
-
             var props = MapType(info.PropertyType);
             var contextual = info.ToContextualProperty();
 
@@ -240,7 +239,7 @@ namespace KubeOps.Operator.Entities.Extensions
                 typeof(DateTime),
                 typeof(DateTimeOffset),
                 typeof(TimeSpan),
-                typeof(Guid)
+                typeof(Guid),
             }.Contains(type) ||
             type.IsEnum ||
             Convert.GetTypeCode(type) != TypeCode.Object ||

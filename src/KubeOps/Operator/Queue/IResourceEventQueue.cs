@@ -8,7 +8,7 @@ namespace KubeOps.Operator.Queue
     public interface IResourceEventQueue<TEntity> : IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        event EventHandler<(ResourceEventType type, TEntity resource)>? ResourceEvent;
+        event EventHandler<(ResourceEventType Type, TEntity Resource)>? ResourceEvent;
 
         Task Start();
 

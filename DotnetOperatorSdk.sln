@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.30406.217
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{95F3A6DD-B421-441D-B263-1B34A1465FF5}"
+ProjectSection(SolutionItems) = preProject
+	README.md = README.md
+EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KubeOps", "src\KubeOps\KubeOps.csproj", "{D7AB6CB9-94B6-4FEB-B7D8-D8AA793BD2A4}"
 EndProject
@@ -20,6 +23,16 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KubeOps.TestOperator.Test", "tests\KubeOps.TestOperator.Test\KubeOps.TestOperator.Test.csproj", "{B374D7E4-E9BA-47F8-B1A4-440DECD376E4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.GenericTest", "tests\KubeOps.GenericTest\KubeOps.GenericTest.csproj", "{714D8DD8-AF4B-4990-AE63-0258BC3E3CD3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{EF94C48A-1D2A-459B-B397-A130463FF52D}"
+ProjectSection(SolutionItems) = preProject
+	config\CodeAnalysis.targets = config\CodeAnalysis.targets
+	config\Common.targets = config\Common.targets
+	config\project.ruleset = config\project.ruleset
+	config\stylecop.json = config\stylecop.json
+	.gitignore = .gitignore
+	.releaserc.json = .releaserc.json
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

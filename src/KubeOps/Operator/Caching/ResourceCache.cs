@@ -53,6 +53,15 @@ namespace KubeOps.Operator.Caching
             return resource;
         }
 
+        public void Remove(TEntity resource) => Remove(resource.Metadata.Uid);
+
+        public void Clear()
+        {
+            _cache.Clear();
+            _metrics.CachedItemsSize.Set(_cache.Count);
+            _metrics.CachedItemsSummary.Observe(_cache.Count);
+        }
+
         private CacheComparisonResult CompareCache(TEntity resource)
         {
             if (!Exists(resource))
@@ -78,15 +87,6 @@ namespace KubeOps.Operator.Caching
             }
 
             return CacheComparisonResult.Modified;
-        }
-
-        public void Remove(TEntity resource) => Remove(resource.Metadata.Uid);
-
-        public void Clear()
-        {
-            _cache.Clear();
-            _metrics.CachedItemsSize.Set(_cache.Count);
-            _metrics.CachedItemsSummary.Observe(_cache.Count);
         }
 
         private bool Exists(TEntity resource) => _cache.ContainsKey(resource.Metadata.Uid);

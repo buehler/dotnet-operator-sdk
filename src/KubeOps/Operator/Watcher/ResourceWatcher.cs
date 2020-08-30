@@ -22,8 +22,6 @@ namespace KubeOps.Operator.Watcher
         private CancellationTokenSource? _cancellation;
         private Watcher<TEntity>? _watcher;
 
-        public event EventHandler<(WatchEventType type, TEntity resource)>? WatcherEvent;
-
         public ResourceWatcher(ILogger<ResourceWatcher<TEntity>> logger, IKubernetesClient client, OperatorSettings settings)
         {
             _logger = logger;
@@ -31,6 +29,8 @@ namespace KubeOps.Operator.Watcher
             _reconnectHandler = new ExponentialBackoffHandler(async () => await WatchResource());
             _metrics = new ResourceWatcherMetrics<TEntity>(settings);
         }
+
+        public event EventHandler<(WatchEventType Type, TEntity Resource)>? WatcherEvent;
 
         public Task Start()
         {
@@ -54,7 +54,7 @@ namespace KubeOps.Operator.Watcher
 
             foreach (var handler in WatcherEvent?.GetInvocationList() ?? new Delegate[] { })
             {
-                WatcherEvent -= (EventHandler<(WatchEventType type, TEntity resource)>) handler;
+                WatcherEvent -= (EventHandler<(WatchEventType Type, TEntity Resource)>)handler;
             }
 
             _reconnectHandler.Dispose();
@@ -79,6 +79,7 @@ namespace KubeOps.Operator.Watcher
             }
 
             _cancellation = new CancellationTokenSource();
+
             // TODO: namespaced resources
             _watcher = await _client.Watch<TEntity>(
                 TimeSpan.FromMinutes(1),

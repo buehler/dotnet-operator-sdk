@@ -23,29 +23,56 @@ namespace KubeOps.Operator.Commands.Generators
             _serializer = serializer;
         }
 
+        public static V1ClusterRole GenerateManagerRbac()
+        {
+            var assembly = Assembly.GetEntryAssembly();
+            if (assembly == null)
+            {
+                throw new Exception("No Entry Assembly found.");
+            }
+
+            return new V1ClusterRole(
+                null,
+                $"{V1ClusterRole.KubeGroup}/{V1ClusterRole.KubeApiVersion}",
+                V1ClusterRole.KubeKind,
+                new V1ObjectMeta { Name = "operator-role" },
+                new List<V1PolicyRule>(
+                    GetAttributes<EntityRbacAttribute>(assembly)
+                        .SelectMany(a => a.CreateRbacPolicies())
+                        .Concat(GetAttributes<GenericRbacAttribute>(assembly).Select(a => a.CreateRbacPolicy()))));
+        }
+
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
             var role = _serializer.Serialize(GenerateManagerRbac(), Format);
-            var roleBinding = _serializer.Serialize(new V1ClusterRoleBinding
-            {
-                ApiVersion = $"{V1ClusterRoleBinding.KubeGroup}/{V1ClusterRoleBinding.KubeApiVersion}",
-                Kind = V1ClusterRoleBinding.KubeKind,
-                Metadata = new V1ObjectMeta {Name = "operator-role-binding"},
-                RoleRef = new V1RoleRef(V1ClusterRole.KubeGroup, V1ClusterRole.KubeKind, "operator-role"),
-                Subjects = new List<V1Subject>
+            var roleBinding = _serializer.Serialize(
+                new V1ClusterRoleBinding
                 {
-                    new V1Subject(V1ServiceAccount.KubeKind, "default", namespaceProperty: "system")
-                }
-            }, Format);
+                    ApiVersion = $"{V1ClusterRoleBinding.KubeGroup}/{V1ClusterRoleBinding.KubeApiVersion}",
+                    Kind = V1ClusterRoleBinding.KubeKind,
+                    Metadata = new V1ObjectMeta { Name = "operator-role-binding" },
+                    RoleRef = new V1RoleRef(V1ClusterRole.KubeGroup, V1ClusterRole.KubeKind, "operator-role"),
+                    Subjects = new List<V1Subject>
+                    {
+                        new V1Subject(V1ServiceAccount.KubeKind, "default", namespaceProperty: "system"),
+                    },
+                },
+                Format);
 
             if (!string.IsNullOrWhiteSpace(OutputPath))
             {
                 Directory.CreateDirectory(OutputPath);
-                await using var roleFile = File.Open(Path.Join(OutputPath,
-                    $"operator-role.{Format.ToString().ToLower()}"), FileMode.Create);
+                await using var roleFile = File.Open(
+                    Path.Join(
+                        OutputPath,
+                        $"operator-role.{Format.ToString().ToLower()}"),
+                    FileMode.Create);
                 await roleFile.WriteAsync(Encoding.UTF8.GetBytes(role));
-                await using var bindingFile = File.Open(Path.Join(OutputPath,
-                    $"operator-role-binding.{Format.ToString().ToLower()}"), FileMode.Create);
+                await using var bindingFile = File.Open(
+                    Path.Join(
+                        OutputPath,
+                        $"operator-role-binding.{Format.ToString().ToLower()}"),
+                    FileMode.Create);
                 await bindingFile.WriteAsync(Encoding.UTF8.GetBytes(roleBinding));
 
                 var kustomize = new KustomizationConfig
@@ -57,7 +84,7 @@ namespace KubeOps.Operator.Commands.Generators
                     },
                     CommonLabels = new Dictionary<string, string>
                     {
-                        {"operator-element", "rbac"},
+                        { "operator-element", "rbac" },
                     },
                 };
                 var kustomizeOutput = Encoding.UTF8.GetBytes(_serializer.Serialize(kustomize, Format));
@@ -72,26 +99,6 @@ namespace KubeOps.Operator.Commands.Generators
             }
 
             return ExitCodes.Success;
-        }
-
-        public static V1ClusterRole GenerateManagerRbac()
-        {
-            var assembly = Assembly.GetEntryAssembly();
-            if (assembly == null)
-            {
-                throw new Exception("No Entry Assembly found.");
-            }
-
-            return new V1ClusterRole(
-                null,
-                $"{V1ClusterRole.KubeGroup}/{V1ClusterRole.KubeApiVersion}",
-                V1ClusterRole.KubeKind,
-                new V1ObjectMeta {Name = "operator-role"},
-                new List<V1PolicyRule>(
-                    GetAttributes<EntityRbacAttribute>(assembly)
-                        .SelectMany(a => a.CreateRbacPolicies())
-                        .Concat(GetAttributes<GenericRbacAttribute>(assembly).Select(a => a.CreateRbacPolicy()))
-                ));
         }
 
         private static IEnumerable<TAttribute> GetAttributes<TAttribute>(Assembly assembly)
