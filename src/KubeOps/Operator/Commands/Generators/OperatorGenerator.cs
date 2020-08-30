@@ -21,58 +21,63 @@ namespace KubeOps.Operator.Commands.Generators
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
-            var output = _serializer.Serialize(new V1Deployment(
-                $"{V1Deployment.KubeGroup}/{V1Deployment.KubeApiVersion}",
-                V1Deployment.KubeKind,
-                new V1ObjectMeta(name: "operator"),
-                new V1DeploymentSpec
-                {
-                    Replicas = 1,
-                    RevisionHistoryLimit = 0,
-                    Template = new V1PodTemplateSpec
+            var output = _serializer.Serialize(
+                new V1Deployment(
+                    $"{V1Deployment.KubeGroup}/{V1Deployment.KubeApiVersion}",
+                    V1Deployment.KubeKind,
+                    new V1ObjectMeta(name: "operator"),
+                    new V1DeploymentSpec
                     {
-                        Spec = new V1PodSpec
+                        Replicas = 1,
+                        RevisionHistoryLimit = 0,
+                        Template = new V1PodTemplateSpec
                         {
-                            TerminationGracePeriodSeconds = 10,
-                            Containers = new List<V1Container>
+                            Spec = new V1PodSpec
                             {
-                                new V1Container
+                                TerminationGracePeriodSeconds = 10,
+                                Containers = new List<V1Container>
                                 {
-                                    Image = "operator",
-                                    Name = "operator",
-                                    Resources = new V1ResourceRequirements
+                                    new V1Container
                                     {
-                                        Requests = new Dictionary<string, ResourceQuantity>
+                                        Image = "operator",
+                                        Name = "operator",
+                                        Resources = new V1ResourceRequirements
                                         {
-                                            {"cpu", new ResourceQuantity("100m")},
-                                            {"memory", new ResourceQuantity("64Mi")},
-                                        },
-                                        Limits = new Dictionary<string, ResourceQuantity>
-                                        {
-                                            {"cpu", new ResourceQuantity("100m")},
-                                            {"memory", new ResourceQuantity("128Mi")},
+                                            Requests = new Dictionary<string, ResourceQuantity>
+                                            {
+                                                { "cpu", new ResourceQuantity("100m") },
+                                                { "memory", new ResourceQuantity("64Mi") },
+                                            },
+                                            Limits = new Dictionary<string, ResourceQuantity>
+                                            {
+                                                { "cpu", new ResourceQuantity("100m") },
+                                                { "memory", new ResourceQuantity("128Mi") },
+                                            },
                                         },
                                     },
                                 },
                             },
                         },
-                    },
-                }), Format);
+                    }),
+                Format);
 
             if (!string.IsNullOrWhiteSpace(OutputPath))
             {
                 Directory.CreateDirectory(OutputPath);
-                await using var file = File.Open(Path.Join(OutputPath,
-                    $"deployment.{Format.ToString().ToLower()}"), FileMode.Create);
+                await using var file = File.Open(
+                    Path.Join(
+                        OutputPath,
+                        $"deployment.{Format.ToString().ToLower()}"),
+                    FileMode.Create);
 
                 await file.WriteAsync(Encoding.UTF8.GetBytes(output));
 
                 var kustomize = new KustomizationConfig
                 {
-                    Resources = new List<string> {$"deployment.{Format.ToString().ToLower()}"},
+                    Resources = new List<string> { $"deployment.{Format.ToString().ToLower()}" },
                     CommonLabels = new Dictionary<string, string>
                     {
-                        {"operator-element", "operator-instance"},
+                        { "operator-element", "operator-instance" },
                     },
                 };
                 var kustomizeOutput = Encoding.UTF8.GetBytes(_serializer.Serialize(kustomize, Format));

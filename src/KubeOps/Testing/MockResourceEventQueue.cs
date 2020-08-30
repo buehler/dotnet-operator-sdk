@@ -12,16 +12,17 @@ namespace KubeOps.Testing
     {
         private readonly MockResourceQueueCollection _collection;
 
-        public event EventHandler<(ResourceEventType type, TEntity resource)>? ResourceEvent;
-
         public MockResourceEventQueue(MockResourceQueueCollection collection)
         {
             _collection = collection;
         }
 
+        public event EventHandler<(ResourceEventType Type, TEntity Resource)>? ResourceEvent;
+
         public IList<TEntity> Enqueued { get; } = new List<TEntity>();
 
-        public IList<(ResourceEventType, TEntity)> ErrorEnqueued { get; } = new List<(ResourceEventType, TEntity)>();
+        public IList<(ResourceEventType Type, TEntity Resource)> ErrorEnqueued { get; } =
+            new List<(ResourceEventType, TEntity)>();
 
         public void Dispose()
         {

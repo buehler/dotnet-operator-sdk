@@ -1,15 +1,14 @@
-﻿using k8s;
+﻿using System.Collections.Generic;
+using k8s;
 using k8s.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace KubeOps.Operator.Entities.Extensions
 {
     public static class KubernetesObjectExtensions
     {
-        public static TResource WithOwnerReference<TResource>(this TResource resource, IKubernetesObject<V1ObjectMeta> owner)
+        public static TResource WithOwnerReference<TResource>(
+            this TResource resource,
+            IKubernetesObject<V1ObjectMeta> owner)
             where TResource : IKubernetesObject<V1ObjectMeta>
         {
             resource.Metadata.EnsureOwnerReferences().Add(owner.MakeOwnerReference());
@@ -27,7 +26,11 @@ namespace KubeOps.Operator.Entities.Extensions
         }
 
         public static V1OwnerReference MakeOwnerReference(this IKubernetesObject<V1ObjectMeta> kubernetesObject)
-            => new V1OwnerReference(kubernetesObject.ApiVersion, kubernetesObject.Kind, kubernetesObject.Metadata.Name, kubernetesObject.Metadata.Uid);
+            => new V1OwnerReference(
+                kubernetesObject.ApiVersion,
+                kubernetesObject.Kind,
+                kubernetesObject.Metadata.Name,
+                kubernetesObject.Metadata.Uid);
 
         public static V1ObjectReference MakeObjectReference(this IKubernetesObject<V1ObjectMeta> kubernetesObject)
             => new V1ObjectReference()
@@ -37,7 +40,7 @@ namespace KubeOps.Operator.Entities.Extensions
                 Name = kubernetesObject.Metadata.Name,
                 NamespaceProperty = kubernetesObject.Metadata.NamespaceProperty,
                 ResourceVersion = kubernetesObject.Metadata.ResourceVersion,
-                Uid = kubernetesObject.Metadata.Uid
+                Uid = kubernetesObject.Metadata.Uid,
             };
 
         /* commented pending fleshing this out and improving after confirming event best practices

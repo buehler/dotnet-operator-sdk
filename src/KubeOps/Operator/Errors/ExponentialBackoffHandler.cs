@@ -17,8 +17,6 @@ namespace KubeOps.Operator.Errors
 
         private int _tryCount = -1;
 
-        public event EventHandler? RetryHandler;
-
         public ExponentialBackoffHandler()
         {
         }
@@ -32,6 +30,8 @@ namespace KubeOps.Operator.Errors
         {
             _asyncRetryHandler = asyncRetryHandler;
         }
+
+        public event EventHandler? RetryHandler;
 
         public TimeSpan Retry(TimeSpan? resetTimer = null)
         {
@@ -79,7 +79,7 @@ namespace KubeOps.Operator.Errors
             Reset();
             foreach (var handler in RetryHandler?.GetInvocationList() ?? new Delegate[] { })
             {
-                RetryHandler -= (EventHandler) handler;
+                RetryHandler -= (EventHandler)handler;
             }
         }
 

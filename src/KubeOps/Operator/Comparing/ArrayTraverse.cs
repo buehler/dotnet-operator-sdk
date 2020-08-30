@@ -4,7 +4,6 @@ namespace KubeOps.Operator.Comparing
 {
     internal class ArrayTraverse
     {
-        public readonly int[] Position;
         private readonly int[] _maxLengths;
 
         public ArrayTraverse(Array array)
@@ -17,6 +16,8 @@ namespace KubeOps.Operator.Comparing
 
             Position = new int[array.Rank];
         }
+
+        public int[] Position { get; }
 
         public bool Step()
         {

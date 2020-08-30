@@ -22,7 +22,7 @@ namespace KubeOps.Operator.DevOps
 
         public Task<HealthCheckResult> CheckHealthAsync(
             HealthCheckContext context,
-            CancellationToken cancellationToken = new CancellationToken())
+            CancellationToken cancellationToken = default)
         {
             if (_controller.All(c => c.Running))
             {
