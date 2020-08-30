@@ -4,7 +4,6 @@ using System.Net;
 using System.Threading.Tasks;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Commands.Generators;
-using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Extensions;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Rest;
@@ -20,14 +19,14 @@ namespace KubeOps.Operator.Commands.Management
     {
         private readonly IKubernetesClient _client;
 
-        [Option(Description = "Do not ask the user if the uninstall should proceed.")]
-        public bool Force { get; set; }
-
         // TODO: kube proxy (for cluster stuff)
         public Uninstall(IKubernetesClient client)
         {
             _client = client;
         }
+
+        [Option(Description = "Do not ask the user if the uninstall should proceed.")]
+        public bool Force { get; set; }
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
@@ -40,7 +39,8 @@ namespace KubeOps.Operator.Commands.Management
                 return ExitCodes.Error;
             }
 
-            await app.Out.WriteLineAsync($@"Starting uninstall from the cluster with url ""{_client.ApiClient.BaseUri}"".");
+            await app.Out.WriteLineAsync(
+                $@"Starting uninstall from the cluster with url ""{_client.ApiClient.BaseUri}"".");
 
             foreach (var crd in crds)
             {

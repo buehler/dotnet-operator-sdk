@@ -228,7 +228,7 @@ namespace KubeOps.Operator.Client
                     crd.Group,
                     crd.Version,
                     crd.Plural,
-                    timeoutSeconds: (int) timeout.TotalSeconds,
+                    timeoutSeconds: (int)timeout.TotalSeconds,
                     watch: true,
                     cancellationToken: cancellationToken)
                 : ApiClient.ListNamespacedCustomObjectWithHttpMessagesAsync(
@@ -236,7 +236,7 @@ namespace KubeOps.Operator.Client
                     crd.Version,
                     @namespace,
                     crd.Plural,
-                    timeoutSeconds: (int) timeout.TotalSeconds,
+                    timeoutSeconds: (int)timeout.TotalSeconds,
                     watch: true,
                     cancellationToken: cancellationToken);
 

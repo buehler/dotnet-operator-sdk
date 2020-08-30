@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Project Ruleset" Description="Default ruleset for dotnet core projects" ToolsVersion="15.0">
+    <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
+        <Rule Id="SA0001" Action="None"/>
+        <Rule Id="SA1600" Action="None"/>
+
+        <Rule Id="CS1591" Action="None"/>
+
+        <Rule Id="SA1008" Action="Info"/>
+        <Rule Id="SA1009" Action="Info"/>
+
+        <Rule Id="SA1101" Action="None"/>
+        <Rule Id="SA1106" Action="Info"/>
+        <Rule Id="SA1118" Action="None"/>
+        <Rule Id="SX1101" Action="Info"/>
+
+        <Rule Id="SA1309" Action="None"/>
+        <Rule Id="SX1309" Action="Warning"/>
+        <Rule Id="SA1313" Action="Info"/>
+
+        <Rule Id="SA1501" Action="Info"/>
+        <Rule Id="SA1503" Action="Info"/>
+
+        <Rule Id="SA1623" Action="None"/>
+        <Rule Id="SA1633" Action="None"/>
+        <Rule Id="SA1642" Action="None"/>
+        <Rule Id="SA1643" Action="None"/>
+        <Rule Id="SA1649" Action="None"/>
+    </Rules>
+    <Rules AnalyzerId="Roslynator.CSharp.Analyzers" RuleNamespace="Roslynator.CSharp.Analyzers">
+        <Rule Id="RCS1029" Action="None"/>
+        <Rule Id="RCS1090" Action="None"/>
+    </Rules>
+</RuleSet>

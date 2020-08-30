@@ -20,10 +20,8 @@ namespace KubeOps.Operator.Queue
     {
         private const int QueueLimit = 512;
 
-        private int _queueSize;
-
-        private readonly Channel<(ResourceEventType type, TEntity resource)> _queue =
-            Channel.CreateBounded<(ResourceEventType type, TEntity resource)>(QueueLimit);
+        private readonly Channel<(ResourceEventType Type, TEntity Resource)> _queue =
+            Channel.CreateBounded<(ResourceEventType Type, TEntity Resource)>(QueueLimit);
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
         private readonly ILogger<ResourceEventQueue<TEntity>> _logger;
@@ -39,9 +37,8 @@ namespace KubeOps.Operator.Queue
 
         private readonly ResourceEventQueueMetrics<TEntity> _metrics = new ResourceEventQueueMetrics<TEntity>();
 
+        private int _queueSize;
         private CancellationTokenSource? _cancellation;
-
-        public event EventHandler<(ResourceEventType type, TEntity resource)>? ResourceEvent;
 
         public ResourceEventQueue(
             ILogger<ResourceEventQueue<TEntity>> logger,
@@ -54,6 +51,8 @@ namespace KubeOps.Operator.Queue
             _cache = cache;
             _watcher = watcher;
         }
+
+        public event EventHandler<(ResourceEventType Type, TEntity Resource)>? ResourceEvent;
 
         public async Task Start()
         {
@@ -105,7 +104,7 @@ namespace KubeOps.Operator.Queue
             _delayedEnqueue.Clear();
             foreach (var handler in ResourceEvent?.GetInvocationList() ?? new Delegate[] { })
             {
-                ResourceEvent -= (EventHandler<(ResourceEventType type, TEntity resource)>) handler;
+                ResourceEvent -= (EventHandler<(ResourceEventType Type, TEntity Resource)>)handler;
             }
 
             foreach (var errorBackoff in _errorHandlers.Values)
@@ -254,7 +253,7 @@ namespace KubeOps.Operator.Queue
             handler.Dispose();
         }
 
-        private async void OnWatcherEvent(object? _, (WatchEventType type, TEntity resource) args)
+        private async void OnWatcherEvent(object? _, (WatchEventType Type, TEntity Resource) args)
         {
             var (type, resource) = args;
             switch (type)
@@ -340,8 +339,8 @@ namespace KubeOps.Operator.Queue
 
                 _logger.LogTrace(
                     @"Read event ""{type}"" for resource ""{resource}"".",
-                    message.type,
-                    message.resource);
+                    message.Type,
+                    message.Resource);
                 _metrics.ReadQueueEvents.Inc();
                 _metrics.QueueSizeSummary.Observe(--_queueSize);
                 _metrics.QueueSize.Set(_queueSize);

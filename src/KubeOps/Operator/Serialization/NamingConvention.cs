@@ -15,15 +15,16 @@ namespace KubeOps.Operator.Serialization
 
         private readonly IDictionary<string, string> _rename = new Dictionary<string, string>
         {
-            {"namespaceProperty", "namespace"},
-            {"enumProperty", "enum"},
-            {"objectProperty", "object"},
+            { "namespaceProperty", "namespace" },
+            { "enumProperty", "enum" },
+            { "objectProperty", "object" },
         };
 
         public string Apply(string value)
         {
-            var (key, renamedValue) = _rename.FirstOrDefault(p =>
-                string.Equals(value, p.Key, StringComparison.InvariantCultureIgnoreCase));
+            var (key, renamedValue) = _rename.FirstOrDefault(
+                p =>
+                    string.Equals(value, p.Key, StringComparison.InvariantCultureIgnoreCase));
 
             if (key != default)
             {
@@ -37,8 +38,9 @@ namespace KubeOps.Operator.Serialization
         {
             var property = base.CreateProperty(member, memberSerialization);
 
-            var (key, renamedValue) = _rename.FirstOrDefault(p =>
-                string.Equals(property.PropertyName, p.Key, StringComparison.InvariantCultureIgnoreCase));
+            var (key, renamedValue) = _rename.FirstOrDefault(
+                p =>
+                    string.Equals(property.PropertyName, p.Key, StringComparison.InvariantCultureIgnoreCase));
 
             if (key != default)
             {

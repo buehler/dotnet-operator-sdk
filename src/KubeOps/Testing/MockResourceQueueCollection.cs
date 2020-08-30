@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using k8s;
 using k8s.Models;
-using KubeOps.Operator.Watcher;
 
 namespace KubeOps.Testing
 {
@@ -25,6 +24,6 @@ namespace KubeOps.Testing
 
         public MockResourceEventQueue<TEntity> Get<TEntity>()
             where TEntity : IKubernetesObject<V1ObjectMeta>
-            => (MockResourceEventQueue<TEntity>) _queues[typeof(TEntity)];
+            => (MockResourceEventQueue<TEntity>)_queues[typeof(TEntity)];
     }
 }
