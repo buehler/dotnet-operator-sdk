@@ -42,7 +42,7 @@ namespace KubeOps.TestOperator.Test
                 {
                     Metadata = new V1ObjectMeta
                     {
-                        Finalizers = new[] { new TestEntityFinalizer(_mock.Object).Identifier },
+                        Finalizers = new[] { new TestEntityFinalizer(_mock.Object, null, null).Identifier },
                     }
                 });
             _mock.Verify(o => o.Finalized(It.IsAny<TestEntity>()), Times.Once);

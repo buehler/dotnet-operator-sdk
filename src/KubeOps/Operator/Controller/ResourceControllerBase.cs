@@ -5,15 +5,51 @@ using System.Threading;
 using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.Caching;
 using KubeOps.Operator.Client;
-using KubeOps.Operator.DependencyInjection;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
+using KubeOps.Operator.Watcher;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Controller
 {
+
+    public class ResourceServices<TEntity> where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        public ResourceServices(ILoggerFactory loggerFactory,
+            IKubernetesClient client,
+            IResourceCache<TEntity> resourceCache,
+            IResourceEventQueue<TEntity> eventQueue,
+            Lazy<IEnumerable<IResourceFinalizer<TEntity>>> finalizers,
+            OperatorSettings settings)
+        {
+            LoggerFactory = loggerFactory;
+            Client = client;
+            ResourceCache = resourceCache;
+            EventQueue = eventQueue;
+            Finalizers = finalizers;
+            Settings = settings;
+        }
+
+        public ILoggerFactory LoggerFactory { get; }
+        public IKubernetesClient Client { get; }
+        public IResourceCache<TEntity> ResourceCache { get; }
+        public IResourceEventQueue<TEntity> EventQueue { get; }
+        public Lazy<IResourceWatcher<TEntity>> ResourceWatcher { get; }
+        public Lazy<IEnumerable<IResourceFinalizer<TEntity>>> Finalizers { get; }
+        public OperatorSettings Settings { get; }
+    }
+
+    public class LazyService<T> : Lazy<T> where T : class
+    {
+        public LazyService(IServiceProvider provider)
+            : base(() => provider.GetRequiredService<T>())
+        {
+        }
+    }
+
     // TODO: namespaced controller (only watch resource of a specific namespace)
     // TODO: Webhooks?
 
@@ -29,29 +65,21 @@ namespace KubeOps.Operator.Controller
 
         private readonly ILogger<ResourceControllerBase<TEntity>> _logger;
         private readonly IResourceEventQueue<TEntity> _eventQueue;
+        private readonly Lazy<IEnumerable<IResourceFinalizer<TEntity>>> _finalizers;
         private bool _running;
 
-        protected ResourceControllerBase()
-            : this(
-                DependencyInjector.Services.GetRequiredService<ILogger<ResourceControllerBase<TEntity>>>(),
-                DependencyInjector.Services.GetRequiredService<IKubernetesClient>(),
-                DependencyInjector.Services.GetRequiredService<IResourceEventQueue<TEntity>>())
+        protected ResourceControllerBase(ResourceServices<TEntity> services)
         {
-        }
-
-        protected ResourceControllerBase(
-            ILogger<ResourceControllerBase<TEntity>> logger,
-            IKubernetesClient client,
-            IResourceEventQueue<TEntity> eventQueue)
-        {
-            _logger = logger;
-            _eventQueue = eventQueue;
-            Client = client;
+            _logger = services.LoggerFactory.CreateLogger< ResourceControllerBase<TEntity>>();
+            _eventQueue = services.EventQueue;
+            _finalizers = services.Finalizers;
+            Services = services;
         }
 
         bool IResourceController.Running => _running;
 
-        protected IKubernetesClient Client { get; }
+        protected IKubernetesClient Client => Services.Client;
+        protected ResourceServices<TEntity> Services { get; }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
@@ -136,9 +164,7 @@ namespace KubeOps.Operator.Controller
                         return;
                     }
 
-                    var finalizer = DependencyInjector.Services
-                        .GetServices<IResourceFinalizer<TEntity>>()
-                        .FirstOrDefault(f => f.Identifier == resource.Metadata.Finalizers.First());
+                    var finalizer = _finalizers.Value.FirstOrDefault(f => f.Identifier == resource.Metadata.Finalizers.First());
                     if (finalizer == null)
                     {
                         _logger.LogDebug(

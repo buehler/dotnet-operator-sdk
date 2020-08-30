@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using k8s;
+﻿using k8s;
 using k8s.Models;
 using KubeOps.Operator.Client;
-using KubeOps.Operator.DependencyInjection;
 using KubeOps.Operator.Entities.Extensions;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace KubeOps.Operator.Finalizer
 {
@@ -15,13 +13,6 @@ namespace KubeOps.Operator.Finalizer
         where TResource : IKubernetesObject<V1ObjectMeta>
     {
         private readonly ILogger<ResourceFinalizerBase<TResource>> _logger;
-
-        protected ResourceFinalizerBase()
-            : this(
-                DependencyInjector.Services.GetRequiredService<ILogger<ResourceFinalizerBase<TResource>>>(),
-                DependencyInjector.Services.GetRequiredService<IKubernetesClient>())
-        {
-        }
 
         protected ResourceFinalizerBase(ILogger<ResourceFinalizerBase<TResource>> logger, IKubernetesClient client)
         {

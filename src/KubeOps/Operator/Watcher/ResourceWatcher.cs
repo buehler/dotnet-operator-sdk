@@ -17,18 +17,19 @@ namespace KubeOps.Operator.Watcher
         private readonly ILogger<ResourceWatcher<TEntity>> _logger;
         private readonly IKubernetesClient _client;
         private readonly ExponentialBackoffHandler _reconnectHandler;
-        private readonly ResourceWatcherMetrics<TEntity> _metrics = new ResourceWatcherMetrics<TEntity>();
+        private readonly ResourceWatcherMetrics<TEntity> _metrics;
 
         private CancellationTokenSource? _cancellation;
         private Watcher<TEntity>? _watcher;
 
         public event EventHandler<(WatchEventType type, TEntity resource)>? WatcherEvent;
 
-        public ResourceWatcher(ILogger<ResourceWatcher<TEntity>> logger, IKubernetesClient client)
+        public ResourceWatcher(ILogger<ResourceWatcher<TEntity>> logger, IKubernetesClient client, OperatorSettings settings)
         {
             _logger = logger;
             _client = client;
             _reconnectHandler = new ExponentialBackoffHandler(async () => await WatchResource());
+            _metrics = new ResourceWatcherMetrics<TEntity>(settings);
         }
 
         public Task Start()
