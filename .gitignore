@@ -27,3 +27,4 @@ bld/
 # Testing results
 coverage.json
 coverage.info
+.vs
