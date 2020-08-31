@@ -34,7 +34,7 @@ namespace KubeOps.Operator.Entities.Extensions
             };
 
         private static IList<V1OwnerReference> EnsureOwnerReferences(this V1ObjectMeta meta) =>
-            meta.OwnerReferences ?? (meta.OwnerReferences = new List<V1OwnerReference>());
+            meta.OwnerReferences ??= new List<V1OwnerReference>();
 
         /* commented pending fleshing this out and improving after confirming event best practices
         /// <summary>
