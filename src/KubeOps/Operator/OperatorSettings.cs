@@ -2,9 +2,7 @@
 {
     public sealed class OperatorSettings
     {
-        public string Name { get; set; } = string.Empty;
-
-        public short Port { get; set; } = 80;
+        public string Name { get; set; } = "KubernetesOperator";
 
         public string MetricsEndpoint { get; set; } = "/metrics";
 

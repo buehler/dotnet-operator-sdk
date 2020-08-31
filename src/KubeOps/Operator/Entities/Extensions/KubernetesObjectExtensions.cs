@@ -15,16 +15,6 @@ namespace KubeOps.Operator.Entities.Extensions
             return resource;
         }
 
-        public static IList<V1OwnerReference> EnsureOwnerReferences(this V1ObjectMeta meta)
-        {
-            if (meta.OwnerReferences == null)
-            {
-                meta.OwnerReferences = new List<V1OwnerReference>();
-            }
-
-            return meta.OwnerReferences;
-        }
-
         public static V1OwnerReference MakeOwnerReference(this IKubernetesObject<V1ObjectMeta> kubernetesObject)
             => new V1OwnerReference(
                 kubernetesObject.ApiVersion,
@@ -33,7 +23,7 @@ namespace KubeOps.Operator.Entities.Extensions
                 kubernetesObject.Metadata.Uid);
 
         public static V1ObjectReference MakeObjectReference(this IKubernetesObject<V1ObjectMeta> kubernetesObject)
-            => new V1ObjectReference()
+            => new V1ObjectReference
             {
                 ApiVersion = kubernetesObject.ApiVersion,
                 Kind = kubernetesObject.Kind,
@@ -42,6 +32,9 @@ namespace KubeOps.Operator.Entities.Extensions
                 ResourceVersion = kubernetesObject.Metadata.ResourceVersion,
                 Uid = kubernetesObject.Metadata.Uid,
             };
+
+        private static IList<V1OwnerReference> EnsureOwnerReferences(this V1ObjectMeta meta) =>
+            meta.OwnerReferences ?? (meta.OwnerReferences = new List<V1OwnerReference>());
 
         /* commented pending fleshing this out and improving after confirming event best practices
         /// <summary>

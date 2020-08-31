@@ -8,7 +8,6 @@ using k8s.Models;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Controller
@@ -18,7 +17,7 @@ namespace KubeOps.Operator.Controller
     public abstract class ResourceControllerBase<TEntity> : IResourceController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        private readonly IReadOnlyList<ResourceEventType> _requeueableEvents = new[]
+        private static readonly IReadOnlyList<ResourceEventType> RequeueableEvents = new[]
         {
             ResourceEventType.Created,
             ResourceEventType.Updated,
@@ -26,30 +25,25 @@ namespace KubeOps.Operator.Controller
         };
 
         private readonly ILogger<ResourceControllerBase<TEntity>> _logger;
-        private readonly IResourceEventQueue<TEntity> _eventQueue;
-        private readonly Lazy<IEnumerable<IResourceFinalizer<TEntity>>> _finalizers;
+        private readonly IResourceServices<TEntity> _services;
         private bool _running;
 
-        protected ResourceControllerBase(ResourceServices<TEntity> services)
+        protected ResourceControllerBase(IResourceServices<TEntity> services)
         {
             _logger = services.LoggerFactory.CreateLogger<ResourceControllerBase<TEntity>>();
-            _eventQueue = services.EventQueue;
-            _finalizers = services.Finalizers;
-            Services = services;
+            _services = services;
         }
 
         bool IResourceController.Running => _running;
 
-        protected IKubernetesClient Client => Services.Client;
-
-        protected ResourceServices<TEntity> Services { get; }
+        protected IKubernetesClient Client => _services.Client;
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation(@"Startup CRD Controller for ""{resource}"".", typeof(TEntity));
 
-            _eventQueue.ResourceEvent += OnResourceEvent;
-            await _eventQueue.Start();
+            _services.EventQueue.ResourceEvent += OnResourceEvent;
+            await _services.EventQueue.Start();
             _running = true;
         }
 
@@ -57,8 +51,8 @@ namespace KubeOps.Operator.Controller
         {
             _logger.LogInformation(@"Shutdown CRD Controller for ""{resource}"".", typeof(TEntity));
 
-            _eventQueue.Stop();
-            _eventQueue.ResourceEvent -= OnResourceEvent;
+            _services.EventQueue.Stop();
+            _services.EventQueue.ResourceEvent -= OnResourceEvent;
             _running = false;
             return Task.CompletedTask;
         }
@@ -108,6 +102,19 @@ namespace KubeOps.Operator.Controller
             return Task.FromResult(default(TimeSpan?));
         }
 
+        protected Task AttachFinalizer<TFinalizer>(TEntity resource)
+            where TFinalizer : class, IResourceFinalizer<TEntity>
+        {
+            if (!(_services.Finalizers
+                .Value
+                .FirstOrDefault(f => f.GetType() == typeof(TFinalizer)) is TFinalizer finalizer))
+            {
+                throw new NoFinalizerRegisteredException(typeof(TEntity));
+            }
+
+            return finalizer.Register(resource);
+        }
+
         private async void OnResourceEvent(object? _, (ResourceEventType Type, TEntity Resource) args)
         {
             var (type, resource) = args;
@@ -127,14 +134,18 @@ namespace KubeOps.Operator.Controller
                         return;
                     }
 
-                    var finalizer = _finalizers.Value.FirstOrDefault(f => f.Identifier == resource.Metadata.Finalizers.First());
-                    if (finalizer == null)
+                    if (!(_services.Finalizers
+                            .Value
+                            .FirstOrDefault(
+                                f => f.Identifier == resource.Metadata.Finalizers.First()) is
+                        IResourceFinalizer<TEntity>
+                        finalizer))
                     {
                         _logger.LogDebug(
                             @"Resource ""{kind}/{name}"" is in pending deletion but no suitable finalizer found.",
                             resource.Kind,
                             resource.Metadata.Name);
-                        _eventQueue.ClearError(resource);
+                        _services.EventQueue.ClearError(resource);
                         return;
                     }
 
@@ -144,12 +155,12 @@ namespace KubeOps.Operator.Controller
                         resource.Metadata.Name,
                         finalizer.Identifier);
                     await finalizer.FinalizeResource(resource);
-                    _eventQueue.ClearError(resource);
+                    _services.EventQueue.ClearError(resource);
 
                     return;
                 }
 
-                if (!_requeueableEvents.Contains(type))
+                if (!RequeueableEvents.Contains(type))
                 {
                     switch (type)
                     {
@@ -166,7 +177,7 @@ namespace KubeOps.Operator.Controller
                         type,
                         resource.Kind,
                         resource.Metadata.Name);
-                    _eventQueue.ClearError(resource);
+                    _services.EventQueue.ClearError(resource);
 
                     return;
                 }
@@ -187,7 +198,7 @@ namespace KubeOps.Operator.Controller
                         resource.Kind,
                         resource.Metadata.Name,
                         requeue);
-                    await _eventQueue.Enqueue(resource, requeue);
+                    await _services.EventQueue.Enqueue(resource, requeue);
                 }
                 else
                 {
@@ -198,7 +209,7 @@ namespace KubeOps.Operator.Controller
                         resource.Metadata.Name);
                 }
 
-                _eventQueue.ClearError(resource);
+                _services.EventQueue.ClearError(resource);
             }
             catch (Exception e)
             {
@@ -208,7 +219,7 @@ namespace KubeOps.Operator.Controller
                     type,
                     resource.Kind,
                     resource.Metadata.Name);
-                _eventQueue.EnqueueErrored(type, resource);
+                _services.EventQueue.EnqueueErrored(type, resource);
             }
         }
     }
