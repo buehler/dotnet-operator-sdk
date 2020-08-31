@@ -8,6 +8,7 @@ using k8s;
 using k8s.Models;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Client;
+using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Errors;
 using KubeOps.Operator.Watcher;
@@ -35,7 +36,7 @@ namespace KubeOps.Operator.Queue
         private readonly ConcurrentDictionary<string, ExponentialBackoffHandler> _errorHandlers =
             new ConcurrentDictionary<string, ExponentialBackoffHandler>();
 
-        private readonly ResourceEventQueueMetrics<TEntity> _metrics = new ResourceEventQueueMetrics<TEntity>();
+        private readonly ResourceEventQueueMetrics<TEntity> _metrics;
 
         private int _queueSize;
         private CancellationTokenSource? _cancellation;
@@ -44,12 +45,14 @@ namespace KubeOps.Operator.Queue
             ILogger<ResourceEventQueue<TEntity>> logger,
             IKubernetesClient client,
             IResourceCache<TEntity> cache,
-            IResourceWatcher<TEntity> watcher)
+            IResourceWatcher<TEntity> watcher,
+            OperatorSettings settings)
         {
             _logger = logger;
             _client = client;
             _cache = cache;
             _watcher = watcher;
+            _metrics = new ResourceEventQueueMetrics<TEntity>(settings);
         }
 
         public event EventHandler<(ResourceEventType Type, TEntity Resource)>? ResourceEvent;

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Client;
-using KubeOps.Operator.DependencyInjection;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,29 +27,22 @@ namespace KubeOps.Operator.Controller
 
         private readonly ILogger<ResourceControllerBase<TEntity>> _logger;
         private readonly IResourceEventQueue<TEntity> _eventQueue;
+        private readonly Lazy<IEnumerable<IResourceFinalizer<TEntity>>> _finalizers;
         private bool _running;
 
-        protected ResourceControllerBase()
-            : this(
-                DependencyInjector.Services.GetRequiredService<ILogger<ResourceControllerBase<TEntity>>>(),
-                DependencyInjector.Services.GetRequiredService<IKubernetesClient>(),
-                DependencyInjector.Services.GetRequiredService<IResourceEventQueue<TEntity>>())
+        protected ResourceControllerBase(ResourceServices<TEntity> services)
         {
-        }
-
-        protected ResourceControllerBase(
-            ILogger<ResourceControllerBase<TEntity>> logger,
-            IKubernetesClient client,
-            IResourceEventQueue<TEntity> eventQueue)
-        {
-            _logger = logger;
-            _eventQueue = eventQueue;
-            Client = client;
+            _logger = services.LoggerFactory.CreateLogger<ResourceControllerBase<TEntity>>();
+            _eventQueue = services.EventQueue;
+            _finalizers = services.Finalizers;
+            Services = services;
         }
 
         bool IResourceController.Running => _running;
 
-        protected IKubernetesClient Client { get; }
+        protected IKubernetesClient Client => Services.Client;
+
+        protected ResourceServices<TEntity> Services { get; }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
@@ -135,9 +127,7 @@ namespace KubeOps.Operator.Controller
                         return;
                     }
 
-                    var finalizer = DependencyInjector.Services
-                        .GetServices<IResourceFinalizer<TEntity>>()
-                        .FirstOrDefault(f => f.Identifier == resource.Metadata.Finalizers.First());
+                    var finalizer = _finalizers.Value.FirstOrDefault(f => f.Identifier == resource.Metadata.Finalizers.First());
                     if (finalizer == null)
                     {
                         _logger.LogDebug(

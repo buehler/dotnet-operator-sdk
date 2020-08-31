@@ -26,7 +26,12 @@ namespace KubeOps.Operator.Caching
 
         private readonly IDictionary<string, TEntity> _cache = new ConcurrentDictionary<string, TEntity>();
 
-        private readonly ResourceCacheMetrics<TEntity> _metrics = new ResourceCacheMetrics<TEntity>();
+        private readonly ResourceCacheMetrics<TEntity> _metrics;
+
+        public ResourceCache(OperatorSettings settings)
+        {
+            _metrics = new ResourceCacheMetrics<TEntity>(settings);
+        }
 
         public TEntity Get(string id) => _cache[id];
 

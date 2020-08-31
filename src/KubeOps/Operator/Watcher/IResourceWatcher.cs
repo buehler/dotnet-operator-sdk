@@ -5,7 +5,7 @@ using k8s.Models;
 
 namespace KubeOps.Operator.Watcher
 {
-    internal interface IResourceWatcher<TEntity> : IDisposable
+    public interface IResourceWatcher<TEntity> : IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         event EventHandler<(WatchEventType Type, TEntity Resource)>? WatcherEvent;

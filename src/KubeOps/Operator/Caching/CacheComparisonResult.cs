@@ -1,6 +1,6 @@
 ﻿namespace KubeOps.Operator.Caching
 {
-    internal enum CacheComparisonResult
+    public enum CacheComparisonResult
     {
         New,
         Modified,

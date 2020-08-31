@@ -3,7 +3,7 @@ using k8s.Models;
 
 namespace KubeOps.Operator.Caching
 {
-    internal interface IResourceCache<TEntity>
+    public interface IResourceCache<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         TEntity Get(string id);
