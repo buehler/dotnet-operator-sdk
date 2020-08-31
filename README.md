@@ -31,24 +31,51 @@ That's it.
 
 ### Map the main function
 
-In your `Program.cs` file, map the main function to a kubernetes operator:
+In your `Program.cs` file, change `Run` to `RunOperator`
 
 ```csharp
-public static class Program
+public class Program
 {
-    public static Task<int> Main(string[] args) =>
-        new KubernetesOperator()
-            .ConfigureServices(
-                services =>
-                {
-                    // add resource controllers here
-                    // add finalizers here
-                })
-            .Run(args);
+    public static Task<int> Main(string[] args)
+    {
+        return CreateHostBuilder(args).Build().RunOperator(args);
+    }
+
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>();
+            });
 }
 ```
 
 This adds the default commands (like run and the code generators) to your app.
+
+Add a startup class
+
+```csharp
+public class Startup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services
+            .AddKubernetesOperator(s => s.Name = "test-operator")
+            .AddFinalizer<TestEntityFinalizer>()
+            .AddController<TestController>();
+
+        services.AddSingleton(new Mock<IManager>());
+        services.AddSingleton(typeof(IManager), provider => provider.GetRequiredService<Mock<IManager>>().Object);
+    }
+
+    public void Configure(IApplicationBuilder app)
+    {
+        app.UseKubernetesOperator();
+    }
+}
+```
+
+Note: you can omit running the webserver by using `ConfigureServices` instead of `ConfigureWebHostDefaults` and moving the services registrations there.
 
 ### Write Entities
 
