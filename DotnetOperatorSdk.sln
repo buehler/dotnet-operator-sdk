@@ -4,9 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.30406.217
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{95F3A6DD-B421-441D-B263-1B34A1465FF5}"
-ProjectSection(SolutionItems) = preProject
-	README.md = README.md
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KubeOps", "src\KubeOps\KubeOps.csproj", "{D7AB6CB9-94B6-4FEB-B7D8-D8AA793BD2A4}"
 EndProject
@@ -23,14 +23,16 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KubeOps.TestOperator.Test", "tests\KubeOps.TestOperator.Test\KubeOps.TestOperator.Test.csproj", "{B374D7E4-E9BA-47F8-B1A4-440DECD376E4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{EF94C48A-1D2A-459B-B397-A130463FF52D}"
-ProjectSection(SolutionItems) = preProject
-	config\CodeAnalysis.targets = config\CodeAnalysis.targets
-	config\Common.targets = config\Common.targets
-	config\project.ruleset = config\project.ruleset
-	config\stylecop.json = config\stylecop.json
-	.gitignore = .gitignore
-	.releaserc.json = .releaserc.json
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		.releaserc.json = .releaserc.json
+		config\CodeAnalysis.targets = config\CodeAnalysis.targets
+		config\Common.targets = config\Common.targets
+		config\project.ruleset = config\project.ruleset
+		config\stylecop.json = config\stylecop.json
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.Testing", "src\KubeOps.Testing\KubeOps.Testing.csproj", "{7AB4C29F-69CB-4638-AFD2-6D459C3EB245}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,6 +58,10 @@ Global
 		{B374D7E4-E9BA-47F8-B1A4-440DECD376E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B374D7E4-E9BA-47F8-B1A4-440DECD376E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B374D7E4-E9BA-47F8-B1A4-440DECD376E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AB4C29F-69CB-4638-AFD2-6D459C3EB245}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AB4C29F-69CB-4638-AFD2-6D459C3EB245}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AB4C29F-69CB-4638-AFD2-6D459C3EB245}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AB4C29F-69CB-4638-AFD2-6D459C3EB245}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -66,6 +72,7 @@ Global
 		{D47717CB-A02E-4B12-BAA8-1D7F8BAE9BBD} = {9AF95FE4-DA1F-4BB0-B60E-23FCFA6AAAA2}
 		{751BDC14-D75F-4DDE-9C45-2432041FBCAC} = {50E9B964-68F7-4B9F-BEA8-165CE45BC5C6}
 		{B374D7E4-E9BA-47F8-B1A4-440DECD376E4} = {50E9B964-68F7-4B9F-BEA8-165CE45BC5C6}
+		{7AB4C29F-69CB-4638-AFD2-6D459C3EB245} = {95F3A6DD-B421-441D-B263-1B34A1465FF5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ADAA5DFB-A7E5-490C-88EF-48D67C715F24}

@@ -16,7 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\KubeOps\KubeOps.csproj" />
+      <ProjectReference Include="..\..\src\KubeOps.Testing\KubeOps.Testing.csproj" />
       <ProjectReference Include="..\KubeOps.TestOperator\KubeOps.TestOperator.csproj" />
     </ItemGroup>
 

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  
+  <Import Project="..\..\config\Common.targets" />
+  <Import Project="..\..\config\CodeAnalysis.targets" />
+  
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>KubeOps.Testing</PackageId>
+    <PackageTags>Kubernetes Operator SDK Testing</PackageTags>
+    <PackageProjectUrl>https://github.com/buehler/dotnet-operator-sdk</PackageProjectUrl>
+    <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
+    <PackageDescription>
+      This is a library to assist with testing of KubeOps Kubernetes Operators.
+    </PackageDescription>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="3.1.7" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KubeOps\KubeOps.csproj" />
+  </ItemGroup>
+
+</Project>

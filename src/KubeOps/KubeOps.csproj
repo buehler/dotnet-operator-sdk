@@ -25,7 +25,6 @@
         <PackageReference Include="KubernetesClient" Version="2.0.29" />
         <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
         <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="3.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="3.1.7" />
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="3.1.7" />
         <PackageReference Include="Namotion.Reflection" Version="1.0.12" />
         <PackageReference Include="prometheus-net.AspNetCore" Version="3.6.0" />
