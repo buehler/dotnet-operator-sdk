@@ -1,7 +1,9 @@
 ﻿using System.Threading.Tasks;
+using KubeOps.Operator.Client;
 using KubeOps.Operator.Finalizer;
 using KubeOps.TestOperator.Entities;
 using KubeOps.TestOperator.TestManager;
+using Microsoft.Extensions.Logging;
 
 namespace KubeOps.TestOperator.Finalizer
 {
@@ -9,7 +11,8 @@ namespace KubeOps.TestOperator.Finalizer
     {
         private readonly IManager _manager;
 
-        public TestEntityFinalizer(IManager manager)
+        public TestEntityFinalizer(IManager manager, IKubernetesClient client, ILogger<ResourceFinalizerBase<TestEntity>> logger) 
+            : base(logger, client)
         {
             _manager = manager;
         }

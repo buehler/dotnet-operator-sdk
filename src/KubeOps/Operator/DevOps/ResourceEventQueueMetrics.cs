@@ -1,8 +1,6 @@
 ﻿using k8s;
 using k8s.Models;
-using KubeOps.Operator.DependencyInjection;
 using KubeOps.Operator.Entities.Extensions;
-using Microsoft.Extensions.DependencyInjection;
 using Prometheus;
 
 namespace KubeOps.Operator.DevOps
@@ -19,9 +17,8 @@ namespace KubeOps.Operator.DevOps
             "scope",
         };
 
-        public ResourceEventQueueMetrics()
+        public ResourceEventQueueMetrics(OperatorSettings settings)
         {
-            var settings = DependencyInjector.Services.GetRequiredService<OperatorSettings>();
             var crd = CustomEntityDefinitionExtensions.CreateResourceDefinition<TEntity>();
             var labelValues = new[]
             {
