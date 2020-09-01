@@ -83,6 +83,10 @@ public static class Program
 
 This adds the default commands (like run and the code generators) to your app.
 
+_NOTE_: Technically you don't need to replace the function,
+but if you don't, the other commands like yaml generation
+are not available to your application.
+
 ### Add to Startup.cs
 
 ```csharp
