@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\..\config\Common.targets" />
+    <Import Project="..\..\config\CodeAnalysis.targets" />
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <PackageId>KubeOps.Testing</PackageId>
+        <PackageTags>Kubernetes Operator SDK CustomResourceDefinition Testing Test</PackageTags>
+        <PackageProjectUrl>https://github.com/buehler/dotnet-operator-sdk</PackageProjectUrl>
+        <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
+        <PackageDescription>
+            Additional Resources that helps / supports integration
+            testing on a kubernetes operator written with the KubeOps
+            operator sdk.
+        </PackageDescription>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="3.1.7" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\KubeOps\KubeOps.csproj" />
+    </ItemGroup>
+
+</Project>
