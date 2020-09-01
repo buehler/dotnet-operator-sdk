@@ -33,7 +33,7 @@ namespace KubeOps.Operator.Finalizer
 
         public async Task Register(TResource resource)
         {
-            if (resource.Metadata.Finalizers != null && resource.Metadata.Finalizers.Contains(Identifier))
+            if (resource.Metadata.Finalizers?.Contains(Identifier) == true)
             {
                 return;
             }

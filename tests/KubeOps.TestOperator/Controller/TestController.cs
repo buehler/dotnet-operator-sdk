@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using KubeOps.Operator.Client;
 using KubeOps.Operator.Controller;
-using KubeOps.Operator.Entities.Extensions;
-using KubeOps.Operator.Finalizer;
-using KubeOps.Operator.Queue;
 using KubeOps.Operator.Rbac;
 using KubeOps.TestOperator.Entities;
 using KubeOps.TestOperator.Finalizer;
 using KubeOps.TestOperator.TestManager;
-using Microsoft.Extensions.Logging;
 
 namespace KubeOps.TestOperator.Controller
 {
@@ -19,7 +13,7 @@ namespace KubeOps.TestOperator.Controller
     {
         private readonly IManager _manager;
 
-        public TestController(IManager manager, ResourceServices<TestEntity> services) 
+        public TestController(IManager manager, IResourceServices<TestEntity> services)
             : base(services)
         {
             _manager = manager;
@@ -28,7 +22,7 @@ namespace KubeOps.TestOperator.Controller
         protected override async Task<TimeSpan?> Created(TestEntity resource)
         {
             _manager.Created(resource);
-            await resource.RegisterFinalizer<TestEntityFinalizer, TestEntity>(Services);
+            await AttachFinalizer<TestEntityFinalizer>(resource);
             return await base.Created(resource);
         }
 

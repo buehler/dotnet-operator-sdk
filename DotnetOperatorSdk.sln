@@ -22,8 +22,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KubeOps.TestOperator", "tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KubeOps.TestOperator.Test", "tests\KubeOps.TestOperator.Test\KubeOps.TestOperator.Test.csproj", "{B374D7E4-E9BA-47F8-B1A4-440DECD376E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.GenericTest", "tests\KubeOps.GenericTest\KubeOps.GenericTest.csproj", "{714D8DD8-AF4B-4990-AE63-0258BC3E3CD3}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{EF94C48A-1D2A-459B-B397-A130463FF52D}"
 ProjectSection(SolutionItems) = preProject
 	config\CodeAnalysis.targets = config\CodeAnalysis.targets
@@ -58,10 +56,6 @@ Global
 		{B374D7E4-E9BA-47F8-B1A4-440DECD376E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B374D7E4-E9BA-47F8-B1A4-440DECD376E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B374D7E4-E9BA-47F8-B1A4-440DECD376E4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{714D8DD8-AF4B-4990-AE63-0258BC3E3CD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{714D8DD8-AF4B-4990-AE63-0258BC3E3CD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{714D8DD8-AF4B-4990-AE63-0258BC3E3CD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{714D8DD8-AF4B-4990-AE63-0258BC3E3CD3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -72,7 +66,6 @@ Global
 		{D47717CB-A02E-4B12-BAA8-1D7F8BAE9BBD} = {9AF95FE4-DA1F-4BB0-B60E-23FCFA6AAAA2}
 		{751BDC14-D75F-4DDE-9C45-2432041FBCAC} = {50E9B964-68F7-4B9F-BEA8-165CE45BC5C6}
 		{B374D7E4-E9BA-47F8-B1A4-440DECD376E4} = {50E9B964-68F7-4B9F-BEA8-165CE45BC5C6}
-		{714D8DD8-AF4B-4990-AE63-0258BC3E3CD3} = {50E9B964-68F7-4B9F-BEA8-165CE45BC5C6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ADAA5DFB-A7E5-490C-88EF-48D67C715F24}
