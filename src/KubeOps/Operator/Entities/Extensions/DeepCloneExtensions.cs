@@ -18,8 +18,12 @@ namespace KubeOps.Operator.Entities.Extensions
                                                          throw new ArgumentNullException();
 
         /// <summary>
-        /// Returns a Deep Clone / Deep Copy of an object of type T using a recursive call to the CloneMethod specified above.
+        /// Returns a Deep Clone / Deep Copy of an object of type T using a recursive
+        /// call to the CloneMethod specified above.
         /// </summary>
+        /// <param name="obj">The object to deeply clone.</param>
+        /// <typeparam name="TResource">Object type.</typeparam>
+        /// <returns>A deep clone of a given object.</returns>
         internal static TResource DeepClone<TResource>(this TResource obj)
             where TResource : IKubernetesObject<V1ObjectMeta>
         {
