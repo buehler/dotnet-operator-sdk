@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Controller
 {
-    public class ResourceServices<TEntity>
+    internal class ResourceServices<TEntity> : IResourceServices<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         public ResourceServices(
@@ -19,7 +19,7 @@ namespace KubeOps.Operator.Controller
             IKubernetesClient client,
             IResourceCache<TEntity> resourceCache,
             IResourceEventQueue<TEntity> eventQueue,
-            Lazy<IEnumerable<IResourceFinalizer<TEntity>>> finalizers,
+            Lazy<IEnumerable<IResourceFinalizer>> finalizers,
             OperatorSettings settings)
         {
             LoggerFactory = loggerFactory;
@@ -38,7 +38,7 @@ namespace KubeOps.Operator.Controller
 
         public IResourceEventQueue<TEntity> EventQueue { get; }
 
-        public Lazy<IEnumerable<IResourceFinalizer<TEntity>>> Finalizers { get; }
+        public Lazy<IEnumerable<IResourceFinalizer>> Finalizers { get; }
 
         public OperatorSettings Settings { get; }
     }

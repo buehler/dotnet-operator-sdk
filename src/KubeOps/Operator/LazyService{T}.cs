@@ -7,7 +7,7 @@ namespace KubeOps.Operator
         where T : class
     {
         public LazyService(IServiceProvider provider)
-            : base(() => provider.GetRequiredService<T>())
+            : base(provider.GetRequiredService<T>)
         {
         }
     }
