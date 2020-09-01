@@ -11,13 +11,47 @@ custom operator yourself.
 
 - `Entity`: A model - an entity - that is used in kubernetes. An entity defines the CRD.
 - `Resource`: An instance of an entity.
+- `Controller` or `ResourceController`: An instance of a resource manager
+  that is responsible for the reconciliation of an entity.
+- `Finalizer`: A special resource manager that is attached to the entity
+  via identifier. The finalizers are called when an entity is deleted
+  on kubernetes.
+- `CRD`: CustomResourceDefinition of kubernetes.
+
+## Features
+
+As of now, the operator sdk supports - roughly - the following features:
+
+- Controller with all operations of an entity
+  - Created
+  - Updated
+  - NotModified
+  - StatusModified
+  - Deleted
+- Finalizers for entities
+- Prometheus metrics for queues / caches / watchers
+- Healthchecks, split up to "readiness" and "liveness" (or both)
+- Commands for the operator (for exact documentation run: `dotnet run -- --help`)
+  - `Run`: Start the operator and run the asp.net application
+  - `Install`: Install the found CRD's into the actual configured
+    cluster in your kubeconfig
+  - `Uninstall`: Remove the CRDs from your cluster
+  - `Generate CRD`: Generate the yaml for your CRDs
+  - `Generate Docker`: Generate a dockerfile for your operator
+  - `Generate Installer`: Generate a kustomization yaml for your operator
+  - `Generate Operator`: Generate the yaml for your operator (rbac / role / etc)
+  - `Generate RBAC`: Generate rbac roles for your CRDs
+
+Other features and ideas are listed in the repositories "issues".
 
 ## How To Use
 
 Using this sdk is pretty simple:
 
+- Create a new asp.net core application
 - Install the package
-- Map the main function
+- Replace the `Run` function in `Program.ch`
+- Add the operator to `Startup.cs`
 - Write entities / controllers / finalizers
 - Go.
 
@@ -29,26 +63,53 @@ dotnet add package KubeOps
 
 That's it.
 
-### Map the main function
+### Replace the Run function
 
-In your `Program.cs` file, map the main function to a kubernetes operator:
+In your `Program.cs` file, replace `Build().Run()` with `Build().RunOperator(args)`:
 
 ```csharp
 public static class Program
 {
-    public static Task<int> Main(string[] args) =>
-        new KubernetesOperator()
-            .ConfigureServices(
-                services =>
-                {
-                    // add resource controllers here
-                    // add finalizers here
-                })
-            .Run(args);
+    public static Task<int> Main(string[] args) => CreateHostBuilder(args).Build().RunOperator(args);
+
+    private static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>();
+            });
 }
 ```
 
 This adds the default commands (like run and the code generators) to your app.
+
+### Add to Startup.cs
+
+```csharp
+public class Startup
+{
+    /* snip... */
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services
+            .AddKubernetesOperator(s => s.Name = "test-operator") // config / settings here
+            .AddFinalizer<TestEntityFinalizer>()
+            .AddController<TestController>(); // Add controllers / finalizers / ... here
+
+        // your own dependencies
+        services.AddTransient<IManager, TestManager.TestManager>();
+    }
+
+    public void Configure(IApplicationBuilder app)
+    {
+        // fire up the mappings for the operator
+        // this is technically not needed, but if you don't call this
+        // function, the healthchecks and mappings are not
+        // mapped to endpoints (therefore not callable)
+        app.UseKubernetesOperator();
+    }
+}
+```
 
 ### Write Entities
 
@@ -129,7 +190,8 @@ public class FooFinalizer : ResourceFinalizerBase<Foo>
 And can be added to a resource with:
 
 ```csharp
-await resource.RegisterFinalizer<FooFinalizer, Foo>();
+// in a resource controller
+await AttachFinalizer<TestEntityFinalizer>(resource);
 ```
 
 After the finalizer ran successfully on a resource, it is unregistered
