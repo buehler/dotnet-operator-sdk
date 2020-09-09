@@ -15,7 +15,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Correctly_Translate_CRD()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
             var ced = CustomEntityDefinitionExtensions.CreateResourceDefinition(_testSpecEntity);
 
             crd.Kind.Should().Be(V1CustomResourceDefinition.KubeKind);
@@ -30,14 +30,14 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Add_Status_SubResource_If_Present()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testStatusEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testStatusEntity);
             crd.Spec.Subresources.Status.Should().NotBeNull();
         }
 
         [Fact]
         public void Should_Not_Add_Status_SubResource_If_Absent()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
             crd.Spec.Subresources?.Status?.Should().BeNull();
         }
 
@@ -52,7 +52,7 @@ namespace KubeOps.Test.Operator.Entities
         [InlineData("Enum", "string", null)]
         public void Should_Set_The_Correct_Type_And_Format_For_Types(string fieldName, string typeName, string? format)
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             specProperties.Type.Should().Be("object");
@@ -71,7 +71,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_The_Correct_Array_Type()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
 
             var normalField = specProperties.Properties["stringArray"];
@@ -88,7 +88,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_Description_On_Class()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             specProperties.Description.Should().NotBe("");
@@ -97,7 +97,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_Description()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             var field = specProperties.Properties["description"];
@@ -108,7 +108,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_ExternalDocs()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             var field = specProperties.Properties["externalDocs"];
@@ -119,7 +119,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_ExternalDocs_Description()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             var field = specProperties.Properties["externalDocsWithDescription"];
@@ -130,7 +130,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_Item_Information()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             var field = specProperties.Properties["items"];
@@ -144,7 +144,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_Length_Information()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             var field = specProperties.Properties["length"];
@@ -156,7 +156,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_MultipleOf()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             var field = specProperties.Properties["multipleOf"];
@@ -167,7 +167,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_Pattern()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             var field = specProperties.Properties["pattern"];
@@ -178,7 +178,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_RangeMinimum()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             var field = specProperties.Properties["rangeMinimum"];
@@ -190,7 +190,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_RangeMaximum()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             var field = specProperties.Properties["rangeMaximum"];
@@ -202,7 +202,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_Required()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testSpecEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testSpecEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             specProperties.Required.Should().Contain("required");
@@ -211,7 +211,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Set_Required_Null_If_No_Required()
         {
-            var crd = EntityToCrdExtensions.CreateCrd(_testStatusEntity).Convert();
+            var crd = (V1beta1CustomResourceDefinition)EntityToCrdExtensions.CreateCrd(_testStatusEntity);
 
             var specProperties = crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"];
             specProperties.Required.Should().BeNull();

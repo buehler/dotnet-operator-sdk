@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using k8s.Models;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Commands.Generators;
-using KubeOps.Operator.Entities.Extensions;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Rest;
 
@@ -54,7 +54,7 @@ namespace KubeOps.Operator.Commands.Management
                     }
                     catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
                     {
-                        await _client.Delete(crd.Convert());
+                        await _client.Delete((V1beta1CustomResourceDefinition)crd);
                     }
                 }
                 catch (HttpOperationException e)

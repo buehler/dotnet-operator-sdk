@@ -68,7 +68,7 @@ namespace KubeOps.Operator.Commands.Generators
             foreach (var crd in crds)
             {
                 var output = UseOldCrds
-                    ? _serializer.Serialize(crd.Convert(), Format)
+                    ? _serializer.Serialize((V1beta1CustomResourceDefinition)crd, Format)
                     : _serializer.Serialize(crd, Format);
 
                 if (!string.IsNullOrWhiteSpace(OutputPath))
