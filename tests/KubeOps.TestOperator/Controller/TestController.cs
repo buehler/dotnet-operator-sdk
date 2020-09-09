@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Rbac;
+using KubeOps.Operator.Services;
 using KubeOps.TestOperator.Entities;
 using KubeOps.TestOperator.Finalizer;
 using KubeOps.TestOperator.TestManager;

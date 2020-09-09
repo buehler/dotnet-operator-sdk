@@ -8,6 +8,7 @@ using k8s.Models;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
+using KubeOps.Operator.Services;
 using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Controller

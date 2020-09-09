@@ -8,7 +8,7 @@ using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
 using Microsoft.Extensions.Logging;
 
-namespace KubeOps.Operator.Controller
+namespace KubeOps.Operator.Services
 {
     public interface IResourceServices<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>

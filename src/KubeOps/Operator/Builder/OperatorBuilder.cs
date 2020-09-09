@@ -8,6 +8,7 @@ using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
 using KubeOps.Operator.Serialization;
+using KubeOps.Operator.Services;
 using KubeOps.Operator.Watcher;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;

@@ -6,10 +6,9 @@ using KubeOps.Operator.Caching;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
-using KubeOps.Operator.Watcher;
 using Microsoft.Extensions.Logging;
 
-namespace KubeOps.Operator.Controller
+namespace KubeOps.Operator.Services
 {
     internal class ResourceServices<TEntity> : IResourceServices<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
