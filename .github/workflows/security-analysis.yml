@@ -9,7 +9,7 @@ on:
     - cron: '0 20 * * 5'
 
 jobs:
-  CodeQL Analysis:
+  codeQL:
     name: Analyze
     runs-on: ubuntu-latest
 
