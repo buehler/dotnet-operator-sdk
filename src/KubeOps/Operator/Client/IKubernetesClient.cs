@@ -12,6 +12,36 @@ namespace KubeOps.Operator.Client
     {
         IKubernetes ApiClient { get; }
 
+        /// <summary>
+        /// Returns the name of the current namespace.
+        /// To determine the current namespace the following places (in the given order) are checked:
+        /// <list type="number">
+        /// <item>
+        /// <description>The created kubernetes configuration (from file / incluster)</description>
+        /// </item>
+        /// <item>
+        /// <description>
+        ///     The env variable given as the param to the function (default "POD_NAMESPACE")
+        ///     which can be provided by the <a href="https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#capabilities-of-the-downward-api">kubernetes downward API</a>
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <description>
+        ///     The fallback secret file if running on the cluster
+        ///     (/var/run/secrets/kubernetes.io/serviceaccount/namespace)
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <description>"default"</description>
+        /// </item>
+        /// </list>
+        /// </summary>
+        /// <param name="downwardApiEnvName">Customizable name of the env var to check for the namespace.</param>
+        /// <returns>A string containing the current namespace (or a fallback of it).</returns>
+        Task<string> GetCurrentNamespace(string downwardApiEnvName = "POD_NAMESPACE");
+
+        Task<VersionInfo> GetServerVersion();
+
         Task<TResource?> Get<TResource>(string name, string? @namespace = null)
             where TResource : class, IKubernetesObject<V1ObjectMeta>;
 

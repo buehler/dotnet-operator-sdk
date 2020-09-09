@@ -118,26 +118,24 @@ namespace KubeOps.Operator.Builder
             Services.AddTransient<EntitySerializer>();
 
             Services.AddTransient<IKubernetesClient, KubernetesClient>();
+            Services.AddSingleton(KubernetesClientConfiguration.BuildDefaultConfig());
             Services.AddSingleton<IKubernetes>(
-                _ =>
+                services => new Kubernetes(
+                    services.GetRequiredService<KubernetesClientConfiguration>(),
+                    new ClientUrlFixer())
                 {
-                    var config = KubernetesClientConfiguration.BuildDefaultConfig();
-
-                    return new Kubernetes(config, new ClientUrlFixer())
+                    SerializationSettings =
                     {
-                        SerializationSettings =
-                        {
-                            ContractResolver = new NamingConvention(),
-                            Converters = new List<JsonConverter>
-                                { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
-                        },
-                        DeserializationSettings =
-                        {
-                            ContractResolver = new NamingConvention(),
-                            Converters = new List<JsonConverter>
-                                { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
-                        },
-                    };
+                        ContractResolver = new NamingConvention(),
+                        Converters = new List<JsonConverter>
+                            { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
+                    },
+                    DeserializationSettings =
+                    {
+                        ContractResolver = new NamingConvention(),
+                        Converters = new List<JsonConverter>
+                            { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
+                    },
                 });
 
             Services.AddTransient(typeof(IResourceCache<>), typeof(ResourceCache<>));

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -16,12 +17,41 @@ namespace KubeOps.Operator.Client
 {
     internal class KubernetesClient : IKubernetesClient
     {
-        public KubernetesClient(IKubernetes apiClient)
+        private const string DownwardApiNamespaceFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
+        private const string DefaultNamespace = "default";
+
+        private readonly KubernetesClientConfiguration _clientConfig;
+
+        public KubernetesClient(IKubernetes apiClient, KubernetesClientConfiguration clientConfig)
         {
+            _clientConfig = clientConfig;
             ApiClient = apiClient;
         }
 
         public IKubernetes ApiClient { get; }
+
+        public async Task<string> GetCurrentNamespace(string downwardApiEnvName = "POD_NAMESPACE")
+        {
+            if (_clientConfig.Namespace != null)
+            {
+                return _clientConfig.Namespace;
+            }
+
+            if (Environment.GetEnvironmentVariable(downwardApiEnvName) != null)
+            {
+                return Environment.GetEnvironmentVariable(downwardApiEnvName) ?? string.Empty;
+            }
+
+            if (File.Exists(DownwardApiNamespaceFile))
+            {
+                var ns = await File.ReadAllTextAsync(DownwardApiNamespaceFile) ?? string.Empty;
+                return ns.Trim();
+            }
+
+            return DefaultNamespace;
+        }
+
+        public Task<VersionInfo> GetServerVersion() => ApiClient.GetCodeAsync();
 
         public async Task<TResource?> Get<TResource>(
             string name,

@@ -24,6 +24,11 @@ namespace KubeOps.Testing
 
         public object? UpdateResult { get; set; }
 
+        public Task<string> GetCurrentNamespace(string downwardApiEnvName = "POD_NAMESPACE") =>
+            Task.FromResult("default");
+
+        public Task<VersionInfo> GetServerVersion() => Task.FromResult(new VersionInfo());
+
         public Task<TResource?> Get<TResource>(string name, string? @namespace = null)
             where TResource : class, IKubernetesObject<V1ObjectMeta>
             => Task.FromResult(GetResult as TResource);
