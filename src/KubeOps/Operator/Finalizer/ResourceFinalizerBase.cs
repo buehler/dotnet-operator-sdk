@@ -50,7 +50,7 @@ namespace KubeOps.Operator.Finalizer
 
         public async Task Unregister(TResource resource)
         {
-            if (resource.Metadata.Finalizers == null || !resource.Metadata.Finalizers.Contains(Identifier))
+            if (resource.Metadata.Finalizers?.Contains(Identifier) != true)
             {
                 return;
             }
