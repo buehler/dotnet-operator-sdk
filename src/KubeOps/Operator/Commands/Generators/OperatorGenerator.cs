@@ -41,6 +41,18 @@ namespace KubeOps.Operator.Commands.Generators
                                     {
                                         Image = "operator",
                                         Name = "operator",
+                                        Ports = new List<V1ContainerPort>
+                                        {
+                                            new V1ContainerPort(80, name: "http"),
+                                        },
+                                        LivenessProbe = new V1Probe(
+                                            timeoutSeconds: 1,
+                                            initialDelaySeconds: 30,
+                                            httpGet: new V1HTTPGetAction("http", path: "/health")),
+                                        ReadinessProbe = new V1Probe(
+                                            timeoutSeconds: 1,
+                                            initialDelaySeconds: 15,
+                                            httpGet: new V1HTTPGetAction("http", path: "/ready")),
                                         Resources = new V1ResourceRequirements
                                         {
                                             Requests = new Dictionary<string, ResourceQuantity>

@@ -114,6 +114,7 @@ namespace KubeOps.Operator.Builder
                 _ => new SerializerBuilder()
                     .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
                     .WithNamingConvention(new NamingConvention())
+                    .WithTypeConverter(new YamlIntOrStrTypeConverter())
                     .Build());
 
             Services.AddTransient<EntitySerializer>();
