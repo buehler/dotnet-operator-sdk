@@ -81,7 +81,7 @@ namespace KubeOps.Operator.Caching
                 return CacheComparisonResult.StatusModified;
             }
 
-            if (comparison.Differences.All(d => d.PropertyName == Finalizers))
+            if (comparison.Differences.All(d => d.ParentPropertyName == Finalizers || d.PropertyName == Finalizers))
             {
                 return CacheComparisonResult.FinalizersModified;
             }
