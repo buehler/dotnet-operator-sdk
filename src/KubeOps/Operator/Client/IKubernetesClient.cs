@@ -40,6 +40,10 @@ namespace KubeOps.Operator.Client
         /// <returns>A string containing the current namespace (or a fallback of it).</returns>
         Task<string> GetCurrentNamespace(string downwardApiEnvName = "POD_NAMESPACE");
 
+        /// <summary>
+        /// Fetch and return the actual kubernetes <see cref="VersionInfo"/> (aka. Server Version).
+        /// </summary>
+        /// <returns>The <see cref="VersionInfo"/> of the current server.</returns>
         Task<VersionInfo> GetServerVersion();
 
         Task<TResource?> Get<TResource>(string name, string? @namespace = null)

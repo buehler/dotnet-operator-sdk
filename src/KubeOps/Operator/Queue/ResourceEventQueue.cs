@@ -86,12 +86,13 @@ namespace KubeOps.Operator.Queue
 
             _delayedEnqueue.Clear();
             _errorHandlers.Clear();
+            _cache.Clear();
             _metrics.Running.Set(0);
         }
 
         public void Dispose()
         {
-            if (_cancellation != null && !_cancellation.IsCancellationRequested)
+            if (_cancellation?.IsCancellationRequested == false)
             {
                 _cancellation.Cancel();
             }

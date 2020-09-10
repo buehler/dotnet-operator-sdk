@@ -5,6 +5,7 @@ using k8s.Models;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Finalizer;
+using KubeOps.Operator.Leader;
 using KubeOps.Operator.Queue;
 using Microsoft.Extensions.Logging;
 
@@ -24,5 +25,7 @@ namespace KubeOps.Operator.Services
         Lazy<IEnumerable<IResourceFinalizer>> Finalizers { get; }
 
         OperatorSettings Settings { get; }
+
+        ILeaderElection LeaderElection { get; }
     }
 }

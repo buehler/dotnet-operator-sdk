@@ -41,26 +41,27 @@ namespace KubeOps.Operator.Watcher
         public Task Stop()
         {
             _logger.LogTrace(@"Resource Watcher shutdown for type ""{type}"".", typeof(TEntity));
-            _cancellation?.Cancel();
+            Dispose();
             return Task.CompletedTask;
         }
 
         public void Dispose()
         {
-            if (_cancellation != null && !_cancellation.IsCancellationRequested)
-            {
-                _cancellation.Cancel();
-            }
-
             foreach (var handler in WatcherEvent?.GetInvocationList() ?? new Delegate[] { })
             {
                 WatcherEvent -= (EventHandler<(WatchEventType Type, TEntity Resource)>)handler;
+            }
+
+            if (_cancellation?.IsCancellationRequested == false)
+            {
+                _cancellation.Cancel();
             }
 
             _reconnectHandler.Dispose();
             _cancellation?.Dispose();
             _watcher?.Dispose();
             _logger.LogTrace(@"Disposed resource watcher for type ""{type}"".", typeof(TEntity));
+            _metrics.Running.Set(0);
         }
 
         private async Task WatchResource()

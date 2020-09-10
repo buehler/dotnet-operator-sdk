@@ -12,7 +12,7 @@ namespace KubeOps.TestOperator
         public void ConfigureServices(IServiceCollection services)
         {
             services
-                .AddKubernetesOperator(s => s.Name = "test-operator")
+                .AddKubernetesOperator()
                 .AddFinalizer<TestEntityFinalizer>()
                 .AddController<TestController>();
 

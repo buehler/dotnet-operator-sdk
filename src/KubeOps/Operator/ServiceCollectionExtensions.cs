@@ -8,7 +8,7 @@ namespace KubeOps.Operator
     {
         public static IOperatorBuilder AddKubernetesOperator(
             this IServiceCollection services,
-            Action<OperatorSettings>? configure)
+            Action<OperatorSettings>? configure = null)
         {
             var settings = new OperatorSettings();
             configure?.Invoke(settings);

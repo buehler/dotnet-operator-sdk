@@ -6,12 +6,14 @@ using KubeOps.Operator.Client;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Finalizer;
+using KubeOps.Operator.Leader;
 using KubeOps.Operator.Queue;
 using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Services;
 using KubeOps.Operator.Watcher;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Rest.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -91,23 +93,22 @@ namespace KubeOps.Operator.Builder
             // support lazy service resolution
             Services.AddTransient(typeof(Lazy<>), typeof(LazyService<>));
 
-            Services.AddTransient(
-                _ => new JsonSerializerSettings
-                {
-                    ContractResolver = new NamingConvention(),
-                    Converters = new List<JsonConverter>
-                    {
-                        new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() },
-                    },
-                });
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            var jsonSettings = new JsonSerializerSettings
             {
+                DateFormatHandling = DateFormatHandling.IsoDateFormat,
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                NullValueHandling = NullValueHandling.Ignore,
+                ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
                 ContractResolver = new NamingConvention(),
                 Converters = new List<JsonConverter>
                 {
                     new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() },
+                    new Iso8601TimeSpanConverter(),
                 },
+                DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
             };
+            Services.AddTransient(_ => jsonSettings);
+            JsonConvert.DefaultSettings = () => jsonSettings;
 
             Services.AddTransient(
                 _ => new SerializerBuilder()
@@ -126,15 +127,32 @@ namespace KubeOps.Operator.Builder
                 {
                     SerializationSettings =
                     {
+                        Formatting = Formatting.Indented,
+                        DateFormatHandling = DateFormatHandling.IsoDateFormat,
+                        DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                        NullValueHandling = NullValueHandling.Ignore,
+                        ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
                         ContractResolver = new NamingConvention(),
                         Converters = new List<JsonConverter>
-                            { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
+                        {
+                            new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() },
+                            new Iso8601TimeSpanConverter(),
+                        },
+                        DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
                     },
                     DeserializationSettings =
                     {
+                        DateFormatHandling = DateFormatHandling.IsoDateFormat,
+                        DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                        NullValueHandling = NullValueHandling.Ignore,
+                        ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
                         ContractResolver = new NamingConvention(),
                         Converters = new List<JsonConverter>
-                            { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } },
+                        {
+                            new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() },
+                            new Iso8601TimeSpanConverter(),
+                        },
+                        DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
                     },
                 });
 
@@ -150,6 +168,10 @@ namespace KubeOps.Operator.Builder
 
             // Add the default controller liveness check.
             AddHealthCheck<ControllerLivenessCheck>();
+
+            // Support for leader election via V1Leases.
+            Services.AddHostedService<LeaderElector>();
+            Services.AddSingleton<ILeaderElection, LeaderElection>();
 
             return this;
         }

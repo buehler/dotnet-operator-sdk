@@ -7,6 +7,7 @@ using k8s;
 using k8s.Models;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Finalizer;
+using KubeOps.Operator.Leader;
 using KubeOps.Operator.Queue;
 using KubeOps.Operator.Services;
 using Microsoft.Extensions.Logging;
@@ -39,22 +40,24 @@ namespace KubeOps.Operator.Controller
 
         protected IKubernetesClient Client => _services.Client;
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation(@"Startup CRD Controller for ""{resource}"".", typeof(TEntity));
-
-            _services.EventQueue.ResourceEvent += OnResourceEvent;
-            await _services.EventQueue.Start();
             _running = true;
+            _services.LeaderElection.LeadershipChange += LeadershipChanged;
+            LeadershipChanged(null, _services.LeaderElection.State);
+
+            return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation(@"Shutdown CRD Controller for ""{resource}"".", typeof(TEntity));
 
-            _services.EventQueue.Stop();
-            _services.EventQueue.ResourceEvent -= OnResourceEvent;
+            LeadershipChanged(null, LeaderState.None);
+            _services.LeaderElection.LeadershipChange -= LeadershipChanged;
             _running = false;
+
             return Task.CompletedTask;
         }
 
@@ -114,6 +117,23 @@ namespace KubeOps.Operator.Controller
             }
 
             return finalizer.Register(resource);
+        }
+
+        private async void LeadershipChanged(object? sender, LeaderState state)
+        {
+            if (state == LeaderState.Leader)
+            {
+                _logger.LogInformation("This instance was elected as leader, starting event queue.");
+                _services.EventQueue.ResourceEvent += OnResourceEvent;
+                await _services.EventQueue.Start();
+
+                return;
+            }
+
+            _logger.LogInformation(
+                "This instance has either resigned from leadership, was elected candidate or is shutting down. Stopping event queue.");
+            await _services.EventQueue.Stop();
+            _services.EventQueue.ResourceEvent -= OnResourceEvent;
         }
 
         private async void OnResourceEvent(object? _, (ResourceEventType Type, TEntity Resource) args)
