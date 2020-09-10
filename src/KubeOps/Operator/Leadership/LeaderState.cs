@@ -1,4 +1,4 @@
-﻿namespace KubeOps.Operator.Leader
+﻿namespace KubeOps.Operator.Leadership
 {
     public enum LeaderState
     {

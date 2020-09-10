@@ -7,7 +7,7 @@ using k8s;
 using k8s.Models;
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Finalizer;
-using KubeOps.Operator.Leader;
+using KubeOps.Operator.Leadership;
 using KubeOps.Operator.Queue;
 using KubeOps.Operator.Services;
 using Microsoft.Extensions.Logging;

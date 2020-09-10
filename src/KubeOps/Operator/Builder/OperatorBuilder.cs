@@ -6,7 +6,7 @@ using KubeOps.Operator.Client;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Finalizer;
-using KubeOps.Operator.Leader;
+using KubeOps.Operator.Leadership;
 using KubeOps.Operator.Queue;
 using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Services;

@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Rest;
 using Timer = System.Timers.Timer;
 
-namespace KubeOps.Operator.Leader
+namespace KubeOps.Operator.Leadership
 {
     internal class LeaderElector : IHostedService
     {

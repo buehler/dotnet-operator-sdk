@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 
-namespace KubeOps.Operator.Leader
+namespace KubeOps.Operator.Leadership
 {
     internal class LeaderElection : ILeaderElection
     {
