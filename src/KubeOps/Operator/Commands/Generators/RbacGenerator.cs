@@ -38,6 +38,7 @@ namespace KubeOps.Operator.Commands.Generators
                 new V1ObjectMeta { Name = "operator-role" },
                 new List<V1PolicyRule>(
                     GetAttributes<EntityRbacAttribute>(assembly)
+                        .Concat(GetAttributes<EntityRbacAttribute>(Assembly.GetExecutingAssembly()))
                         .SelectMany(a => a.CreateRbacPolicies())
                         .Concat(GetAttributes<GenericRbacAttribute>(assembly).Select(a => a.CreateRbacPolicy()))));
         }

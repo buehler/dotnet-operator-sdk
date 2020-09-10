@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using k8s.Models;
 using KubeOps.Operator.Client;
+using KubeOps.Operator.Rbac;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Rest;
@@ -12,6 +13,7 @@ using Timer = System.Timers.Timer;
 
 namespace KubeOps.Operator.Leadership
 {
+    [EntityRbac(typeof(V1Lease), Verbs = RbacVerb.All)]
     internal class LeaderElector : IHostedService
     {
         private readonly ILogger<LeaderElector> _logger;
