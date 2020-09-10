@@ -3,7 +3,7 @@ using k8s.Models;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
 
-namespace KubeOps.Test.Operator.Entities.TestEntities
+namespace KubeOps.Test.TestEntities
 {
     [Description("This is the Spec Class Description")]
     public class TestSpecEntitySpec

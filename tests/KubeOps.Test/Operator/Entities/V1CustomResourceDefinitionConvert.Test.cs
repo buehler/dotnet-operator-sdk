@@ -2,7 +2,7 @@
 using FluentAssertions;
 using k8s.Models;
 using KubeOps.Operator.Entities.Extensions;
-using KubeOps.Test.Operator.Entities.TestEntities;
+using KubeOps.Test.TestEntities;
 using Xunit;
 
 namespace KubeOps.Test.Operator.Entities

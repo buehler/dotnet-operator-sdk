@@ -1,0 +1,163 @@
+﻿using System.Collections.Generic;
+using FluentAssertions;
+using k8s.Models;
+using KubeOps.Operator;
+using KubeOps.Operator.Caching;
+using KubeOps.Test.TestEntities;
+using Xunit;
+
+namespace KubeOps.Test.Operator.Caching
+{
+    public class ResourceCacheTest
+    {
+        private readonly IResourceCache<TestStatusEntity> _cache =
+            new ResourceCache<TestStatusEntity>(new OperatorSettings());
+
+        [Fact]
+        public void Throws_When_Not_Found()
+            => Assert.Throws<KeyNotFoundException>(() => _cache.Get("foobar"));
+
+        [Theory]
+        [MemberData(nameof(Data))]
+        public void Should_Correctly_Compare_Objects(
+            TestStatusEntity? firstInsert,
+            TestStatusEntity secondInsert,
+            CacheComparisonResult expectedResult)
+        {
+            _cache.Clear();
+
+            if (firstInsert != null)
+            {
+                _cache.Upsert(firstInsert, out _);
+            }
+
+            _cache.Upsert(secondInsert, out var result);
+
+            result.Should().Be(expectedResult);
+        }
+
+        [Fact]
+        public void Should_Remove_Object()
+        {
+            _cache.Clear();
+
+            var entity = new TestStatusEntity { Metadata = new V1ObjectMeta { Uid = "test" } };
+            _cache.Upsert(entity, out _);
+            _cache.Get("test");
+            _cache.Remove(entity);
+
+            Assert.Throws<KeyNotFoundException>(() => _cache.Get("test"));
+        }
+
+        public static IEnumerable<object?[]> Data =>
+            new List<object?[]>
+            {
+                new object?[]
+                {
+                    null,
+                    new TestStatusEntity { Metadata = new V1ObjectMeta { Uid = "test" } },
+                    CacheComparisonResult.New,
+                },
+                new object?[]
+                {
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Spec = new TestStatusEntitySpec { SpecString = "test" },
+                    },
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test2" },
+                        Spec = new TestStatusEntitySpec { SpecString = "test" },
+                    },
+                    CacheComparisonResult.New,
+                },
+                new object?[]
+                {
+                    new TestStatusEntity { Metadata = new V1ObjectMeta { Uid = "test" } },
+                    new TestStatusEntity { Metadata = new V1ObjectMeta { Uid = "test" } },
+                    CacheComparisonResult.NotModified,
+                },
+                new object?[]
+                {
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Spec = new TestStatusEntitySpec { SpecString = "test" },
+                    },
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Spec = new TestStatusEntitySpec { SpecString = "test" },
+                    },
+                    CacheComparisonResult.NotModified,
+                },
+                new object?[]
+                {
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Spec = new TestStatusEntitySpec { SpecString = "test" },
+                    },
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Spec = new TestStatusEntitySpec { SpecString = "test2" },
+                    },
+                    CacheComparisonResult.Modified,
+                },
+                new object?[]
+                {
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Status = new TestStatusEntityStatus { StatusString = "status" },
+                    },
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Status = new TestStatusEntityStatus { StatusString = "status" },
+                    },
+                    CacheComparisonResult.NotModified,
+                },
+                new object?[]
+                {
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Status = new TestStatusEntityStatus { StatusString = "status" },
+                    },
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Status = new TestStatusEntityStatus { StatusString = "status2" },
+                    },
+                    CacheComparisonResult.StatusModified,
+                },
+                new object?[]
+                {
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test", Finalizers = new List<string> { "f1" } },
+                    },
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test", Finalizers = new List<string> { "f2" } },
+                    },
+                    CacheComparisonResult.FinalizersModified,
+                },
+                new object?[]
+                {
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test", Finalizers = new List<string> { "f1" } },
+                    },
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                    },
+                    CacheComparisonResult.FinalizersModified,
+                },
+            };
+    }
+}

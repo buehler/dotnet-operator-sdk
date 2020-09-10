@@ -2,7 +2,7 @@
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
 
-namespace KubeOps.Test.Operator.Entities.TestEntities
+namespace KubeOps.Test.TestEntities
 {
     [IgnoreEntity]
     [KubernetesEntity(Group = "kubeops.test.dev", ApiVersion = "V1")]
