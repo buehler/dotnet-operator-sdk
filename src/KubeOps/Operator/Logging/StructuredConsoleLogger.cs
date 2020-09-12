@@ -22,10 +22,16 @@ namespace KubeOps.Operator.Logging
 
         public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None;
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
         {
             var message = new LogMessage
             {
+                Level = logLevel,
                 Category = _category,
                 Message = formatter(state, exception),
                 Timestamp = DateTime.UtcNow,
@@ -40,25 +46,24 @@ namespace KubeOps.Operator.Logging
                 }
             }
 
-            if (exception != null)
-            {
-                message.Exception = exception.ToString();
-            }
+            message.Exception = exception?.ToString();
 
             Console.WriteLine(JsonConvert.SerializeObject(message, _jsonSettings));
         }
 
         private struct LogMessage
         {
+            public LogLevel Level { get; set; }
+
             public string Category { get; set; }
 
             public DateTime Timestamp { get; set; }
 
             public string Message { get; set; }
 
-            public string Exception { get; set; }
+            public string? Exception { get; set; }
 
-            public IDictionary<string, object> Parameters { get; set; }
+            public IDictionary<string, object>? Parameters { get; set; }
         }
     }
 }
