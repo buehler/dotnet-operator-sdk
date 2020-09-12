@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -145,6 +146,11 @@ namespace KubeOps.Operator.Entities.Extensions
                 props.ExclusiveMinimum = rangeMin.ExclusiveMinimum;
             }
 
+            if (info.GetCustomAttribute<PreserveUnknownFieldsAttribute>() != null)
+            {
+                props.XKubernetesPreserveUnknownFields = true;
+            }
+
             return props;
         }
 
@@ -165,9 +171,20 @@ namespace KubeOps.Operator.Entities.Extensions
                 props.Items = MapType(
                     type.GetElementType() ?? throw new NullReferenceException("No Array Element Type found"));
             }
+            else if (!IsSimpleType(type) &&
+                     (typeof(IDictionary).IsAssignableFrom(type) ||
+                      (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>)) ||
+                      (type.IsGenericType &&
+                       type.GetGenericArguments().FirstOrDefault()?.GetGenericTypeDefinition() ==
+                       typeof(KeyValuePair<,>))))
+            {
+                props.Type = Object;
+                props.XKubernetesPreserveUnknownFields = true;
+            }
             else if (!IsSimpleType(type))
             {
                 props.Type = Object;
+
                 props.Properties = new Dictionary<string, V1JSONSchemaProps>(
                     type.GetProperties()
                         .Select(

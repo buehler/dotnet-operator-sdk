@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using k8s.Models;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
@@ -73,6 +75,16 @@ namespace KubeOps.Test.TestEntities
 
         [Required]
         public int Required { get; set; }
+
+        public IDictionary Dictionary { get; set; } = new Dictionary<string, string>();
+
+        public IDictionary<string, string> GenericDictionary { get; set; } = new Dictionary<string, string>();
+
+        public IEnumerable<KeyValuePair<string, string>> KeyValueEnumerable { get; set; } =
+            new Dictionary<string, string>();
+
+        [PreserveUnknownFields]
+        public object PreserveUnknownFields { get; set; } = new object();
 
         public enum TestSpecEnum
         {
