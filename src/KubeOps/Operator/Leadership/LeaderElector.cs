@@ -78,7 +78,7 @@ namespace KubeOps.Operator.Leadership
         /// Check the <see cref="V1Lease"/> object for the leader election.
         /// </summary>
         /// <returns>A Task.</returns>
-        private async Task CheckLeaderLease()
+        internal async Task CheckLeaderLease()
         {
             if (_namespace.Length == 0)
             {
@@ -245,7 +245,7 @@ namespace KubeOps.Operator.Leadership
         /// and therefore suppress orphans.
         /// </summary>
         /// <returns>A Task.</returns>
-        private async Task ClearLeaseIfLeader()
+        internal async Task ClearLeaseIfLeader()
         {
             if (_namespace.Length == 0)
             {
