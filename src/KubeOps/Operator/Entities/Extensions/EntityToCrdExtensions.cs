@@ -30,9 +30,9 @@ namespace KubeOps.Operator.Entities.Extensions
         internal static V1CustomResourceDefinition CreateCrd<TEntity>()
             where TEntity : IKubernetesObject<V1ObjectMeta> => CreateCrd(typeof(TEntity));
 
-        internal static V1CustomResourceDefinition CreateCrd(Type entityType)
+        internal static V1CustomResourceDefinition CreateCrd(this Type entityType)
         {
-            var entityDefinition = CustomEntityDefinitionExtensions.CreateResourceDefinition(entityType);
+            var entityDefinition = entityType.CreateResourceDefinition();
 
             var crd = new V1CustomResourceDefinition(
                 new V1CustomResourceDefinitionSpec(),

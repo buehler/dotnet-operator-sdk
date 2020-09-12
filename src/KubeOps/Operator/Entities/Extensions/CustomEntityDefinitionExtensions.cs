@@ -15,7 +15,7 @@ namespace KubeOps.Operator.Entities.Extensions
             where TEntity : IKubernetesObject<V1ObjectMeta> =>
             CreateResourceDefinition(typeof(TEntity));
 
-        internal static CustomEntityDefinition CreateResourceDefinition(Type resourceType)
+        internal static CustomEntityDefinition CreateResourceDefinition(this Type resourceType)
         {
             var attribute = resourceType.GetCustomAttribute<KubernetesEntityAttribute>();
             if (attribute == null)
