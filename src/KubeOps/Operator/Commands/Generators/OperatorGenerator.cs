@@ -41,6 +41,20 @@ namespace KubeOps.Operator.Commands.Generators
                                     {
                                         Image = "operator",
                                         Name = "operator",
+                                        Env = new List<V1EnvVar>
+                                        {
+                                            new V1EnvVar
+                                            {
+                                                Name = "POD_NAMESPACE",
+                                                ValueFrom = new V1EnvVarSource
+                                                {
+                                                    FieldRef = new V1ObjectFieldSelector
+                                                    {
+                                                        FieldPath = "metadata.namespace",
+                                                    },
+                                                },
+                                            },
+                                        },
                                         Ports = new List<V1ContainerPort>
                                         {
                                             new V1ContainerPort(80, name: "http"),
