@@ -181,6 +181,10 @@ namespace KubeOps.Operator.Entities.Extensions
                 props.Type = Object;
                 props.XKubernetesPreserveUnknownFields = true;
             }
+            else if (type == typeof(IntstrIntOrString))
+            {
+                props.XKubernetesIntOrString = true;
+            }
             else if (!IsSimpleType(type))
             {
                 props.Type = Object;

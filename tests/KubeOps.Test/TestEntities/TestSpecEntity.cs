@@ -86,6 +86,8 @@ namespace KubeOps.Test.TestEntities
         [PreserveUnknownFields]
         public object PreserveUnknownFields { get; set; } = new object();
 
+        public IntstrIntOrString IntOrString { get; set; } = string.Empty;
+
         public enum TestSpecEnum
         {
             Value1,

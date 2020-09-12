@@ -290,5 +290,15 @@ namespace KubeOps.Test.Operator.Entities
             var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
             specProperties.Properties["keyValueEnumerable"].Properties.Should().BeNull();
         }
+
+        [Fact]
+        public void Should_Set_IntOrString()
+        {
+            var crd = _testSpecEntity.CreateCrd();
+
+            var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
+            specProperties.Properties["intOrString"].Properties.Should().BeNull();
+            specProperties.Properties["intOrString"].XKubernetesIntOrString.Should().BeTrue();
+        }
     }
 }
