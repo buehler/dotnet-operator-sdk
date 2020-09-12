@@ -72,8 +72,6 @@ namespace KubeOps.Operator.Entities.Extensions
 
         private static V1JSONSchemaProps MapProperty(PropertyInfo info)
         {
-            // TODO: get description somehow.
-            // TODO: support description via XML fields -> but describe how (generate xml file stuff)
             var props = MapType(info.PropertyType);
             var contextual = info.ToContextualProperty();
 
@@ -85,6 +83,11 @@ namespace KubeOps.Operator.Entities.Extensions
 
             // Get the description on the property
             props.Description ??= info.GetCustomAttribute<DescriptionAttribute>()?.Description;
+            var docsSummary = contextual.GetXmlDocsSummary();
+            if (!string.IsNullOrWhiteSpace(docsSummary))
+            {
+                props.Description ??= docsSummary;
+            }
 
             var externalDoc = info.GetCustomAttribute<ExternalDocsAttribute>();
             if (externalDoc != null)

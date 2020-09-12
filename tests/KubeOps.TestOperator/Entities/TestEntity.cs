@@ -5,6 +5,9 @@ namespace KubeOps.TestOperator.Entities
 {
     public class TestEntitySpec
     {
+        /// <summary>
+        /// This is a test for the contextual fetching of descriptions.
+        /// </summary>
         public string Spec { get; set; } = string.Empty;
     }
 
