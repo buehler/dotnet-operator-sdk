@@ -88,6 +88,9 @@ namespace KubeOps.Test.TestEntities
 
         public IntstrIntOrString IntOrString { get; set; } = string.Empty;
 
+        [EmbeddedResource]
+        public V1ConfigMap KubernetesObject { get; set; } = new V1ConfigMap();
+
         public enum TestSpecEnum
         {
             Value1,

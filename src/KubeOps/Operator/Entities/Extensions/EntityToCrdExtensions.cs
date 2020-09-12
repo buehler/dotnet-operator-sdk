@@ -151,6 +151,14 @@ namespace KubeOps.Operator.Entities.Extensions
                 props.XKubernetesPreserveUnknownFields = true;
             }
 
+            if (info.GetCustomAttribute<EmbeddedResourceAttribute>() != null)
+            {
+                props.Type = null;
+                props.Properties = null;
+                props.XKubernetesPreserveUnknownFields = true;
+                props.XKubernetesEmbeddedResource = true;
+            }
+
             return props;
         }
 
