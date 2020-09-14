@@ -22,7 +22,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="CompareNETObjects" Version="4.66.0" />
+        <PackageReference Include="CompareNETObjects" Version="4.67.0" />
         <PackageReference Include="KubernetesClient" Version="2.0.29" />
         <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
         <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="3.0.0" />
