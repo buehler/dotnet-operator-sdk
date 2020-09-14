@@ -332,8 +332,7 @@ namespace KubeOps.Operator.Queue
             _logger.LogTrace(@"Start queue reader for type ""{type}"".", typeof(TEntity));
 
             _metrics.Running.Set(1);
-            while (_cancellation != null &&
-                   !_cancellation.IsCancellationRequested &&
+            while (_cancellation?.IsCancellationRequested == false &&
                    await _queue.Reader.WaitToReadAsync(_cancellation.Token))
             {
                 if (!_queue.Reader.TryRead(out var message))

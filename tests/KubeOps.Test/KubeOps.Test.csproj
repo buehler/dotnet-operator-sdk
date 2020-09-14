@@ -20,9 +20,4 @@
         <ProjectReference Include="..\..\src\KubeOps\KubeOps.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Operator\Queue" />
-      <Folder Include="Operator\Watcher" />
-    </ItemGroup>
-
 </Project>

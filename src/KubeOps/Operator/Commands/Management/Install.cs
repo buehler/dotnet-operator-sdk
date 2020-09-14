@@ -19,7 +19,6 @@ namespace KubeOps.Operator.Commands.Management
     {
         private readonly IKubernetesClient _client;
 
-        // TODO: kube proxy (for cluster stuff)
         public Install(IKubernetesClient client)
         {
             _client = client;

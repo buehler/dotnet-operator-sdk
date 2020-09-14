@@ -154,7 +154,7 @@ namespace KubeOps.Operator.Watcher
             _metrics.Running.Set(0);
             _metrics.WatcherClosed.Inc();
 
-            if (_cancellation != null && !_cancellation.IsCancellationRequested)
+            if (_cancellation?.IsCancellationRequested == false)
             {
                 _logger.LogDebug("The server closed the connection. Trying to reconnect.");
                 RestartWatcher();
