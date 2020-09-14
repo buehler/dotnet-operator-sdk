@@ -14,8 +14,6 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Controller
 {
-    // TODO: namespaced controller (only watch resource of a specific namespace)
-    // TODO: Webhooks?
     public abstract class ResourceControllerBase<TEntity> : IResourceController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
@@ -43,6 +41,14 @@ namespace KubeOps.Operator.Controller
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation(@"Startup CRD Controller for ""{resource}"".", typeof(TEntity));
+            if (!string.IsNullOrWhiteSpace(_services.Settings.Namespace))
+            {
+                _logger.LogInformation(
+                    @"The CRD controller for ""{resource}"" is namespaced to ""{namespace}"".",
+                    typeof(TEntity),
+                    _services.Settings.Namespace);
+            }
+
             _running = true;
             _services.LeaderElection.LeadershipChange += LeadershipChanged;
             LeadershipChanged(null, _services.LeaderElection.State);

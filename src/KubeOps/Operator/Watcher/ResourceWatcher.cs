@@ -16,6 +16,7 @@ namespace KubeOps.Operator.Watcher
     {
         private readonly ILogger<ResourceWatcher<TEntity>> _logger;
         private readonly IKubernetesClient _client;
+        private readonly OperatorSettings _settings;
         private readonly ExponentialBackoffHandler _reconnectHandler;
         private readonly ResourceWatcherMetrics<TEntity> _metrics;
 
@@ -26,6 +27,7 @@ namespace KubeOps.Operator.Watcher
         {
             _logger = logger;
             _client = client;
+            _settings = settings;
             _reconnectHandler = new ExponentialBackoffHandler(async () => await WatchResource());
             _metrics = new ResourceWatcherMetrics<TEntity>(settings);
         }
@@ -81,13 +83,12 @@ namespace KubeOps.Operator.Watcher
 
             _cancellation = new CancellationTokenSource();
 
-            // TODO: namespaced resources
             _watcher = await _client.Watch<TEntity>(
                 TimeSpan.FromMinutes(1),
                 OnWatcherEvent,
                 OnException,
                 OnClose,
-                null,
+                _settings.Namespace,
                 _cancellation.Token);
             _metrics.Running.Set(1);
         }
