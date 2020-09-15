@@ -62,7 +62,7 @@ namespace KubeOps.Operator.Entities.Extensions
 
             if (entityType.GetProperty("Status") != null || entityType.GetProperty("status") != null)
             {
-                version.Subresources = new V1CustomResourceSubresources(null, new { });
+                version.Subresources = new V1CustomResourceSubresources(null, new object());
             }
 
             version.Schema = new V1CustomResourceValidation(MapType(entityType));

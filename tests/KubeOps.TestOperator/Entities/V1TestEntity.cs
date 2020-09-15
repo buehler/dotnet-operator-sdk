@@ -1,9 +1,10 @@
 ﻿using k8s.Models;
 using KubeOps.Operator.Entities;
+using KubeOps.Operator.Entities.Annotations;
 
 namespace KubeOps.TestOperator.Entities
 {
-    public class TestEntitySpec
+    public class V1TestEntitySpec
     {
         /// <summary>
         /// This is a test for the contextual fetching of descriptions.
@@ -11,13 +12,13 @@ namespace KubeOps.TestOperator.Entities
         public string Spec { get; set; } = string.Empty;
     }
 
-    public class TestEntityStatus
+    public class V1TestEntityStatus
     {
         public string Status { get; set; } = string.Empty;
     }
 
-    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", PluralName = "testentities")]
-    public class TestEntity : CustomKubernetesEntity<TestEntitySpec, TestEntityStatus>
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "testentity", PluralName = "testentities")]
+    public class V1TestEntity : CustomKubernetesEntity<V1TestEntitySpec, V1TestEntityStatus>
     {
     }
 }

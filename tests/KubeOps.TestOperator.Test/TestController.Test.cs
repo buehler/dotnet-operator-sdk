@@ -22,12 +22,12 @@ namespace KubeOps.TestOperator.Test
             _factory.Run();
             var mock = _factory.Services.GetRequiredService<Mock<IManager>>();
             mock.Reset();
-            mock.Setup(o => o.Created(It.IsAny<TestEntity>()));
-            mock.Verify(o => o.Created(It.IsAny<TestEntity>()), Times.Never);
-            _factory.MockedKubernetesClient.UpdateResult = new TestEntity();
-            var queue = _factory.GetMockedEventQueue<TestEntity>();
-            queue.Created(new TestEntity());
-            mock.Verify(o => o.Created(It.IsAny<TestEntity>()), Times.Once);
+            mock.Setup(o => o.Created(It.IsAny<V1TestEntity>()));
+            mock.Verify(o => o.Created(It.IsAny<V1TestEntity>()), Times.Never);
+            _factory.MockedKubernetesClient.UpdateResult = new V1TestEntity();
+            var queue = _factory.GetMockedEventQueue<V1TestEntity>();
+            queue.Created(new V1TestEntity());
+            mock.Verify(o => o.Created(It.IsAny<V1TestEntity>()), Times.Once);
         }
 
         [Fact]
@@ -36,11 +36,11 @@ namespace KubeOps.TestOperator.Test
             _factory.Run();
             var mock = _factory.Services.GetRequiredService<Mock<IManager>>();
             mock.Reset();
-            mock.Setup(o => o.Updated(It.IsAny<TestEntity>()));
-            mock.Verify(o => o.Updated(It.IsAny<TestEntity>()), Times.Never);
-            var queue = _factory.GetMockedEventQueue<TestEntity>();
-            queue.Updated(new TestEntity());
-            mock.Verify(o => o.Updated(It.IsAny<TestEntity>()), Times.Once);
+            mock.Setup(o => o.Updated(It.IsAny<V1TestEntity>()));
+            mock.Verify(o => o.Updated(It.IsAny<V1TestEntity>()), Times.Never);
+            var queue = _factory.GetMockedEventQueue<V1TestEntity>();
+            queue.Updated(new V1TestEntity());
+            mock.Verify(o => o.Updated(It.IsAny<V1TestEntity>()), Times.Once);
         }
 
         [Fact]
@@ -49,11 +49,11 @@ namespace KubeOps.TestOperator.Test
             _factory.Run();
             var mock = _factory.Services.GetRequiredService<Mock<IManager>>();
             mock.Reset();
-            mock.Setup(o => o.NotModified(It.IsAny<TestEntity>()));
-            mock.Verify(o => o.NotModified(It.IsAny<TestEntity>()), Times.Never);
-            var queue = _factory.GetMockedEventQueue<TestEntity>();
-            queue.NotModified(new TestEntity());
-            mock.Verify(o => o.NotModified(It.IsAny<TestEntity>()), Times.Once);
+            mock.Setup(o => o.NotModified(It.IsAny<V1TestEntity>()));
+            mock.Verify(o => o.NotModified(It.IsAny<V1TestEntity>()), Times.Never);
+            var queue = _factory.GetMockedEventQueue<V1TestEntity>();
+            queue.NotModified(new V1TestEntity());
+            mock.Verify(o => o.NotModified(It.IsAny<V1TestEntity>()), Times.Once);
         }
 
         [Fact]
@@ -62,11 +62,11 @@ namespace KubeOps.TestOperator.Test
             _factory.Run();
             var mock = _factory.Services.GetRequiredService<Mock<IManager>>();
             mock.Reset();
-            mock.Setup(o => o.Deleted(It.IsAny<TestEntity>()));
-            mock.Verify(o => o.Deleted(It.IsAny<TestEntity>()), Times.Never);
-            var queue = _factory.GetMockedEventQueue<TestEntity>();
-            queue.Deleted(new TestEntity());
-            mock.Verify(o => o.Deleted(It.IsAny<TestEntity>()), Times.Once);
+            mock.Setup(o => o.Deleted(It.IsAny<V1TestEntity>()));
+            mock.Verify(o => o.Deleted(It.IsAny<V1TestEntity>()), Times.Never);
+            var queue = _factory.GetMockedEventQueue<V1TestEntity>();
+            queue.Deleted(new V1TestEntity());
+            mock.Verify(o => o.Deleted(It.IsAny<V1TestEntity>()), Times.Once);
         }
 
         [Fact]
@@ -75,11 +75,11 @@ namespace KubeOps.TestOperator.Test
             _factory.Run();
             var mock = _factory.Services.GetRequiredService<Mock<IManager>>();
             mock.Reset();
-            mock.Setup(o => o.StatusModified(It.IsAny<TestEntity>()));
-            mock.Verify(o => o.StatusModified(It.IsAny<TestEntity>()), Times.Never);
-            var queue = _factory.GetMockedEventQueue<TestEntity>();
-            queue.StatusUpdated(new TestEntity());
-            mock.Verify(o => o.StatusModified(It.IsAny<TestEntity>()), Times.Once);
+            mock.Setup(o => o.StatusModified(It.IsAny<V1TestEntity>()));
+            mock.Verify(o => o.StatusModified(It.IsAny<V1TestEntity>()), Times.Never);
+            var queue = _factory.GetMockedEventQueue<V1TestEntity>();
+            queue.StatusUpdated(new V1TestEntity());
+            mock.Verify(o => o.StatusModified(It.IsAny<V1TestEntity>()), Times.Once);
         }
     }
 }

@@ -24,19 +24,19 @@ namespace KubeOps.TestOperator.Test
             _factory.Run();
             var mock = _factory.Services.GetRequiredService<Mock<IManager>>();
             mock.Reset();
-            mock.Setup(o => o.Finalized(It.IsAny<TestEntity>()));
-            mock.Verify(o => o.Finalized(It.IsAny<TestEntity>()), Times.Never);
-            _factory.MockedKubernetesClient.UpdateResult = new TestEntity();
-            var queue = _factory.GetMockedEventQueue<TestEntity>();
+            mock.Setup(o => o.Finalized(It.IsAny<V1TestEntity>()));
+            mock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Never);
+            _factory.MockedKubernetesClient.UpdateResult = new V1TestEntity();
+            var queue = _factory.GetMockedEventQueue<V1TestEntity>();
             queue.Finalizing(
-                new TestEntity
+                new V1TestEntity
                 {
                     Metadata = new V1ObjectMeta
                     {
                         Finalizers = new[] { new TestEntityFinalizer(mock.Object, null, null).Identifier },
                     },
                 });
-            mock.Verify(o => o.Finalized(It.IsAny<TestEntity>()), Times.Once);
+            mock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Once);
         }
     }
 }

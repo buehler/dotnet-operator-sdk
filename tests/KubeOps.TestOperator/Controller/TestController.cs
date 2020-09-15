@@ -9,43 +9,43 @@ using KubeOps.TestOperator.TestManager;
 
 namespace KubeOps.TestOperator.Controller
 {
-    [EntityRbac(typeof(TestEntity), Verbs = RbacVerb.All)]
-    public class TestController : ResourceControllerBase<TestEntity>
+    [EntityRbac(typeof(V1TestEntity), Verbs = RbacVerb.All)]
+    public class TestController : ResourceControllerBase<V1TestEntity>
     {
         private readonly IManager _manager;
 
-        public TestController(IManager manager, IResourceServices<TestEntity> services)
+        public TestController(IManager manager, IResourceServices<V1TestEntity> services)
             : base(services)
         {
             _manager = manager;
         }
 
-        protected override async Task<TimeSpan?> Created(TestEntity resource)
+        protected override async Task<TimeSpan?> Created(V1TestEntity resource)
         {
             _manager.Created(resource);
             await AttachFinalizer<TestEntityFinalizer>(resource);
             return await base.Created(resource);
         }
 
-        protected override async Task<TimeSpan?> Updated(TestEntity resource)
+        protected override async Task<TimeSpan?> Updated(V1TestEntity resource)
         {
             _manager.Updated(resource);
             return await base.Updated(resource);
         }
 
-        protected override async Task<TimeSpan?> NotModified(TestEntity resource)
+        protected override async Task<TimeSpan?> NotModified(V1TestEntity resource)
         {
             _manager.NotModified(resource);
             return await base.NotModified(resource);
         }
 
-        protected override async Task StatusModified(TestEntity resource)
+        protected override async Task StatusModified(V1TestEntity resource)
         {
             _manager.StatusModified(resource);
             await base.StatusModified(resource);
         }
 
-        protected override async Task Deleted(TestEntity resource)
+        protected override async Task Deleted(V1TestEntity resource)
         {
             _manager.Deleted(resource);
             await base.Deleted(resource);
