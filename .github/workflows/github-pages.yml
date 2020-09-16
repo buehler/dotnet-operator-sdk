@@ -5,20 +5,22 @@ on:
     branches: [master]
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+  gh-pages:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 3.1.401
-      - name: Build
-        run: ./build.sh --target compile --no-logo
-      - uses: nikeee/docfx-action@v1.0.0
-        name: Build Documentation
+      - name: Setup MS Build
+        uses: microsoft/setup-msbuild@v1.0.1
+      - name: Install DocFX
+        uses: crazy-max/ghaction-chocolatey@v1
         with:
-          args: docs/docfx.json
+          args: install docfx -y
+      - name: Build Documentation
+        run: docfx docs/docfx.json
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@3.5.9
         with:
