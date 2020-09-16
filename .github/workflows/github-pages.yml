@@ -9,6 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.401
+      - name: Build
+        run: ./build.sh --target compile --no-logo
       - uses: nikeee/docfx-action@v1.0.0
         name: Build Documentation
         with:
