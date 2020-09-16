@@ -15,10 +15,12 @@ jobs:
           dotnet-version: 3.1.401
       - name: Setup MS Build
         uses: microsoft/setup-msbuild@v1.0.1
-      - name: Install DocFX
+      - name: Install DocFX & Rsync
         uses: crazy-max/ghaction-chocolatey@v1
         with:
           args: install docfx rsync -y
+      - name: Restore Solution
+        run: dotnet restore
       - name: Build Solution
         run: dotnet build
       - name: Build Documentation
