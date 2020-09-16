@@ -18,7 +18,9 @@ jobs:
       - name: Install DocFX
         uses: crazy-max/ghaction-chocolatey@v1
         with:
-          args: install docfx -y
+          args: install docfx rsync -y
+      - name: Build Solution
+        run: dotnet build
       - name: Build Documentation
         run: docfx docs/docfx.json
       - name: Deploy
