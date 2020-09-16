@@ -1,0 +1,9 @@
+- name: Documentation
+  href: docs/
+  homepage: docs/getting_started.md
+- name: KubeOps Api
+  href: kube-ops/
+  homepage: kube-ops/index.md
+- name: KubeOps Testing Api
+  href: kube-ops-testing/
+  homepage: kube-ops-testing/index.md

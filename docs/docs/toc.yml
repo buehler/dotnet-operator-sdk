@@ -1,0 +1,20 @@
+- name: Getting Started
+  href: getting_started.md
+- name: Features
+  href: features.md
+- name: Settings
+  href: settings.md
+- name: Entities
+  href: entities.md
+- name: Controller
+  href: controller.md
+- name: Finalizer
+  href: finalizer.md
+- name: Utilities
+  href: utilities.md
+- name: CLI Commands
+  href: commands.md
+- name: MS Build extensions
+  href: ms_build.md
+- name: Testing
+  href: testing.md
