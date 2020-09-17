@@ -2,7 +2,9 @@ name: Publish Documentation
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - docs/docs
 
 jobs:
   build-gh-pages:
@@ -19,10 +21,9 @@ jobs:
         uses: crazy-max/ghaction-chocolatey@v1
         with:
           args: install docfx -y
-      - name: Restore Solution
-        run: dotnet restore
       - name: Build Solution
-        run: dotnet build
+        run: .\build.ps1 --target Compile --no-logo
+        shell: powershell
       - name: Build Documentation
         run: docfx docs/docfx.json
       - name: Upload docs artifact
