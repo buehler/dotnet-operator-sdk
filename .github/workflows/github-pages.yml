@@ -5,7 +5,7 @@ on:
     branches: [master]
 
 jobs:
-  gh-pages:
+  build-gh-pages:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
@@ -18,16 +18,31 @@ jobs:
       - name: Install DocFX & Rsync
         uses: crazy-max/ghaction-chocolatey@v1
         with:
-          args: install docfx rsync -y
+          args: install docfx -y
       - name: Restore Solution
         run: dotnet restore
       - name: Build Solution
         run: dotnet build
       - name: Build Documentation
         run: docfx docs/docfx.json
-      - name: Deploy
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: pages
+          path: docs/public
+  deploy-gh-pages:
+    runs-on: ubuntu-latest
+    needs: build-gh-pages
+    steps:
+      - name: Download docs artifact
+        id: download
+        uses: actions/download-artifact@v2
+        with:
+          name: pages
+          path: public
+      - name: Deploy gh pages
         uses: JamesIves/github-pages-deploy-action@3.5.9
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
-          FOLDER: docs/public
+          FOLDER: ${{ steps.download.outputs.download-path }}
