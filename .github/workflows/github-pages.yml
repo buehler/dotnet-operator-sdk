@@ -46,4 +46,4 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
-          FOLDER: ${{ steps.download.outputs.download-path }}
+          FOLDER: public
