@@ -10,11 +10,18 @@ you can see the help and overview when using
 multiple commands. Some of them do install / uninstall your crds in
 your currently selected kubernetes cluster or can generate code.
 
+> [!NOTE]
+> For the normal "dotnet run" command exists a `--namespaced`
+> option that starts the operator in namespaced mode. This means
+> that only the given namespace is watched for entities.
+
 ## Available Commands
 
 Here is a brief overview over the available commands:
-_NOTE_: all commands assume either the compiled dll or you using
-`dotnet run -- ` as prepended command.
+
+> [!NOTE]
+> all commands assume either the compiled dll or you using
+> `dotnet run -- ` as prepended command.
 
 - ` ` (empty): runs the operator (normal `dotnet run`)
 - `version`: prints the version information for the actual connected kubernetes cluster

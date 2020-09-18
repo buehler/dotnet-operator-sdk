@@ -84,9 +84,10 @@ You can use the various validator attributes to customize your crd:
 - `Required`: The field is listed in the required fields
 - `PreserveUnknownFields`: Set the `X-Kubernetes-Preserve-Unknown-Fields` to `true`
 
-_NOTE on `Description`_: if your project generates the XML documentation files
-for the result, the crd generator also searches for those files and a possible
-`<summary>` tag in the xml documentation. The attribute will take precedence though.
+> [!NOTE]
+> For `Description`: if your project generates the XML documentation files
+> for the result, the crd generator also searches for those files and a possible
+> `<summary>` tag in the xml documentation. The attribute will take precedence though.
 
 ```csharp
 public class MappingSpec
@@ -145,8 +146,9 @@ the system uses the previously mentioned version priority to sort the versions
 and picking the first one. To overwrite this behaviour, use the
 <xref:KubeOps.Operator.Entities.Annotations.StorageVersionAttribute>.
 
-_WARNING_: when multiple <xref:KubeOps.Operator.Entities.Annotations.StorageVersionAttribute>
-are used, the system will thrown an error.
+> [!WARNING]
+> when multiple <xref:KubeOps.Operator.Entities.Annotations.StorageVersionAttribute>
+> are used, the system will thrown an error.
 
 To overwrite a version, annotate the entity class with the attribute.
 
