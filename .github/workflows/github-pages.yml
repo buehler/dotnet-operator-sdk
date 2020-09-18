@@ -2,9 +2,7 @@ name: Publish Documentation
 
 on:
   push:
-    branches:
-      - master
-      - docs/docs
+    branches: [master]
 
 jobs:
   build-gh-pages:
