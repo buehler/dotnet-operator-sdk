@@ -84,9 +84,10 @@ You can use the various validator attributes to customize your crd:
 - `Required`: The field is listed in the required fields
 - `PreserveUnknownFields`: Set the `X-Kubernetes-Preserve-Unknown-Fields` to `true`
 
-_NOTE on `Description`_: if your project generates the XML documentation files
-for the result, the crd generator also searches for those files and a possible
-`<summary>` tag in the xml documentation. The attribute will take precedence though.
+> [!NOTE]
+> For `Description`: if your project generates the XML documentation files
+> for the result, the crd generator also searches for those files and a possible
+> `<summary>` tag in the xml documentation. The attribute will take precedence though.
 
 ```csharp
 public class MappingSpec
@@ -101,4 +102,114 @@ In the example above, the text of the attribute will be used.
 
 ## Multi-Version Entities
 
-TODO
+You can manage multiple versions of a CRD. To do this, you can
+specify multiple classes as the "same" entity, but with different
+versions.
+
+To mark multiple entity classes as the same, use exactly the same
+`Kind`, `Group` and `PluralName` and differ in the `ApiVersion`
+field.
+
+### Version priority
+
+Sorting of the versions - and therefore determine which version should be
+the `storage version` if no attribute is provided - is done by the kubernetes
+rules of version sorting:
+
+Priority is as follows:
+
+1. General Availablility (i.e. `V1Foobar`, `V2Foobar`)
+2. Beta Versions (i.e. `V11Beta13Foobar`, `V2Beta1Foobar`)
+3. Alpha Versions (i.e. `V16Alpha13Foobar`, `V2Alpha10Foobar`)
+
+The parsed version numbers are sorted by the highest first, this leads
+to the following version priority:
+
+```
+- v10
+- v2
+- v1
+- v11beta2
+- v10beta3
+- v3beta1
+- v12alpha1
+- v11alpha2
+```
+
+This can also be seen over at the
+[kubernetes documentation](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#version-priority).
+
+### Storage Version
+
+To determine the storage version (of which one, and exactly one must exist)
+the system uses the previously mentioned version priority to sort the versions
+and picking the first one. To overwrite this behaviour, use the
+<xref:KubeOps.Operator.Entities.Annotations.StorageVersionAttribute>.
+
+> [!WARNING]
+> when multiple <xref:KubeOps.Operator.Entities.Annotations.StorageVersionAttribute>
+> are used, the system will thrown an error.
+
+To overwrite a version, annotate the entity class with the attribute.
+
+### Example
+
+#### Normal multiversion entity
+
+Note that the `Kind`
+
+```csharp
+[KubernetesEntity(
+    ApiVersion = "v1",
+    Kind = "VersionedEntity",
+    Group = "kubeops.test.dev",
+    PluralName = "versionedentities")]
+public class V1VersionedEntity : CustomKubernetesEntity
+{
+}
+
+[KubernetesEntity(
+    ApiVersion = "v1beta1",
+    Kind = "VersionedEntity",
+    Group = "kubeops.test.dev",
+    PluralName = "versionedentities")]
+public class V1Beta1VersionedEntity : CustomKubernetesEntity
+{
+}
+
+[KubernetesEntity(
+    ApiVersion = "v1alpha1",
+    Kind = "VersionedEntity",
+    Group = "kubeops.test.dev",
+    PluralName = "versionedentities")]
+public class V1Alpha1VersionedEntity : CustomKubernetesEntity
+{
+}
+```
+
+The resulting storage version would be `V1VersionedEntity`.
+
+#### Overwritten storage version multiversion entity
+
+```csharp
+[KubernetesEntity(
+    ApiVersion = "v1",
+    Kind = "AttributeVersionedEntity",
+    Group = "kubeops.test.dev",
+    PluralName = "attributeversionedentities")]
+[StorageVersion]
+public class V1AttributeVersionedEntity : CustomKubernetesEntity
+{
+}
+
+[KubernetesEntity(
+    ApiVersion = "v2",
+    Kind = "AttributeVersionedEntity",
+    Group = "kubeops.test.dev",
+    PluralName = "attributeversionedentities")]
+public class V2AttributeVersionedEntity : CustomKubernetesEntity
+{
+}
+```
+
+The resulting storage version would be `V1AttributeVersionedEntity`.

@@ -7,6 +7,10 @@ resources on kubernetes and queueing of the events.
 When you want to create a controller for your (or any) entity,
 read the following instructions.
 
+When you have controllers, don't forget to register them with
+<xref:KubeOps.Operator.Builder.IOperatorBuilder.AddController``1>
+to the DI system.
+
 ## Controller instance
 
 After you created a custom entity (like described in [Entities](./entities.md))
@@ -14,7 +18,8 @@ or you want to reconcile a given entity (from the `k8s.Models` namespace,
 e.g. `V1ConfigMap`) you need to create a controller class
 as you would do for a MVC or API controller in asp.net.
 
-Make sure you have the correct baseclass (`ResourceControllerBase<TEntity>`)
+Make sure you have the correct baseclass
+(<xref:KubeOps.Operator.Controller.ResourceControllerBase`1>)
 inherited.
 
 ```csharp
@@ -31,6 +36,17 @@ public class FooCtrl: ResourceControllerBase<MyCustomEntity>
     // "Deleted" (i.e. when the entity was deleted and all finalizers are done)
 }
 ```
+
+## Namespaced controller
+
+To limit the operator (and therefore all controllers) to a specific
+namespace in kubernetes, use the @"KubeOps.Operator.OperatorSettings"
+and configure a specific namespace when it is predefined.
+
+To use namespacing dynamically, run the application with the `--namespaced`
+option. When given a name (i.e. `--namespaced=foobar`) the defined
+namespace is used. When only the option is provided (i.e. `--namespaced`)
+then the actual namespace is used that the pod runs in.
 
 ## RBAC
 
