@@ -186,11 +186,16 @@ namespace KubeOps.Operator.Entities.Extensions
                      (typeof(IDictionary).IsAssignableFrom(type) ||
                       (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>)) ||
                       (type.IsGenericType &&
-                       type.GetGenericArguments().FirstOrDefault()?.GetGenericTypeDefinition() ==
+                       type.GetGenericArguments().FirstOrDefault()?.IsGenericType == true && type.GetGenericArguments().FirstOrDefault()?.GetGenericTypeDefinition() ==
                        typeof(KeyValuePair<,>))))
             {
                 props.Type = Object;
                 props.XKubernetesPreserveUnknownFields = true;
+            }
+            else if (!IsSimpleType(type) && type.IsGenericType && typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()))
+            {
+                props.Type = Array;
+                props.Items = MapType(type.GetGenericArguments()[0]);
             }
             else if (type == typeof(IntstrIntOrString))
             {
@@ -198,22 +203,7 @@ namespace KubeOps.Operator.Entities.Extensions
             }
             else if (!IsSimpleType(type))
             {
-                props.Type = Object;
-
-                props.Properties = new Dictionary<string, V1JSONSchemaProps>(
-                    type.GetProperties()
-                        .Select(
-                            prop => KeyValuePair.Create(
-                                CamelCase(prop.Name),
-                                MapProperty(prop))));
-                props.Required = type.GetProperties()
-                    .Where(prop => prop.GetCustomAttribute<RequiredAttribute>() != null)
-                    .Select(prop => CamelCase(prop.Name))
-                    .ToList();
-                if (props.Required.Count == 0)
-                {
-                    props.Required = null;
-                }
+                ProcessType(type, props);
             }
             else if (type == typeof(int) || Nullable.GetUnderlyingType(type) == typeof(int))
             {
@@ -260,6 +250,26 @@ namespace KubeOps.Operator.Entities.Extensions
             }
 
             return props;
+        }
+
+        private static void ProcessType(Type type, V1JSONSchemaProps props)
+        {
+            props.Type = Object;
+
+            props.Properties = new Dictionary<string, V1JSONSchemaProps>(
+                type.GetProperties()
+                    .Select(
+                        prop => KeyValuePair.Create(
+                            CamelCase(prop.Name),
+                            MapProperty(prop))));
+            props.Required = type.GetProperties()
+                .Where(prop => prop.GetCustomAttribute<RequiredAttribute>() != null)
+                .Select(prop => CamelCase(prop.Name))
+                .ToList();
+            if (props.Required.Count == 0)
+            {
+                props.Required = null;
+            }
         }
 
         private static bool IsSimpleType(Type type) =>
