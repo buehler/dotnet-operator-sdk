@@ -89,6 +89,22 @@ namespace KubeOps.Test.Operator.Entities
         }
 
         [Fact]
+        public void Should_Set_The_Correct_Complex_Array_Type()
+        {
+            var crd = _testSpecEntity.CreateCrd();
+            var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
+
+            var complexItemsArray = specProperties.Properties["complexItems"];
+            complexItemsArray.Type.Should().Be("array");
+            (complexItemsArray.Items as V1JSONSchemaProps)?.Type?.Should().Be("object");
+            complexItemsArray.Nullable.Should().BeNull();
+            var subProps = (complexItemsArray.Items as V1JSONSchemaProps)!.Properties;
+
+            var subName = subProps["name"];
+            subName?.Type.Should().Be("string");
+        }
+
+        [Fact]
         public void Should_Set_Description_On_Class()
         {
             var crd = _testSpecEntity.CreateCrd();

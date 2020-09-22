@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using k8s.Models;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
@@ -76,6 +77,8 @@ namespace KubeOps.Test.TestEntities
         [Required]
         public int Required { get; set; }
 
+        public IEnumerable<TestItem> ComplexItems { get; set; } = Enumerable.Empty<TestItem>();
+
         public IDictionary Dictionary { get; set; } = new Dictionary<string, string>();
 
         public IDictionary<string, string> GenericDictionary { get; set; } = new Dictionary<string, string>();
@@ -101,5 +104,12 @@ namespace KubeOps.Test.TestEntities
     [KubernetesEntity(Group = "kubeops.test.dev", ApiVersion = "V1")]
     public class TestSpecEntity : CustomKubernetesEntity<TestSpecEntitySpec>
     {
+    }
+
+    public class TestItem
+    {
+        public string Name { get; set; } = null!;
+        public string Item { get; set; } = null!;
+        public string Extra { get; set; } = null!;
     }
 }
