@@ -26,7 +26,7 @@
         <PackageReference Include="KubernetesClient" Version="2.0.33" />
         <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
         <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="3.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="3.1.8" />
+        <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="3.1.9" />
         <PackageReference Include="Namotion.Reflection" Version="1.0.14" />
         <PackageReference Include="prometheus-net.AspNetCore" Version="3.6.0" />
         <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="3.6.0" />
