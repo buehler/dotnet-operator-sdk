@@ -5,6 +5,7 @@ using FluentAssertions;
 using k8s.Models;
 using KubeOps.Operator.Commands.Generators;
 using KubeOps.Operator.Entities.Extensions;
+using KubeOps.Operator.Errors;
 using KubeOps.Test.TestEntities;
 using Xunit;
 
@@ -326,6 +327,13 @@ namespace KubeOps.Test.Operator.Entities
             specProperties.Properties["kubernetesObject"].Properties.Should().BeNull();
             specProperties.Properties["kubernetesObject"].XKubernetesPreserveUnknownFields.Should().BeTrue();
             specProperties.Properties["kubernetesObject"].XKubernetesEmbeddedResource.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Should_Throw_On_Not_Supported_Type()
+        {
+            var ex = Assert.Throws<CrdConversionException>(() => typeof(TestInvalidEntity).CreateCrd());
+            ex.InnerException.Should().BeOfType<CrdPropertyTypeException>();
         }
     }
 }

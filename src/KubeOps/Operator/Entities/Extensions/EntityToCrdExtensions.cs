@@ -6,6 +6,7 @@ using System.Reflection;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Entities.Annotations;
+using KubeOps.Operator.Errors;
 using Namotion.Reflection;
 
 namespace KubeOps.Operator.Entities.Extensions
@@ -55,7 +56,6 @@ namespace KubeOps.Operator.Entities.Extensions
             var version = new V1CustomResourceDefinitionVersion();
             spec.Versions = new[] { version };
 
-            // TODO: versions?
             version.Name = entityDefinition.Version;
             version.Served = true;
             version.Storage = true;
@@ -72,7 +72,18 @@ namespace KubeOps.Operator.Entities.Extensions
 
         private static V1JSONSchemaProps MapProperty(PropertyInfo info)
         {
-            var props = MapType(info.PropertyType);
+            V1JSONSchemaProps props;
+            try
+            {
+                props = MapType(info.PropertyType);
+            }
+            catch (Exception ex)
+            {
+                throw new CrdConversionException(
+                    $@"During conversion of the property ""{info.Name}"" with type ""{info.PropertyType.Name}"", an error occured.",
+                    ex);
+            }
+
             var contextual = info.ToContextualProperty();
 
             // Check for nullability and nullable types
@@ -186,13 +197,16 @@ namespace KubeOps.Operator.Entities.Extensions
                      (typeof(IDictionary).IsAssignableFrom(type) ||
                       (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>)) ||
                       (type.IsGenericType &&
-                       type.GetGenericArguments().FirstOrDefault()?.IsGenericType == true && type.GetGenericArguments().FirstOrDefault()?.GetGenericTypeDefinition() ==
+                       type.GetGenericArguments().FirstOrDefault()?.IsGenericType == true &&
+                       type.GetGenericArguments().FirstOrDefault()?.GetGenericTypeDefinition() ==
                        typeof(KeyValuePair<,>))))
             {
                 props.Type = Object;
                 props.XKubernetesPreserveUnknownFields = true;
             }
-            else if (!IsSimpleType(type) && type.IsGenericType && typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()))
+            else if (!IsSimpleType(type) &&
+                     type.IsGenericType &&
+                     typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()))
             {
                 props.Type = Array;
                 props.Items = MapType(type.GetGenericArguments()[0]);
@@ -247,6 +261,10 @@ namespace KubeOps.Operator.Entities.Extensions
             {
                 props.Type = String;
                 props.EnumProperty = new List<object>(Enum.GetNames(Nullable.GetUnderlyingType(type)!));
+            }
+            else
+            {
+                throw new CrdPropertyTypeException();
             }
 
             return props;
