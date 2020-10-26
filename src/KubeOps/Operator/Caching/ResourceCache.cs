@@ -13,6 +13,7 @@ namespace KubeOps.Operator.Caching
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private const string ResourceVersion = "ResourceVersion";
+        private const string ManagedFields = "ManagedFields";
         private const string Finalizers = "Metadata.Finalizers";
         private const string Status = "Status";
 
@@ -21,7 +22,7 @@ namespace KubeOps.Operator.Caching
             {
                 Caching = true,
                 AutoClearCache = false,
-                MembersToIgnore = new List<string> { ResourceVersion },
+                MembersToIgnore = new List<string> { ResourceVersion, ManagedFields },
             });
 
         private readonly IDictionary<string, TEntity> _cache = new ConcurrentDictionary<string, TEntity>();
@@ -90,8 +91,6 @@ namespace KubeOps.Operator.Caching
         }
 
         private bool Exists(TEntity resource) => _cache.ContainsKey(resource.Metadata.Uid);
-
-        private bool Exists(string id) => _cache.ContainsKey(id);
 
         private void Remove(string resourceUid)
         {

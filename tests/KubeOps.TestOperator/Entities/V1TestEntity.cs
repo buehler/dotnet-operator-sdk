@@ -1,6 +1,5 @@
 ﻿using k8s.Models;
 using KubeOps.Operator.Entities;
-using KubeOps.Operator.Entities.Annotations;
 
 namespace KubeOps.TestOperator.Entities
 {
@@ -17,7 +16,7 @@ namespace KubeOps.TestOperator.Entities
         public string Status { get; set; } = string.Empty;
     }
 
-    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "testentity", PluralName = "testentities")]
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     public class V1TestEntity : CustomKubernetesEntity<V1TestEntitySpec, V1TestEntityStatus>
     {
     }
