@@ -7,7 +7,9 @@
         <IsPackable>true</IsPackable>
         <PackageId>KubeOps.Testing</PackageId>
         <PackageTags>Kubernetes Operator SDK CustomResourceDefinition Testing Test</PackageTags>
-        <PackageProjectUrl>https://github.com/buehler/dotnet-operator-sdk</PackageProjectUrl>
+        <PackageProjectUrl>https://buehler.github.io/dotnet-operator-sdk/</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
         <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
         <PackageDescription>
             Additional Resources that helps / supports integration
@@ -15,7 +17,7 @@
             operator sdk.
         </PackageDescription>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="3.1.9" />
     </ItemGroup>

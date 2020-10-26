@@ -12,7 +12,9 @@
         <IsPackable>true</IsPackable>
         <PackageId>KubeOps</PackageId>
         <PackageTags>Kubernetes Operator SDK CustomResourceDefinition</PackageTags>
-        <PackageProjectUrl>https://github.com/buehler/dotnet-operator-sdk</PackageProjectUrl>
+        <PackageProjectUrl>https://buehler.github.io/dotnet-operator-sdk/</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
         <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
         <PackageDescription>
             This is an operator sdk written in c#.
