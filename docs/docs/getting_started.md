@@ -30,6 +30,11 @@ Using this sdk is pretty simple:
 - Write entities / controllers / finalizers
 - Go.
 
+> [!NOTE]
+> If you don't create an asp.net core application (template)
+> please note that the output type of the application must be an "exe":
+> `<OutputType>Exe</OutputType>`
+
 ### Install the package
 
 ```bash
