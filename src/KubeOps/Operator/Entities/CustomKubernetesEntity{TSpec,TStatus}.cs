@@ -14,6 +14,6 @@ namespace KubeOps.Operator.Entities
         where TSpec : new()
         where TStatus : new()
     {
-        public TStatus Status { get; set; } = new TStatus();
+        public TStatus Status { get; set; } = new();
     }
 }

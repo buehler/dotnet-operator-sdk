@@ -11,7 +11,7 @@ namespace KubeOps.Operator.Comparing
                 return;
             }
 
-            ArrayTraverse walker = new ArrayTraverse(array);
+            ArrayTraverse walker = new(array);
             do
             {
                 action(array, walker.Position);

@@ -7,7 +7,7 @@ namespace KubeOps.Operator.Entities
     public class EntityList<T> : KubernetesObject
         where T : IKubernetesObject<V1ObjectMeta>
     {
-        public V1ListMeta Metadata { get; set; } = new V1ListMeta();
+        public V1ListMeta Metadata { get; set; } = new();
 
         public IList<T> Items { get; set; } = new List<T>();
     }

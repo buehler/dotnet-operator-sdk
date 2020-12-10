@@ -23,7 +23,7 @@ namespace KubeOps.Operator.Queue
         private readonly Channel<(ResourceEventType Type, TEntity Resource)> _queue =
             Channel.CreateBounded<(ResourceEventType Type, TEntity Resource)>(QueueLimit);
 
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim _semaphore = new(1);
         private readonly ILogger<ResourceEventQueue<TEntity>> _logger;
         private readonly IKubernetesClient _client;
         private readonly IResourceCache<TEntity> _cache;
@@ -32,8 +32,7 @@ namespace KubeOps.Operator.Queue
         private readonly IDictionary<string, ResourceTimer<TEntity>> _delayedEnqueue =
             new ConcurrentDictionary<string, ResourceTimer<TEntity>>();
 
-        private readonly ConcurrentDictionary<string, ExponentialBackoffHandler> _errorHandlers =
-            new ConcurrentDictionary<string, ExponentialBackoffHandler>();
+        private readonly ConcurrentDictionary<string, ExponentialBackoffHandler> _errorHandlers = new();
 
         private readonly ResourceEventQueueMetrics<TEntity> _metrics;
 

@@ -10,7 +10,7 @@ namespace KubeOps.Operator.Errors
         private const double MaxRetrySeconds = 64;
         private readonly Action? _retryHandler;
         private readonly Func<Task>? _asyncRetryHandler;
-        private readonly Random _rnd = new Random();
+        private readonly Random _rnd = new();
 
         private Timer? _retryTimer;
         private Timer? _resetTimer;

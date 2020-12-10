@@ -17,7 +17,7 @@ namespace KubeOps.Operator.Caching
         private const string Finalizers = "Metadata.Finalizers";
         private const string Status = "Status";
 
-        private readonly CompareLogic _compare = new CompareLogic(
+        private readonly CompareLogic _compare = new(
             new ComparisonConfig
             {
                 Caching = true,
