@@ -4,6 +4,7 @@ using System.Reflection;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Comparing;
+using ReferenceEqualityComparer = KubeOps.Operator.Comparing.ReferenceEqualityComparer;
 
 namespace KubeOps.Operator.Entities.Extensions
 {

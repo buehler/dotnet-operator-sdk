@@ -12,7 +12,7 @@ namespace KubeOps.Operator.Client
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
-            if (request.RequestUri.Segments.Count(s => s == "/") > 1)
+            if (request.RequestUri?.Segments.Count(s => s == "/") > 1)
             {
                 // This request uri contains "empty" segments. (i.e. https://.../apis//v1/...)
                 // This means, this is a default api group (/api/v1)
