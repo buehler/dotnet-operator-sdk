@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using DotnetKubernetesClient;
+using DotnetKubernetesClient.LabelSelectors;
 using k8s;
 using k8s.Models;
-using KubeOps.Operator.Client;
-using KubeOps.Operator.Client.LabelSelectors;
 
 namespace KubeOps.Testing
 {
@@ -53,7 +53,8 @@ namespace KubeOps.Testing
             where TResource : IKubernetesObject<V1ObjectMeta>
             => Task.FromResult((TResource)UpdateResult!)!;
 
-        public Task UpdateStatus<TStatus>(IStatus<TStatus> resource)
+        public Task UpdateStatus<TResource>(TResource resource)
+            where TResource : IKubernetesObject<V1ObjectMeta>, IStatus<object>
             => Task.CompletedTask;
 
         public Task Delete<TResource>(TResource resource)

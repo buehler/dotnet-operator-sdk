@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using KubeOps.Operator;
 
 namespace KubeOps.Build
 {

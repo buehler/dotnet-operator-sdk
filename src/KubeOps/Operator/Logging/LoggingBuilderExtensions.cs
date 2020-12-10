@@ -11,8 +11,9 @@ namespace KubeOps.Operator.Logging
         {
             builder.AddConfiguration();
 
-            builder.Services.TryAddEnumerable(ServiceDescriptor
-                .Singleton<ILoggerProvider, StructuredConsoleLoggerProvider>());
+            builder.Services.TryAddEnumerable(
+                ServiceDescriptor
+                    .Singleton<ILoggerProvider, StructuredConsoleLoggerProvider>());
 
             return builder;
         }

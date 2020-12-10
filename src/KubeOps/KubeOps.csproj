@@ -25,7 +25,7 @@
 
     <ItemGroup>
         <PackageReference Include="CompareNETObjects" Version="4.67.0" />
-        <PackageReference Include="KubernetesClient" Version="3.0.12" />
+        <PackageReference Include="DotnetKubernetesClient" Version="1.0.0" />
         <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
         <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="3.0.0" />
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="5.0.1" />

@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using KubeOps.Operator.Client;
+using DotnetKubernetesClient;
 using KubeOps.Operator.Finalizer;
 using KubeOps.TestOperator.Entities;
 using KubeOps.TestOperator.TestManager;
@@ -11,7 +11,7 @@ namespace KubeOps.TestOperator.Finalizer
     {
         private readonly IManager _manager;
 
-        public TestEntityFinalizer(IManager manager, IKubernetesClient client, ILogger<ResourceFinalizerBase<V1TestEntity>> logger) 
+        public TestEntityFinalizer(IManager manager, IKubernetesClient client, ILogger<ResourceFinalizerBase<V1TestEntity>> logger)
             : base(logger, client)
         {
             _manager = manager;

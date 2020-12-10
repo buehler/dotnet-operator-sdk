@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using k8s;
+using DotnetKubernetesClient;
 using KubeOps.Operator.Caching;
-using KubeOps.Operator.Client;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Finalizer;
@@ -16,7 +15,6 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Rest.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 using Prometheus;
 using YamlDotNet.Serialization;
 
@@ -102,7 +100,7 @@ namespace KubeOps.Operator.Builder
                 ContractResolver = new NamingConvention(),
                 Converters = new List<JsonConverter>
                 {
-                    new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() },
+                    new StringEnumConverter { CamelCaseText = true },
                     new Iso8601TimeSpanConverter(),
                 },
                 DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
@@ -120,42 +118,6 @@ namespace KubeOps.Operator.Builder
             Services.AddTransient<EntitySerializer>();
 
             Services.AddTransient<IKubernetesClient, KubernetesClient>();
-            Services.AddSingleton(KubernetesClientConfiguration.BuildDefaultConfig());
-            Services.AddSingleton<IKubernetes>(
-                services => new Kubernetes(
-                    services.GetRequiredService<KubernetesClientConfiguration>(),
-                    new ClientUrlFixer())
-                {
-                    SerializationSettings =
-                    {
-                        Formatting = Formatting.Indented,
-                        DateFormatHandling = DateFormatHandling.IsoDateFormat,
-                        DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-                        NullValueHandling = NullValueHandling.Ignore,
-                        ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-                        ContractResolver = new NamingConvention(),
-                        Converters = new List<JsonConverter>
-                        {
-                            new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() },
-                            new Iso8601TimeSpanConverter(),
-                        },
-                        DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
-                    },
-                    DeserializationSettings =
-                    {
-                        DateFormatHandling = DateFormatHandling.IsoDateFormat,
-                        DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-                        NullValueHandling = NullValueHandling.Ignore,
-                        ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-                        ContractResolver = new NamingConvention(),
-                        Converters = new List<JsonConverter>
-                        {
-                            new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() },
-                            new Iso8601TimeSpanConverter(),
-                        },
-                        DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
-                    },
-                });
 
             Services.AddTransient(typeof(IResourceCache<>), typeof(ResourceCache<>));
             Services.AddTransient(typeof(IResourceWatcher<>), typeof(ResourceWatcher<>));

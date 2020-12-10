@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.RegularExpressions;
-using KubeOps.Operator.Client;
+using DotnetKubernetesClient;
 
 namespace KubeOps.Operator
 {
@@ -14,7 +14,8 @@ namespace KubeOps.Operator
         /// </summary>
         public string Name { get; set; } =
             new Regex(@"(\W|_)", RegexOptions.CultureInvariant).Replace(
-                Assembly.GetEntryAssembly()?.GetName().Name ?? DefaultOperatorName, NonCharReplacement)
+                    Assembly.GetEntryAssembly()?.GetName().Name ?? DefaultOperatorName,
+                    NonCharReplacement)
                 .ToLowerInvariant();
 
         /// <summary>

@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using DotnetKubernetesClient;
 using k8s.Models;
-using KubeOps.Operator.Client;
 using KubeOps.Operator.Commands.Generators;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Rest;

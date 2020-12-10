@@ -1,11 +1,10 @@
-﻿using System;
-using System.Threading.Tasks;
-using KubeOps.Operator.Client;
+﻿using System.Threading.Tasks;
+using DotnetKubernetesClient;
 using KubeOps.Operator.Commands.Generators;
 using KubeOps.Operator.Commands.Management;
+using KubeOps.Operator.Commands.Utilities;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Hosting;
-using Version = KubeOps.Operator.Commands.Utilities.Version;
 
 namespace KubeOps.Operator.Commands
 {
@@ -18,7 +17,7 @@ namespace KubeOps.Operator.Commands
     {
         private readonly IHost _host;
         private readonly IKubernetesClient _client;
-        private readonly OperatorSettings _settings;
+        private OperatorSettings _settings;
 
         public RunOperator(IHost host, IKubernetesClient client, OperatorSettings settings)
         {

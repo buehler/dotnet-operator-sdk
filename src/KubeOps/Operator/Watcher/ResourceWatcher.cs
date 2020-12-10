@@ -2,9 +2,9 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
-using KubeOps.Operator.Client;
 using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Errors;
 using Microsoft.Extensions.Logging;
@@ -23,7 +23,10 @@ namespace KubeOps.Operator.Watcher
         private CancellationTokenSource? _cancellation;
         private Watcher<TEntity>? _watcher;
 
-        public ResourceWatcher(ILogger<ResourceWatcher<TEntity>> logger, IKubernetesClient client, OperatorSettings settings)
+        public ResourceWatcher(
+            ILogger<ResourceWatcher<TEntity>> logger,
+            IKubernetesClient client,
+            OperatorSettings settings)
         {
             _logger = logger;
             _client = client;

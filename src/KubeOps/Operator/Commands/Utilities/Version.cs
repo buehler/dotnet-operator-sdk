@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using KubeOps.Operator.Client;
+using DotnetKubernetesClient;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Utilities

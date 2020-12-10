@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
+using DotnetKubernetesClient;
 using FluentAssertions;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator;
 using KubeOps.Operator.Caching;
-using KubeOps.Operator.Client;
 using KubeOps.Operator.Queue;
 using KubeOps.Operator.Watcher;
 using KubeOps.Test.TestEntities;
