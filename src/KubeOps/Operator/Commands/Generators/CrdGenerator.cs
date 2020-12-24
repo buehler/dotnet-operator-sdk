@@ -11,6 +11,7 @@ using KubeOps.Operator.Entities.Annotations;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Entities.Kustomize;
 using KubeOps.Operator.Serialization;
+using KubeOps.Operator.Services;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Generators
@@ -20,23 +21,22 @@ namespace KubeOps.Operator.Commands.Generators
     {
         private readonly EntitySerializer _serializer;
 
-        public CrdGenerator(EntitySerializer serializer)
+        private readonly IResourceTypeService _resourceTypeService;
+
+        public CrdGenerator(EntitySerializer serializer, IResourceTypeService resourceTypeService)
         {
             _serializer = serializer;
+            _resourceTypeService = resourceTypeService;
         }
 
         [Option("--use-old-crds", Description = "Defines that the old crd definitions (V1Beta1) should be used.")]
         public bool UseOldCrds { get; set; }
 
-        public static IEnumerable<V1CustomResourceDefinition> GenerateCrds(Assembly? assembly = null)
+        public IEnumerable<V1CustomResourceDefinition> GenerateCrds()
         {
-            assembly ??= Assembly.GetEntryAssembly();
-            if (assembly == null)
-            {
-                throw new Exception("No Entry Assembly found.");
-            }
+            var resourceTypes = _resourceTypeService.GetResourceTypesByAttribute<KubernetesEntityAttribute>();
 
-            return GetTypesWithAttribute<KubernetesEntityAttribute>(assembly)
+            return resourceTypes
                 .Where(type => !type.GetCustomAttributes<IgnoreEntityAttribute>().Any())
                 .Select(type => (type.CreateCrd(), type.GetCustomAttributes<StorageVersionAttribute>().Any()))
                 .GroupBy(grp => grp.Item1.Metadata.Name)
@@ -120,9 +120,5 @@ namespace KubeOps.Operator.Commands.Generators
 
             return ExitCodes.Success;
         }
-
-        private static IEnumerable<Type> GetTypesWithAttribute<TAttribute>(Assembly assembly)
-            where TAttribute : Attribute =>
-            assembly.GetTypes().Where(type => type.GetCustomAttributes<TAttribute>().Any());
     }
 }

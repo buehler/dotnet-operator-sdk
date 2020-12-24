@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using DotnetKubernetesClient;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller;
@@ -31,6 +32,8 @@ namespace KubeOps.Operator.Builder
         }
 
         public IServiceCollection Services { get; }
+        
+        private IResourceTypeService ResourceTypeService { get; set; }
 
         public IOperatorBuilder AddHealthCheck<THealthCheck>(string? name = default)
             where THealthCheck : class, IHealthCheck
@@ -80,6 +83,13 @@ namespace KubeOps.Operator.Builder
             where TFinalizer : class, IResourceFinalizer
         {
             Services.AddTransient(typeof(IResourceFinalizer), typeof(TFinalizer));
+
+            return this;
+        }
+
+        public IOperatorBuilder AddResourceAssembly(Assembly assembly)
+        {
+            ResourceTypeService.AddAssembly(assembly);
 
             return this;
         }
@@ -135,6 +145,16 @@ namespace KubeOps.Operator.Builder
             // Support for leader election via V1Leases.
             Services.AddHostedService<LeaderElector>();
             Services.AddSingleton<ILeaderElection, LeaderElection>();
+
+            var entryAssembly = Assembly.GetEntryAssembly();
+            if (entryAssembly == null)
+            {
+                throw new Exception("No Entry Assembly found.");
+            }
+
+            ResourceTypeService = new ResourceTypeService(entryAssembly, Assembly.GetExecutingAssembly());
+
+            Services.AddSingleton(ResourceTypeService);
 
             return this;
         }
