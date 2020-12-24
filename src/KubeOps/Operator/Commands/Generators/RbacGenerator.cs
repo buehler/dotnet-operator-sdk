@@ -28,12 +28,12 @@ namespace KubeOps.Operator.Commands.Generators
             _resourceTypeService = resourceTypeService;
         }
 
-        public V1ClusterRole GenerateManagerRbac()
+        public static V1ClusterRole GenerateManagerRbac(IResourceTypeService resourceTypeService)
         {
-            var entityRbacPolicyRules = _resourceTypeService.GetResourceAttributes<EntityRbacAttribute>()
+            var entityRbacPolicyRules = resourceTypeService.GetResourceAttributes<EntityRbacAttribute>()
                 .SelectMany(attribute => attribute.CreateRbacPolicies());
 
-            var genericRbacPolicyRules = _resourceTypeService.GetResourceAttributes<GenericRbacAttribute>()
+            var genericRbacPolicyRules = resourceTypeService.GetResourceAttributes<GenericRbacAttribute>()
                 .Select(attribute => attribute.CreateRbacPolicy());
 
             return new V1ClusterRole(
@@ -46,7 +46,7 @@ namespace KubeOps.Operator.Commands.Generators
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
-            var role = _serializer.Serialize(GenerateManagerRbac(), Format);
+            var role = _serializer.Serialize(GenerateManagerRbac(_resourceTypeService), Format);
             var roleBinding = _serializer.Serialize(
                 new V1ClusterRoleBinding
                 {

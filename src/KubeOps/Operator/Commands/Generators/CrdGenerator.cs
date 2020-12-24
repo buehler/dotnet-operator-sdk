@@ -32,9 +32,9 @@ namespace KubeOps.Operator.Commands.Generators
         [Option("--use-old-crds", Description = "Defines that the old crd definitions (V1Beta1) should be used.")]
         public bool UseOldCrds { get; set; }
 
-        public IEnumerable<V1CustomResourceDefinition> GenerateCrds()
+        public static IEnumerable<V1CustomResourceDefinition> GenerateCrds(IResourceTypeService resourceTypeService)
         {
-            var resourceTypes = _resourceTypeService.GetResourceTypesByAttribute<KubernetesEntityAttribute>();
+            var resourceTypes = resourceTypeService.GetResourceTypesByAttribute<KubernetesEntityAttribute>();
 
             return resourceTypes
                 .Where(type => !type.GetCustomAttributes<IgnoreEntityAttribute>().Any())
@@ -74,7 +74,7 @@ namespace KubeOps.Operator.Commands.Generators
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
-            var crds = GenerateCrds().ToList();
+            var crds = GenerateCrds(_resourceTypeService).ToList();
             if (!string.IsNullOrWhiteSpace(OutputPath))
             {
                 Directory.CreateDirectory(OutputPath);

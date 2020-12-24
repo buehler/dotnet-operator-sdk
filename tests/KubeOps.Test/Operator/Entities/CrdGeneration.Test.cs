@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using FluentAssertions;
@@ -6,6 +7,7 @@ using k8s.Models;
 using KubeOps.Operator.Commands.Generators;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Errors;
+using KubeOps.Operator.Services;
 using KubeOps.Test.TestEntities;
 using Xunit;
 
@@ -240,7 +242,7 @@ namespace KubeOps.Test.Operator.Entities
         [Fact]
         public void Should_Ignore_Entity_With_Ignore_Attribute()
         {
-            var crds = CrdGenerator.GenerateCrds(Assembly.GetExecutingAssembly()).ToList();
+            var crds = CrdGenerator.GenerateCrds(new ResourceTypeService()).ToList();
             crds.Should().NotContain(crd => crd.Spec.Names.Kind == "TestIgnoredEntity");
             crds.Should().Contain(crd => crd.Spec.Names.Kind == "TestSpecEntity");
         }

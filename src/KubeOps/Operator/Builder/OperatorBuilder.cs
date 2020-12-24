@@ -29,10 +29,18 @@ namespace KubeOps.Operator.Builder
         public OperatorBuilder(IServiceCollection services)
         {
             Services = services;
+
+            var entryAssembly = Assembly.GetEntryAssembly();
+            if (entryAssembly == null)
+            {
+                throw new Exception("No Entry Assembly found.");
+            }
+
+            ResourceTypeService = new ResourceTypeService(entryAssembly, Assembly.GetExecutingAssembly());
         }
 
         public IServiceCollection Services { get; }
-        
+
         private IResourceTypeService ResourceTypeService { get; set; }
 
         public IOperatorBuilder AddHealthCheck<THealthCheck>(string? name = default)
@@ -145,14 +153,6 @@ namespace KubeOps.Operator.Builder
             // Support for leader election via V1Leases.
             Services.AddHostedService<LeaderElector>();
             Services.AddSingleton<ILeaderElection, LeaderElection>();
-
-            var entryAssembly = Assembly.GetEntryAssembly();
-            if (entryAssembly == null)
-            {
-                throw new Exception("No Entry Assembly found.");
-            }
-
-            ResourceTypeService = new ResourceTypeService(entryAssembly, Assembly.GetExecutingAssembly());
 
             Services.AddSingleton(ResourceTypeService);
 
