@@ -87,7 +87,7 @@ namespace KubeOps.Operator.Watcher
             _cancellation = new CancellationTokenSource();
 
             _watcher = await _client.Watch<TEntity>(
-                TimeSpan.FromMinutes(1),
+                TimeSpan.FromSeconds(_settings.WatcherHttpTimeout),
                 OnWatcherEvent,
                 OnException,
                 OnClose,
