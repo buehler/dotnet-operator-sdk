@@ -1,4 +1,5 @@
-﻿using k8s;
+﻿using System.Reflection;
+using k8s;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Finalizer;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,5 +67,13 @@ namespace KubeOps.Operator.Builder
         /// <returns>The builder for chaining.</returns>
         IOperatorBuilder AddFinalizer<TFinalizer>()
             where TFinalizer : class, IResourceFinalizer;
+
+        /// <summary>
+        /// Adds an assembly to the resource search path. This allows the given Assembly to searched
+        /// for resources when generating CRDs or RBAC definitions.
+        /// </summary>
+        /// <param name="assembly">The assembly to add.</param>
+        /// <returns>The builder for chaining.</returns>
+        IOperatorBuilder AddResourceAssembly(Assembly assembly);
     }
 }
