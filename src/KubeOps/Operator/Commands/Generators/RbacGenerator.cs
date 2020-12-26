@@ -102,9 +102,5 @@ namespace KubeOps.Operator.Commands.Generators
 
             return ExitCodes.Success;
         }
-
-        private static IEnumerable<TAttribute> GetAttributes<TAttribute>(Assembly assembly)
-            where TAttribute : Attribute =>
-            assembly.GetTypes().SelectMany(t => t.GetCustomAttributes<TAttribute>(true)); // TODO Call IResourceTypeService
     }
 }
