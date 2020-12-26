@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace KubeOps.Operator.Services
 {
-    public class ResourceTypeService : IResourceTypeService
+    internal class ResourceTypeService : IResourceTypeService
     {
         private readonly ICollection<Assembly> _assemblies;
 
-        public ResourceTypeService(params Assembly[] assemblies)
+        internal ResourceTypeService(params Assembly[] assemblies)
         {
             _assemblies = new HashSet<Assembly>(assemblies);
         }

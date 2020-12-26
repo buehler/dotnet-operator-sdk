@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace KubeOps.Operator.Services
 {
-    public interface IResourceTypeService
+    internal interface IResourceTypeService
     {
-        public void AddAssembly(Assembly assembly);
+        void AddAssembly(Assembly assembly);
 
-        public IEnumerable<Type> GetResourceTypesByAttribute<TAttribute>()
+        IEnumerable<Type> GetResourceTypesByAttribute<TAttribute>()
             where TAttribute : Attribute;
 
         IEnumerable<TAttribute> GetResourceAttributes<TAttribute>()
