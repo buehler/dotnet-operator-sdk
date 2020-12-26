@@ -1,7 +1,7 @@
 # Finalizers
 
 A finalizer is a special type of software that can asynchronously
-cleanup stuff for an entity that is beeing deleted.
+cleanup stuff for an entity that is being deleted.
 
 A finalizer is registered as an identifier in the kubernetes
 resource (i.e. in the yaml / json structure) and an object
