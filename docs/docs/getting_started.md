@@ -25,7 +25,7 @@ Using this sdk is pretty simple:
 
 - Create a new asp.net core application
 - Install the package
-- Replace the `Run` function in `Program.ch`
+- Replace the `Run` function in `Program.cs`
 - Add the operator to `Startup.cs`
 - Write entities / controllers / finalizers
 - Go.
