@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,7 @@ using k8s.Models;
 using KubeOps.Operator.Entities.Kustomize;
 using KubeOps.Operator.Rbac;
 using KubeOps.Operator.Serialization;
+using KubeOps.Operator.Services;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Generators
@@ -18,34 +20,33 @@ namespace KubeOps.Operator.Commands.Generators
     {
         private readonly EntitySerializer _serializer;
 
-        public RbacGenerator(EntitySerializer serializer)
+        private readonly IResourceTypeService _resourceTypeService;
+
+        public RbacGenerator(EntitySerializer serializer, IResourceTypeService resourceTypeService)
         {
             _serializer = serializer;
+            _resourceTypeService = resourceTypeService;
         }
 
-        public static V1ClusterRole GenerateManagerRbac()
+        public static V1ClusterRole GenerateManagerRbac(IResourceTypeService resourceTypeService)
         {
-            var assembly = Assembly.GetEntryAssembly();
-            if (assembly == null)
-            {
-                throw new Exception("No Entry Assembly found.");
-            }
+            var entityRbacPolicyRules = resourceTypeService.GetResourceAttributes<EntityRbacAttribute>()
+                .SelectMany(attribute => attribute.CreateRbacPolicies());
+
+            var genericRbacPolicyRules = resourceTypeService.GetResourceAttributes<GenericRbacAttribute>()
+                .Select(attribute => attribute.CreateRbacPolicy());
 
             return new V1ClusterRole(
                 null,
                 $"{V1ClusterRole.KubeGroup}/{V1ClusterRole.KubeApiVersion}",
                 V1ClusterRole.KubeKind,
                 new V1ObjectMeta { Name = "operator-role" },
-                new List<V1PolicyRule>(
-                    GetAttributes<EntityRbacAttribute>(assembly)
-                        .Concat(GetAttributes<EntityRbacAttribute>(Assembly.GetExecutingAssembly()))
-                        .SelectMany(a => a.CreateRbacPolicies())
-                        .Concat(GetAttributes<GenericRbacAttribute>(assembly).Select(a => a.CreateRbacPolicy()))));
+                new List<V1PolicyRule>(Enumerable.Concat(entityRbacPolicyRules, genericRbacPolicyRules)));
         }
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
-            var role = _serializer.Serialize(GenerateManagerRbac(), Format);
+            var role = _serializer.Serialize(GenerateManagerRbac(_resourceTypeService), Format);
             var roleBinding = _serializer.Serialize(
                 new V1ClusterRoleBinding
                 {
@@ -101,9 +102,5 @@ namespace KubeOps.Operator.Commands.Generators
 
             return ExitCodes.Success;
         }
-
-        private static IEnumerable<TAttribute> GetAttributes<TAttribute>(Assembly assembly)
-            where TAttribute : Attribute =>
-            assembly.GetTypes().SelectMany(t => t.GetCustomAttributes<TAttribute>(true));
     }
 }
