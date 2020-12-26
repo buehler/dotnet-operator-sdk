@@ -57,5 +57,10 @@ namespace KubeOps.Operator
         /// The duration in seconds in which the leader lease is valid.
         /// </summary>
         public ushort LeaderElectionLeaseDuration { get; set; } = 30;
+
+        /// <summary>
+        /// The timeout in seconds which the watcher has (after this timeout, the server will close the connection).
+        /// </summary>
+        public int WatcherHttpTimeout { get; set; } = 60;
     }
 }
