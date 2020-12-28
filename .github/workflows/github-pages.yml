@@ -20,6 +20,7 @@ jobs:
           name: changelog
           path: CHANGELOG.md
   build-gh-pages:
+    needs: build-changelog
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
