@@ -33,6 +33,7 @@ namespace KubeOps.Operator.Caching
 
         /// <summary>
         /// Prefill the cache with a list of entities.
+        /// This does not delete other items in the cache.
         /// </summary>
         /// <param name="entities">List of entities.</param>
         void Fill(IEnumerable<TEntity> entities);
