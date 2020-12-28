@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using GlobExpressions;
@@ -14,11 +15,18 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 [UnsetVisualStudioEnvironmentVariables]
 class Build : NukeBuild
 {
+    const short MaxReleaseNoteLength = 30000;
+
     public static int Main() => Execute<Build>(x => x.Test);
 
     [Parameter("Version of the nuget package to build.")] readonly string Version = string.Empty;
 
-    string NugetVersion => Version.StartsWith("v") ? Version.Substring(1) : Version;
+    [Parameter("Optional release notes to append.")] readonly string ReleaseNotes = string.Empty;
+
+    [Parameter("Name of the environment variable that contains the api key.")] readonly string ApiKeyEnv = string.Empty;
+
+    [Parameter("Name of the environment variable that contains the nuget source.")]
+    readonly string SourceEnv = string.Empty;
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -30,6 +38,12 @@ class Build : NukeBuild
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
 
     IEnumerable<Project> Projects => Solution.AllProjects.Where(p => p.SolutionFolder?.Name == "src");
+
+    string PackageReleaseNotes => (ReleaseNotes.Length > MaxReleaseNoteLength
+            ? ReleaseNotes.Substring(0, MaxReleaseNoteLength)
+            : ReleaseNotes)
+        .Replace(",", "%2c")
+        .Replace(";", "%3b");
 
     Target Clean => _ => _
         .Before(Restore)
@@ -56,6 +70,7 @@ class Build : NukeBuild
             .SetProjectFile(Solution)
             .SetConfiguration(Configuration)
             .SetProperty("CollectCoverage", true)
+            .EnableNoRestore()
             .EnableNoBuild()));
 
     Target Pack => _ => _
@@ -63,17 +78,21 @@ class Build : NukeBuild
         .Requires(() => !string.IsNullOrWhiteSpace(Version))
         .Executes(() => DotNetPack(s => s
             .SetConfiguration(Configuration.Release)
-            .SetVersion(NugetVersion)
+            .SetVersion(Version)
+            .SetPackageReleaseNotes(PackageReleaseNotes)
             .SetOutputDirectory(ArtifactsDirectory)
             .CombineWith(Projects, (ss, proj) => ss
                 .SetProject(proj))));
 
     Target Publish => _ => _
         .Requires(
-            () => !string.IsNullOrWhiteSpace(EnvironmentInfo.GetVariable<string>("NUGET_KEY", null)))
+            () => !string.IsNullOrWhiteSpace(ApiKeyEnv) &&
+                  !string.IsNullOrWhiteSpace(SourceEnv) &&
+                  !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(ApiKeyEnv)) &&
+                  !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(SourceEnv)))
         .Executes(() => DotNetNuGetPush(s => s
-            .SetSource("https://api.nuget.org/v3/index.json")
-            .SetApiKey(EnvironmentInfo.GetVariable<string>("NUGET_KEY", null))
+            .SetSource(Environment.GetEnvironmentVariable(SourceEnv) ?? string.Empty)
+            .SetApiKey(Environment.GetEnvironmentVariable(ApiKeyEnv) ?? string.Empty)
             .CombineWith(Glob.Files(ArtifactsDirectory, "*.nupkg"), (ss, package) => ss
                 .SetTargetPath(ArtifactsDirectory / package))));
 }
