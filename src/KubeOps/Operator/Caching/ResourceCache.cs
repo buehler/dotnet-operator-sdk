@@ -18,20 +18,20 @@ namespace KubeOps.Operator.Caching
         private const string Status = "Status";
 
         private readonly CompareLogic _compare = new(
-            new ComparisonConfig
+            new()
             {
                 Caching = true,
                 AutoClearCache = false,
-                MembersToIgnore = new List<string> { ResourceVersion, ManagedFields },
+                MembersToIgnore = new() { ResourceVersion, ManagedFields },
             });
 
-        private readonly IDictionary<string, TEntity> _cache = new ConcurrentDictionary<string, TEntity>();
+        private readonly ConcurrentDictionary<string, TEntity> _cache = new();
 
         private readonly ResourceCacheMetrics<TEntity> _metrics;
 
         public ResourceCache(OperatorSettings settings)
         {
-            _metrics = new ResourceCacheMetrics<TEntity>(settings);
+            _metrics = new(settings);
         }
 
         public TEntity Get(string id) => _cache[id];
@@ -40,18 +40,24 @@ namespace KubeOps.Operator.Caching
         {
             result = CompareCache(resource);
 
-            if (result == CacheComparisonResult.New)
-            {
-                _cache.Add(resource.Metadata.Uid, resource.DeepClone());
-            }
-            else
-            {
-                _cache[resource.Metadata.Uid] = resource.DeepClone();
-            }
+            var clone = resource.DeepClone();
+            _cache.AddOrUpdate(resource.Metadata.Uid, clone, (_, _) => clone);
 
             _metrics.CachedItemsSize.Set(_cache.Count);
             _metrics.CachedItemsSummary.Observe(_cache.Count);
             return resource;
+        }
+
+        public void Fill(IEnumerable<TEntity> entities)
+        {
+            foreach (var entity in entities)
+            {
+                var clone = entity.DeepClone();
+                _cache.AddOrUpdate(entity.Metadata.Uid, clone, (_, _) => clone);
+            }
+
+            _metrics.CachedItemsSize.Set(_cache.Count);
+            _metrics.CachedItemsSummary.Observe(_cache.Count);
         }
 
         public void Remove(TEntity resource) => Remove(resource.Metadata.Uid);
@@ -94,7 +100,7 @@ namespace KubeOps.Operator.Caching
 
         private void Remove(string resourceUid)
         {
-            _cache.Remove(resourceUid);
+            _cache.TryRemove(resourceUid, out _);
             _metrics.CachedItemsSize.Set(_cache.Count);
             _metrics.CachedItemsSummary.Observe(_cache.Count);
         }

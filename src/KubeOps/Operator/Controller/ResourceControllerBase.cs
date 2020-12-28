@@ -130,6 +130,14 @@ namespace KubeOps.Operator.Controller
             if (state == LeaderState.Leader)
             {
                 _logger.LogInformation("This instance was elected as leader, starting event queue.");
+
+                if (_services.Settings.PreloadCache)
+                {
+                    _logger.LogInformation("The 'preload cache' setting is set to 'true'.");
+                    var items = await _services.Client.List<TEntity>(_services.Settings.Namespace);
+                    _services.ResourceCache.Fill(items);
+                }
+
                 _services.EventQueue.ResourceEvent += OnResourceEvent;
                 await _services.EventQueue.Start();
 
