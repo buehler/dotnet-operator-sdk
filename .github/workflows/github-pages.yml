@@ -5,6 +5,20 @@ on:
     branches: [master]
 
 jobs:
+  build-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create Changelog
+        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          output: CHANGELOG.md
+      - name: Upload changelog
+        uses: actions/upload-artifact@v2
+        with:
+          name: changelog
+          path: CHANGELOG.md
   build-gh-pages:
     runs-on: windows-latest
     steps:
@@ -22,11 +36,12 @@ jobs:
       - name: Build Solution
         run: .\build.ps1 --target Compile --no-logo
         shell: powershell
-      - name: Create Changelog
-        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
+      - name: Download docs artifact
+        id: cl
+        uses: actions/download-artifact@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          output: docs/CHANGELOG.md
+          name: changelog
+          path: docs
       - name: Build Documentation
         run: docfx docs/docfx.json
       - name: Upload docs artifact
