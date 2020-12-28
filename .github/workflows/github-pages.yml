@@ -22,6 +22,11 @@ jobs:
       - name: Build Solution
         run: .\build.ps1 --target Compile --no-logo
         shell: powershell
+      - name: Create Changelog
+        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          output: docs/CHANGELOG.md
       - name: Build Documentation
         run: docfx docs/docfx.json
       - name: Upload docs artifact
