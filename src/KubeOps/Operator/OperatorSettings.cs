@@ -61,6 +61,6 @@ namespace KubeOps.Operator
         /// <summary>
         /// The timeout in seconds which the watcher has (after this timeout, the server will close the connection).
         /// </summary>
-        public int WatcherHttpTimeout { get; set; } = 60;
+        public ushort WatcherHttpTimeout { get; set; } = 60;
     }
 }
