@@ -1,4 +1,6 @@
-﻿using k8s.Models;
+﻿using System;
+using System.Collections.Generic;
+using k8s.Models;
 using KubeOps.Operator.Entities;
 
 namespace KubeOps.Test.TestEntities
@@ -11,6 +13,13 @@ namespace KubeOps.Test.TestEntities
     public class TestStatusEntityStatus
     {
         public string StatusString { get; set; } = string.Empty;
+        public List<ComplexStatusObject> StatusList { get; set; } = new List<ComplexStatusObject>();
+    }
+
+    public class ComplexStatusObject
+    {
+        public string ObjectName { get; set; } = string.Empty;
+        public DateTime LastModified { get; set; }
     }
 
     [KubernetesEntity(Group = "kubeops.test.dev", ApiVersion = "V1")]
