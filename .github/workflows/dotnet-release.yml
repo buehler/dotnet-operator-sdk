@@ -1,4 +1,4 @@
-name: .NET Core Release
+name: .NET Release
 
 on: [workflow_dispatch]
 
@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Setup .NET Core
+      - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.100
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
-      - name: Setup .NET Core
+      - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.100
@@ -30,5 +30,8 @@ jobs:
           extra_plugins: |
             @semantic-release/exec
         env:
-          NUGET_KEY: ${{ secrets.NUGET_KEY }}
+          NUGET_SOURCE: 'https://api.nuget.org/v3/index.json'
+          NUGET_API_KEY: ${{ secrets.NUGET_KEY }}
+          GH_NUGET_SOURCE: 'https://nuget.pkg.github.com/buehler/index.json'
+          GH_NUGET_API_KEY: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

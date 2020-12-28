@@ -1,8 +1,8 @@
 # KubeOps
 
 ![Code Security Testing](https://github.com/buehler/dotnet-operator-sdk/workflows/Code%20Security%20Testing/badge.svg)
-![.NET Core Release](https://github.com/buehler/dotnet-operator-sdk/workflows/.NET%20Core%20Release/badge.svg)
-![.NET Core Testing](https://github.com/buehler/dotnet-operator-sdk/workflows/.NET%20Core%20Testing/badge.svg)
+![.NET Release](https://github.com/buehler/dotnet-operator-sdk/workflows/.NET%20Release/badge.svg)
+![.NET Testing](https://github.com/buehler/dotnet-operator-sdk/workflows/.NET%20Testing/badge.svg)
 [![Nuget](https://img.shields.io/nuget/v/KubeOps)](https://www.nuget.org/packages/KubeOps/)
 
 This is the repository of the dotnet kubernetes operator sdk.

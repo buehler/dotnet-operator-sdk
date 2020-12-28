@@ -32,7 +32,7 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
-      - name: Setup .NET Core
+      - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.100

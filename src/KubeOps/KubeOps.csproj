@@ -15,7 +15,7 @@
         <PackageProjectUrl>https://buehler.github.io/dotnet-operator-sdk/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
+        <PackageLicense>Unlicense</PackageLicense>
         <PackageDescription>
             This is an operator sdk written in c#.
             It enables a developer to create a custom controller for CRDs

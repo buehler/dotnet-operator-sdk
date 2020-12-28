@@ -5,7 +5,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "./build.sh --no-logo --version ${nextRelease.version} --target Pack"
+        "prepareCmd": "./build.sh --no-logo --version ${nextRelease.version} --release-notes '${nextRelease.notes}' --target Pack"
       }
     ]
   ],
@@ -19,7 +19,13 @@
     [
       "@semantic-release/exec",
       {
-        "publishCmd": "./build.sh --no-logo --target Publish"
+        "publishCmd": "./build.sh --no-logo --target Publish --source-env GH_NUGET_SOURCE --api-key-env GH_NUGET_API_KEY"
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "publishCmd": "./build.sh --no-logo --target Publish --source-env NUGET_SOURCE --api-key-env NUGET_API_KEY"
       }
     ]
   ]
