@@ -1,4 +1,4 @@
-name: .NET Core Release
+name: .NET Release
 
 on: [workflow_dispatch]
 
