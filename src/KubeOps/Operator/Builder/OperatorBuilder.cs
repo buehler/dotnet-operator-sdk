@@ -137,7 +137,7 @@ namespace KubeOps.Operator.Builder
 
             Services.AddTransient<IKubernetesClient, KubernetesClient>();
 
-            Services.AddTransient(typeof(IResourceCache<>), typeof(ResourceCache<>));
+            Services.AddSingleton(typeof(IResourceCache<>), typeof(ResourceCache<>));
             Services.AddTransient(typeof(IResourceWatcher<>), typeof(ResourceWatcher<>));
             Services.AddTransient(typeof(IResourceEventQueue<>), typeof(ResourceEventQueue<>));
             Services.AddTransient(typeof(IResourceServices<>), typeof(ResourceServices<>));

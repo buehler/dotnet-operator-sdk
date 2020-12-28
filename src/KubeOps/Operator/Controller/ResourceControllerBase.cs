@@ -134,7 +134,8 @@ namespace KubeOps.Operator.Controller
                 if (_services.Settings.PreloadCache)
                 {
                     _logger.LogInformation("The 'preload cache' setting is set to 'true'.");
-
+                    var items = await _services.Client.List<TEntity>(_services.Settings.Namespace);
+                    _services.ResourceCache.Fill(items);
                 }
 
                 _services.EventQueue.ResourceEvent += OnResourceEvent;
