@@ -77,7 +77,7 @@ namespace KubeOps.Operator.Caching
                 return CacheComparisonResult.NotModified;
             }
 
-            if (comparison.Differences.All(d => d.ParentPropertyName == Status))
+            if (comparison.Differences.All(d => d.PropertyName.Split('.')[0] == Status))
             {
                 return CacheComparisonResult.StatusModified;
             }
