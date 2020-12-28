@@ -1,12 +1,15 @@
 # MS Build extensions
 
 This project extends the default build process of dotnet with some
-code generation targets before the build.
+code generation targets after the build.
 
-You'll find those two files here:
+You'll find the configurations and targets here:
 
-- [KubeOps.props](https://github.com/buehler/dotnet-operator-sdk/blob/master/src/KubeOps/Build/KubeOps.props): defines the build properties
 - [KubeOps.targets](https://github.com/buehler/dotnet-operator-sdk/blob/master/src/KubeOps/Build/KubeOps.targets): defines the additional build targets
+
+An example of such a target is:
+
+[!code-xml[KubeOps.targets](../../src/KubeOps/Build/KubeOps.targets?range=2-17&dedent=4&highlight=2-7)]
 
 They can be configured with the prop settings described below.
 The props file just defines the defaults.
