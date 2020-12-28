@@ -13,12 +13,12 @@ namespace KubeOps.Test.TestEntities
     public class TestStatusEntityStatus
     {
         public string StatusString { get; set; } = string.Empty;
-        public List<ComplexStatusObject> StatusList { get; set; }
+        public List<ComplexStatusObject> StatusList { get; set; } = new List<ComplexStatusObject>();
     }
 
     public class ComplexStatusObject
     {
-        public string ObjectName { get; set; }
+        public string ObjectName { get; set; } = string.Empty;
         public DateTime LastModified { get; set; }
     }
 

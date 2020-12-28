@@ -145,7 +145,9 @@ namespace KubeOps.Test.Operator.Caching
                     new TestStatusEntity
                     {
                         Metadata = new V1ObjectMeta { Uid = "test" },
+#pragma warning disable 8625
                         Status = null,
+#pragma warning restore 8625
                     },
                     CacheComparisonResult.StatusModified,
                 },
