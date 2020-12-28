@@ -36,9 +36,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Build\KubeOps.props">
-            <PackagePath>build\</PackagePath>
-        </Content>
         <Content Include="Build\KubeOps.targets">
             <PackagePath>build\</PackagePath>
         </Content>
