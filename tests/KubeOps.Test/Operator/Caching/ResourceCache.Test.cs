@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using FluentAssertions;
 using k8s.Models;
 using KubeOps.Operator;
@@ -131,6 +132,56 @@ namespace KubeOps.Test.Operator.Caching
                     {
                         Metadata = new V1ObjectMeta { Uid = "test" },
                         Status = new TestStatusEntityStatus { StatusString = "status2" },
+                    },
+                    CacheComparisonResult.StatusModified,
+                },
+                new object?[]
+                {
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Status = new TestStatusEntityStatus { StatusString = "status" },
+                    },
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Status = null,
+                    },
+                    CacheComparisonResult.StatusModified,
+                },
+                new object?[]
+                {
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Status = new TestStatusEntityStatus
+                        {
+                            StatusString = "status",
+                            StatusList = new List<ComplexStatusObject>()
+                            {
+                                new ComplexStatusObject()
+                                {
+                                    ObjectName = "status",
+                                    LastModified = DateTime.Parse("2020-01-01")
+                                }
+                            }
+                        },
+                    },
+                    new TestStatusEntity
+                    {
+                        Metadata = new V1ObjectMeta { Uid = "test" },
+                        Status = new TestStatusEntityStatus
+                        {
+                            StatusString = "status",
+                            StatusList = new List<ComplexStatusObject>()
+                            {
+                                new ComplexStatusObject()
+                                {
+                                    ObjectName = "status",
+                                    LastModified = DateTime.Parse("2020-01-02")
+                                }
+                            }
+                        },
                     },
                     CacheComparisonResult.StatusModified,
                 },
