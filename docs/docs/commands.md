@@ -23,7 +23,7 @@ Here is a brief overview over the available commands:
 > all commands assume either the compiled dll or you using
 > `dotnet run -- ` as prepended command.
 
-- ` ` (empty): runs the operator (normal `dotnet run`)
+- `""` (empty): runs the operator (normal `dotnet run`)
 - `version`: prints the version information for the actual connected kubernetes cluster
 - `install`: install the CRDs for the solution into the cluster
 - `uninstall`: uninstall the CRDs for the solution from the cluster
