@@ -21,9 +21,9 @@ variables that you can add in a `<PropertyGroup>` in your `csproj` file:
 
 | Property               | Description                                                                | Default Value                                                           |
 | ---------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| KubeOpsDockerfilePath  | The path of the dockerfile                                                 | $(SolutionDir)Dockerfile<br>or<br>$(MSBuildProjectDirectory)\Dockerfile |
+| KubeOpsDockerfilePath  | The path of the dockerfile                                                 | $(MSBuildProjectDirectory)\Dockerfile                                   |
 | KubeOpsDockerTag       | Which dotnet sdk / run tag should be used                                  | latest                                                                  |
-| KubeOpsConfigRoot      | The base directory for generated elements                                  | $(SolutionDir)config<br>or<br>$(MSBuildProjectDirectory)\config         |
+| KubeOpsConfigRoot      | The base directory for generated elements                                  | $(MSBuildProjectDirectory)\config                                       |
 | KubeOpsCrdDir          | The directory for the generated crds                                       | \$(KubeOpsConfigRoot)\crds                                              |
 | KubeOpsCrdFormat       | Output format for crds                                                     | Yaml                                                                    |
 | KubeOpsCrdUseOldCrds   | Use V1Beta version of crd instead of V1<br>(for kubernetes version < 1.16) | false                                                                   |
