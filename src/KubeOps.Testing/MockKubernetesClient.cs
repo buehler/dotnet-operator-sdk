@@ -79,7 +79,23 @@ namespace KubeOps.Testing
             Action<Exception>? onError = null,
             Action? onClose = null,
             string? @namespace = null,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            params ILabelSelector[] selectors)
+            where TResource : IKubernetesObject<V1ObjectMeta>
+            => Task.FromResult(
+                new Watcher<TResource>(
+                    () => Task.FromResult(new StreamReader(new MemoryStream())),
+                    (_, __) => { },
+                    _ => { }));
+
+        public Task<Watcher<TResource>> Watch<TResource>(
+            TimeSpan timeout,
+            Action<WatchEventType, TResource> onEvent,
+            Action<Exception>? onError = null,
+            Action? onClose = null,
+            string? @namespace = null,
+            CancellationToken cancellationToken = default,
+            string? labelSelector = default)
             where TResource : IKubernetesObject<V1ObjectMeta>
             => Task.FromResult(
                 new Watcher<TResource>(
