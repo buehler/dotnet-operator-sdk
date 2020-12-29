@@ -21,20 +21,21 @@ variables that you can add in a `<PropertyGroup>` in your `csproj` file:
 
 | Property               | Description                                                                | Default Value                                                           |
 | ---------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| KubeOpsDockerfilePath  | The path of the dockerfile                                                 | $(MSBuildProjectDirectory)\Dockerfile                                   |
-| KubeOpsDockerTag       | Which dotnet sdk / run tag should be used                                  | latest                                                                  |
-| KubeOpsConfigRoot      | The base directory for generated elements                                  | $(MSBuildProjectDirectory)\config                                       |
-| KubeOpsCrdDir          | The directory for the generated crds                                       | \$(KubeOpsConfigRoot)\crds                                              |
-| KubeOpsCrdFormat       | Output format for crds                                                     | Yaml                                                                    |
-| KubeOpsCrdUseOldCrds   | Use V1Beta version of crd instead of V1<br>(for kubernetes version < 1.16) | false                                                                   |
-| KubeOpsRbacDir         | Where to put the roles                                                     | \$(KubeOpsConfigRoot)\rbac                                              |
-| KubeOpsRbacFormat      | Output format for rbac                                                     | Yaml                                                                    |
-| KubeOpsOperatorDir     | Where to put operator related elements<br>(e.g. Deployment)                | \$(KubeOpsConfigRoot)\operator                                          |
-| KubeOpsOperatorFormat  | Output format for the operator                                             | Yaml                                                                    |
-| KubeOpsInstallerDir    | Where to put the installation files<br>(e.g. Namespace / Kustomization)    | \$(KubeOpsConfigRoot)\install                                           |
-| KubeOpsInstallerFormat | Output format for the installation files                                   | Yaml                                                                    |
-| KubeOpsSkipDockerfile  | Skip dockerfile during build                                               | ""                                                                      |
-| KubeOpsSkipCrds        | Skip crd generation during build                                           | ""                                                                      |
-| KubeOpsSkipRbac        | Skip rbac generation during build                                          | ""                                                                      |
-| KubeOpsSkipOperator    | Skip operator generation during build                                      | ""                                                                      |
-| KubeOpsSkipInstaller   | Skip installer generation during build                                     | ""                                                                      |
+| KubeOpsBasePath        | Base path for all other elements                                           | `$(MSBuildProjectDirectory)`                                            |
+| KubeOpsDockerfilePath  | The path of the dockerfile                                                 | `$(KubeOpsBasePath)\Dockerfile`                                         |
+| KubeOpsDockerTag       | Which dotnet sdk / run tag should be used                                  | `latest`                                                                |
+| KubeOpsConfigRoot      | The base directory for generated elements                                  | `$(KubeOpsBasePath)\config`                                             |
+| KubeOpsCrdDir          | The directory for the generated crds                                       | `$(KubeOpsConfigRoot)\crds`                                             |
+| KubeOpsCrdFormat       | Output format for crds                                                     | `Yaml`                                                                  |
+| KubeOpsCrdUseOldCrds   | Use V1Beta version of crd instead of V1<br>(for kubernetes version < 1.16) | `false`                                                                 |
+| KubeOpsRbacDir         | Where to put the roles                                                     | `$(KubeOpsConfigRoot)\rbac`                                             |
+| KubeOpsRbacFormat      | Output format for rbac                                                     | `Yaml`                                                                  |
+| KubeOpsOperatorDir     | Where to put operator related elements<br>(e.g. Deployment)                | `$(KubeOpsConfigRoot)\operator`                                         |
+| KubeOpsOperatorFormat  | Output format for the operator                                             | `Yaml`                                                                  |
+| KubeOpsInstallerDir    | Where to put the installation files<br>(e.g. Namespace / Kustomization)    | `$(KubeOpsConfigRoot)\install`                                          |
+| KubeOpsInstallerFormat | Output format for the installation files                                   | `Yaml`                                                                  |
+| KubeOpsSkipDockerfile  | Skip dockerfile during build                                               | `""`                                                                    |
+| KubeOpsSkipCrds        | Skip crd generation during build                                           | `""`                                                                    |
+| KubeOpsSkipRbac        | Skip rbac generation during build                                          | `""`                                                                    |
+| KubeOpsSkipOperator    | Skip operator generation during build                                      | `""`                                                                    |
+| KubeOpsSkipInstaller   | Skip installer generation during build                                     | `""`                                                                    |

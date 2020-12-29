@@ -2,7 +2,7 @@
     <Target Name="GenerateDockerfile">
         <PropertyGroup>
             <!-- Configuration for Docker related commands -->
-            <KubeOpsDockerfilePath Condition="'$(KubeOpsDockerfilePath)' == ''">$(MSBuildProjectDirectory)\Dockerfile</KubeOpsDockerfilePath>
+            <KubeOpsDockerfilePath Condition="'$(KubeOpsDockerfilePath)' == ''">$(KubeOpsBasePath)\Dockerfile</KubeOpsDockerfilePath>
             <KubeOpsDockerTag Condition="'$(KubeOpsDockerTag)' == ''">latest</KubeOpsDockerTag>
         </PropertyGroup>
 
@@ -78,8 +78,13 @@
 
     <Target Name="GenerateAfterBuild" AfterTargets="Build">
         <PropertyGroup>
+            <!-- Configuration for the base -->
+            <KubeOpsBasePath Condition="'$(KubeOpsBasePath)' == ''">$(MSBuildProjectDirectory)</KubeOpsBasePath>
+        </PropertyGroup>
+
+        <PropertyGroup>
             <!-- Configuration for the pathes where to store the generated yamls and elements -->
-            <KubeOpsConfigRoot Condition="'$(KubeOpsConfigRoot)' == ''">$(MSBuildProjectDirectory)\config</KubeOpsConfigRoot>
+            <KubeOpsConfigRoot Condition="'$(KubeOpsConfigRoot)' == ''">$(KubeOpsBasePath)\config</KubeOpsConfigRoot>
         </PropertyGroup>
 
         <CallTarget Condition="'$(KubeOpsSkipDockerfile)' == ''" Targets="GenerateDockerfile"/>

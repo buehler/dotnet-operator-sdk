@@ -159,14 +159,14 @@ namespace KubeOps.Test.Operator.Caching
                         Status = new TestStatusEntityStatus
                         {
                             StatusString = "status",
-                            StatusList = new List<ComplexStatusObject>()
+                            StatusList = new List<ComplexStatusObject>
                             {
-                                new ComplexStatusObject()
+                                new()
                                 {
                                     ObjectName = "status",
-                                    LastModified = DateTime.Parse("2020-01-01")
-                                }
-                            }
+                                    LastModified = DateTime.Parse("2020-01-01"),
+                                },
+                            },
                         },
                     },
                     new TestStatusEntity
@@ -175,14 +175,14 @@ namespace KubeOps.Test.Operator.Caching
                         Status = new TestStatusEntityStatus
                         {
                             StatusString = "status",
-                            StatusList = new List<ComplexStatusObject>()
+                            StatusList = new List<ComplexStatusObject>
                             {
-                                new ComplexStatusObject()
+                                new()
                                 {
                                     ObjectName = "status",
-                                    LastModified = DateTime.Parse("2020-01-02")
-                                }
-                            }
+                                    LastModified = DateTime.Parse("2020-01-02"),
+                                },
+                            },
                         },
                     },
                     CacheComparisonResult.StatusModified,
