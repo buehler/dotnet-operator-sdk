@@ -2,11 +2,22 @@
 
 namespace KubeOps.Operator.Entities.Annotations
 {
+    /// <summary>
+    /// Defines length limits for properties.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class LengthAttribute : Attribute
     {
-        public int MinLength { get; set; } = -1;
+        /// <summary>
+        /// If not `-1`, define the minimum length.
+        /// -1 is used as the "null" - value.
+        /// </summary>
+        public long MinLength { get; set; } = -1;
 
-        public int MaxLength { get; set; } = -1;
+        /// <summary>
+        /// If not `-1`, define the maximum length.
+        /// -1 is used as the "null" - value.
+        /// </summary>
+        public long MaxLength { get; set; } = -1;
     }
 }

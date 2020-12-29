@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using FluentAssertions;
@@ -336,6 +335,39 @@ namespace KubeOps.Test.Operator.Entities
         {
             var ex = Assert.Throws<CrdConversionException>(() => typeof(TestInvalidEntity).CreateCrd());
             ex.InnerException.Should().BeOfType<CrdPropertyTypeException>();
+        }
+
+        [Fact]
+        public void Should_Add_GenericAdditionalPrinterColumns()
+        {
+            var crd = _testSpecEntity.CreateCrd();
+            var apc = crd.Spec.Versions.First().AdditionalPrinterColumns;
+
+            apc.Should().NotBeNull();
+            apc.Should().ContainSingle(def => def.JsonPath == ".metadata.creationTimestamp" && def.Name == "Age");
+        }
+
+        [Fact]
+        public void Should_Add_AdditionalPrinterColumns()
+        {
+            var crd = _testSpecEntity.CreateCrd();
+            var apc = crd.Spec.Versions.First().AdditionalPrinterColumns;
+
+            apc.Should().NotBeNull();
+            apc.Should()
+                .ContainSingle(
+                    def => def.JsonPath == ".spec.normalString" && def.Name == "NormalString" && def.Priority == 0);
+            apc.Should().ContainSingle(def => def.JsonPath == ".spec.normalInt" && def.Priority == 1);
+            apc.Should().ContainSingle(def => def.JsonPath == ".spec.normalLong" && def.Name == "OtherName");
+        }
+
+        [Fact]
+        public void Must_Not_Contain_Ignored_TopLevel_Properties()
+        {
+            var crd = _testSpecEntity.CreateCrd();
+
+            var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties;
+            specProperties.Should().NotContainKeys("metadata", "apiVersion", "kind");
         }
     }
 }

@@ -26,6 +26,8 @@ namespace KubeOps.Operator.Entities.Extensions
         private const string Double = "double";
         private const string DateTime = "date-time";
 
+        private static readonly string[] IgnoredToplevelProperties = { "metadata", "apiversion", "kind" };
+
         internal static V1CustomResourceDefinition CreateCrd(
             this IKubernetesObject<V1ObjectMeta> kubernetesEntity) => CreateCrd(kubernetesEntity.GetType());
 
@@ -65,17 +67,32 @@ namespace KubeOps.Operator.Entities.Extensions
                 version.Subresources = new V1CustomResourceSubresources(null, new object());
             }
 
-            version.Schema = new V1CustomResourceValidation(MapType(entityType));
+            var columns = new List<V1CustomResourceColumnDefinition>();
+            version.Schema = new V1CustomResourceValidation(MapType(entityType, columns, string.Empty));
+
+            version.AdditionalPrinterColumns = entityType
+                .GetCustomAttributes<GenericAdditionalPrinterColumnAttribute>(true)
+                .Select(a => a.ToAdditionalPrinterColumn())
+                .Concat(columns)
+                .ToList();
+
+            if (version.AdditionalPrinterColumns.Count == 0)
+            {
+                version.AdditionalPrinterColumns = null;
+            }
 
             return crd;
         }
 
-        private static V1JSONSchemaProps MapProperty(PropertyInfo info)
+        private static V1JSONSchemaProps MapProperty(
+            PropertyInfo info,
+            IList<V1CustomResourceColumnDefinition> additionalColumns,
+            string jsonPath)
         {
             V1JSONSchemaProps props;
             try
             {
-                props = MapType(info.PropertyType);
+                props = MapType(info.PropertyType, additionalColumns, jsonPath);
             }
             catch (Exception ex)
             {
@@ -108,26 +125,18 @@ namespace KubeOps.Operator.Entities.Extensions
 
             // Get items (of array probably) description
             var items = info.GetCustomAttribute<ItemsAttribute>();
-            if (items != null && items.MaxItems != -1)
+            if (items != null)
             {
-                props.MaxItems = items.MaxItems;
-            }
-
-            if (items != null && items.MinItems != -1)
-            {
-                props.MinItems = items.MinItems;
+                props.MinItems = items.MinItems == -1 ? null : items.MinItems;
+                props.MaxItems = items.MaxItems == -1 ? null : items.MaxItems;
             }
 
             // Get length description
             var length = info.GetCustomAttribute<LengthAttribute>();
-            if (length != null && length.MaxLength != -1)
+            if (length != null)
             {
-                props.MaxLength = length.MaxLength;
-            }
-
-            if (length != null && length.MinLength != -1)
-            {
-                props.MinLength = length.MinLength;
+                props.MinLength = length.MinLength == -1 ? null : length.MinLength;
+                props.MaxLength = length.MaxLength == -1 ? null : length.MaxLength;
             }
 
             // get multiple of description
@@ -160,11 +169,13 @@ namespace KubeOps.Operator.Entities.Extensions
                 props.ExclusiveMinimum = rangeMin.ExclusiveMinimum;
             }
 
+            // check if preserve unknown is set
             if (info.GetCustomAttribute<PreserveUnknownFieldsAttribute>() != null)
             {
                 props.XKubernetesPreserveUnknownFields = true;
             }
 
+            // check if embedded resource is set
             if (info.GetCustomAttribute<EmbeddedResourceAttribute>() != null)
             {
                 props.Type = null;
@@ -173,10 +184,29 @@ namespace KubeOps.Operator.Entities.Extensions
                 props.XKubernetesEmbeddedResource = true;
             }
 
+            // get additional printer column information
+            var additionalColumn = info.GetCustomAttribute<AdditionalPrinterColumnAttribute>();
+            if (additionalColumn != null)
+            {
+                additionalColumns.Add(
+                    new V1CustomResourceColumnDefinition
+                    {
+                        Name = additionalColumn.Name ?? info.Name,
+                        Description = props.Description,
+                        JsonPath = jsonPath,
+                        Priority = additionalColumn.Priority,
+                        Type = props.Type,
+                        Format = props.Format,
+                    });
+            }
+
             return props;
         }
 
-        private static V1JSONSchemaProps MapType(Type type)
+        private static V1JSONSchemaProps MapType(
+            Type type,
+            IList<V1CustomResourceColumnDefinition> additionalColumns,
+            string jsonPath)
         {
             var props = new V1JSONSchemaProps();
 
@@ -191,7 +221,9 @@ namespace KubeOps.Operator.Entities.Extensions
             {
                 props.Type = Array;
                 props.Items = MapType(
-                    type.GetElementType() ?? throw new NullReferenceException("No Array Element Type found"));
+                    type.GetElementType() ?? throw new NullReferenceException("No Array Element Type found"),
+                    additionalColumns,
+                    jsonPath);
             }
             else if (!IsSimpleType(type) &&
                      (typeof(IDictionary).IsAssignableFrom(type) ||
@@ -209,7 +241,7 @@ namespace KubeOps.Operator.Entities.Extensions
                      typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()))
             {
                 props.Type = Array;
-                props.Items = MapType(type.GetGenericArguments()[0]);
+                props.Items = MapType(type.GetGenericArguments()[0], additionalColumns, jsonPath);
             }
             else if (type == typeof(IntstrIntOrString))
             {
@@ -217,7 +249,7 @@ namespace KubeOps.Operator.Entities.Extensions
             }
             else if (!IsSimpleType(type))
             {
-                ProcessType(type, props);
+                ProcessType(type, props, additionalColumns, jsonPath);
             }
             else if (type == typeof(int) || Nullable.GetUnderlyingType(type) == typeof(int))
             {
@@ -270,16 +302,23 @@ namespace KubeOps.Operator.Entities.Extensions
             return props;
         }
 
-        private static void ProcessType(Type type, V1JSONSchemaProps props)
+        private static void ProcessType(
+            Type type,
+            V1JSONSchemaProps props,
+            IList<V1CustomResourceColumnDefinition> additionalColumns,
+            string jsonPath)
         {
             props.Type = Object;
 
             props.Properties = new Dictionary<string, V1JSONSchemaProps>(
                 type.GetProperties()
+                    .Where(
+                        info => jsonPath != string.Empty ||
+                                !IgnoredToplevelProperties.Contains(info.Name.ToLowerInvariant()))
                     .Select(
                         prop => KeyValuePair.Create(
                             CamelCase(prop.Name),
-                            MapProperty(prop))));
+                            MapProperty(prop, additionalColumns, $"{jsonPath}.{CamelCase(prop.Name)}"))));
             props.Required = type.GetProperties()
                 .Where(prop => prop.GetCustomAttribute<RequiredAttribute>() != null)
                 .Select(prop => CamelCase(prop.Name))

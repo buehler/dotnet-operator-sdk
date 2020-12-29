@@ -15,14 +15,17 @@ namespace KubeOps.Test.TestEntities
 
         public string[]? NullableStringArray { get; set; }
 
+        [AdditionalPrinterColumn]
         public string NormalString { get; set; } = string.Empty;
 
         public string? NullableString { get; set; }
 
+        [AdditionalPrinterColumn(Priority = 1)]
         public int NormalInt { get; set; }
 
         public int? NullableInt { get; set; }
 
+        [AdditionalPrinterColumn(Name = "OtherName")]
         public long NormalLong { get; set; }
 
         public long? NullableLong { get; set; }
@@ -102,6 +105,8 @@ namespace KubeOps.Test.TestEntities
     }
 
     [KubernetesEntity(Group = "kubeops.test.dev", ApiVersion = "V1")]
+    [GenericAdditionalPrinterColumn(".metadata.namespace", "Namespace", "string")]
+    [GenericAdditionalPrinterColumn(".metadata.creationTimestamp", "Age", "date")]
     public class TestSpecEntity : CustomKubernetesEntity<TestSpecEntitySpec>
     {
     }
