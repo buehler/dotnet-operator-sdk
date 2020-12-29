@@ -1,5 +1,6 @@
 ﻿using k8s.Models;
 using KubeOps.Operator.Entities;
+using KubeOps.Operator.Entities.Annotations;
 
 namespace KubeOps.TestOperator.Entities
 {
@@ -10,6 +11,7 @@ namespace KubeOps.TestOperator.Entities
         /// </summary>
         public string Spec { get; set; } = string.Empty;
 
+        [AdditionalPrinterColumn]
         public string Username { get; set; } = string.Empty;
 
         public IntstrIntOrString StringOrInteger { get; set; } = 42;
@@ -21,6 +23,7 @@ namespace KubeOps.TestOperator.Entities
     }
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v2", Kind = "TestEntity")]
+    [GenericAdditionalPrinterColumn(".metadata.namespace", "Namespace", "string")]
     public class V2TestEntity : CustomKubernetesEntity<V2TestEntitySpec, V2TestEntityStatus>
     {
     }

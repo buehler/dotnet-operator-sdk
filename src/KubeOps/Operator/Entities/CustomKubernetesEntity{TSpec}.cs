@@ -10,6 +10,9 @@ namespace KubeOps.Operator.Entities
     public abstract class CustomKubernetesEntity<TSpec> : CustomKubernetesEntity, ISpec<TSpec>
         where TSpec : new()
     {
+        /// <summary>
+        /// Specification of the kubernetes object.
+        /// </summary>
         public TSpec Spec { get; set; } = new();
     }
 }

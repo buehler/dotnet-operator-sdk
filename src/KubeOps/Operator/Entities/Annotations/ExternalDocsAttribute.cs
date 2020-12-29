@@ -2,6 +2,9 @@
 
 namespace KubeOps.Operator.Entities.Annotations
 {
+    /// <summary>
+    /// Defines that the property has an external documentation.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class ExternalDocsAttribute : Attribute
     {
@@ -11,8 +14,14 @@ namespace KubeOps.Operator.Entities.Annotations
             Url = url;
         }
 
+        /// <summary>
+        /// Additional description.
+        /// </summary>
         public string? Description { get; }
 
+        /// <summary>
+        /// Url where to find the documentation.
+        /// </summary>
         public string Url { get; }
     }
 }
