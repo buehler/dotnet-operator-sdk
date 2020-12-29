@@ -3,6 +3,7 @@ name: Publish Documentation
 on:
   push:
     branches: [master]
+    tags: ['**']
 
 jobs:
   build-changelog:
