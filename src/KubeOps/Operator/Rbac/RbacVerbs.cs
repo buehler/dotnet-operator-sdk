@@ -2,6 +2,9 @@
 
 namespace KubeOps.Operator.Rbac
 {
+    /// <summary>
+    /// List of possible rbac verbs.
+    /// </summary>
     [Flags]
     public enum RbacVerb
     {

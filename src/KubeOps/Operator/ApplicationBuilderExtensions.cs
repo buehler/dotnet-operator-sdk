@@ -6,8 +6,17 @@ using Prometheus;
 
 namespace KubeOps.Operator
 {
+    /// <summary>
+    /// Extensions for the <see cref="IApplicationBuilder"/>.
+    /// </summary>
     public static class ApplicationBuilderExtensions
     {
+        /// <summary>
+        /// Use the kubernetes operator.
+        /// Register routing (.UseRouting()) and endpoints.
+        /// The endpoints contain health-checks and metrics endpoints.
+        /// </summary>
+        /// <param name="app">The <see cref="IApplicationBuilder"/>.</param>
         public static void UseKubernetesOperator(
             this IApplicationBuilder app)
         {

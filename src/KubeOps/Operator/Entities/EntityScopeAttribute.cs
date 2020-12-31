@@ -2,6 +2,9 @@
 
 namespace KubeOps.Operator.Entities
 {
+    /// <summary>
+    /// Defines the scope of an entity.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class EntityScopeAttribute : Attribute
     {
@@ -10,6 +13,9 @@ namespace KubeOps.Operator.Entities
             Scope = scope;
         }
 
+        /// <summary>
+        /// The defined scope.
+        /// </summary>
         public EntityScope Scope { get; set; }
     }
 }

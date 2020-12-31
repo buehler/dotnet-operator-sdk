@@ -1,5 +1,8 @@
 ﻿namespace KubeOps.Operator.Leadership
 {
+    /// <summary>
+    /// States an operator can be in for leadership.
+    /// </summary>
     public enum LeaderState
     {
         /// <summary>

@@ -4,8 +4,18 @@ using k8s.Models;
 
 namespace KubeOps.Operator.Entities.Extensions
 {
+    /// <summary>
+    /// Extensions for various kubernetes objects.
+    /// </summary>
     public static class KubernetesObjectExtensions
     {
+        /// <summary>
+        /// Ensures the object contains owner references and adds the owner to the list.
+        /// </summary>
+        /// <param name="resource">The resource that is owned by another resource.</param>
+        /// <param name="owner">The owner to add.</param>
+        /// <typeparam name="TResource">The type of the entity.</typeparam>
+        /// <returns>The resource with the added owner reference.</returns>
         public static TResource WithOwnerReference<TResource>(
             this TResource resource,
             IKubernetesObject<V1ObjectMeta> owner)
@@ -15,15 +25,25 @@ namespace KubeOps.Operator.Entities.Extensions
             return resource;
         }
 
+        /// <summary>
+        /// Create a <see cref="V1OwnerReference"/> out of a kubernetes object.
+        /// </summary>
+        /// <param name="kubernetesObject">The object that should be translated.</param>
+        /// <returns>The created <see cref="V1OwnerReference"/>.</returns>
         public static V1OwnerReference MakeOwnerReference(this IKubernetesObject<V1ObjectMeta> kubernetesObject)
-            => new V1OwnerReference(
+            => new(
                 kubernetesObject.ApiVersion,
                 kubernetesObject.Kind,
                 kubernetesObject.Metadata.Name,
                 kubernetesObject.Metadata.Uid);
 
+        /// <summary>
+        /// Create a <see cref="V1ObjectReference"/> of a kubernetes object.
+        /// </summary>
+        /// <param name="kubernetesObject">The object that should be translated.</param>
+        /// <returns>The created <see cref="V1ObjectReference"/>.</returns>
         public static V1ObjectReference MakeObjectReference(this IKubernetesObject<V1ObjectMeta> kubernetesObject)
-            => new V1ObjectReference
+            => new()
             {
                 ApiVersion = kubernetesObject.ApiVersion,
                 Kind = kubernetesObject.Kind,
@@ -35,30 +55,5 @@ namespace KubeOps.Operator.Entities.Extensions
 
         private static IList<V1OwnerReference> EnsureOwnerReferences(this V1ObjectMeta meta) =>
             meta.OwnerReferences ??= new List<V1OwnerReference>();
-
-        /* commented pending fleshing this out and improving after confirming event best practices
-        /// <summary>
-        /// Create an event for a kubernetesObject that can be applied to the cluster using the Create on <see cref="Client.IKubernetesClient" />
-        /// </summary>
-        /// <param name="kubernetesObject">The object to create an event for</param>
-        /// <param name="reason">A short reason tag, like Created, Updated, Reconciled</param>
-        /// <param name="message">A human readable message to go with the event</param>
-        /// <param name="type">A string corresponding to the event type, Normal or Warning</param>
-        /// <param name="component">The component generating the event, it should be the name of the operator</param>
-        /// <returns></returns>
-        public static V1Event Event(this IKubernetesObject<V1ObjectMeta> kubernetesObject, string reason, string message, string type = "Normal", string? component = null) =>
-            new V1Event
-            {
-                Metadata = new V1ObjectMeta { Name = $"{kubernetesObject.Name()}.{DateTimeOffset.UtcNow.ToFileTime()}", NamespaceProperty = kubernetesObject.Namespace() },
-                InvolvedObject = kubernetesObject.MakeObjectReference(),
-                Reason = reason,
-                Source = new V1EventSource { Component = component },
-                Count = 1,
-                Message = message,
-                FirstTimestamp = DateTime.UtcNow,
-                LastTimestamp = DateTime.UtcNow,
-                Type = type
-            };
-        */
     }
 }

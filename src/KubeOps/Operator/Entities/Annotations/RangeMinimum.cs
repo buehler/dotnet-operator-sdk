@@ -11,11 +11,11 @@ namespace KubeOps.Operator.Entities.Annotations
         /// <summary>
         /// Minimum value to be set.
         /// </summary>
-        public double Minimum { get; set; }
+        public double Minimum { get; init; }
 
         /// <summary>
         /// Defines if the minimum value is included or excluded.
         /// </summary>
-        public bool ExclusiveMinimum { get; set; }
+        public bool ExclusiveMinimum { get; init; }
     }
 }

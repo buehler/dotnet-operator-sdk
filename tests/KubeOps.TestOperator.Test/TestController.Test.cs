@@ -24,7 +24,6 @@ namespace KubeOps.TestOperator.Test
             mock.Reset();
             mock.Setup(o => o.Created(It.IsAny<V1TestEntity>()));
             mock.Verify(o => o.Created(It.IsAny<V1TestEntity>()), Times.Never);
-            _factory.MockedKubernetesClient.UpdateResult = new V1TestEntity();
             var queue = _factory.GetMockedEventQueue<V1TestEntity>();
             queue.Created(new V1TestEntity());
             mock.Verify(o => o.Created(It.IsAny<V1TestEntity>()), Times.Once);
