@@ -14,6 +14,13 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Controller
 {
+    /// <summary>
+    /// Resource controller base. Contains the logic to reconcile entities.
+    /// This class must be overloaded for any entities one wants to manage.
+    ///
+    /// Overwrite the specific methods to use them for reconciliation.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the entity.</typeparam>
     public abstract class ResourceControllerBase<TEntity> : IResourceController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
@@ -28,6 +35,10 @@ namespace KubeOps.Operator.Controller
         private readonly IResourceServices<TEntity> _services;
         private bool _running;
 
+        /// <summary>
+        /// Construct the controller.
+        /// </summary>
+        /// <param name="services">The needed services for the controller to function properly.</param>
         protected ResourceControllerBase(IResourceServices<TEntity> services)
         {
             _logger = services.LoggerFactory.CreateLogger<ResourceControllerBase<TEntity>>();
@@ -36,8 +47,17 @@ namespace KubeOps.Operator.Controller
 
         bool IResourceController.Running => _running;
 
+        /// <summary>
+        /// Instance of the <see cref="IKubernetesClient"/> for querying the cluster.
+        /// </summary>
         protected IKubernetesClient Client => _services.Client;
 
+        /// <summary>
+        /// Start the controller. This does not necessarily mean the controller
+        /// "runs" afterwards. Leader-election will take place first.
+        /// </summary>
+        /// <param name="cancellationToken"><see cref="CancellationToken"/>.</param>
+        /// <returns>A task for the async method.</returns>
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation(@"Startup CRD Controller for ""{resource}"".", typeof(TEntity));
@@ -56,6 +76,11 @@ namespace KubeOps.Operator.Controller
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Stop the controller.
+        /// </summary>
+        /// <param name="cancellationToken"><see cref="CancellationToken"/>.</param>
+        /// <returns>A task for the async method.</returns>
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation(@"Shutdown CRD Controller for ""{resource}"".", typeof(TEntity));
@@ -67,6 +92,15 @@ namespace KubeOps.Operator.Controller
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Called for <see cref="ResourceEventType.Created"/> events for a given resource.
+        /// </summary>
+        /// <param name="resource">The resource that fired the created event.</param>
+        /// <returns>
+        /// A task with an optional <see cref="TimeSpan"/>. If null is returned,
+        /// event will not be re-queued. If a <see cref="TimeSpan"/> is returned,
+        /// the resource will be re-queued at the given point in time.
+        /// </returns>
         protected virtual Task<TimeSpan?> Created(TEntity resource)
         {
             _logger.LogDebug(
@@ -76,6 +110,15 @@ namespace KubeOps.Operator.Controller
             return Task.FromResult(default(TimeSpan?));
         }
 
+        /// <summary>
+        /// Called for <see cref="ResourceEventType.Updated"/> events for a given resource.
+        /// </summary>
+        /// <param name="resource">The resource that fired the updated event.</param>
+        /// <returns>
+        /// A task with an optional <see cref="TimeSpan"/>. If null is returned,
+        /// event will not be re-queued. If a <see cref="TimeSpan"/> is returned,
+        /// the resource will be re-queued at the given point in time.
+        /// </returns>
         protected virtual Task<TimeSpan?> Updated(TEntity resource)
         {
             _logger.LogDebug(
@@ -85,6 +128,15 @@ namespace KubeOps.Operator.Controller
             return Task.FromResult(default(TimeSpan?));
         }
 
+        /// <summary>
+        /// Called for <see cref="ResourceEventType.NotModified"/> events for a given resource.
+        /// </summary>
+        /// <param name="resource">The resource that fired the not-modified event.</param>
+        /// <returns>
+        /// A task with an optional <see cref="TimeSpan"/>. If null is returned,
+        /// event will not be re-queued. If a <see cref="TimeSpan"/> is returned,
+        /// the resource will be re-queued at the given point in time.
+        /// </returns>
         protected virtual Task<TimeSpan?> NotModified(TEntity resource)
         {
             _logger.LogDebug(
@@ -94,6 +146,15 @@ namespace KubeOps.Operator.Controller
             return Task.FromResult(default(TimeSpan?));
         }
 
+        /// <summary>
+        /// Called for <see cref="ResourceEventType.StatusUpdated"/> events for a given resource.
+        /// </summary>
+        /// <param name="resource">The resource that fired the status-modified event.</param>
+        /// <returns>
+        /// A task with an optional <see cref="TimeSpan"/>. If null is returned,
+        /// event will not be re-queued. If a <see cref="TimeSpan"/> is returned,
+        /// the resource will be re-queued at the given point in time.
+        /// </returns>
         protected virtual Task StatusModified(TEntity resource)
         {
             _logger.LogDebug(
@@ -103,6 +164,15 @@ namespace KubeOps.Operator.Controller
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Called for <see cref="ResourceEventType.Deleted"/> events for a given resource.
+        /// </summary>
+        /// <param name="resource">The resource that fired the deleted event.</param>
+        /// <returns>
+        /// A task with an optional <see cref="TimeSpan"/>. If null is returned,
+        /// event will not be re-queued. If a <see cref="TimeSpan"/> is returned,
+        /// the resource will be re-queued at the given point in time.
+        /// </returns>
         protected virtual Task Deleted(TEntity resource)
         {
             _logger.LogDebug(
@@ -112,6 +182,15 @@ namespace KubeOps.Operator.Controller
             return Task.FromResult(default(TimeSpan?));
         }
 
+        /// <summary>
+        /// Attach a finalizer to a given resource.
+        /// The finalizer is registered with it's name in the finalizer
+        /// list of the resource.
+        /// </summary>
+        /// <param name="resource">The resource to attach the finalizer to.</param>
+        /// <typeparam name="TFinalizer">The type of the finalizer.</typeparam>
+        /// <returns>A task that resolves when the finalizer is added.</returns>
+        /// <exception cref="NoFinalizerRegisteredException">When no finalizer for the given type is found.</exception>
         protected Task AttachFinalizer<TFinalizer>(TEntity resource)
             where TFinalizer : class, IResourceFinalizer<TEntity>
         {

@@ -12,12 +12,12 @@ namespace KubeOps.Operator.Entities.Annotations
         /// If not `-1`, defines the minimal item count for the property.
         /// -1 is used as the "null" - value.
         /// </summary>
-        public long MinItems { get; set; } = -1;
+        public long MinItems { get; init; } = -1;
 
         /// <summary>
         /// If not `-1`, defines the maximal item count for the property.
         /// -1 is used as the "null" - value.
         /// </summary>
-        public long MaxItems { get; set; } = -1;
+        public long MaxItems { get; init; } = -1;
     }
 }

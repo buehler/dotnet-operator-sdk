@@ -11,11 +11,11 @@ namespace KubeOps.Operator.Entities.Annotations
         /// <summary>
         /// Maximum value to be set.
         /// </summary>
-        public double Maximum { get; set; }
+        public double Maximum { get; init; }
 
         /// <summary>
         /// Defines if the maximum value is included or excluded.
         /// </summary>
-        public bool ExclusiveMaximum { get; set; }
+        public bool ExclusiveMaximum { get; init; }
     }
 }

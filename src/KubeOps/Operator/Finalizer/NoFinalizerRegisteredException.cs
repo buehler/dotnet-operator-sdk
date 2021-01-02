@@ -3,6 +3,9 @@ using System.Reflection;
 
 namespace KubeOps.Operator.Finalizer
 {
+    /// <summary>
+    /// Exception that is thrown when no finalizer is registered for a given type.
+    /// </summary>
     public class NoFinalizerRegisteredException : Exception
     {
         public NoFinalizerRegisteredException()

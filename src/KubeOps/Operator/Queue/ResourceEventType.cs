@@ -1,5 +1,8 @@
 ﻿namespace KubeOps.Operator.Queue
 {
+    /// <summary>
+    /// Event type for resources.
+    /// </summary>
     public enum ResourceEventType
     {
         /// <summary>

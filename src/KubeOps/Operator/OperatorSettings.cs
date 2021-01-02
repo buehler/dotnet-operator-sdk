@@ -4,6 +4,9 @@ using DotnetKubernetesClient;
 
 namespace KubeOps.Operator
 {
+    /// <summary>
+    /// Operator settings.
+    /// </summary>
     public sealed class OperatorSettings
     {
         private const string DefaultOperatorName = "KubernetesOperator";

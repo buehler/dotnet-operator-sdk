@@ -1,5 +1,8 @@
 ﻿namespace KubeOps.Operator.Entities
 {
+    /// <summary>
+    /// Definition for the scopes of entities.
+    /// </summary>
     public enum EntityScope
     {
         /// <summary>
