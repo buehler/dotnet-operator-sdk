@@ -16,9 +16,9 @@ namespace KubeOps.Test.Operator.Leadership
     public class LeaderElectorTest
     {
         private readonly LeaderElector _elector;
-        private readonly Mock<ILeaderElection> _election = new Mock<ILeaderElection>();
-        private readonly Mock<IKubernetesClient> _client = new Mock<IKubernetesClient>();
-        private readonly Mock<ILogger<LeaderElector>> _logger = new Mock<ILogger<LeaderElector>>();
+        private readonly Mock<ILeaderElection> _election = new();
+        private readonly Mock<IKubernetesClient> _client = new();
+        private readonly Mock<ILogger<LeaderElector>> _logger = new();
 
         public LeaderElectorTest()
         {

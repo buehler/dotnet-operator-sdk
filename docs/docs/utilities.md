@@ -35,3 +35,12 @@ to see which metrics are available.
 
 Of course you can also have a look at the used metrics classes to see the
 implementation: [Metrics Implementations](https://github.com/buehler/dotnet-operator-sdk/tree/master/src/KubeOps/Operator/DevOps).
+
+# Entity / Resource utils
+
+There are several method extensions that help with day to day resource
+handling. Head over to their documentation to see that they do:
+
+- @"KubeOps.Operator.Entities.Extensions.KubernetesObjectExtensions.MakeObjectReference(k8s.IKubernetesObject{k8s.Models.V1ObjectMeta})"
+- @"KubeOps.Operator.Entities.Extensions.KubernetesObjectExtensions.MakeOwnerReference(k8s.IKubernetesObject{k8s.Models.V1ObjectMeta})"
+- @"KubeOps.Operator.Entities.Extensions.KubernetesObjectExtensions.WithOwnerReference``1(``0,k8s.IKubernetesObject{k8s.Models.V1ObjectMeta})"
