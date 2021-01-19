@@ -5,6 +5,7 @@ using DotnetKubernetesClient;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
+using KubeOps.Operator.Events;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Leadership;
 using KubeOps.Operator.Queue;
@@ -136,6 +137,7 @@ namespace KubeOps.Operator.Builder
             Services.AddTransient<EntitySerializer>();
 
             Services.AddTransient<IKubernetesClient, KubernetesClient>();
+            Services.AddTransient<IEventManager, EventManager>();
 
             Services.AddSingleton(typeof(IResourceCache<>), typeof(ResourceCache<>));
             Services.AddTransient(typeof(IResourceWatcher<>), typeof(ResourceWatcher<>));

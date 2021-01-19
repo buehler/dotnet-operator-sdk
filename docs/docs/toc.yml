@@ -8,6 +8,8 @@
   href: entities.md
 - name: Controller
   href: controller.md
+- name: Events
+  href: events.md
 - name: Finalizer
   href: finalizer.md
 - name: Utilities

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
 using KubeOps.Operator.Controller;
+using KubeOps.Operator.Events;
 using KubeOps.Operator.Rbac;
 using KubeOps.Operator.Services;
 using KubeOps.TestOperator.Entities;
-using KubeOps.TestOperator.Finalizer;
 using KubeOps.TestOperator.TestManager;
 
 namespace KubeOps.TestOperator.Controller
@@ -13,17 +13,19 @@ namespace KubeOps.TestOperator.Controller
     public class TestController : ResourceControllerBase<V1TestEntity>
     {
         private readonly IManager _manager;
+        private readonly IEventManager.Publisher _publisher;
 
-        public TestController(IManager manager, IResourceServices<V1TestEntity> services)
+        public TestController(IManager manager, IEventManager eventManager, IResourceServices<V1TestEntity> services)
             : base(services)
         {
             _manager = manager;
+            _publisher = eventManager.CreatePublisher("reason", "my fancy message");
         }
 
         protected override async Task<TimeSpan?> Created(V1TestEntity resource)
         {
             _manager.Created(resource);
-            await AttachFinalizer<TestEntityFinalizer>(resource);
+            await _publisher(resource);
             return await base.Created(resource);
         }
 
