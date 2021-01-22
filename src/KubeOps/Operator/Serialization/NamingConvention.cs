@@ -18,6 +18,13 @@ namespace KubeOps.Operator.Serialization
             { "namespaceProperty", "namespace" },
             { "enumProperty", "enum" },
             { "objectProperty", "object" },
+            { "readOnlyProperty", "readOnly" },
+            { "xKubernetesEmbeddedResource", "x-kubernetes-embedded-resource" },
+            { "xKubernetesIntOrString", "x-kubernetes-int-or-string" },
+            { "xKubernetesListMapKeys", "x-kubernetes-list-map-keys" },
+            { "xKubernetesListType", "x-kubernetes-list-type" },
+            { "xKubernetesMapType", "x-kubernetes-map-type" },
+            { "xKubernetesPreserveUnknownFields", "x-kubernetes-preserve-unknown-fields" },
         };
 
         public string Apply(string value)
@@ -26,12 +33,9 @@ namespace KubeOps.Operator.Serialization
                 p =>
                     string.Equals(value, p.Key, StringComparison.InvariantCultureIgnoreCase));
 
-            if (key != default)
-            {
-                value = renamedValue;
-            }
-
-            return _yamlNaming.Apply(value);
+            return key != default
+                ? renamedValue
+                : _yamlNaming.Apply(value);
         }
 
         protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)

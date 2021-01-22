@@ -1,4 +1,5 @@
 ﻿using System;
+using DotnetKubernetesClient.Entities;
 using FluentAssertions;
 using k8s.Models;
 using KubeOps.Operator.Entities.Extensions;

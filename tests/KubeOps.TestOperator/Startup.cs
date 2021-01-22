@@ -2,6 +2,7 @@
 using KubeOps.TestOperator.Controller;
 using KubeOps.TestOperator.Finalizer;
 using KubeOps.TestOperator.TestManager;
+using KubeOps.TestOperator.Webhooks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,7 +15,8 @@ namespace KubeOps.TestOperator
             services
                 .AddKubernetesOperator()
                 .AddFinalizer<TestEntityFinalizer>()
-                .AddController<TestController>();
+                .AddController<TestController>()
+                .AddValidationWebhook<TestValidator>();
 
             services.AddTransient<IManager, TestManager.TestManager>();
         }

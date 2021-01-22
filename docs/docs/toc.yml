@@ -12,6 +12,8 @@
   href: events.md
 - name: Finalizer
   href: finalizer.md
+- name: Webhooks
+  href: webhooks.md
 - name: Utilities
   href: utilities.md
 - name: CLI Commands

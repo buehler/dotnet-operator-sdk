@@ -12,6 +12,7 @@ using KubeOps.Operator.Queue;
 using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Services;
 using KubeOps.Operator.Watcher;
+using KubeOps.Operator.Webhooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Rest.Serialization;
@@ -27,6 +28,8 @@ namespace KubeOps.Operator.Builder
         internal const string LivenessTag = "liveness";
         internal const string ReadinessTag = "readiness";
 
+        private readonly IResourceTypeService _resourceTypeService;
+
         public OperatorBuilder(IServiceCollection services)
         {
             Services = services;
@@ -37,12 +40,10 @@ namespace KubeOps.Operator.Builder
                 throw new Exception("No Entry Assembly found.");
             }
 
-            ResourceTypeService = new ResourceTypeService(entryAssembly, Assembly.GetExecutingAssembly());
+            _resourceTypeService = new ResourceTypeService(entryAssembly, Assembly.GetExecutingAssembly());
         }
 
         public IServiceCollection Services { get; }
-
-        private IResourceTypeService ResourceTypeService { get; set; }
 
         public IOperatorBuilder AddHealthCheck<THealthCheck>(string? name = default)
             where THealthCheck : class, IHealthCheck
@@ -98,7 +99,16 @@ namespace KubeOps.Operator.Builder
 
         public IOperatorBuilder AddResourceAssembly(Assembly assembly)
         {
-            ResourceTypeService.AddAssembly(assembly);
+            _resourceTypeService.AddAssembly(assembly);
+
+            return this;
+        }
+
+        public IOperatorBuilder AddValidationWebhook<TWebhook>()
+            where TWebhook : class, IValidationWebhook
+        {
+            Services.AddTransient(typeof(IValidationWebhook), typeof(TWebhook));
+            Services.AddTransient(typeof(TWebhook));
 
             return this;
         }
@@ -132,6 +142,7 @@ namespace KubeOps.Operator.Builder
                     .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
                     .WithNamingConvention(new NamingConvention())
                     .WithTypeConverter(new YamlIntOrStrTypeConverter())
+                    .WithTypeConverter(new YamlByteArrayTypeConverter())
                     .Build());
 
             Services.AddTransient<EntitySerializer>();
@@ -156,7 +167,7 @@ namespace KubeOps.Operator.Builder
             Services.AddHostedService<LeaderElector>();
             Services.AddSingleton<ILeaderElection, LeaderElection>();
 
-            Services.AddSingleton(ResourceTypeService);
+            Services.AddSingleton(_resourceTypeService);
 
             return this;
         }

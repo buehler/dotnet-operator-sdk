@@ -39,6 +39,7 @@
     "dest": "public",
     "sitemap": {
       "baseUrl": "https://buehler.github.io/dotnet-operator-sdk/"
-    }
+    },
+    "template":["default","templates/discordfx"]
   }
 }

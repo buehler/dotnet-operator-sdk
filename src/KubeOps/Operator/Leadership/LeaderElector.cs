@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
+using DotnetKubernetesClient.LabelSelectors;
 using k8s.Models;
+using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Rbac;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,6 +17,7 @@ using Timer = System.Timers.Timer;
 namespace KubeOps.Operator.Leadership
 {
     [EntityRbac(typeof(V1Lease), Verbs = RbacVerb.All)]
+    [EntityRbac(typeof(V1Deployment), Verbs = RbacVerb.Get | RbacVerb.List)]
     internal class LeaderElector : IHostedService
     {
         private readonly ILogger<LeaderElector> _logger;
@@ -26,6 +30,7 @@ namespace KubeOps.Operator.Leadership
 
         private Timer? _leaseCheck;
         private string _namespace = string.Empty;
+        private V1Deployment? _operatorDeployment;
 
         public LeaderElector(
             ILogger<LeaderElector> logger,
@@ -42,7 +47,7 @@ namespace KubeOps.Operator.Leadership
             _hostname = Environment.MachineName;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation(@"Startup Leader Elector for operator ""{operatorName}"".", _settings.Name);
 
@@ -53,15 +58,24 @@ namespace KubeOps.Operator.Leadership
                 AutoReset = true,
             };
 
+            _logger.LogTrace("Fetching namespace for leader election.");
+            _namespace = await _client.GetCurrentNamespace();
+            _operatorDeployment = (await _client.List<V1Deployment>(
+                _namespace,
+                new EqualsSelector("operator-deployment", _settings.Name))).FirstOrDefault();
+            if (_operatorDeployment != null)
+            {
+                _operatorDeployment.Kind = V1Deployment.KubeKind;
+                _operatorDeployment.ApiVersion = $"{V1Deployment.KubeGroup}/{V1Deployment.KubeApiVersion}";
+            }
+
 #if DEBUG
             _election.LeadershipChanged(LeaderState.Leader);
-
-            return Task.CompletedTask;
 #else
             _leaseCheck.Start();
             _leaseCheck.Elapsed += async (_, __) => await CheckLeaderLease();
 
-            return CheckLeaderLease();
+            await CheckLeaderLease();
 #endif
         }
 
@@ -70,6 +84,9 @@ namespace KubeOps.Operator.Leadership
             _logger.LogInformation(@"Shutdown Leader Elector for operator ""{operatorName}"".", _settings.Name);
             _leaseCheck?.Dispose();
             _leaseCheck = null;
+
+            _namespace = string.Empty;
+            _operatorDeployment = null;
 
             return ClearLeaseIfLeader();
         }
@@ -80,12 +97,6 @@ namespace KubeOps.Operator.Leadership
         /// <returns>A Task.</returns>
         internal async Task CheckLeaderLease()
         {
-            if (_namespace.Length == 0)
-            {
-                _logger.LogTrace("Fetching namespace for leader election.");
-                _namespace = await _client.GetCurrentNamespace();
-            }
-
             _logger.LogTrace(@"Fetch V1Lease object for operator ""{operator}"".", _settings.Name);
             var lease = await _client.Get<V1Lease>(_leaseName, _namespace);
 
@@ -106,6 +117,12 @@ namespace KubeOps.Operator.Leadership
                             new V1ObjectMeta(
                                 name: _leaseName,
                                 namespaceProperty: _namespace,
+                                ownerReferences: _operatorDeployment != null
+                                    ? new List<V1OwnerReference>
+                                    {
+                                        _operatorDeployment.MakeOwnerReference(),
+                                    }
+                                    : null,
                                 annotations: new Dictionary<string, string> { { "leader-elector", _settings.Name } }),
                             new V1LeaseSpec(
                                 DateTime.UtcNow,
