@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using DotnetKubernetesClient.Entities;
 using FluentAssertions;
 using k8s.Models;
 using KubeOps.Operator.Commands.Generators;

@@ -43,5 +43,10 @@ namespace KubeOps.Operator.Entities.Kustomize
         /// List of <see cref="KustomizationImage"/>.
         /// </summary>
         public IList<KustomizationImage>? Images { get; set; }
+
+        /// <summary>
+        /// List of <see cref="KustomizationConfigMapGenerator"/>.
+        /// </summary>
+        public IList<KustomizationConfigMapGenerator>? ConfigMapGenerator { get; set; }
     }
 }

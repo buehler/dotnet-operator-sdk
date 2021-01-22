@@ -42,19 +42,19 @@ namespace KubeOps.Operator.Commands.Generators
 
         public string GenerateDockerfile() =>
             $@"# Build the operator
-FROM mcr.microsoft.com/dotnet/core/sdk:{DotnetImageTag} as build
+FROM mcr.microsoft.com/dotnet/sdk:{DotnetImageTag} as build
 WORKDIR /operator
 
 COPY ./ ./
 RUN dotnet publish -c Release -o out {ProjectToBuild}
 
 # The runner for the application
-FROM mcr.microsoft.com/dotnet/core/aspnet:{DotnetImageTag} as final
+FROM mcr.microsoft.com/dotnet/aspnet:{DotnetImageTag} as final
 WORKDIR /operator
 
 COPY --from=build /operator/out/ ./
 
-CMD [ ""dotnet"", ""{TargetFile}"" ]
+ENTRYPOINT [ ""dotnet"", ""{TargetFile}"" ]
 ";
     }
 }

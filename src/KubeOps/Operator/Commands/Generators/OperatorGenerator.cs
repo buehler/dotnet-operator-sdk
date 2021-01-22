@@ -1,121 +1,238 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
 using System.Threading.Tasks;
 using k8s.Models;
+using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Kustomize;
 using KubeOps.Operator.Serialization;
+using KubeOps.Operator.Webhooks;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Generators
 {
-    [Command("operator", Description = "Generates the needed yamls to run the operator.")]
+    [Command("operator", "op", Description = "Generates the needed yamls to run the operator.")]
     internal class OperatorGenerator : GeneratorBase
     {
         private readonly EntitySerializer _serializer;
+        private readonly OperatorSettings _settings;
+        private readonly bool _hasWebhooks;
 
-        public OperatorGenerator(EntitySerializer serializer)
+        public OperatorGenerator(
+            EntitySerializer serializer,
+            OperatorSettings settings,
+            IEnumerable<IValidationWebhook> validators)
         {
             _serializer = serializer;
+            _settings = settings;
+            _hasWebhooks = validators.Any();
         }
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
-            var output = _serializer.Serialize(
-                new V1Deployment(
-                    $"{V1Deployment.KubeGroup}/{V1Deployment.KubeApiVersion}",
-                    V1Deployment.KubeKind,
-                    new V1ObjectMeta(name: "operator"),
-                    new V1DeploymentSpec
+            var fileWriter = new FileWriter(app.Out);
+
+            if (OutputPath != null &&
+                _hasWebhooks &&
+                (!File.Exists(Path.Join(OutputPath, "ca.pem")) || !File.Exists(Path.Join(OutputPath, "ca-key.pem"))))
+            {
+                using var certManager = new CertificateGenerator(app.Out);
+                await certManager.CreateCaCertificate(OutputPath);
+            }
+
+            fileWriter.Add(
+                $"kustomization.{Format.ToString().ToLower()}",
+                _serializer.Serialize(
+                    new KustomizationConfig
                     {
-                        Replicas = 1,
-                        RevisionHistoryLimit = 0,
-                        Template = new V1PodTemplateSpec
+                        Resources = new List<string>
                         {
-                            Spec = new V1PodSpec
+                            $"deployment.{Format.ToString().ToLower()}",
+                        },
+                        CommonLabels = new Dictionary<string, string>
+                        {
+                            { "operator-element", "operator-instance" },
+                        },
+                        ConfigMapGenerator = _hasWebhooks
+                            ? new List<KustomizationConfigMapGenerator>
                             {
-                                TerminationGracePeriodSeconds = 10,
-                                Containers = new List<V1Container>
+                                new()
                                 {
-                                    new V1Container
+                                    Name = "webhook-ca",
+                                    Files = new List<string>
                                     {
-                                        Image = "operator",
-                                        Name = "operator",
-                                        Env = new List<V1EnvVar>
+                                        "ca.pem",
+                                        "ca-key.pem",
+                                    },
+                                },
+                                new()
+                                {
+                                    Name = "webhook-config",
+                                    Literals = new List<string>
+                                    {
+                                        "KESTREL__ENDPOINTS__HTTP__URL=http://0.0.0.0:80",
+                                        "KESTREL__ENDPOINTS__HTTPS__URL=https://0.0.0.0:443",
+                                        "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__PATH=/certs/server.pem",
+                                        "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__KEYPATH=/certs/server-key.pem",
+                                    },
+                                },
+                            }
+                            : null,
+                    },
+                    Format));
+
+            fileWriter.Add(
+                $"deployment.{Format.ToString().ToLower()}",
+                _serializer.Serialize(
+                    new V1Deployment(
+                        $"{V1Deployment.KubeGroup}/{V1Deployment.KubeApiVersion}",
+                        V1Deployment.KubeKind,
+                        new V1ObjectMeta(
+                            name: "operator",
+                            labels: new Dictionary<string, string> { { "operator-deployment", _settings.Name } }),
+                        new V1DeploymentSpec
+                        {
+                            Replicas = 1,
+                            RevisionHistoryLimit = 0,
+                            Template = new V1PodTemplateSpec
+                            {
+                                Metadata = new V1ObjectMeta(
+                                    labels: new Dictionary<string, string> { { "operator", _settings.Name } }),
+                                Spec = new V1PodSpec
+                                {
+                                    TerminationGracePeriodSeconds = 10,
+                                    Volumes = !_hasWebhooks
+                                        ? null
+                                        : new List<V1Volume>
                                         {
-                                            new V1EnvVar
+                                            new()
                                             {
-                                                Name = "POD_NAMESPACE",
-                                                ValueFrom = new V1EnvVarSource
+                                                Name = "certificates",
+                                                EmptyDir = new(),
+                                            },
+                                            new()
+                                            {
+                                                Name = "ca-certificates",
+                                                ConfigMap = new() { Name = "webhook-ca" },
+                                            },
+                                        },
+                                    InitContainers = !_hasWebhooks
+                                        ? null
+                                        : new List<V1Container>
+                                        {
+                                            new()
+                                            {
+                                                Image = "operator",
+                                                Name = "webhook-installer",
+                                                Args = new[]
                                                 {
-                                                    FieldRef = new V1ObjectFieldSelector
+                                                    "webhooks",
+                                                    "install",
+                                                },
+                                                Env = new List<V1EnvVar>
+                                                {
+                                                    new()
                                                     {
-                                                        FieldPath = "metadata.namespace",
+                                                        Name = "POD_NAMESPACE",
+                                                        ValueFrom = new V1EnvVarSource
+                                                        {
+                                                            FieldRef = new V1ObjectFieldSelector
+                                                            {
+                                                                FieldPath = "metadata.namespace",
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                                VolumeMounts = new List<V1VolumeMount>
+                                                {
+                                                    new()
+                                                    {
+                                                        Name = "certificates",
+                                                        MountPath = "/certs",
+                                                    },
+                                                    new()
+                                                    {
+                                                        Name = "ca-certificates",
+                                                        MountPath = "/ca",
+                                                        ReadOnlyProperty = true,
                                                     },
                                                 },
                                             },
                                         },
-                                        Ports = new List<V1ContainerPort>
+                                    Containers = new List<V1Container>
+                                    {
+                                        new()
                                         {
-                                            new V1ContainerPort(80, name: "http"),
-                                        },
-                                        LivenessProbe = new V1Probe(
-                                            timeoutSeconds: 1,
-                                            initialDelaySeconds: 30,
-                                            httpGet: new V1HTTPGetAction("http", path: "/health")),
-                                        ReadinessProbe = new V1Probe(
-                                            timeoutSeconds: 1,
-                                            initialDelaySeconds: 15,
-                                            httpGet: new V1HTTPGetAction("http", path: "/ready")),
-                                        Resources = new V1ResourceRequirements
-                                        {
-                                            Requests = new Dictionary<string, ResourceQuantity>
+                                            Image = "operator",
+                                            Name = "operator",
+                                            Env = new List<V1EnvVar>
                                             {
-                                                { "cpu", new ResourceQuantity("100m") },
-                                                { "memory", new ResourceQuantity("64Mi") },
+                                                new()
+                                                {
+                                                    Name = "POD_NAMESPACE",
+                                                    ValueFrom = new V1EnvVarSource
+                                                    {
+                                                        FieldRef = new V1ObjectFieldSelector
+                                                        {
+                                                            FieldPath = "metadata.namespace",
+                                                        },
+                                                    },
+                                                },
                                             },
-                                            Limits = new Dictionary<string, ResourceQuantity>
+                                            EnvFrom = !_hasWebhooks
+                                                ? null
+                                                : new List<V1EnvFromSource>
+                                                {
+                                                    new()
+                                                    {
+                                                        ConfigMapRef = new() { Name = "webhook-config" },
+                                                    },
+                                                },
+                                            VolumeMounts = !_hasWebhooks
+                                                ? null
+                                                : new List<V1VolumeMount>
+                                                {
+                                                    new()
+                                                    {
+                                                        Name = "certificates",
+                                                        MountPath = "/certs",
+                                                        ReadOnlyProperty = true,
+                                                    },
+                                                },
+                                            Ports = new List<V1ContainerPort>
                                             {
-                                                { "cpu", new ResourceQuantity("100m") },
-                                                { "memory", new ResourceQuantity("128Mi") },
+                                                new(80, name: "http"),
+                                                new(443, name: "https"),
+                                            },
+                                            LivenessProbe = new V1Probe(
+                                                timeoutSeconds: 1,
+                                                initialDelaySeconds: 30,
+                                                httpGet: new V1HTTPGetAction("http", path: "/health")),
+                                            ReadinessProbe = new V1Probe(
+                                                timeoutSeconds: 1,
+                                                initialDelaySeconds: 15,
+                                                httpGet: new V1HTTPGetAction("http", path: "/ready")),
+                                            Resources = new V1ResourceRequirements
+                                            {
+                                                Requests = new Dictionary<string, ResourceQuantity>
+                                                {
+                                                    { "cpu", new ResourceQuantity("100m") },
+                                                    { "memory", new ResourceQuantity("64Mi") },
+                                                },
+                                                Limits = new Dictionary<string, ResourceQuantity>
+                                                {
+                                                    { "cpu", new ResourceQuantity("100m") },
+                                                    { "memory", new ResourceQuantity("128Mi") },
+                                                },
                                             },
                                         },
                                     },
                                 },
                             },
-                        },
-                    }),
-                Format);
+                        }),
+                    Format));
 
-            if (!string.IsNullOrWhiteSpace(OutputPath))
-            {
-                Directory.CreateDirectory(OutputPath);
-                await using var file = File.Open(
-                    Path.Join(
-                        OutputPath,
-                        $"deployment.{Format.ToString().ToLower()}"),
-                    FileMode.Create);
-
-                await file.WriteAsync(Encoding.UTF8.GetBytes(output));
-
-                var kustomize = new KustomizationConfig
-                {
-                    Resources = new List<string> { $"deployment.{Format.ToString().ToLower()}" },
-                    CommonLabels = new Dictionary<string, string>
-                    {
-                        { "operator-element", "operator-instance" },
-                    },
-                };
-                var kustomizeOutput = Encoding.UTF8.GetBytes(_serializer.Serialize(kustomize, Format));
-                await using var kustomizationFile =
-                    File.Open(Path.Join(OutputPath, $"kustomization.{Format.ToString().ToLower()}"), FileMode.Create);
-                await kustomizationFile.WriteAsync(kustomizeOutput);
-            }
-            else
-            {
-                await app.Out.WriteLineAsync(output);
-            }
-
+            await fileWriter.Output(OutputPath);
             return ExitCodes.Success;
         }
     }

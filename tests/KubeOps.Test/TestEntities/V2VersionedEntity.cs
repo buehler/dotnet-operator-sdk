@@ -8,7 +8,7 @@ namespace KubeOps.Test.TestEntities
         Kind = "VersionedEntity",
         Group = "kubeops.test.dev",
         PluralName = "versionedentities")]
-    public class V2VersionedEntity: CustomKubernetesEntity
+    public class V2VersionedEntity : CustomKubernetesEntity
     {
     }
 }

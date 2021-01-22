@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using k8s.Models;
 using k8s.Versioning;
+using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Annotations;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Entities.Kustomize;
@@ -75,49 +76,33 @@ namespace KubeOps.Operator.Commands.Generators
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
             var crds = GenerateCrds(_resourceTypeService).ToList();
-            if (!string.IsNullOrWhiteSpace(OutputPath))
-            {
-                Directory.CreateDirectory(OutputPath);
 
-                var kustomizeOutput = Encoding.UTF8.GetBytes(
-                    _serializer.Serialize(
-                        new KustomizationConfig
-                        {
-                            Resources = crds
-                                .Select(crd => $"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLower()}")
-                                .ToList(),
-                            CommonLabels = new Dictionary<string, string>
-                            {
-                                { "operator-element", "crd" },
-                            },
-                        },
-                        Format));
-                await using var kustomizationFile =
-                    File.Open(Path.Join(OutputPath, $"kustomization.{Format.ToString().ToLower()}"), FileMode.Create);
-                await kustomizationFile.WriteAsync(kustomizeOutput);
-            }
-
+            var fileWriter = new FileWriter(app.Out);
             foreach (var crd in crds)
             {
                 var output = UseOldCrds
                     ? _serializer.Serialize((V1beta1CustomResourceDefinition)crd, Format)
                     : _serializer.Serialize(crd, Format);
 
-                if (!string.IsNullOrWhiteSpace(OutputPath))
-                {
-                    await using var file = File.Open(
-                        Path.Join(
-                            OutputPath,
-                            $"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLower()}"),
-                        FileMode.Create);
-                    await file.WriteAsync(Encoding.UTF8.GetBytes(output));
-                }
-                else
-                {
-                    await app.Out.WriteLineAsync(output);
-                }
+                fileWriter.Add($"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLower()}", output);
             }
 
+            fileWriter.Add(
+                $"kustomization.{Format.ToString().ToLower()}",
+                _serializer.Serialize(
+                    new KustomizationConfig
+                    {
+                        Resources = crds
+                            .Select(crd => $"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLower()}")
+                            .ToList(),
+                        CommonLabels = new Dictionary<string, string>
+                        {
+                            { "operator-element", "crd" },
+                        },
+                    },
+                    Format));
+
+            await fileWriter.Output(OutputPath);
             return ExitCodes.Success;
         }
     }

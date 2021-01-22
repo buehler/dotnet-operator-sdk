@@ -13,7 +13,7 @@ namespace KubeOps.Operator.Events
         /// <summary>
         /// Delegate that publishes a predefined event for a statically given resource.
         /// This delegate should be created with
-        /// <see cref="IEventManager.CreatePublisher(IKubernetesObject{k8s.Models.V1ObjectMeta},string,string,KubeOps.Operator.Events.EventType)"/>.
+        /// <see cref="IEventManager.CreatePublisher(k8s.IKubernetesObject{k8s.Models.V1ObjectMeta},string,string,KubeOps.Operator.Events.EventType)"/>.
         /// When called, the publisher creates or updates the event defined by the params.
         /// </summary>
         /// <returns>A task that completes when the event is published.</returns>

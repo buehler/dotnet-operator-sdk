@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
+using DotnetKubernetesClient.Entities;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Builder;
-using KubeOps.Operator.Entities.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Finalizer

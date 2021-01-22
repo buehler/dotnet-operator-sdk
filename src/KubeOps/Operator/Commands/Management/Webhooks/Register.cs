@@ -1,0 +1,98 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using DotnetKubernetesClient;
+using k8s.Models;
+using KubeOps.Operator.Webhooks;
+using McMaster.Extensions.CommandLineUtils;
+
+namespace KubeOps.Operator.Commands.Management.Webhooks
+{
+    [Command(
+        "register",
+        "reg",
+        "r",
+        Description = "Registers the currently implemented webhooks in the current selected cluster.")]
+    internal class Register
+    {
+        private readonly OperatorSettings _settings;
+        private readonly IKubernetesClient _client;
+        private readonly IList<IValidationWebhook> _validators;
+
+        public Register(
+            OperatorSettings settings,
+            IKubernetesClient client,
+            IEnumerable<IValidationWebhook> validators)
+        {
+            _settings = settings;
+            _client = client;
+            _validators = validators.ToList();
+        }
+
+        [Option(
+            Description =
+                "The base-url under which the webhooks are registered (e.g. https://foobar.ngrok.com/). " +
+                "Either base url or service info must be set.")]
+        public string? BaseUrl { get; init; }
+
+        [Option(
+            Description =
+                "The name of a kubernetes service that should be used for communication. " +
+                "Either base url or service info must be set.",
+            Template = "--service-name <NAME>")]
+        public string? ServiceName { get; init; }
+
+        [Option(
+            Description =
+                "The namespace of the kubernetes service that should be used for communication. " +
+                "Either base url or service info must be set.",
+            Template = "--service-namespace <NAMESPACE>")]
+        public string? ServiceNamespace { get; init; }
+
+        [Option(
+            Description =
+                "The - if any - path to the specific route on the service. " +
+                "Either base url or service info must be set.",
+            Template = "--service-path <PATH>")]
+        public string? ServicePath { get; init; }
+
+        [Option(
+            Description =
+                "The port of the service that should be used (defaults to 443). " +
+                "Either base url or service info must be set.",
+            Template = "--service-port <PORT>")]
+        public short? ServicePort { get; init; }
+
+        [Option(
+            Description =
+                "The (pem encoded) ca-certificate - if any - bundle to validate the webhook server. " +
+                "Either base url or service info must be set.",
+            Template = "--ca-bundle <CA_PEM_DATA>")]
+        public string? CaBundle { get; init; }
+
+        public async Task<int> OnExecuteAsync(CommandLineApplication app)
+        {
+            await app.Out.WriteLineAsync($"Found {_validators.Count} validators.");
+
+            var config = Validators.CreateValidator(
+                (
+                    _settings.Name,
+                    BaseUrl,
+                    CaBundle != null ? Encoding.UTF8.GetBytes(CaBundle) : null,
+                    ServiceName != null && ServiceNamespace != null
+                        ? new Admissionregistrationv1ServiceReference(
+                            ServiceName,
+                            ServiceNamespace,
+                            ServicePath,
+                            ServicePort)
+                        : null),
+                _validators);
+
+            await app.Out.WriteLineAsync($@"Install ""{config.Metadata.Name}"" validator on cluster.");
+            await _client.Save(config);
+
+            return ExitCodes.Success;
+        }
+    }
+}

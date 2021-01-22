@@ -1,4 +1,4 @@
-﻿# Events
+﻿# Events / Event Series
 
 Kubernetes knows "Events" which can be sort of attached to a resource
 (i.e. a Kubernetes object).

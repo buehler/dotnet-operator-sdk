@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using DotnetKubernetesClient.Entities;
 using k8s.Models;
-using KubeOps.Operator.Entities.Extensions;
 
 namespace KubeOps.Operator.Rbac
 {

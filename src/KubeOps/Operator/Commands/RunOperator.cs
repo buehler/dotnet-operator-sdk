@@ -12,6 +12,7 @@ namespace KubeOps.Operator.Commands
     [Subcommand(typeof(Generator))]
     [Subcommand(typeof(Install))]
     [Subcommand(typeof(Uninstall))]
+    [Subcommand(typeof(Management.Webhooks.Webhooks))]
     [Subcommand(typeof(Version))]
     internal class RunOperator
     {

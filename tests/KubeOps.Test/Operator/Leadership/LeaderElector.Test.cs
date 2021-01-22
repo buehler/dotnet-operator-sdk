@@ -118,13 +118,14 @@ namespace KubeOps.Test.Operator.Leadership
             _election.Setup(e => e.LeadershipChanged(It.IsAny<LeaderState>()));
             _client
                 .Setup(c => c.Get<V1Lease>(It.IsAny<string>(), It.IsAny<string?>()))
-                .ReturnsAsync(() => new V1Lease
-                {
-                    Spec = new V1LeaseSpec
+                .ReturnsAsync(
+                    () => new V1Lease
                     {
-                        HolderIdentity = Environment.MachineName,
-                    },
-                });
+                        Spec = new V1LeaseSpec
+                        {
+                            HolderIdentity = Environment.MachineName,
+                        },
+                    });
 
             await _elector.CheckLeaderLease();
 
@@ -137,13 +138,14 @@ namespace KubeOps.Test.Operator.Leadership
             _election.Setup(e => e.LeadershipChanged(It.IsAny<LeaderState>()));
             _client
                 .Setup(c => c.Get<V1Lease>(It.IsAny<string>(), It.IsAny<string?>()))
-                .ReturnsAsync(() => new V1Lease
-                {
-                    Spec = new V1LeaseSpec
+                .ReturnsAsync(
+                    () => new V1Lease
                     {
-                        HolderIdentity = Environment.MachineName,
-                    },
-                });
+                        Spec = new V1LeaseSpec
+                        {
+                            HolderIdentity = Environment.MachineName,
+                        },
+                    });
             _client
                 .Setup(c => c.Update(It.IsAny<V1Lease>()))
                 .ThrowsAsync(
@@ -165,13 +167,14 @@ namespace KubeOps.Test.Operator.Leadership
             _election.Setup(e => e.LeadershipChanged(It.IsAny<LeaderState>()));
             _client
                 .Setup(c => c.Get<V1Lease>(It.IsAny<string>(), It.IsAny<string?>()))
-                .ReturnsAsync(() => new V1Lease
-                {
-                    Spec = new V1LeaseSpec
+                .ReturnsAsync(
+                    () => new V1Lease
                     {
-                        HolderIdentity = Environment.MachineName,
-                    },
-                });
+                        Spec = new V1LeaseSpec
+                        {
+                            HolderIdentity = Environment.MachineName,
+                        },
+                    });
             _client
                 .Setup(c => c.Update(It.IsAny<V1Lease>()))
                 .ThrowsAsync(
@@ -193,13 +196,14 @@ namespace KubeOps.Test.Operator.Leadership
             _election.Setup(e => e.LeadershipChanged(It.IsAny<LeaderState>()));
             _client
                 .Setup(c => c.Get<V1Lease>(It.IsAny<string>(), It.IsAny<string?>()))
-                .ReturnsAsync(() => new V1Lease
-                {
-                    Spec = new V1LeaseSpec
+                .ReturnsAsync(
+                    () => new V1Lease
                     {
-                        HolderIdentity = Environment.MachineName,
-                    },
-                });
+                        Spec = new V1LeaseSpec
+                        {
+                            HolderIdentity = Environment.MachineName,
+                        },
+                    });
             _client
                 .Setup(c => c.Update(It.IsAny<V1Lease>()))
                 .ThrowsAsync(
@@ -216,14 +220,15 @@ namespace KubeOps.Test.Operator.Leadership
             _election.Setup(e => e.LeadershipChanged(It.IsAny<LeaderState>()));
             _client
                 .Setup(c => c.Get<V1Lease>(It.IsAny<string>(), It.IsAny<string?>()))
-                .ReturnsAsync(() => new V1Lease
-                {
-                    Spec = new V1LeaseSpec
+                .ReturnsAsync(
+                    () => new V1Lease
                     {
-                        HolderIdentity = $"not-{Environment.MachineName}",
-                        RenewTime = DateTime.UtcNow.AddMinutes(-1),
-                    },
-                });
+                        Spec = new V1LeaseSpec
+                        {
+                            HolderIdentity = $"not-{Environment.MachineName}",
+                            RenewTime = DateTime.UtcNow.AddMinutes(-1),
+                        },
+                    });
 
             await _elector.CheckLeaderLease();
 
@@ -236,14 +241,15 @@ namespace KubeOps.Test.Operator.Leadership
             _election.Setup(e => e.LeadershipChanged(It.IsAny<LeaderState>()));
             _client
                 .Setup(c => c.Get<V1Lease>(It.IsAny<string>(), It.IsAny<string?>()))
-                .ReturnsAsync(() => new V1Lease
-                {
-                    Spec = new V1LeaseSpec
+                .ReturnsAsync(
+                    () => new V1Lease
                     {
-                        HolderIdentity = $"not-{Environment.MachineName}",
-                        RenewTime = DateTime.UtcNow.AddMinutes(-1),
-                    },
-                });
+                        Spec = new V1LeaseSpec
+                        {
+                            HolderIdentity = $"not-{Environment.MachineName}",
+                            RenewTime = DateTime.UtcNow.AddMinutes(-1),
+                        },
+                    });
             _client
                 .Setup(c => c.Update(It.IsAny<V1Lease>()))
                 .ThrowsAsync(
@@ -265,14 +271,15 @@ namespace KubeOps.Test.Operator.Leadership
             _election.Setup(e => e.LeadershipChanged(It.IsAny<LeaderState>()));
             _client
                 .Setup(c => c.Get<V1Lease>(It.IsAny<string>(), It.IsAny<string?>()))
-                .ReturnsAsync(() => new V1Lease
-                {
-                    Spec = new V1LeaseSpec
+                .ReturnsAsync(
+                    () => new V1Lease
                     {
-                        HolderIdentity = $"not-{Environment.MachineName}",
-                        RenewTime = DateTime.UtcNow.AddMinutes(-1),
-                    },
-                });
+                        Spec = new V1LeaseSpec
+                        {
+                            HolderIdentity = $"not-{Environment.MachineName}",
+                            RenewTime = DateTime.UtcNow.AddMinutes(-1),
+                        },
+                    });
             _client
                 .Setup(c => c.Update(It.IsAny<V1Lease>()))
                 .ThrowsAsync(
@@ -294,14 +301,15 @@ namespace KubeOps.Test.Operator.Leadership
             _election.Setup(e => e.LeadershipChanged(It.IsAny<LeaderState>()));
             _client
                 .Setup(c => c.Get<V1Lease>(It.IsAny<string>(), It.IsAny<string?>()))
-                .ReturnsAsync(() => new V1Lease
-                {
-                    Spec = new V1LeaseSpec
+                .ReturnsAsync(
+                    () => new V1Lease
                     {
-                        HolderIdentity = $"not-{Environment.MachineName}",
-                        RenewTime = DateTime.UtcNow.AddMinutes(-1),
-                    },
-                });
+                        Spec = new V1LeaseSpec
+                        {
+                            HolderIdentity = $"not-{Environment.MachineName}",
+                            RenewTime = DateTime.UtcNow.AddMinutes(-1),
+                        },
+                    });
             _client
                 .Setup(c => c.Update(It.IsAny<V1Lease>()))
                 .ThrowsAsync(
@@ -318,14 +326,15 @@ namespace KubeOps.Test.Operator.Leadership
             _election.Setup(e => e.LeadershipChanged(It.IsAny<LeaderState>()));
             _client
                 .Setup(c => c.Get<V1Lease>(It.IsAny<string>(), It.IsAny<string?>()))
-                .ReturnsAsync(() => new V1Lease
-                {
-                    Spec = new V1LeaseSpec
+                .ReturnsAsync(
+                    () => new V1Lease
                     {
-                        HolderIdentity = $"not-{Environment.MachineName}",
-                        RenewTime = DateTime.UtcNow.AddSeconds(-1),
-                    },
-                });
+                        Spec = new V1LeaseSpec
+                        {
+                            HolderIdentity = $"not-{Environment.MachineName}",
+                            RenewTime = DateTime.UtcNow.AddSeconds(-1),
+                        },
+                    });
 
             await _elector.CheckLeaderLease();
 

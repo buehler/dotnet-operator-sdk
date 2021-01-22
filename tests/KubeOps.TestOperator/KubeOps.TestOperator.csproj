@@ -8,14 +8,16 @@
         <NoWarn>CS1591</NoWarn>
     </PropertyGroup>
 
+    <!--<Import Project="..\..\src\KubeOps\Build\KubeOps.targets"/>-->
+
     <ItemGroup>
-      <ProjectReference Include="..\..\src\KubeOps\KubeOps.csproj" />
+        <ProjectReference Include="..\..\src\KubeOps\KubeOps.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="appsettings.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
+        <Content Include="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
 </Project>

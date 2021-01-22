@@ -1,6 +1,6 @@
-﻿using k8s;
+﻿using DotnetKubernetesClient.Entities;
+using k8s;
 using k8s.Models;
-using KubeOps.Operator.Entities.Extensions;
 using Prometheus;
 
 namespace KubeOps.Operator.DevOps
