@@ -16,6 +16,8 @@ As of now, the operator sdk supports - roughly - the following features:
   - Deleted
   - AddFinalizer
 - Finalizers for entities
+- Webhooks
+  - Validation / validators
 - Prometheus metrics for queues / caches / watchers
 - Healthchecks, split up to "readiness" and "liveness" (or both)
 - Commands for the operator (for exact documentation run: `dotnet run -- --help`)

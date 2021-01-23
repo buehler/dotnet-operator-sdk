@@ -9,7 +9,7 @@ You'll find the configurations and targets here:
 
 An example of such a target is:
 
-[!code-xml[KubeOps.targets](../../src/KubeOps/Build/KubeOps.targets?range=2-17&dedent=4&highlight=2-7)]
+[!code-xml[KubeOps.targets](../../src/KubeOps/Build/KubeOps.targets?range=45-53&dedent=4&highlight=2-7)]
 
 They can be configured with the prop settings described below.
 The props file just defines the defaults.

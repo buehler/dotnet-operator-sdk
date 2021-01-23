@@ -105,8 +105,9 @@ public class Startup
 
 When you completed this basic setup instructions, the next steps may or may not include:
 
-- Writting entities: Find more under ["Entites"](./entities.md)
-- Writting controllers: Find more under ["Controller"](./controller.md)
-- Writting finalizer: Find more under ["Finalizer"](./finalizer.md)
+- Writing entities: Find more under ["Entites"](./entities.md)
+- Writing controllers: Find more under ["Controller"](./controller.md)
+- Writing finalizer: Find more under ["Finalizer"](./finalizer.md)
+- Writing webhooks: Find more under ["Webhooks"](./webhooks.md)
 - Customize the operator: Find more under ["Settings"](./settings.md)
-- Writting and using utilities: Find more under ["Utilities"](./utilities.md)
+- Writing and using utilities: Find more under ["Utilities"](./utilities.md)

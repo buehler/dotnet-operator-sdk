@@ -10,6 +10,11 @@ of the master api. Those are documented on the
 The following documentation should give the user an overview
 on how to implement a webhook what this implies to the written operator.
 
+At the courtesy of the kubernetes website, here is a diagram of the
+process that runs for admission controllers and api requests:
+
+![admission controller phases](https://d33wubrfki0l68.cloudfront.net/af21ecd38ec67b3d81c1b762221b4ac777fcf02d/7c60e/images/blog/2019-03-21-a-guide-to-kubernetes-admission-controllers/admission-controller-phases.png)
+
 ## General
 
 In general, if your operator contains _any_ registered (registered in the
@@ -33,6 +38,11 @@ to the normal deployment of the operator will happen:
 
 When a webhook is registered, the specified operations will
 trigger a POST call to the operator.
+
+> [!NOTE]
+> The certificates are generated with [cfssl](https://github.com/cloudflare/cfssl),
+> an amazing tool from cloudflare that helps with the general hassle
+> of creating CAs and certificates in general.
 
 > [!NOTE]
 > Make sure you commit the `ca.pem` / `ca-key.pem` file.
@@ -74,11 +84,12 @@ before it is definitely created / updated or deleted.
 
 The implementation of a webhook is fairly simple:
 - Create a class somewhere in your project.
-- Implement the `IValidationWebhook{TEntity}` interface.
-- Define the `Operations` (from the interface) that the validator
-  is interested in.
+- Implement the @"KubeOps.Operator.Webhooks.IValidationWebhook`1" interface.
+- Define the @"KubeOps.Operator.Webhooks.IValidationWebhook.Operations"
+  (from the interface) that the validator is interested in.
 - Overwrite the corresponding methods.
-- Register it in the `IOperatorBuilder` with `AddValidationWebhook`.
+- Register it in the @"KubeOps.Operator.Builder.IOperatorBuilder"
+  with @"KubeOps.Operator.Builder.IOperatorBuilder.AddValidationWebhook``1".
 
 > [!WARNING]
 > The interface contains default implementations for _ALL_ methods.
@@ -87,7 +98,8 @@ The implementation of a webhook is fairly simple:
 > result.
 > The async methods take precedence over the synchronous ones.
 
-The return value of the validation methods are `ValidationResult`
+The return value of the validation methods are
+@"KubeOps.Operator.Webhooks.ValidationResult"
 objects. A result contains a boolean flag if the entity / operation
 is valid or not. It may contain additional warnings (if it is valid)
 that are presented to the user if the kubernetes api supports it.
@@ -97,21 +109,21 @@ as well as a custom error message that is presented to the user.
 ### Example
 
 ```c#
-public class TestValidator : IValidationWebhook<V2TestEntity>
+public class TestValidator : IValidationWebhook<EntityClass>
  {
      public ValidatedOperations Operations => ValidatedOperations.Create | ValidatedOperations.Update;
 
-     public ValidationResult Create(V2TestEntity newEntity, bool dryRun) =>
+     public ValidationResult Create(EntityClass newEntity, bool dryRun) =>
          CheckSpec(newEntity)
              ? ValidationResult.Success("The username may not be foobar.")
              : ValidationResult.Fail(StatusCodes.Status400BadRequest, @"Username is ""foobar"".");
 
-     public ValidationResult Update(V2TestEntity _, V2TestEntity newEntity, bool dryRun) =>
+     public ValidationResult Update(EntityClass _, EntityClass newEntity, bool dryRun) =>
          CheckSpec(newEntity)
              ? ValidationResult.Success("The username may not be foobar.")
              : ValidationResult.Fail(StatusCodes.Status400BadRequest, @"Username is ""foobar"".");
 
-     private static bool CheckSpec(V2TestEntity entity) => entity.Spec.Username != "foobar";
+     private static bool CheckSpec(EntityClass entity) => entity.Spec.Username != "foobar";
  }
 ```
 

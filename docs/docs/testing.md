@@ -60,8 +60,6 @@ All methods do return `null` or the object that was passed
 into the mocked class. There are five different object
 references that can be set to return certain results upon calling the client.
 
-[!code-csharp[TestStartup.cs](../../src/KubeOps.Testing/MockKubernetesClient.cs?range=13-14,17-25,88&highlight=3-11)]
-
 > [!WARNING]
 > The mocked client is injected as singleton, this means
 > the used "result" references can vary. Be aware of that

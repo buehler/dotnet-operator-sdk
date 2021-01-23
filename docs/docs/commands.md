@@ -29,11 +29,14 @@ Here is a brief overview over the available commands:
 - `uninstall`: uninstall the CRDs for the solution from the cluster
 - `generator`: entry command for generator commands (i.e. has subcommands), all commands
   output their result to the stdout or the given output path
-  - `crd`: Generate the CRDs
-  - `docker`: Generate the dockerfile
-  - `installer`: Generate the installer files (i.e. kustomization yaml) for the operator
-  - `operator`: Generate the deployment for the operator
-  - `rbac`: Generate the needed rbac roles / role bindings for the operator
+  - `crd`: generate the CRDs
+  - `docker`: generate the dockerfile
+  - `installer`: generate the installer files (i.e. kustomization yaml) for the operator
+  - `operator`: generate the deployment for the operator
+  - `rbac`: generate the needed rbac roles / role bindings for the operator
+- `webhook`: entry command for webhook related operations
+  - `install`: generate the server certificate and install the service / webhook registration
+  - `register`: register the currently implemented webhooks to the currently selected cluster
 
 ## Code Generation
 

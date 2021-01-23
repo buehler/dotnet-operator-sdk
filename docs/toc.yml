@@ -8,4 +8,4 @@
   href: kube-ops-testing/
   homepage: kube-ops-testing/index.md
 - name: Changelog
-  href: CHANGELOG.md
+  href: https://github.com/buehler/dotnet-operator-sdk/releases
