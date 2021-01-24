@@ -1,6 +1,16 @@
 {
-  "verifyConditions": ["@semantic-release/github"],
-  "addChannel": ["@semantic-release/github"],
+  "branches": [
+    "release",
+    {
+      "name": "master",
+      "prerelease": "prerelease"
+    }
+  ],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/github"
+  ],
   "prepare": [
     [
       "@semantic-release/exec",
@@ -13,7 +23,11 @@
     [
       "@semantic-release/github",
       {
-        "assets": [{ "path": "artifacts/*.nupkg" }]
+        "assets": [
+          {
+            "path": "artifacts/*.nupkg"
+          }
+        ]
       }
     ],
     [
