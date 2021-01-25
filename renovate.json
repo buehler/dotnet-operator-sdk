@@ -13,6 +13,7 @@
   },
   "automerge": true,
   "timezone": "Europe/Zurich",
+  "schedule": ["after 9pm", "before 6am"],
   "ignorePaths": [],
   "packageRules": [
     {
