@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using k8s;
+using k8s.Models;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Webhooks;
@@ -50,15 +51,6 @@ namespace KubeOps.Operator.Builder
         /// <returns>The builder for chaining.</returns>
         IOperatorBuilder AddLivenessCheck<TLivenessCheck>(string? name = default)
             where TLivenessCheck : class, IHealthCheck;
-
-        /// <summary>
-        /// Adds a resource controller for an entity of <see cref="IKubernetesObject{TMetadata}"/>.
-        /// This controller is taking care for the reconciliation of that particular entity.
-        /// </summary>
-        /// <typeparam name="TController">The type of the controller to add.</typeparam>
-        /// <returns>The builder for chaining.</returns>
-        IOperatorBuilder AddController<TController>()
-            where TController : class, IResourceController;
 
         /// <summary>
         /// Adds a resource finalizer. Finalizers take care of "to be deleted" instances of

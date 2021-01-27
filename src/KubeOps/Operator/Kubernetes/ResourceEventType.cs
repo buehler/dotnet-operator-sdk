@@ -1,4 +1,4 @@
-﻿namespace KubeOps.Operator.Queue
+﻿namespace KubeOps.Operator.Kubernetes
 {
     /// <summary>
     /// Event type for resources.
@@ -34,7 +34,5 @@
         /// Fired when the resource is marked for deletion but has pending finalizers.
         /// </summary>
         Finalizing,
-
-        // TODO: events updated?
     }
 }

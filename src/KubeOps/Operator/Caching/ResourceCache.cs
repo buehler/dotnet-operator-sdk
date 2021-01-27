@@ -9,7 +9,7 @@ using KubeOps.Operator.Entities.Extensions;
 
 namespace KubeOps.Operator.Caching
 {
-    internal class ResourceCache<TEntity> : IResourceCache<TEntity>
+    internal class ResourceCache<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private const string ResourceVersion = "ResourceVersion";
@@ -29,9 +29,9 @@ namespace KubeOps.Operator.Caching
 
         private readonly ResourceCacheMetrics<TEntity> _metrics;
 
-        public ResourceCache(OperatorSettings settings)
+        public ResourceCache(ResourceCacheMetrics<TEntity> metrics)
         {
-            _metrics = new(settings);
+            _metrics = metrics;
         }
 
         public TEntity Get(string id) => _cache[id];

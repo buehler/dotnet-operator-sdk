@@ -1,9 +1,9 @@
 ﻿namespace KubeOps.Operator.Caching
 {
     /// <summary>
-    /// Result for the <see cref="IResourceCache{TEntity}.Upsert"/> when comparison is done.
+    /// Result for the <see cref="ResourceCache{TEntity}.Upsert"/> when comparison is done.
     /// </summary>
-    public enum CacheComparisonResult
+    internal enum CacheComparisonResult
     {
         /// <summary>
         /// The resource is new to the cache
