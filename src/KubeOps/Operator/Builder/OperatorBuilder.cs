@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using DotnetKubernetesClient;
+using k8s;
+using k8s.Models;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Events;
 using KubeOps.Operator.Finalizer;
+using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
-using KubeOps.Operator.Queue;
 using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Services;
-using KubeOps.Operator.Watcher;
 using KubeOps.Operator.Webhooks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Rest.Serialization;
 using Newtonsoft.Json;
@@ -28,19 +31,18 @@ namespace KubeOps.Operator.Builder
         internal const string LivenessTag = "liveness";
         internal const string ReadinessTag = "readiness";
 
+        internal static readonly Assembly[] Assemblies =
+        {
+            Assembly.GetEntryAssembly() ?? throw new Exception("No Entry Assembly found."),
+            Assembly.GetExecutingAssembly(),
+        };
+
         private readonly IResourceTypeService _resourceTypeService;
 
         public OperatorBuilder(IServiceCollection services)
         {
             Services = services;
-
-            var entryAssembly = Assembly.GetEntryAssembly();
-            if (entryAssembly == null)
-            {
-                throw new Exception("No Entry Assembly found.");
-            }
-
-            _resourceTypeService = new ResourceTypeService(entryAssembly, Assembly.GetExecutingAssembly());
+            _resourceTypeService = new ResourceTypeService(Assemblies);
         }
 
         public IServiceCollection Services { get; }
@@ -81,14 +83,6 @@ namespace KubeOps.Operator.Builder
             return this;
         }
 
-        public IOperatorBuilder AddController<TController>()
-            where TController : class, IResourceController
-        {
-            Services.AddHostedService<TController>();
-
-            return this;
-        }
-
         public IOperatorBuilder AddFinalizer<TFinalizer>()
             where TFinalizer : class, IResourceFinalizer
         {
@@ -113,12 +107,23 @@ namespace KubeOps.Operator.Builder
             return this;
         }
 
+        internal static IEnumerable<(Type ControllerType, Type EntityType)> GetControllers() => Assemblies
+            .SelectMany(a => a.GetTypes())
+            .Where(
+                t => t.IsClass &&
+                     !t.IsAbstract &&
+                     t.GetInterfaces()
+                         .Any(
+                             i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceController<>)))
+            .Select(
+                t => (t,
+                    t.GetInterfaces()
+                        .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceController<>))
+                        .GenericTypeArguments[0]));
+
         internal IOperatorBuilder AddOperatorBase(OperatorSettings settings)
         {
             Services.AddSingleton(settings);
-
-            // support lazy service resolution
-            Services.AddTransient(typeof(Lazy<>), typeof(LazyService<>));
 
             var jsonSettings = new JsonSerializerSettings
             {
@@ -141,8 +146,8 @@ namespace KubeOps.Operator.Builder
                 _ => new SerializerBuilder()
                     .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
                     .WithNamingConvention(new NamingConvention())
-                    .WithTypeConverter(new YamlIntOrStrTypeConverter())
-                    .WithTypeConverter(new YamlByteArrayTypeConverter())
+                    .WithTypeConverter(new Yaml.ByteArrayStringYamlConverter())
+                    .WithTypeConverter(new IntOrStringYamlConverter())
                     .Build());
 
             Services.AddTransient<EntitySerializer>();
@@ -150,24 +155,34 @@ namespace KubeOps.Operator.Builder
             Services.AddTransient<IKubernetesClient, KubernetesClient>();
             Services.AddTransient<IEventManager, EventManager>();
 
-            Services.AddSingleton(typeof(IResourceCache<>), typeof(ResourceCache<>));
-            Services.AddTransient(typeof(IResourceWatcher<>), typeof(ResourceWatcher<>));
-            Services.AddTransient(typeof(IResourceEventQueue<>), typeof(ResourceEventQueue<>));
-            Services.AddTransient(typeof(IResourceServices<>), typeof(ResourceServices<>));
+            Services.AddTransient(typeof(ResourceCache<>));
+            Services.AddTransient(typeof(ResourceWatcher<>));
+            Services.AddTransient(typeof(ManagedResourceController<>));
+
+            // Support all the metrics
+            Services.AddSingleton(typeof(ResourceWatcherMetrics<>));
+            Services.AddSingleton(typeof(ResourceCacheMetrics<>));
+            Services.AddSingleton(typeof(ResourceControllerMetrics<>));
 
             // Support for healthchecks and prometheus.
             Services
                 .AddHealthChecks()
                 .ForwardToPrometheus();
 
-            // Add the default controller liveness check.
-            AddHealthCheck<ControllerLivenessCheck>();
-
             // Support for leader election via V1Leases.
             Services.AddHostedService<LeaderElector>();
             Services.AddSingleton<ILeaderElection, LeaderElection>();
 
             Services.AddSingleton(_resourceTypeService);
+            Services.AddHostedService<ResourceControllerManager>();
+
+            // Add the service provider (for instantiation)
+            // and all found controller types.
+            Services.TryAddSingleton(sp => sp);
+            foreach (var (controllerType, _) in GetControllers())
+            {
+                Services.TryAddScoped(controllerType);
+            }
 
             return this;
         }

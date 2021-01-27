@@ -1,71 +1,92 @@
 ﻿using System;
 using System.IO;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.DevOps;
-using KubeOps.Operator.Errors;
 using Microsoft.Extensions.Logging;
 
-namespace KubeOps.Operator.Watcher
+namespace KubeOps.Operator.Kubernetes
 {
-    internal class ResourceWatcher<TEntity> : IResourceWatcher<TEntity>
-        where TEntity : IKubernetesObject<V1ObjectMeta>
+    internal class ResourceWatcher<TResource> : IDisposable
+        where TResource : IKubernetesObject<V1ObjectMeta>
     {
-        private readonly ILogger<ResourceWatcher<TEntity>> _logger;
-        private readonly IKubernetesClient _client;
-        private readonly OperatorSettings _settings;
-        private readonly ExponentialBackoffHandler _reconnectHandler;
-        private readonly ResourceWatcherMetrics<TEntity> _metrics;
+        private const double MaxRetrySeconds = 32;
 
+        private readonly Subject<(WatchEventType Event, TResource Resource)> _watchEvents = new();
+        private readonly IKubernetesClient _client;
+        private readonly ILogger<ResourceWatcher<TResource>> _logger;
+        private readonly ResourceWatcherMetrics<TResource> _metrics;
+        private readonly OperatorSettings _settings;
+        private readonly Subject<TimeSpan> _reconnectHandler = new();
+        private readonly IDisposable _reconnectSubscription;
+        private readonly Random _rnd = new();
+
+        private IDisposable? _resetReconnectCounter;
+        private int _reconnectAttempts;
         private CancellationTokenSource? _cancellation;
-        private Watcher<TEntity>? _watcher;
+        private Watcher<TResource>? _watcher;
 
         public ResourceWatcher(
-            ILogger<ResourceWatcher<TEntity>> logger,
             IKubernetesClient client,
+            ILogger<ResourceWatcher<TResource>> logger,
+            ResourceWatcherMetrics<TResource> metrics,
             OperatorSettings settings)
         {
-            _logger = logger;
             _client = client;
+            _logger = logger;
+            _metrics = metrics;
             _settings = settings;
-            _reconnectHandler = new ExponentialBackoffHandler(async () => await WatchResource());
-            _metrics = new ResourceWatcherMetrics<TEntity>(settings);
+            _reconnectSubscription =
+                _reconnectHandler
+                    .Select(Observable.Timer)
+                    .Switch()
+                    .Subscribe(async _ => await WatchResource());
+            //new ExponentialBackoffHandler(async () => await WatchResource());
         }
 
-        public event EventHandler<(WatchEventType Type, TEntity Resource)>? WatcherEvent;
+        public IObservable<(WatchEventType Event, TResource Resource)> WatchEvents => _watchEvents;
 
         public Task Start()
         {
-            _logger.LogDebug(@"Resource Watcher startup for type ""{type}"".", typeof(TEntity));
+            _logger.LogDebug(@"Resource Watcher startup for type ""{type}"".", typeof(TResource));
             return WatchResource();
         }
 
         public Task Stop()
         {
-            _logger.LogTrace(@"Resource Watcher shutdown for type ""{type}"".", typeof(TEntity));
-            Dispose();
+            _logger.LogTrace(@"Resource Watcher shutdown for type ""{type}"".", typeof(TResource));
+            Disposing(true);
             return Task.CompletedTask;
         }
 
         public void Dispose()
         {
-            foreach (var handler in WatcherEvent?.GetInvocationList() ?? new Delegate[] { })
+            Disposing(false);
+        }
+
+        private void Disposing(bool fromStop)
+        {
+            if (!fromStop)
             {
-                WatcherEvent -= (EventHandler<(WatchEventType Type, TEntity Resource)>)handler;
+                _watchEvents.Dispose();
+                _reconnectHandler.Dispose();
             }
 
+            _reconnectHandler.Dispose();
+            _reconnectSubscription.Dispose();
             if (_cancellation?.IsCancellationRequested == false)
             {
                 _cancellation.Cancel();
             }
 
-            _reconnectHandler.Dispose();
             _cancellation?.Dispose();
             _watcher?.Dispose();
-            _logger.LogTrace(@"Disposed resource watcher for type ""{type}"".", typeof(TEntity));
+            _logger.LogTrace(@"Disposed resource watcher for type ""{type}"".", typeof(TResource));
             _metrics.Running.Set(0);
         }
 
@@ -79,14 +100,14 @@ namespace KubeOps.Operator.Watcher
                 }
                 else
                 {
-                    _logger.LogTrace(@"Watcher for type ""{type}"" already running.", typeof(TEntity));
+                    _logger.LogTrace(@"Watcher for type ""{type}"" already running.", typeof(TResource));
                     return;
                 }
             }
 
             _cancellation = new CancellationTokenSource();
 
-            _watcher = await _client.Watch<TEntity>(
+            _watcher = await _client.Watch<TResource>(
                 TimeSpan.FromSeconds(_settings.WatcherHttpTimeout),
                 OnWatcherEvent,
                 OnException,
@@ -96,16 +117,7 @@ namespace KubeOps.Operator.Watcher
             _metrics.Running.Set(1);
         }
 
-        private async void RestartWatcher()
-        {
-            _logger.LogTrace(@"Restarting resource watcher for type ""{type}"".", typeof(TEntity));
-            _cancellation?.Cancel();
-            _watcher?.Dispose();
-            _watcher = null;
-            await WatchResource();
-        }
-
-        private void OnWatcherEvent(WatchEventType type, TEntity resource)
+        private void OnWatcherEvent(WatchEventType type, TResource resource)
         {
             _logger.LogTrace(
                 @"Received watch event ""{eventType}"" for ""{kind}/{name}"".",
@@ -120,7 +132,7 @@ namespace KubeOps.Operator.Watcher
                 case WatchEventType.Added:
                 case WatchEventType.Modified:
                 case WatchEventType.Deleted:
-                    WatcherEvent?.Invoke(this, (type, resource));
+                    _watchEvents.OnNext((type, resource));
                     break;
                 case WatchEventType.Error:
                 case WatchEventType.Bookmark:
@@ -128,6 +140,15 @@ namespace KubeOps.Operator.Watcher
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, "Event did not match.");
             }
+        }
+
+        private async void RestartWatcher()
+        {
+            _logger.LogTrace(@"Restarting resource watcher for type ""{type}"".", typeof(TResource));
+            _cancellation?.Cancel();
+            _watcher?.Dispose();
+            _watcher = null;
+            await WatchResource();
         }
 
         private void OnException(Exception e)
@@ -143,14 +164,21 @@ namespace KubeOps.Operator.Watcher
             {
                 _logger.LogTrace(
                     @"Either the server or the client did close the connection on watcher for resource ""{resource}"". Restart.",
-                    typeof(TEntity));
+                    typeof(TResource));
                 WatchResource().ConfigureAwait(false);
                 return;
             }
 
-            _logger.LogError(e, @"There was an error while watching the resource ""{resource}"".", typeof(TEntity));
-            var backoff = _reconnectHandler.Retry(TimeSpan.FromSeconds(5));
+            _logger.LogError(e, @"There was an error while watching the resource ""{resource}"".", typeof(TResource));
+            var backoff = ExponentialBackoff(++_reconnectAttempts);
             _logger.LogInformation("Trying to reconnect with exponential backoff {backoff}.", backoff);
+            _resetReconnectCounter?.Dispose();
+            _resetReconnectCounter = Observable
+                .Timer(TimeSpan.FromMinutes(1))
+                .FirstAsync()
+                .Subscribe(_ => _reconnectAttempts = 0);
+
+            _reconnectHandler.OnNext(backoff);
         }
 
         private void OnClose()
@@ -164,5 +192,9 @@ namespace KubeOps.Operator.Watcher
                 RestartWatcher();
             }
         }
+
+        private TimeSpan ExponentialBackoff(int retryCount) => TimeSpan
+            .FromSeconds(Math.Min(Math.Pow(2, retryCount), MaxRetrySeconds))
+            .Add(TimeSpan.FromMilliseconds(_rnd.Next(0, 1000)));
     }
 }

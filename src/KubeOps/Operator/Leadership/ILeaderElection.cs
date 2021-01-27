@@ -10,12 +10,7 @@ namespace KubeOps.Operator.Leadership
         /// <summary>
         /// Event that is fired when the leadership state changes.
         /// </summary>
-        event EventHandler<LeaderState>? LeadershipChange;
-
-        /// <summary>
-        /// The current state.
-        /// </summary>
-        LeaderState State { get; }
+        IObservable<LeaderState> LeadershipChange { get; }
 
         internal void LeadershipChanged(LeaderState state);
     }

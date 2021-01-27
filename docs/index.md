@@ -4,6 +4,7 @@
 ![.NET Release](https://github.com/buehler/dotnet-operator-sdk/workflows/.NET%20Release/badge.svg)
 ![.NET Testing](https://github.com/buehler/dotnet-operator-sdk/workflows/.NET%20Testing/badge.svg)
 [![Nuget](https://img.shields.io/nuget/v/KubeOps)](https://www.nuget.org/packages/KubeOps/)
+[![Nuget](https://img.shields.io/nuget/vpre/KubeOps?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps/absoluteLatest)
 
 Welcome to the documentation of `KubeOps`.
 

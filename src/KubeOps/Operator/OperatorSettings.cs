@@ -64,16 +64,18 @@ namespace KubeOps.Operator
         /// <summary>
         /// The timeout in seconds which the watcher has (after this timeout, the server will close the connection).
         /// </summary>
-        public ushort WatcherHttpTimeout { get; set; } = 60;
+        public ushort WatcherHttpTimeout { get; set; } = 120;
 
         /// <summary>
+        /// <para>
         /// If set to true, controllers perform a search for already
         /// existing objects in the cluster and load them into the objects cache.
-        ///
+        /// </para>
+        /// <para>
         /// This bears the risk of not catching elements when they are created
         /// during downtime of the operator.
-        ///
-        /// The search will be performed on each "Start" of the controller.
+        /// </para>
+        /// <para>The search will be performed on each "Start" of the controller.</para>
         /// </summary>
         public bool PreloadCache { get; set; }
     }
