@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
-using KubeOps.Operator.Builder;
+using KubeOps.Operator.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -16,15 +16,18 @@ namespace KubeOps.Operator.Finalizer
     {
         private readonly IKubernetesClient _client;
         private readonly IServiceProvider _services;
+        private readonly ResourceLocator _locator;
         private readonly ILogger<FinalizerManager<TResource>> _logger;
 
         public FinalizerManager(
             IKubernetesClient client,
             IServiceProvider services,
+            ResourceLocator locator,
             ILogger<FinalizerManager<TResource>> logger)
         {
             _client = client;
             _services = services;
+            _locator = locator;
             _logger = logger;
         }
 
@@ -62,8 +65,8 @@ namespace KubeOps.Operator.Finalizer
                 resource.Name());
 
             await Task.WhenAll(
-                OperatorBuilder
-                    .GetFinalizers()
+                _locator
+                    .FinalizerTypes
                     .Select(scope.ServiceProvider.GetService)
                     .OfType<IResourceFinalizer<TResource>>()
                     .Where(finalizer => resource.HasFinalizer(finalizer.Identifier))

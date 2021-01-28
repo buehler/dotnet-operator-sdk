@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using DotnetKubernetesClient.Entities;
 using k8s.Models;
+using KubeOps.Operator.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace KubeOps.Operator.Webhooks
 {
@@ -13,8 +16,12 @@ namespace KubeOps.Operator.Webhooks
         public static V1ValidatingWebhookConfiguration CreateValidator(
             (string OperatorName, string? BaseUrl, byte[]? CaBundle, Admissionregistrationv1ServiceReference? Service)
                 hookConfig,
-            IEnumerable<IValidationWebhook> validators) =>
-            new()
+            ResourceLocator locator,
+            IServiceProvider serviceProvider)
+        {
+            using var scope = serviceProvider.CreateScope();
+
+            return new()
             {
                 Kind = V1ValidatingWebhookConfiguration.KubeKind,
                 ApiVersion =
@@ -23,27 +30,14 @@ namespace KubeOps.Operator.Webhooks
                 {
                     Name = TrimName($"validators.{hookConfig.OperatorName}").ToLowerInvariant(),
                 },
-                Webhooks = validators
+                Webhooks = locator
+                    .ValidatorTypes
                     .Select(
                         wh =>
                         {
-                            var type = wh
-                                .GetType()
-                                .GetInterfaces()
-                                .FirstOrDefault(
-                                    t => t.IsGenericType &&
-                                         typeof(IValidationWebhook<>).IsAssignableFrom(t.GetGenericTypeDefinition()));
-                            if (type == null)
-                            {
-                                throw new Exception(
-                                    $@"Validator ""{wh.GetType().Name}"" is not of IValidationWebhook<TEntity> type.");
-                            }
+                            var (validatorType, resourceType) = wh;
 
-                            var crd = type
-                                .GenericTypeArguments
-                                .First()
-                                .CreateResourceDefinition();
-
+                            var crd = resourceType.CreateResourceDefinition();
                             var endpoint = $"/{crd.Group}/{crd.Version}/{crd.Plural}/validate".ToLowerInvariant();
 
                             var clientConfig = new Admissionregistrationv1WebhookClientConfig();
@@ -62,9 +56,22 @@ namespace KubeOps.Operator.Webhooks
                                 clientConfig.CaBundle = hookConfig.CaBundle;
                             }
 
+                            var instance = scope.ServiceProvider.GetRequiredService(validatorType);
+                            var operationsProperty = typeof(IValidationWebhook<>)
+                                .MakeGenericType(resourceType)
+                                .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
+                                .First(m => m.Name == "SupportedOperations");
+                            var webhookNameProperty = typeof(IValidationWebhook<>)
+                                .MakeGenericType(resourceType)
+                                .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
+                                .First(m => m.Name == "WebhookName");
+
                             return new V1ValidatingWebhook
                             {
-                                Name = TrimName(wh.WebhookName).ToLowerInvariant(),
+                                Name = TrimName(
+                                        webhookNameProperty.GetValue(instance) as string ??
+                                        throw new Exception("Webhook name is null."))
+                                    .ToLowerInvariant(),
                                 AdmissionReviewVersions = new[] { "v1" },
                                 SideEffects = "None",
                                 MatchPolicy = "Exact",
@@ -72,7 +79,7 @@ namespace KubeOps.Operator.Webhooks
                                 {
                                     new()
                                     {
-                                        Operations = wh.SupportedOperations,
+                                        Operations = operationsProperty.GetValue(instance) as IList<string>,
                                         Resources = new[] { crd.Plural },
                                         Scope = "*",
                                         ApiGroups = new[] { crd.Group },
@@ -84,6 +91,7 @@ namespace KubeOps.Operator.Webhooks
                         })
                     .ToList(),
             };
+        }
 
         private static string TrimName(string name) =>
             name.Length < MaxNameLength ? name : name.Substring(0, MaxNameLength);

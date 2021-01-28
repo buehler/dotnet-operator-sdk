@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using KubeOps.Operator.Builder;
+using KubeOps.Operator.Services;
 using KubeOps.Operator.Webhooks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -45,26 +46,17 @@ namespace KubeOps.Operator
                         .GetRequiredService<ILoggerFactory>()
                         .CreateLogger("ApplicationStartup");
 
-                    foreach (var validator in app.ApplicationServices
-                                                  .GetService<IEnumerable<IValidationWebhook>>() ??
-                                              new List<IValidationWebhook>())
+                    using var scope = app.ApplicationServices.CreateScope();
+                    foreach (var (validatorType, resourceType) in scope
+                        .ServiceProvider
+                        .GetRequiredService<ResourceLocator>()
+                        .ValidatorTypes)
                     {
-                        var hookType = validator
-                            .GetType()
-                            .GetInterfaces()
-                            .FirstOrDefault(
-                                t => t.IsGenericType &&
-                                     typeof(IValidationWebhook<>).IsAssignableFrom(t.GetGenericTypeDefinition()));
-                        if (hookType == null)
-                        {
-                            throw new Exception(
-                                $@"Validator ""{validator.GetType().Name}"" is not of IValidationWebhook<TEntity> type.");
-                        }
-
-                        var registerMethod = hookType
+                        var validator = scope.ServiceProvider.GetRequiredService(validatorType);
+                        var registerMethod = typeof(IValidationWebhook<>)
+                            .MakeGenericType(resourceType)
                             .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                             .First(m => m.Name == "Register");
-
                         registerMethod.Invoke(validator, new object[] { endpoints });
                         logger.LogInformation(
                             @"Registered validation webhook ""{namespace}.{name}"".",

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using KubeOps.Operator.Builder;
 using KubeOps.Operator.Leadership;
+using KubeOps.Operator.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -13,20 +13,25 @@ namespace KubeOps.Operator.Controller
     {
         private readonly IServiceProvider _services;
         private readonly ILeaderElection _leaderElection;
+        private readonly ResourceLocator _resourceLocator;
 
         private readonly List<IManagedResourceController> _controller = new();
 
         private IDisposable? _leadershipSubscription;
 
-        public ResourceControllerManager(IServiceProvider services, ILeaderElection leaderElection)
+        public ResourceControllerManager(
+            IServiceProvider services,
+            ILeaderElection leaderElection,
+            ResourceLocator resourceLocator)
         {
             _services = services;
             _leaderElection = leaderElection;
+            _resourceLocator = resourceLocator;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            foreach (var (controllerType, entityType) in OperatorBuilder.GetControllers())
+            foreach (var (controllerType, entityType) in _resourceLocator.ControllerTypes)
             {
                 var managedType = typeof(ManagedResourceController<>).MakeGenericType(entityType);
                 var managedInstance = _services.GetRequiredService(managedType) as IManagedResourceController ??

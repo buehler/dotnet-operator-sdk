@@ -6,7 +6,7 @@ using k8s.Models;
 using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Kustomize;
 using KubeOps.Operator.Serialization;
-using KubeOps.Operator.Webhooks;
+using KubeOps.Operator.Services;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Generators
@@ -21,11 +21,11 @@ namespace KubeOps.Operator.Commands.Generators
         public OperatorGenerator(
             EntitySerializer serializer,
             OperatorSettings settings,
-            IEnumerable<IValidationWebhook> validators)
+            ResourceLocator resourceLocator)
         {
             _serializer = serializer;
             _settings = settings;
-            _hasWebhooks = validators.Any();
+            _hasWebhooks = resourceLocator.ValidatorTypes.Any();
         }
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)

@@ -53,34 +53,14 @@ namespace KubeOps.Operator.Builder
             where TLivenessCheck : class, IHealthCheck;
 
         /// <summary>
-        /// Adds an assembly to the resource search path. This allows the given Assembly to searched
+        /// <para>
+        /// Adds an assembly to the resource search path. This allows the given Assembly to be searched
         /// for resources when generating CRDs or RBAC definitions.
+        /// </para>
+        /// <para>Also webhooks / controllers and finalizers will be searched in this assembly.</para>
         /// </summary>
         /// <param name="assembly">The assembly to add.</param>
         /// <returns>The builder for chaining.</returns>
         IOperatorBuilder AddResourceAssembly(Assembly assembly);
-
-        /// <summary>
-        /// <para>
-        /// Add an <see cref="IValidationWebhook{TEntity}"/> to the system.
-        /// The validator is registered as POST request on the system.
-        /// </para>
-        /// <para>
-        /// Note that the operator must use HTTPS (in some form) to use validators.
-        /// For local development, this could be done with ngrok (https://ngrok.com/).
-        /// </para>
-        /// <para>
-        /// The operator generator (if enabled during build) will generate the CA certificate
-        /// and the operator will generate the server certificate during pod startup.
-        /// </para>
-        /// </summary>
-        /// <typeparam name="TWebhook">
-        /// The type of the finalizer.
-        /// This must be a <see cref="IValidationWebhook{TEntity}"/> instead of "only" a
-        /// <see cref="IValidationWebhook"/>.
-        /// </typeparam>
-        /// <returns>The builder for chaining.</returns>
-        IOperatorBuilder AddValidationWebhook<TWebhook>()
-            where TWebhook : class, IValidationWebhook;
     }
 }
