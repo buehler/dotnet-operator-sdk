@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using DotnetKubernetesClient.Entities;
@@ -30,13 +31,59 @@ namespace KubeOps.Operator.Webhooks
     /// return a "not implemented" result by default.
     /// </para>
     /// <para>
-    /// Overwrite the needed ones as defined in <see cref="IValidationWebhook.Operations"/>.
+    /// Overwrite the needed ones as defined in <see cref="Operations"/>.
     /// The async implementations take precedence over the synchronous ones.
+    /// </para>
+    /// <para>
+    /// Note that the operator must use HTTPS (in some form) to use validators.
+    /// For local development, this could be done with ngrok (https://ngrok.com/).
+    /// </para>
+    /// <para>
+    /// The operator generator (if enabled during build) will generate the CA certificate
+    /// and the operator will generate the server certificate during pod startup.
     /// </para>
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity that should be validated.</typeparam>
-    public interface IValidationWebhook<in TEntity> : IValidationWebhook
+    public interface IValidationWebhook<in TEntity>
     {
+        /// <summary>
+        /// The operations that the webhook wants to be notified about.
+        /// All subscribed events are forwarded to the validation webhook.
+        /// </summary>
+        ValidatedOperations Operations { get; }
+
+        internal string WebhookName => $"{GetType().Namespace ?? "root"}.{GetType().Name}";
+
+        internal IList<string> SupportedOperations
+        {
+            get
+            {
+                if (Operations.HasFlag(ValidatedOperations.All))
+                {
+                    return new List<string> { "*" };
+                }
+
+                var result = new List<string>();
+
+                if (Operations.HasFlag(ValidatedOperations.Create))
+                {
+                    result.Add("CREATE");
+                }
+
+                if (Operations.HasFlag(ValidatedOperations.Update))
+                {
+                    result.Add("UPDATE");
+                }
+
+                if (Operations.HasFlag(ValidatedOperations.Delete))
+                {
+                    result.Add("DELETE");
+                }
+
+                return result;
+            }
+        }
+
         /// <summary>
         /// Validation for <see cref="ValidatedOperations.Create"/> operations.
         /// </summary>
@@ -125,7 +172,8 @@ namespace KubeOps.Operator.Webhooks
                     AdmissionReview<TEntity> result;
                     try
                     {
-                        if (!(context.RequestServices.GetRequiredService(GetType()) is IValidationWebhook<TEntity>
+                        using var scope = context.RequestServices.CreateScope();
+                        if (!(scope.ServiceProvider.GetRequiredService(GetType()) is IValidationWebhook<TEntity>
                             validator))
                         {
                             throw new Exception("Validator is not a valid IValidationWebhook<TEntity>");

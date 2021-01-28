@@ -89,6 +89,7 @@ namespace KubeOps.Operator.Controller
             .Switch()
             .Select(data => Observable.FromAsync(() => UpdateResourceData(data)))
             .Switch()
+            .Where(data => data != null)
             .Do(
                 data => _logger.LogTrace(
                     @"Mapped requeued resource event to ""{resourceEventType}"" for ""{kind}/{name}""",

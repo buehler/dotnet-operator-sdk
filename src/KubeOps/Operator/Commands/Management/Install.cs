@@ -20,18 +20,18 @@ namespace KubeOps.Operator.Commands.Management
     {
         private readonly IKubernetesClient _client;
 
-        private readonly IResourceTypeService _resourceTypeService;
+        private readonly ResourceLocator _resourceLocator;
 
-        public Install(IKubernetesClient client, IResourceTypeService resourceTypeService)
+        public Install(IKubernetesClient client, ResourceLocator resourceLocator)
         {
             _client = client;
-            _resourceTypeService = resourceTypeService;
+            _resourceLocator = resourceLocator;
         }
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
             var error = false;
-            var crds = CrdGenerator.GenerateCrds(_resourceTypeService).ToList();
+            var crds = CrdGenerator.GenerateCrds(_resourceLocator).ToList();
             await app.Out.WriteLineAsync($"Found {crds.Count} CRD's.");
             await app.Out.WriteLineAsync($@"Starting install into cluster with url ""{_client.ApiClient.BaseUri}"".");
 

@@ -20,12 +20,12 @@ namespace KubeOps.Operator.Commands.Management
     {
         private readonly IKubernetesClient _client;
 
-        private readonly IResourceTypeService _resourceTypeService;
+        private readonly ResourceLocator _resourceLocator;
 
-        public Uninstall(IKubernetesClient client, IResourceTypeService resourceTypeService)
+        public Uninstall(IKubernetesClient client, ResourceLocator resourceLocator)
         {
             _client = client;
-            _resourceTypeService = resourceTypeService;
+            _resourceLocator = resourceLocator;
         }
 
         [Option(Description = "Do not ask the user if the uninstall should proceed.")]
@@ -34,7 +34,7 @@ namespace KubeOps.Operator.Commands.Management
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
             var error = false;
-            var crds = CrdGenerator.GenerateCrds(_resourceTypeService).ToList();
+            var crds = CrdGenerator.GenerateCrds(_resourceLocator).ToList();
             await app.Out.WriteLineAsync($"Found {crds.Count} CRD's.");
 
             if (!Force && !Prompt.GetYesNo("Should the uninstall proceed?", false, ConsoleColor.Red))

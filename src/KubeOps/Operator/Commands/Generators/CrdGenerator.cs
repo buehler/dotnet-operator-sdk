@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using k8s.Models;
 using k8s.Versioning;
@@ -22,20 +20,20 @@ namespace KubeOps.Operator.Commands.Generators
     {
         private readonly EntitySerializer _serializer;
 
-        private readonly IResourceTypeService _resourceTypeService;
+        private readonly ResourceLocator _resourceLocator;
 
-        public CrdGenerator(EntitySerializer serializer, IResourceTypeService resourceTypeService)
+        public CrdGenerator(EntitySerializer serializer, ResourceLocator resourceLocator)
         {
             _serializer = serializer;
-            _resourceTypeService = resourceTypeService;
+            _resourceLocator = resourceLocator;
         }
 
         [Option("--use-old-crds", Description = "Defines that the old crd definitions (V1Beta1) should be used.")]
         public bool UseOldCrds { get; set; }
 
-        public static IEnumerable<V1CustomResourceDefinition> GenerateCrds(IResourceTypeService resourceTypeService)
+        public static IEnumerable<V1CustomResourceDefinition> GenerateCrds(ResourceLocator resourceTypeService)
         {
-            var resourceTypes = resourceTypeService.GetResourceTypesByAttribute<KubernetesEntityAttribute>();
+            var resourceTypes = resourceTypeService.GetTypesWithAttribute<KubernetesEntityAttribute>();
 
             return resourceTypes
                 .Where(type => !type.GetCustomAttributes<IgnoreEntityAttribute>().Any())
@@ -75,7 +73,7 @@ namespace KubeOps.Operator.Commands.Generators
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
-            var crds = GenerateCrds(_resourceTypeService).ToList();
+            var crds = GenerateCrds(_resourceLocator).ToList();
 
             var fileWriter = new FileWriter(app.Out);
             foreach (var crd in crds)

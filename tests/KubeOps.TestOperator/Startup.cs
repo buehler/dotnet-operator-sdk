@@ -13,10 +13,7 @@ namespace KubeOps.TestOperator
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services
-                .AddKubernetesOperator()
-                .AddValidationWebhook<TestValidator>();
-
+            services.AddKubernetesOperator();
             services.AddTransient<IManager, TestManager.TestManager>();
         }
 

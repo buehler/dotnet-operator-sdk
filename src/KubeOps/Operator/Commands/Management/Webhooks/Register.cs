@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s.Models;
+using KubeOps.Operator.Services;
 using KubeOps.Operator.Webhooks;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -18,16 +20,19 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
     {
         private readonly OperatorSettings _settings;
         private readonly IKubernetesClient _client;
-        private readonly IList<IValidationWebhook> _validators;
+        private readonly ResourceLocator _resourceLocator;
+        private readonly IServiceProvider _serviceProvider;
 
         public Register(
             OperatorSettings settings,
             IKubernetesClient client,
-            IEnumerable<IValidationWebhook> validators)
+            ResourceLocator resourceLocator,
+            IServiceProvider serviceProvider)
         {
             _settings = settings;
             _client = client;
-            _validators = validators.ToList();
+            _resourceLocator = resourceLocator;
+            _serviceProvider = serviceProvider;
         }
 
         [Option(
@@ -73,7 +78,7 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
-            await app.Out.WriteLineAsync($"Found {_validators.Count} validators.");
+            await app.Out.WriteLineAsync($"Found {_resourceLocator.ValidatorTypes.Count()} validators.");
 
             var config = Validators.CreateValidator(
                 (
@@ -87,7 +92,8 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                             ServicePath,
                             ServicePort)
                         : null),
-                _validators);
+                _resourceLocator,
+                _serviceProvider);
 
             await app.Out.WriteLineAsync($@"Install ""{config.Metadata.Name}"" validator on cluster.");
             await _client.Save(config);

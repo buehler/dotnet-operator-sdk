@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using DotnetKubernetesClient;
 using k8s;
@@ -14,7 +13,6 @@ using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
 using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Services;
-using KubeOps.Operator.Webhooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -31,18 +29,16 @@ namespace KubeOps.Operator.Builder
         internal const string LivenessTag = "liveness";
         internal const string ReadinessTag = "readiness";
 
-        internal static readonly Assembly[] Assemblies =
-        {
-            Assembly.GetEntryAssembly() ?? throw new Exception("No Entry Assembly found."),
-            Assembly.GetExecutingAssembly(),
-        };
-
-        private readonly IResourceTypeService _resourceTypeService;
+        private readonly ResourceLocator _resourceLocator = new(
+            new[]
+            {
+                Assembly.GetEntryAssembly() ?? throw new Exception("No Entry Assembly found."),
+                Assembly.GetExecutingAssembly(),
+            });
 
         public OperatorBuilder(IServiceCollection services)
         {
             Services = services;
-            _resourceTypeService = new ResourceTypeService(Assemblies);
         }
 
         public IServiceCollection Services { get; }
@@ -85,42 +81,9 @@ namespace KubeOps.Operator.Builder
 
         public IOperatorBuilder AddResourceAssembly(Assembly assembly)
         {
-            _resourceTypeService.AddAssembly(assembly);
-
+            _resourceLocator.Add(assembly);
             return this;
         }
-
-        public IOperatorBuilder AddValidationWebhook<TWebhook>()
-            where TWebhook : class, IValidationWebhook
-        {
-            Services.AddTransient(typeof(IValidationWebhook), typeof(TWebhook));
-            Services.AddTransient(typeof(TWebhook));
-
-            return this;
-        }
-
-        internal static IEnumerable<(Type ControllerType, Type EntityType)> GetControllers() => Assemblies
-            .SelectMany(a => a.GetTypes())
-            .Where(
-                t => t.IsClass &&
-                     !t.IsAbstract &&
-                     t.GetInterfaces()
-                         .Any(
-                             i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceController<>)))
-            .Select(
-                t => (t,
-                    t.GetInterfaces()
-                        .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceController<>))
-                        .GenericTypeArguments[0]));
-
-        internal static IEnumerable<Type> GetFinalizers() => Assemblies
-            .SelectMany(a => a.GetTypes())
-            .Where(
-                t => t.IsClass &&
-                     !t.IsAbstract &&
-                     t.GetInterfaces()
-                         .Any(
-                             i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceFinalizer<>)));
 
         internal IOperatorBuilder AddOperatorBase(OperatorSettings settings)
         {
@@ -156,7 +119,7 @@ namespace KubeOps.Operator.Builder
             Services.AddTransient<IKubernetesClient, KubernetesClient>();
             Services.AddTransient<IEventManager, EventManager>();
 
-            Services.AddSingleton(_resourceTypeService);
+            Services.AddSingleton(_resourceLocator);
 
             Services.AddTransient(typeof(ResourceCache<>));
             Services.AddTransient(typeof(ResourceWatcher<>));
@@ -183,16 +146,22 @@ namespace KubeOps.Operator.Builder
             // and all found controller types.
             Services.AddHostedService<ResourceControllerManager>();
             Services.TryAddSingleton(sp => sp);
-            foreach (var (controllerType, _) in GetControllers())
+            foreach (var (controllerType, _) in _resourceLocator.ControllerTypes)
             {
                 Services.TryAddScoped(controllerType);
             }
 
             // Register all found finalizer for the finalize manager
             Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
-            foreach (var finalizerType in GetFinalizers())
+            foreach (var finalizerType in _resourceLocator.FinalizerTypes)
             {
                 Services.TryAddScoped(finalizerType);
+            }
+
+            // Register all found validation webhooks
+            foreach (var (validatorType, _) in _resourceLocator.ValidatorTypes)
+            {
+                Services.TryAddScoped(validatorType);
             }
 
             return this;

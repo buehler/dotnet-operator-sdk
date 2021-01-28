@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using DotnetKubernetesClient.LabelSelectors;
 using k8s.Models;
 using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Extensions;
+using KubeOps.Operator.Services;
 using KubeOps.Operator.Webhooks;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -21,13 +23,19 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
     {
         private readonly IKubernetesClient _client;
         private readonly OperatorSettings _settings;
-        private readonly IEnumerable<IValidationWebhook> _validators;
+        private readonly ResourceLocator _resourceLocator;
+        private readonly IServiceProvider _serviceProvider;
 
-        public Install(IKubernetesClient client, OperatorSettings settings, IEnumerable<IValidationWebhook> validators)
+        public Install(
+            IKubernetesClient client,
+            OperatorSettings settings,
+            ResourceLocator resourceLocator,
+            IServiceProvider serviceProvider)
         {
             _client = client;
             _settings = settings;
-            _validators = validators;
+            _resourceLocator = resourceLocator;
+            _serviceProvider = serviceProvider;
         }
 
         [Option(
@@ -83,7 +91,7 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                 // Ignore not found service delete.
             }
 
-            await _client.Save(
+            await _client.Create(
                 new V1Service(
                     V1Service.KubeApiVersion,
                     V1Service.KubeKind,
@@ -135,7 +143,8 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                     Name = _settings.Name,
                     NamespaceProperty = @namespace,
                 }),
-                _validators);
+                _resourceLocator,
+                _serviceProvider);
             if (deployment != null)
             {
                 validator.Metadata.OwnerReferences = new List<V1OwnerReference>
@@ -144,7 +153,7 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                 };
             }
 
-            await _client.Save(validator);
+            await _client.Create(validator);
             return ExitCodes.Success;
         }
     }
