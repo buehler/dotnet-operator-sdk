@@ -83,14 +83,6 @@ namespace KubeOps.Operator.Builder
             return this;
         }
 
-        public IOperatorBuilder AddFinalizer<TFinalizer>()
-            where TFinalizer : class, IResourceFinalizer
-        {
-            Services.AddTransient(typeof(IResourceFinalizer), typeof(TFinalizer));
-
-            return this;
-        }
-
         public IOperatorBuilder AddResourceAssembly(Assembly assembly)
         {
             _resourceTypeService.AddAssembly(assembly);
@@ -120,6 +112,15 @@ namespace KubeOps.Operator.Builder
                     t.GetInterfaces()
                         .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceController<>))
                         .GenericTypeArguments[0]));
+
+        internal static IEnumerable<Type> GetFinalizers() => Assemblies
+            .SelectMany(a => a.GetTypes())
+            .Where(
+                t => t.IsClass &&
+                     !t.IsAbstract &&
+                     t.GetInterfaces()
+                         .Any(
+                             i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceFinalizer<>)));
 
         internal IOperatorBuilder AddOperatorBase(OperatorSettings settings)
         {
@@ -155,6 +156,8 @@ namespace KubeOps.Operator.Builder
             Services.AddTransient<IKubernetesClient, KubernetesClient>();
             Services.AddTransient<IEventManager, EventManager>();
 
+            Services.AddSingleton(_resourceTypeService);
+
             Services.AddTransient(typeof(ResourceCache<>));
             Services.AddTransient(typeof(ResourceWatcher<>));
             Services.AddTransient(typeof(ManagedResourceController<>));
@@ -173,15 +176,23 @@ namespace KubeOps.Operator.Builder
             Services.AddHostedService<LeaderElector>();
             Services.AddSingleton<ILeaderElection, LeaderElection>();
 
-            Services.AddSingleton(_resourceTypeService);
-            Services.AddHostedService<ResourceControllerManager>();
+            // Register event handler
+            Services.AddTransient<IEventManager, EventManager>();
 
             // Add the service provider (for instantiation)
             // and all found controller types.
+            Services.AddHostedService<ResourceControllerManager>();
             Services.TryAddSingleton(sp => sp);
             foreach (var (controllerType, _) in GetControllers())
             {
                 Services.TryAddScoped(controllerType);
+            }
+
+            // Register all found finalizer for the finalize manager
+            Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
+            foreach (var finalizerType in GetFinalizers())
+            {
+                Services.TryAddScoped(finalizerType);
             }
 
             return this;

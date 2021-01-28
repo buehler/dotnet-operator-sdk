@@ -10,6 +10,7 @@ using k8s.Models;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.DevOps;
+using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Kubernetes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -30,6 +31,7 @@ namespace KubeOps.Operator.Controller
         private readonly IServiceProvider _services;
         private readonly ResourceControllerMetrics<TResource> _metrics;
         private readonly OperatorSettings _settings;
+        private readonly IFinalizerManager<TResource> _finalizerManager;
 
         private readonly Subject<(TResource Resource, TimeSpan Delay)>
             _requeuedEvents = new();
@@ -46,7 +48,8 @@ namespace KubeOps.Operator.Controller
             ResourceCache<TResource> cache,
             IServiceProvider services,
             ResourceControllerMetrics<TResource> metrics,
-            OperatorSettings settings)
+            OperatorSettings settings,
+            IFinalizerManager<TResource> finalizerManager)
         {
             _logger = logger;
             _client = client;
@@ -55,15 +58,28 @@ namespace KubeOps.Operator.Controller
             _services = services;
             _metrics = metrics;
             _settings = settings;
+            _finalizerManager = finalizerManager;
         }
 
         public Type ControllerType { get; set; } = typeof(IResourceController<>);
 
         private IObservable<Unit> WatcherEvents => _watcher
             .WatchEvents
-            .Do(_ => _metrics.EventsFromWatcher.Inc())
             .Select(MapWatchEvent)
-            .Select(data => Observable.FromAsync(() => HandleResourceEvent(data), ThreadPoolScheduler.Instance))
+            .Do(
+                data => _logger.LogTrace(
+                    @"Mapped watch event to ""{resourceEventType}"" for ""{kind}/{name}""",
+                    data.ResourceEvent,
+                    data.Resource.Kind,
+                    data.Resource.Name()))
+            .Where(data => data.ResourceEvent != ResourceEventType.FinalizerModified)
+            .Do(_ => _metrics.EventsFromWatcher.Inc())
+            .Select(
+                data => Observable.FromAsync(
+                    () => data.ResourceEvent == ResourceEventType.Finalizing
+                        ? HandleResourceFinalization(data)
+                        : HandleResourceEvent(data),
+                    ThreadPoolScheduler.Instance))
             .Merge();
 
         private IObservable<Unit> RequeuedEvents => _requeuedEvents
@@ -73,6 +89,16 @@ namespace KubeOps.Operator.Controller
             .Switch()
             .Select(data => Observable.FromAsync(() => UpdateResourceData(data)))
             .Switch()
+            .Do(
+                data => _logger.LogTrace(
+                    @"Mapped requeued resource event to ""{resourceEventType}"" for ""{kind}/{name}""",
+                    data?.ResourceEvent,
+                    data?.Resource.Kind,
+                    data?.Resource.Name()))
+            .Where(
+                data =>
+                    data?.ResourceEvent != ResourceEventType.Finalizing &&
+                    data?.ResourceEvent != ResourceEventType.FinalizerModified)
             .Select(
                 data => Observable.FromAsync(
                     () => HandleResourceEvent(data), // this default is never gonna happen.
@@ -108,7 +134,9 @@ namespace KubeOps.Operator.Controller
             .Switch()
             .Select(
                 data => Observable.FromAsync(
-                    () => HandleResourceEvent(data), // this default is never gonna happen.
+                    () => data?.ResourceEvent == ResourceEventType.Finalizing
+                        ? HandleResourceFinalization(data)
+                        : HandleResourceEvent(data),
                     ThreadPoolScheduler.Instance))
             .Merge();
 
@@ -174,17 +202,18 @@ namespace KubeOps.Operator.Controller
                     return (ResourceEventType.StatusUpdated, resource);
                 case CacheComparisonResult.NotModified:
                     return (ResourceEventType.NotModified, resource);
+                case CacheComparisonResult.FinalizersModified:
+                    return (ResourceEventType.FinalizerModified, resource);
+                default:
+                    var ex = new ArgumentException("The caching state is out of the processable range", nameof(state));
+                    _logger.LogCritical(
+                        ex,
+                        @"The caching state ""{cacheState}"" is not further processable for controller handling for the resource ""{kind}/{name}"".",
+                        state,
+                        resource.Kind,
+                        resource.Name());
+                    throw ex;
             }
-
-            var ex = new ArgumentException("The caching state is out of the processable range", nameof(state));
-            _logger.LogCritical(
-                ex,
-                @"The caching state ""{cacheState}"" is not further processable for controller handling for the resource ""{kind}/{name}"".",
-                state,
-                resource.Kind,
-                resource.Name());
-
-            throw ex;
         }
 
         private QueuedEvent MapWatchEvent(
@@ -263,12 +292,6 @@ namespace KubeOps.Operator.Controller
                 @event,
                 resource.Kind,
                 resource.Name());
-
-            if (@event == ResourceEventType.Finalizing)
-            {
-                // TODO
-                return;
-            }
 
             ResourceControllerResult? result = null;
             _logger.LogTrace(@"Instantiating new DI scope for controller ""{name}"".", ControllerType.Name);
@@ -357,6 +380,21 @@ namespace KubeOps.Operator.Controller
                     _requeuedEvents.OnNext((resource, requeue.RequeueIn));
                     break;
             }
+        }
+
+        private async Task HandleResourceFinalization(QueuedEvent? data)
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            _logger.LogDebug(
+                @"Finalize resource ""{kind}/{name}"".",
+                data.Resource.Kind,
+                data.Resource.Name());
+
+            await _finalizerManager.FinalizeAsync(data.Resource);
         }
 
         private TimeSpan ExponentialBackoff(int retryCount) => TimeSpan
