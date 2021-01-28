@@ -3,7 +3,8 @@ name: .NET Testing
 on:
   push:
     branches:
-      - '**'
+      - '!master'
+      - '!release'
   pull_request:
     branches:
       - '**'
