@@ -20,7 +20,7 @@ namespace KubeOps.Operator
         /// <param name="host">The <see cref="IHost"/>.</param>
         /// <param name="args">Program arguments.</param>
         /// <returns>Async task with completion result.</returns>
-        public static Task<int> RunOperator(this IHost host, string[] args)
+        public static Task<int> RunOperatorAsync(this IHost host, string[] args)
         {
             var app = new CommandLineApplication<RunOperator>();
             app

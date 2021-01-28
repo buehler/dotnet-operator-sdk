@@ -7,8 +7,8 @@ namespace KubeOps.Operator.Controller
     {
         Type ControllerType { get; set; }
 
-        Task Start();
+        Task StartAsync();
 
-        Task Stop();
+        Task StopAsync();
     }
 }

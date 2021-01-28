@@ -140,7 +140,7 @@ namespace KubeOps.Operator.Controller
                     ThreadPoolScheduler.Instance))
             .Merge();
 
-        public async Task Start()
+        public async Task StartAsync()
         {
             if (_settings.PreloadCache)
             {
@@ -159,7 +159,7 @@ namespace KubeOps.Operator.Controller
             _metrics.Running.Set(1);
         }
 
-        public async Task Stop()
+        public async Task StopAsync()
         {
             _logger.LogTrace(@"Managed resource controller shutdown for type ""{type}"".", typeof(TResource));
             await _watcher.Stop();

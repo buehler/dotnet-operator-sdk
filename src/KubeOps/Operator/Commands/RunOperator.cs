@@ -18,7 +18,7 @@ namespace KubeOps.Operator.Commands
     {
         private readonly IHost _host;
         private readonly IKubernetesClient _client;
-        private OperatorSettings _settings;
+        private readonly OperatorSettings _settings;
 
         public RunOperator(IHost host, IKubernetesClient client, OperatorSettings settings)
         {

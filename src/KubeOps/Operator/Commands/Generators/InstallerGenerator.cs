@@ -78,7 +78,7 @@ namespace KubeOps.Operator.Commands.Generators
                     },
                     Format));
 
-            await fileWriter.Output(OutputPath);
+            await fileWriter.OutputAsync(OutputPath);
             return ExitCodes.Success;
         }
     }

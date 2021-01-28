@@ -45,7 +45,7 @@ namespace KubeOps.Operator.Controller
             _leadershipSubscription?.Dispose();
             foreach (var controller in _controller)
             {
-                controller.Stop();
+                controller.StopAsync();
                 controller.Dispose();
             }
 
@@ -64,11 +64,11 @@ namespace KubeOps.Operator.Controller
             {
                 if (state == LeaderState.Leader)
                 {
-                    controller.Start();
+                    controller.StartAsync();
                 }
                 else
                 {
-                    controller.Stop();
+                    controller.StopAsync();
                 }
             }
         }
