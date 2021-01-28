@@ -37,7 +37,7 @@ namespace KubeOps.Operator.Commands.Generators
                 (!File.Exists(Path.Join(OutputPath, "ca.pem")) || !File.Exists(Path.Join(OutputPath, "ca-key.pem"))))
             {
                 using var certManager = new CertificateGenerator(app.Out);
-                await certManager.CreateCaCertificate(OutputPath);
+                await certManager.CreateCaCertificateAsync(OutputPath);
             }
 
             fileWriter.Add(
@@ -232,7 +232,7 @@ namespace KubeOps.Operator.Commands.Generators
                         }),
                     Format));
 
-            await fileWriter.Output(OutputPath);
+            await fileWriter.OutputAsync(OutputPath);
             return ExitCodes.Success;
         }
     }

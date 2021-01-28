@@ -9,8 +9,8 @@ using KubeOps.Operator.Entities.Extensions;
 
 namespace KubeOps.Operator.Caching
 {
-    internal class ResourceCache<TEntity>
-        where TEntity : IKubernetesObject<V1ObjectMeta>
+    internal class ResourceCache<TResource>
+        where TResource : IKubernetesObject<V1ObjectMeta>
     {
         private const string ResourceVersion = "ResourceVersion";
         private const string ManagedFields = "ManagedFields";
@@ -25,18 +25,18 @@ namespace KubeOps.Operator.Caching
                 MembersToIgnore = new() { ResourceVersion, ManagedFields },
             });
 
-        private readonly ConcurrentDictionary<string, TEntity> _cache = new();
+        private readonly ConcurrentDictionary<string, TResource> _cache = new();
 
-        private readonly ResourceCacheMetrics<TEntity> _metrics;
+        private readonly ResourceCacheMetrics<TResource> _metrics;
 
-        public ResourceCache(ResourceCacheMetrics<TEntity> metrics)
+        public ResourceCache(ResourceCacheMetrics<TResource> metrics)
         {
             _metrics = metrics;
         }
 
-        public TEntity Get(string id) => _cache[id];
+        public TResource Get(string id) => _cache[id];
 
-        public TEntity Upsert(TEntity resource, out CacheComparisonResult result)
+        public TResource Upsert(TResource resource, out CacheComparisonResult result)
         {
             result = CompareCache(resource);
 
@@ -48,9 +48,9 @@ namespace KubeOps.Operator.Caching
             return resource;
         }
 
-        public void Fill(IEnumerable<TEntity> entities)
+        public void Fill(IEnumerable<TResource> resources)
         {
-            foreach (var entity in entities)
+            foreach (var entity in resources)
             {
                 var clone = entity.DeepClone();
                 _cache.AddOrUpdate(entity.Metadata.Uid, clone, (_, _) => clone);
@@ -60,7 +60,7 @@ namespace KubeOps.Operator.Caching
             _metrics.CachedItemsSummary.Observe(_cache.Count);
         }
 
-        public void Remove(TEntity resource) => Remove(resource.Metadata.Uid);
+        public void Remove(TResource resource) => Remove(resource.Metadata.Uid);
 
         public void Clear()
         {
@@ -69,7 +69,7 @@ namespace KubeOps.Operator.Caching
             _metrics.CachedItemsSummary.Observe(_cache.Count);
         }
 
-        private CacheComparisonResult CompareCache(TEntity resource)
+        private CacheComparisonResult CompareCache(TResource resource)
         {
             if (!Exists(resource))
             {
@@ -96,7 +96,7 @@ namespace KubeOps.Operator.Caching
             return CacheComparisonResult.Modified;
         }
 
-        private bool Exists(TEntity resource) => _cache.ContainsKey(resource.Metadata.Uid);
+        private bool Exists(TResource resource) => _cache.ContainsKey(resource.Metadata.Uid);
 
         private void Remove(string resourceUid)
         {

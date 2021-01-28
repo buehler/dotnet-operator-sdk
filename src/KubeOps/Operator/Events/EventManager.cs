@@ -25,7 +25,7 @@ namespace KubeOps.Operator.Events
             _logger = logger;
         }
 
-        public async Task Publish(
+        public async Task PublishAsync(
             IKubernetesObject<V1ObjectMeta> resource,
             string reason,
             string message,
@@ -78,20 +78,25 @@ namespace KubeOps.Operator.Events
                 @event.LastTimestamp);
 
             await _client.Save(@event);
-            _logger.LogDebug(@"Created or updated event with name ""{name}"".", eventName);
+            _logger.LogInformation(
+                @"Created or updated event with name ""{name}"" to new count {count} on resource ""{kind}/{name}"".",
+                eventName,
+                @event.Count,
+                resource.Kind,
+                resource.Name());
         }
 
-        public Task Publish(Corev1Event @event)
+        public Task PublishAsync(Corev1Event @event)
             => _client.Save(@event);
 
-        public IEventManager.Publisher CreatePublisher(string reason, string message, EventType type = EventType.Normal)
-            => resource => Publish(resource, reason, message, type);
+        public IEventManager.AsyncPublisher CreatePublisher(string reason, string message, EventType type = EventType.Normal)
+            => resource => PublishAsync(resource, reason, message, type);
 
-        public IEventManager.StaticPublisher CreatePublisher(
+        public IEventManager.AsyncStaticPublisher CreatePublisher(
             IKubernetesObject<V1ObjectMeta> resource,
             string reason,
             string message,
             EventType type = EventType.Normal)
-            => () => Publish(resource, reason, message, type);
+            => () => PublishAsync(resource, reason, message, type);
     }
 }

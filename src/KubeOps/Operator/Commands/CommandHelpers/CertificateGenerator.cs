@@ -62,7 +62,7 @@ namespace KubeOps.Operator.Commands.CommandHelpers
             Delete(_servercsr);
         }
 
-        public async Task CreateCaCertificate(string outputFolder)
+        public async Task CreateCaCertificateAsync(string outputFolder)
         {
             if (!_initialized)
             {
@@ -90,7 +90,7 @@ namespace KubeOps.Operator.Commands.CommandHelpers
             await ListDir(outputFolder);
         }
 
-        public async Task CreateServerCertificate(
+        public async Task CreateServerCertificateAsync(
             string outputFolder,
             string name,
             string @namespace,

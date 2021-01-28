@@ -21,7 +21,7 @@ namespace KubeOps.Operator.Commands.CommandHelpers
             _files.Add(filename, content);
         }
 
-        public async Task Output(string? outputPath = null)
+        public async Task OutputAsync(string? outputPath = null)
         {
             if (outputPath == null)
             {

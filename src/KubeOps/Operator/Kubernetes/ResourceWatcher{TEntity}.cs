@@ -46,7 +46,6 @@ namespace KubeOps.Operator.Kubernetes
                     .Select(Observable.Timer)
                     .Switch()
                     .Subscribe(async _ => await WatchResource());
-            //new ExponentialBackoffHandler(async () => await WatchResource());
         }
 
         public IObservable<(WatchEventType Event, TResource Resource)> WatchEvents => _watchEvents;

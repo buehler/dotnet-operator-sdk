@@ -52,12 +52,12 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
 #if DEBUG
             CertificatesPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             CaCertificatesPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            await certManager.CreateCaCertificate(CaCertificatesPath);
+            await certManager.CreateCaCertificateAsync(CaCertificatesPath);
 #endif
 
             Directory.CreateDirectory(CertificatesPath);
             File.Copy(Path.Join(CaCertificatesPath, "ca.pem"), Path.Join(Path.Join(CertificatesPath, "ca.pem")));
-            await certManager.CreateServerCertificate(
+            await certManager.CreateServerCertificateAsync(
                 CertificatesPath,
                 _settings.Name,
                 @namespace,
