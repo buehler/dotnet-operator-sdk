@@ -15,7 +15,6 @@ namespace KubeOps.TestOperator
         {
             services
                 .AddKubernetesOperator()
-                .AddFinalizer<TestEntityFinalizer>()
                 .AddValidationWebhook<TestValidator>();
 
             services.AddTransient<IManager, TestManager.TestManager>();

@@ -34,5 +34,10 @@
         /// Fired when the resource is marked for deletion but has pending finalizers.
         /// </summary>
         Finalizing,
+
+        /// <summary>
+        /// Fired when the resource has it's finalizers modified.
+        /// </summary>
+        FinalizerModified,
     }
 }

@@ -6,6 +6,7 @@
         <LangVersion>9</LangVersion>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>CS1591</NoWarn>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <!--<Import Project="..\..\src\KubeOps\Build\KubeOps.targets"/>-->

@@ -53,15 +53,6 @@ namespace KubeOps.Operator.Builder
             where TLivenessCheck : class, IHealthCheck;
 
         /// <summary>
-        /// Adds a resource finalizer. Finalizers take care of "to be deleted" instances of
-        /// an entity that needs to asynchronously perfrom some tasks.
-        /// </summary>
-        /// <typeparam name="TFinalizer">The type of the finalizer to add.</typeparam>
-        /// <returns>The builder for chaining.</returns>
-        IOperatorBuilder AddFinalizer<TFinalizer>()
-            where TFinalizer : class, IResourceFinalizer;
-
-        /// <summary>
         /// Adds an assembly to the resource search path. This allows the given Assembly to searched
         /// for resources when generating CRDs or RBAC definitions.
         /// </summary>

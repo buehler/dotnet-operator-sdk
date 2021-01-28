@@ -81,8 +81,7 @@ class Build : NukeBuild
             .SetVersion(Version)
             .SetPackageReleaseNotes(PackageReleaseNotes)
             .SetOutputDirectory(ArtifactsDirectory)
-            .CombineWith(Projects, (ss, proj) => ss
-                .SetProject(proj))));
+            .SetProject(Solution)));
 
     Target Publish => _ => _
         .Requires(

@@ -32,11 +32,6 @@ namespace KubeOps.Operator.Controller.Results
         public static ResourceControllerResult RequeueEvent(TimeSpan delay)
             => new RequeueEventResult(delay);
 
-        /// <inheritdoc cref="RequeueEvent"/>
-        /// <returns>A task that contains the <see cref="ResourceControllerResult"/> with the configured delay.</returns>
-        public static Task<ResourceControllerResult> RequeueEventAsync(TimeSpan delay)
-            => Task.FromResult<ResourceControllerResult>(new RequeueEventResult(delay));
-
         // TODO: Requeue with forced event method
     }
 }
