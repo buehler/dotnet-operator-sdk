@@ -1,5 +1,10 @@
 # Custom Entities
 
+The words `entity` and `resource` are kind of interchangeable. It strongly
+depends on the context. The resource is the type of an object in kubernetes
+which is defined by the default api or a CRD. While an entity is a class
+in C# of such a resource. (CRD means "custom resource definition").
+
 To write your own kubernetes entities, use the interfaces
 provided by `k8s` or use the <xref:KubeOps.Operator.Entities.CustomKubernetesEntity>.
 
@@ -39,7 +44,7 @@ If you don't use the <xref:KubeOps.Operator.Entities.CustomKubernetesEntity`1> b
 
 ### Ignoring Entities
 
-There are usecases when you want to model / watch a custom entity from another
+There are use-cases when you want to model / watch a custom entity from another
 software engineer that are not part of the base models in `k8s`.
 
 To prevent the generator from creating yamls for CRDs you don't own, use

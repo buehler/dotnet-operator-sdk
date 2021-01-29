@@ -54,20 +54,20 @@ namespace KubeOps.Testing
             var server = Server;
         }
 
-        public Task EnqueueEvent<TResource>(ResourceEventType type, TResource resource)
-            where TResource : class, IKubernetesObject<V1ObjectMeta>
+        public Task EnqueueEvent<TEntity>(ResourceEventType type, TEntity resource)
+            where TEntity : class, IKubernetesObject<V1ObjectMeta>
         {
-            var controller = Services.GetRequiredService<ManagedResourceController<TResource>>() as
-                MockManagedResourceController<TResource>;
+            var controller = Services.GetRequiredService<ManagedResourceController<TEntity>>() as
+                MockManagedResourceController<TEntity>;
 
             return controller?.EnqueueEvent(type, resource) ?? Task.CompletedTask;
         }
 
-        public Task EnqueueFinalization<TResource>(TResource resource)
-            where TResource : class, IKubernetesObject<V1ObjectMeta>
+        public Task EnqueueFinalization<TEntity>(TEntity resource)
+            where TEntity : class, IKubernetesObject<V1ObjectMeta>
         {
-            var controller = Services.GetRequiredService<ManagedResourceController<TResource>>() as
-                MockManagedResourceController<TResource>;
+            var controller = Services.GetRequiredService<ManagedResourceController<TEntity>>() as
+                MockManagedResourceController<TEntity>;
 
             return controller?.EnqueueFinalization(resource) ?? Task.CompletedTask;
         }

@@ -82,14 +82,15 @@ It is suggested one uses `Docker Desktop` with kubernetes.
 The general idea of this webhook type is to validate an entity
 before it is definitely created / updated or deleted.
 
+Webhooks are registered in a **scoped** maner to the DI system.
+They behave like asp.net api controller.
+
 The implementation of a webhook is fairly simple:
 - Create a class somewhere in your project.
 - Implement the @"KubeOps.Operator.Webhooks.IValidationWebhook`1" interface.
-- Define the @"KubeOps.Operator.Webhooks.IValidationWebhook.Operations"
+- Define the @"KubeOps.Operator.Webhooks.IValidationWebhook`1.Operations"
   (from the interface) that the validator is interested in.
 - Overwrite the corresponding methods.
-- Register it in the @"KubeOps.Operator.Builder.IOperatorBuilder"
-  with @"KubeOps.Operator.Builder.IOperatorBuilder.AddValidationWebhook``1".
 
 > [!WARNING]
 > The interface contains default implementations for _ALL_ methods.
@@ -125,16 +126,4 @@ public class TestValidator : IValidationWebhook<EntityClass>
 
      private static bool CheckSpec(EntityClass entity) => entity.Spec.Username != "foobar";
  }
-```
-
-And then register the webhook in `Startup.cs`:
-
-```c#
-public void ConfigureServices(IServiceCollection services)
-{
-    services
-        .AddKubernetesOperator()
-        // ...
-        .AddValidationWebhook<TestValidator>();
-}
 ```

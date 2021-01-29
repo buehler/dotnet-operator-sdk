@@ -24,7 +24,7 @@ IEventManager manager = services.GetRequiredService<IEventManager>;
 // If the event was previously published, it is fetched
 // and the "count" number is increased. This essentially
 // creates an event-series.
-await manager.Publish(resource, "reason", "my fancy message");
+await manager.PublishAsync(resource, "reason", "my fancy message");
 ```
 
 If you want full control over the event:
@@ -39,19 +39,19 @@ var @event = new Corev1Event
 
 // Publish the event.
 // This essentially calls IKubernetesClient.Save.
-await manager.Publish(@event);
+await manager.PublishAsync(@event);
 ```
 
 ### Use publisher delegates
 
 If you don't want to call the
-@"KubeOps.Operator.Events.IEventManager.Publish(k8s.IKubernetesObject{k8s.Models.V1ObjectMeta},System.String,System.String,KubeOps.Operator.Events.EventType)"
+@"KubeOps.Operator.Events.IEventManager.PublishAsync(k8s.IKubernetesObject{k8s.Models.V1ObjectMeta},System.String,System.String,KubeOps.Operator.Events.EventType)"
 all the time with the same arguments, you can create delegates.
 
 There exist two different delegates:
-- @"KubeOps.Operator.Events.IEventManager.StaticPublisher": Predefined event
+- @"KubeOps.Operator.Events.IEventManager.AsyncStaticPublisher": Predefined event
   on a predefined resource.
-- @"KubeOps.Operator.Events.IEventManager.Publisher": Predefined event
+- @"KubeOps.Operator.Events.IEventManager.AsyncPublisher": Predefined event
   on a variable resource.
 
 Both are created with their specific overload:
@@ -80,22 +80,21 @@ The dynamic publisher can be used to predefine the event for your resources.
 
 As an example in a controller:
 ```c#
-public class TestController : ResourceControllerBase<V1TestEntity>
+public class TestController : IResourceController<V1TestEntity>
 {
     private readonly IEventManager.Publisher _publisher;
 
-    public TestController(IEventManager eventManager, IResourceServices<V1TestEntity> services)
-        : base(services)
+    public TestController(IEventManager eventManager)
     {
         _publisher = eventManager.CreatePublisher("reason", "my fancy message");
     }
 
-    protected override async Task<TimeSpan?> Created(V1TestEntity resource)
+    public Task<ResourceControllerResult> CreatedAsync(V1TestEntity resource)
     {
         // Here, the event is published with predefined strings
         // but for a "variable" resource.
         await _publisher(resource);
-        return await base.Created(resource);
+        return Task.FromResult<ResourceControllerResult>(null);
     }
 }
 ```

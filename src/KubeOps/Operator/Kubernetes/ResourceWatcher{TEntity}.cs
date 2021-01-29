@@ -12,15 +12,15 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Kubernetes
 {
-    internal class ResourceWatcher<TResource> : IDisposable
-        where TResource : IKubernetesObject<V1ObjectMeta>
+    internal class ResourceWatcher<TEntity> : IDisposable
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private const double MaxRetrySeconds = 32;
 
-        private readonly Subject<(WatchEventType Event, TResource Resource)> _watchEvents = new();
+        private readonly Subject<(WatchEventType Event, TEntity Resource)> _watchEvents = new();
         private readonly IKubernetesClient _client;
-        private readonly ILogger<ResourceWatcher<TResource>> _logger;
-        private readonly ResourceWatcherMetrics<TResource> _metrics;
+        private readonly ILogger<ResourceWatcher<TEntity>> _logger;
+        private readonly ResourceWatcherMetrics<TEntity> _metrics;
         private readonly OperatorSettings _settings;
         private readonly Subject<TimeSpan> _reconnectHandler = new();
         private readonly IDisposable _reconnectSubscription;
@@ -29,12 +29,12 @@ namespace KubeOps.Operator.Kubernetes
         private IDisposable? _resetReconnectCounter;
         private int _reconnectAttempts;
         private CancellationTokenSource? _cancellation;
-        private Watcher<TResource>? _watcher;
+        private Watcher<TEntity>? _watcher;
 
         public ResourceWatcher(
             IKubernetesClient client,
-            ILogger<ResourceWatcher<TResource>> logger,
-            ResourceWatcherMetrics<TResource> metrics,
+            ILogger<ResourceWatcher<TEntity>> logger,
+            ResourceWatcherMetrics<TEntity> metrics,
             OperatorSettings settings)
         {
             _client = client;
@@ -48,17 +48,17 @@ namespace KubeOps.Operator.Kubernetes
                     .Subscribe(async _ => await WatchResource());
         }
 
-        public IObservable<(WatchEventType Event, TResource Resource)> WatchEvents => _watchEvents;
+        public IObservable<(WatchEventType Event, TEntity Resource)> WatchEvents => _watchEvents;
 
         public Task Start()
         {
-            _logger.LogDebug(@"Resource Watcher startup for type ""{type}"".", typeof(TResource));
+            _logger.LogDebug(@"Resource Watcher startup for type ""{type}"".", typeof(TEntity));
             return WatchResource();
         }
 
         public Task Stop()
         {
-            _logger.LogTrace(@"Resource Watcher shutdown for type ""{type}"".", typeof(TResource));
+            _logger.LogTrace(@"Resource Watcher shutdown for type ""{type}"".", typeof(TEntity));
             Disposing(true);
             return Task.CompletedTask;
         }
@@ -85,7 +85,7 @@ namespace KubeOps.Operator.Kubernetes
 
             _cancellation?.Dispose();
             _watcher?.Dispose();
-            _logger.LogTrace(@"Disposed resource watcher for type ""{type}"".", typeof(TResource));
+            _logger.LogTrace(@"Disposed resource watcher for type ""{type}"".", typeof(TEntity));
             _metrics.Running.Set(0);
         }
 
@@ -99,14 +99,14 @@ namespace KubeOps.Operator.Kubernetes
                 }
                 else
                 {
-                    _logger.LogTrace(@"Watcher for type ""{type}"" already running.", typeof(TResource));
+                    _logger.LogTrace(@"Watcher for type ""{type}"" already running.", typeof(TEntity));
                     return;
                 }
             }
 
             _cancellation = new CancellationTokenSource();
 
-            _watcher = await _client.Watch<TResource>(
+            _watcher = await _client.Watch<TEntity>(
                 TimeSpan.FromSeconds(_settings.WatcherHttpTimeout),
                 OnWatcherEvent,
                 OnException,
@@ -116,7 +116,7 @@ namespace KubeOps.Operator.Kubernetes
             _metrics.Running.Set(1);
         }
 
-        private void OnWatcherEvent(WatchEventType type, TResource resource)
+        private void OnWatcherEvent(WatchEventType type, TEntity resource)
         {
             _logger.LogTrace(
                 @"Received watch event ""{eventType}"" for ""{kind}/{name}"".",
@@ -143,7 +143,7 @@ namespace KubeOps.Operator.Kubernetes
 
         private async void RestartWatcher()
         {
-            _logger.LogTrace(@"Restarting resource watcher for type ""{type}"".", typeof(TResource));
+            _logger.LogTrace(@"Restarting resource watcher for type ""{type}"".", typeof(TEntity));
             _cancellation?.Cancel();
             _watcher?.Dispose();
             _watcher = null;
@@ -163,12 +163,12 @@ namespace KubeOps.Operator.Kubernetes
             {
                 _logger.LogTrace(
                     @"Either the server or the client did close the connection on watcher for resource ""{resource}"". Restart.",
-                    typeof(TResource));
+                    typeof(TEntity));
                 WatchResource().ConfigureAwait(false);
                 return;
             }
 
-            _logger.LogError(e, @"There was an error while watching the resource ""{resource}"".", typeof(TResource));
+            _logger.LogError(e, @"There was an error while watching the resource ""{resource}"".", typeof(TEntity));
             var backoff = ExponentialBackoff(++_reconnectAttempts);
             _logger.LogInformation("Trying to reconnect with exponential backoff {backoff}.", backoff);
             _resetReconnectCounter?.Dispose();

@@ -23,12 +23,12 @@ namespace KubeOps.Operator.Entities.Extensions
         /// call to the CloneMethod specified above.
         /// </summary>
         /// <param name="obj">The object to deeply clone.</param>
-        /// <typeparam name="TResource">Object type.</typeparam>
+        /// <typeparam name="TEntity">Object type.</typeparam>
         /// <returns>A deep clone of a given object.</returns>
-        internal static TResource DeepClone<TResource>(this TResource obj)
-            where TResource : IKubernetesObject<V1ObjectMeta>
+        internal static TEntity DeepClone<TEntity>(this TEntity obj)
+            where TEntity : IKubernetesObject<V1ObjectMeta>
         {
-            return (TResource)(DeepClone_Internal(
+            return (TEntity)(DeepClone_Internal(
                                    obj,
                                    new Dictionary<object, object>(new ReferenceEqualityComparer())) ??
                                throw new InvalidCastException());

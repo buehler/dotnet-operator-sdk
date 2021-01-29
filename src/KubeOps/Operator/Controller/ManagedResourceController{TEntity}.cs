@@ -17,23 +17,23 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Controller
 {
-    internal class ManagedResourceController<TResource> : IManagedResourceController
-        where TResource : class, IKubernetesObject<V1ObjectMeta>
+    internal class ManagedResourceController<TEntity> : IManagedResourceController
+        where TEntity : class, IKubernetesObject<V1ObjectMeta>
     {
         private const byte MaxRetries = 4;
 
         private readonly Random _rnd = new();
 
-        private readonly ILogger<ManagedResourceController<TResource>> _logger;
+        private readonly ILogger<ManagedResourceController<TEntity>> _logger;
         private readonly IKubernetesClient _client;
-        private readonly ResourceWatcher<TResource> _watcher;
-        private readonly ResourceCache<TResource> _cache;
+        private readonly ResourceWatcher<TEntity> _watcher;
+        private readonly ResourceCache<TEntity> _cache;
         private readonly IServiceProvider _services;
-        private readonly ResourceControllerMetrics<TResource> _metrics;
+        private readonly ResourceControllerMetrics<TEntity> _metrics;
         private readonly OperatorSettings _settings;
-        private readonly IFinalizerManager<TResource> _finalizerManager;
+        private readonly IFinalizerManager<TEntity> _finalizerManager;
 
-        private readonly Subject<(TResource Resource, TimeSpan Delay)>
+        private readonly Subject<(TEntity Resource, TimeSpan Delay)>
             _requeuedEvents = new();
 
         private readonly Subject<QueuedEvent>
@@ -42,14 +42,14 @@ namespace KubeOps.Operator.Controller
         private IDisposable? _eventSubscription;
 
         public ManagedResourceController(
-            ILogger<ManagedResourceController<TResource>> logger,
+            ILogger<ManagedResourceController<TEntity>> logger,
             IKubernetesClient client,
-            ResourceWatcher<TResource> watcher,
-            ResourceCache<TResource> cache,
+            ResourceWatcher<TEntity> watcher,
+            ResourceCache<TEntity> cache,
             IServiceProvider services,
-            ResourceControllerMetrics<TResource> metrics,
+            ResourceControllerMetrics<TEntity> metrics,
             OperatorSettings settings,
-            IFinalizerManager<TResource> finalizerManager)
+            IFinalizerManager<TEntity> finalizerManager)
         {
             _logger = logger;
             _client = client;
@@ -146,11 +146,11 @@ namespace KubeOps.Operator.Controller
             if (_settings.PreloadCache)
             {
                 _logger.LogInformation("The 'preload cache' setting is set to 'true'.");
-                var items = await _client.List<TResource>(_settings.Namespace);
+                var items = await _client.List<TEntity>(_settings.Namespace);
                 _cache.Fill(items);
             }
 
-            _logger.LogDebug(@"Managed resource controller startup for type ""{type}"".", typeof(TResource));
+            _logger.LogDebug(@"Managed resource controller startup for type ""{type}"".", typeof(TEntity));
             _eventSubscription = WatcherEvents
                 .Merge(RequeuedEvents)
                 .Merge(ErroredEvents)
@@ -162,7 +162,7 @@ namespace KubeOps.Operator.Controller
 
         public virtual async Task StopAsync()
         {
-            _logger.LogTrace(@"Managed resource controller shutdown for type ""{type}"".", typeof(TResource));
+            _logger.LogTrace(@"Managed resource controller shutdown for type ""{type}"".", typeof(TEntity));
             await _watcher.Stop();
             _eventSubscription?.Dispose();
             _eventSubscription = null;
@@ -172,7 +172,7 @@ namespace KubeOps.Operator.Controller
 
         public void Dispose()
         {
-            _logger.LogTrace(@"Managed resource controller disposal for type ""{type}"".", typeof(TResource));
+            _logger.LogTrace(@"Managed resource controller disposal for type ""{type}"".", typeof(TEntity));
             _watcher.Dispose();
             _eventSubscription?.Dispose();
             _eventSubscription = null;
@@ -197,13 +197,13 @@ namespace KubeOps.Operator.Controller
             _logger.LogTrace(@"Instantiating new DI scope for controller ""{name}"".", ControllerType.Name);
             using (var scope = _services.CreateScope())
             {
-                if (!(scope.ServiceProvider.GetRequiredService(ControllerType) is IResourceController<TResource>
+                if (!(scope.ServiceProvider.GetRequiredService(ControllerType) is IResourceController<TEntity>
                     controller))
                 {
                     var ex = new InvalidCastException(
-                        $@"The type ""{ControllerType.Namespace}.{ControllerType.Name}"" is not a valid IResourceController<TResource> type.");
+                        $@"The type ""{ControllerType.Namespace}.{ControllerType.Name}"" is not a valid IResourceController<TEntity> type.");
                     _logger.LogCritical(
-                        @"The type ""{namespace}.{name}"" is not a valid IResourceController<TResource> type.",
+                        @"The type ""{namespace}.{name}"" is not a valid IResourceController<TEntity> type.",
                         ControllerType.Namespace,
                         ControllerType.Name);
                     throw ex;
@@ -295,9 +295,9 @@ namespace KubeOps.Operator.Controller
             await _finalizerManager.FinalizeAsync(data.Resource);
         }
 
-        private (ResourceEventType ResourceEvent, TResource Resource) MapCacheResult(
+        private (ResourceEventType ResourceEvent, TEntity Resource) MapCacheResult(
             CacheComparisonResult state,
-            TResource resource)
+            TEntity resource)
         {
             _logger.LogTrace(
                 @"Mapping cache result ""{cacheResult}"" for ""{kind}/{name}"".",
@@ -334,7 +334,7 @@ namespace KubeOps.Operator.Controller
         }
 
         private QueuedEvent MapWatchEvent(
-            (WatchEventType Event, TResource Resource) data)
+            (WatchEventType Event, TEntity Resource) data)
         {
             var (watchEventType, resource) = data;
 
@@ -370,14 +370,14 @@ namespace KubeOps.Operator.Controller
         }
 
         private async Task<QueuedEvent?> UpdateResourceData(
-            TResource resource)
+            TEntity resource)
         {
             _logger.LogTrace(
                 @"Update resource from k8s / cache for delayed requeue for ""{kind}/{name}"".",
                 resource.Kind,
                 resource.Name());
 
-            var newResource = await _client.Get<TResource>(
+            var newResource = await _client.Get<TEntity>(
                 resource.Name(),
                 resource.Namespace());
 
@@ -400,6 +400,6 @@ namespace KubeOps.Operator.Controller
             .FromSeconds(Math.Pow(2, retryCount))
             .Add(TimeSpan.FromMilliseconds(_rnd.Next(0, 1000)));
 
-        internal record QueuedEvent(ResourceEventType ResourceEvent, TResource Resource, int RetryCount = 0);
+        internal record QueuedEvent(ResourceEventType ResourceEvent, TEntity Resource, int RetryCount = 0);
     }
 }

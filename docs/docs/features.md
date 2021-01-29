@@ -14,7 +14,6 @@ As of now, the operator sdk supports - roughly - the following features:
   - NotModified
   - StatusModified
   - Deleted
-  - AddFinalizer
 - Finalizers for entities
 - Webhooks
   - Validation / validators

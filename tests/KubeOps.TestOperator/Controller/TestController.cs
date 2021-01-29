@@ -20,33 +20,33 @@ namespace KubeOps.TestOperator.Controller
             _manager = manager;
         }
 
-        public Task<ResourceControllerResult> CreatedAsync(V1TestEntity resource)
+        public Task<ResourceControllerResult> CreatedAsync(V1TestEntity entity)
         {
-            _manager.Created(resource);
+            _manager.Created(entity);
             return Task.FromResult<ResourceControllerResult>(null);
         }
 
-        public Task<ResourceControllerResult> UpdatedAsync(V1TestEntity resource)
+        public Task<ResourceControllerResult> UpdatedAsync(V1TestEntity entity)
         {
-            _manager.Updated(resource);
+            _manager.Updated(entity);
             return Task.FromResult<ResourceControllerResult>(null);
         }
 
-        public Task<ResourceControllerResult> NotModifiedAsync(V1TestEntity resource)
+        public Task<ResourceControllerResult> NotModifiedAsync(V1TestEntity entity)
         {
-            _manager.NotModified(resource);
+            _manager.NotModified(entity);
             return Task.FromResult<ResourceControllerResult>(null);
         }
 
-        public Task StatusModifiedAsync(V1TestEntity resource)
+        public Task StatusModifiedAsync(V1TestEntity entity)
         {
-            _manager.StatusModified(resource);
+            _manager.StatusModified(entity);
             return Task.CompletedTask;
         }
 
-        public Task DeletedAsync(V1TestEntity resource)
+        public Task DeletedAsync(V1TestEntity entity)
         {
-            _manager.Deleted(resource);
+            _manager.Deleted(entity);
             return Task.CompletedTask;
         }
     }
