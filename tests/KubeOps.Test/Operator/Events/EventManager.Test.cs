@@ -34,7 +34,7 @@ namespace KubeOps.Test.Operator.Events
             _mockedClient.Setup(client => client.Save(It.IsAny<Corev1Event>()));
             _mockedClient.Verify(client => client.Save(It.IsAny<Corev1Event>()), Times.Never);
 
-            await _manager.Publish(new Corev1Event());
+            await _manager.PublishAsync(new Corev1Event());
 
             _mockedClient.Verify(client => client.Save(It.IsAny<Corev1Event>()), Times.Once);
         }
@@ -50,7 +50,7 @@ namespace KubeOps.Test.Operator.Events
             _mockedClient.Setup(client => client.Save(It.IsAny<Corev1Event>()));
             _mockedClient.Verify(client => client.Save(It.IsAny<Corev1Event>()), Times.Never);
 
-            await _manager.Publish(testResource, "REASON", "MESSAGE");
+            await _manager.PublishAsync(testResource, "REASON", "MESSAGE");
 
             _mockedClient.Verify(client => client.Save(It.IsAny<Corev1Event>()), Times.Once);
             _mockedClient.Verify(client => client.Get<Corev1Event>(eventName, testResource.Namespace()), Times.Once);
@@ -79,7 +79,7 @@ namespace KubeOps.Test.Operator.Events
             _mockedClient.Setup(client => client.Save(It.IsAny<Corev1Event>()));
             _mockedClient.Verify(client => client.Save(It.IsAny<Corev1Event>()), Times.Never);
 
-            await _manager.Publish(testResource, "REASON", "MESSAGE");
+            await _manager.PublishAsync(testResource, "REASON", "MESSAGE");
 
             _mockedClient.Verify(client => client.Get<Corev1Event>(eventName, testResource.Namespace()), Times.Once);
             _mockedClient.Verify(
@@ -112,7 +112,7 @@ namespace KubeOps.Test.Operator.Events
             _mockedClient.Setup(client => client.Save(It.IsAny<Corev1Event>()));
             _mockedClient.Verify(client => client.Save(It.IsAny<Corev1Event>()), Times.Never);
 
-            await _manager.Publish(testResource, "REASON", "MESSAGE");
+            await _manager.PublishAsync(testResource, "REASON", "MESSAGE");
 
             _mockedClient.Verify(client => client.Get<Corev1Event>(eventName, testResource.Namespace()), Times.Once);
             _mockedClient.Verify(
@@ -133,7 +133,7 @@ namespace KubeOps.Test.Operator.Events
             _mockedClient.Setup(client => client.Save(It.IsAny<Corev1Event>()));
             _mockedClient.Verify(client => client.Save(It.IsAny<Corev1Event>()), Times.Never);
 
-            await _manager.Publish(testResource, "REASON", "MESSAGE");
+            await _manager.PublishAsync(testResource, "REASON", "MESSAGE");
 
             _mockedClient.Verify(client => client.Get<Corev1Event>(eventName, testResource.Namespace()), Times.Once);
             _mockedClient.Verify(
@@ -149,7 +149,7 @@ namespace KubeOps.Test.Operator.Events
             var (_, testResource) = GetTestEvent();
             var pub = _manager.CreatePublisher(testResource, "REASON", "MESSAGE");
 
-            pub.Should().BeOfType<IEventManager.StaticPublisher>();
+            pub.Should().BeOfType<IEventManager.AsyncStaticPublisher>();
         }
 
         [Fact]
@@ -157,7 +157,7 @@ namespace KubeOps.Test.Operator.Events
         {
             var pub = _manager.CreatePublisher("REASON", "MESSAGE");
 
-            pub.Should().BeOfType<IEventManager.Publisher>();
+            pub.Should().BeOfType<IEventManager.AsyncPublisher>();
         }
 
         [Fact]

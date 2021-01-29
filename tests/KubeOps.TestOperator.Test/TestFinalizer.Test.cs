@@ -1,4 +1,7 @@
-﻿using k8s.Models;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using k8s.Models;
+using KubeOps.Operator.Finalizer;
 using KubeOps.Testing;
 using KubeOps.TestOperator.Entities;
 using KubeOps.TestOperator.Finalizer;
@@ -19,21 +22,20 @@ namespace KubeOps.TestOperator.Test
         }
 
         [Fact]
-        public void Test_If_Manager_Finalized_Is_Called()
+        public async Task Test_If_Manager_Finalizer_Is_Called()
         {
             _factory.Run();
             var mock = _factory.Services.GetRequiredService<Mock<IManager>>();
             mock.Reset();
             mock.Setup(o => o.Finalized(It.IsAny<V1TestEntity>()));
             mock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Never);
-            _factory.MockedKubernetesClient.UpdateResult = new V1TestEntity();
-            var queue = _factory.GetMockedEventQueue<V1TestEntity>();
-            queue.Finalizing(
+            await _factory.EnqueueFinalization(
                 new V1TestEntity
                 {
                     Metadata = new V1ObjectMeta
                     {
-                        Finalizers = new[] { new TestEntityFinalizer(mock.Object, null, null).Identifier },
+                        Finalizers = new List<string>
+                            { (new TestEntityFinalizer(mock.Object) as IResourceFinalizer<V1TestEntity>).Identifier },
                     },
                 });
             mock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Once);

@@ -11,8 +11,7 @@ namespace KubeOps.Test.Operator.Caching
 {
     public class ResourceCacheTest
     {
-        private readonly IResourceCache<TestStatusEntity> _cache =
-            new ResourceCache<TestStatusEntity>(new OperatorSettings());
+        private readonly ResourceCache<TestStatusEntity> _cache = new(new(new()));
 
         [Fact]
         public void Throws_When_Not_Found()
@@ -20,7 +19,7 @@ namespace KubeOps.Test.Operator.Caching
 
         [Theory]
         [MemberData(nameof(Data))]
-        public void Should_Correctly_Compare_Objects(
+        internal void Should_Correctly_Compare_Objects(
             TestStatusEntity? firstInsert,
             TestStatusEntity secondInsert,
             CacheComparisonResult expectedResult)
