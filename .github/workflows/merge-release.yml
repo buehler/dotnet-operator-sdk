@@ -6,12 +6,16 @@ jobs:
   merge-master:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
-
-      - name: Merge master -> release
-        uses: devmasx/merge-branch@v1.3.1
-        with:
-          type: now
-          from_branch: master
-          target_branch: release
-          github_token: ${{ github.token }}
+      - uses: actions/checkout@v2
+      - name: Setup git config
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+      - name: Rebase release on master
+        run: |
+          git checkout master
+          git pull
+          git checkout release
+          git pull
+          git rebase master
+          git push origin release
