@@ -13,7 +13,7 @@ namespace KubeOps.Test.Operator.Commands.Generators
     public class CrdGeneratorTest
     {
         private readonly IList<V1CustomResourceDefinition> _crds =
-            CrdGenerator.GenerateCrds(new ResourceTypeService(Assembly.GetExecutingAssembly())).ToList();
+            CrdGenerator.GenerateCrds(new (Assembly.GetExecutingAssembly())).ToList();
 
         [Fact]
         public void Should_Generate_Correct_Number_Of_Crds()

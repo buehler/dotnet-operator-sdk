@@ -141,7 +141,7 @@ namespace KubeOps.Operator.Controller
                     ThreadPoolScheduler.Instance))
             .Merge();
 
-        public async Task StartAsync()
+        public virtual async Task StartAsync()
         {
             if (_settings.PreloadCache)
             {
@@ -160,7 +160,7 @@ namespace KubeOps.Operator.Controller
             _metrics.Running.Set(1);
         }
 
-        public async Task StopAsync()
+        public virtual async Task StopAsync()
         {
             _logger.LogTrace(@"Managed resource controller shutdown for type ""{type}"".", typeof(TResource));
             await _watcher.Stop();
@@ -177,6 +177,122 @@ namespace KubeOps.Operator.Controller
             _eventSubscription?.Dispose();
             _eventSubscription = null;
             _metrics.Running.Set(0);
+        }
+
+        protected async Task HandleResourceEvent(QueuedEvent? data)
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            var (@event, resource, _) = data;
+            _logger.LogDebug(
+                @"Execute/Reconcile event ""{eventType}"" on resource ""{kind}/{name}"".",
+                @event,
+                resource.Kind,
+                resource.Name());
+
+            ResourceControllerResult? result = null;
+            _logger.LogTrace(@"Instantiating new DI scope for controller ""{name}"".", ControllerType.Name);
+            using (var scope = _services.CreateScope())
+            {
+                if (!(scope.ServiceProvider.GetRequiredService(ControllerType) is IResourceController<TResource>
+                    controller))
+                {
+                    var ex = new InvalidCastException(
+                        $@"The type ""{ControllerType.Namespace}.{ControllerType.Name}"" is not a valid IResourceController<TResource> type.");
+                    _logger.LogCritical(
+                        @"The type ""{namespace}.{name}"" is not a valid IResourceController<TResource> type.",
+                        ControllerType.Namespace,
+                        ControllerType.Name);
+                    throw ex;
+                }
+
+                try
+                {
+                    switch (@event)
+                    {
+                        case ResourceEventType.Created:
+                            result = await controller.CreatedAsync(resource);
+                            _metrics.CreatedEvents.Inc();
+                            break;
+                        case ResourceEventType.Updated:
+                            result = await controller.UpdatedAsync(resource);
+                            _metrics.UpdatedEvents.Inc();
+                            break;
+                        case ResourceEventType.NotModified:
+                            result = await controller.NotModifiedAsync(resource);
+                            _metrics.NotModifiedEvents.Inc();
+                            break;
+                        case ResourceEventType.Deleted:
+                            await controller.DeletedAsync(resource);
+                            _metrics.DeletedEvents.Inc();
+                            _logger.LogInformation(
+                                @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue not possible.",
+                                @event,
+                                resource.Kind,
+                                resource.Name());
+                            return;
+                        case ResourceEventType.StatusUpdated:
+                            await controller.StatusModifiedAsync(resource);
+                            _metrics.StatusUpdatedEvents.Inc();
+                            _logger.LogInformation(
+                                @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue not possible.",
+                                @event,
+                                resource.Kind,
+                                resource.Name());
+                            return;
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(
+                        e,
+                        @"Event type ""{eventType}"" on resource ""{kind}/{name}"" threw an error. Retry attempt {retryAttempt}.",
+                        @event,
+                        resource.Kind,
+                        resource.Name(),
+                        data.RetryCount + 1);
+                    _erroredEvents.OnNext(data with { RetryCount = data.RetryCount + 1 });
+                    return;
+                }
+            }
+
+            switch (result)
+            {
+                case null:
+                    _logger.LogInformation(
+                        @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue not requested.",
+                        @event,
+                        resource.Kind,
+                        resource.Name());
+                    return;
+                case RequeueEventResult requeue:
+                    _logger.LogInformation(
+                        @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue requested with delay ""{requeue}"".",
+                        @event,
+                        resource.Kind,
+                        resource.Name(),
+                        requeue.RequeueIn);
+                    _requeuedEvents.OnNext((resource, requeue.RequeueIn));
+                    break;
+            }
+        }
+
+        protected async Task HandleResourceFinalization(QueuedEvent? data)
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            _logger.LogDebug(
+                @"Finalize resource ""{kind}/{name}"".",
+                data.Resource.Kind,
+                data.Resource.Name());
+
+            await _finalizerManager.FinalizeAsync(data.Resource);
         }
 
         private (ResourceEventType ResourceEvent, TResource Resource) MapCacheResult(
@@ -280,128 +396,10 @@ namespace KubeOps.Operator.Controller
             return new QueuedEvent(@event, cachedResource);
         }
 
-        private async Task HandleResourceEvent(QueuedEvent? data)
-        {
-            if (data == null)
-            {
-                return;
-            }
-
-            var (@event, resource, _) = data;
-            _logger.LogDebug(
-                @"Execute/Reconcile event ""{eventType}"" on resource ""{kind}/{name}"".",
-                @event,
-                resource.Kind,
-                resource.Name());
-
-            ResourceControllerResult? result = null;
-            _logger.LogTrace(@"Instantiating new DI scope for controller ""{name}"".", ControllerType.Name);
-            using (var scope = _services.CreateScope())
-            {
-                var controller =
-                    scope.ServiceProvider.GetRequiredService(ControllerType) as IResourceController<TResource>;
-
-                if (controller == null)
-                {
-                    var ex = new InvalidCastException(
-                        $@"The type ""{ControllerType.Namespace}.{ControllerType.Name}"" is not a valid IResourceController<TResource> type.");
-                    _logger.LogCritical(
-                        @"The type ""{namespace}.{name}"" is not a valid IResourceController<TResource> type.",
-                        ControllerType.Namespace,
-                        ControllerType.Name);
-                    throw ex;
-                }
-
-                try
-                {
-                    switch (@event)
-                    {
-                        case ResourceEventType.Created:
-                            result = await controller.CreatedAsync(resource);
-                            _metrics.CreatedEvents.Inc();
-                            break;
-                        case ResourceEventType.Updated:
-                            result = await controller.UpdatedAsync(resource);
-                            _metrics.UpdatedEvents.Inc();
-                            break;
-                        case ResourceEventType.NotModified:
-                            result = await controller.NotModifiedAsync(resource);
-                            _metrics.NotModifiedEvents.Inc();
-                            break;
-                        case ResourceEventType.Deleted:
-                            await controller.DeletedAsync(resource);
-                            _metrics.DeletedEvents.Inc();
-                            _logger.LogInformation(
-                                @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue not possible.",
-                                @event,
-                                resource.Kind,
-                                resource.Name());
-                            return;
-                        case ResourceEventType.StatusUpdated:
-                            await controller.StatusModifiedAsync(resource);
-                            _metrics.StatusUpdatedEvents.Inc();
-                            _logger.LogInformation(
-                                @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue not possible.",
-                                @event,
-                                resource.Kind,
-                                resource.Name());
-                            return;
-                    }
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError(
-                        e,
-                        @"Event type ""{eventType}"" on resource ""{kind}/{name}"" threw an error. Retry attempt {retryAttempt}.",
-                        @event,
-                        resource.Kind,
-                        resource.Name(),
-                        data.RetryCount + 1);
-                    _erroredEvents.OnNext(data with { RetryCount = data.RetryCount + 1 });
-                    return;
-                }
-            }
-
-            switch (result)
-            {
-                case null:
-                    _logger.LogInformation(
-                        @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue not requested.",
-                        @event,
-                        resource.Kind,
-                        resource.Name());
-                    return;
-                case RequeueEventResult requeue:
-                    _logger.LogInformation(
-                        @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue requested with delay ""{requeue}"".",
-                        @event,
-                        resource.Kind,
-                        resource.Name(),
-                        requeue.RequeueIn);
-                    _requeuedEvents.OnNext((resource, requeue.RequeueIn));
-                    break;
-            }
-        }
-
-        private async Task HandleResourceFinalization(QueuedEvent? data)
-        {
-            if (data == null)
-            {
-                return;
-            }
-
-            _logger.LogDebug(
-                @"Finalize resource ""{kind}/{name}"".",
-                data.Resource.Kind,
-                data.Resource.Name());
-
-            await _finalizerManager.FinalizeAsync(data.Resource);
-        }
-
         private TimeSpan ExponentialBackoff(int retryCount) => TimeSpan
             .FromSeconds(Math.Pow(2, retryCount))
             .Add(TimeSpan.FromMilliseconds(_rnd.Next(0, 1000)));
 
-        private record QueuedEvent(ResourceEventType ResourceEvent, TResource Resource, int RetryCount = 0);
+        internal record QueuedEvent(ResourceEventType ResourceEvent, TResource Resource, int RetryCount = 0);
     }
 }

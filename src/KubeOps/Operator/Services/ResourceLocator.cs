@@ -12,13 +12,12 @@ namespace KubeOps.Operator.Services
     {
         private readonly ICollection<Assembly> _assemblies;
 
-        public ResourceLocator(IEnumerable<Assembly> assemblies)
+        public ResourceLocator(params Assembly[] assemblies)
         {
             _assemblies = new HashSet<Assembly>(assemblies);
         }
 
-        public IEnumerable<ControllerType> ControllerTypes => _assemblies
-            .SelectMany(a => a.GetTypes())
+        public IEnumerable<ControllerType> ControllerTypes => Types
             .Where(
                 t => t.IsClass &&
                      !t.IsAbstract &&
@@ -32,8 +31,7 @@ namespace KubeOps.Operator.Services
                         .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceController<>))
                         .GenericTypeArguments[0]));
 
-        public IEnumerable<Type> FinalizerTypes => _assemblies
-            .SelectMany(a => a.GetTypes())
+        public IEnumerable<Type> FinalizerTypes => Types
             .Where(
                 t => t.IsClass &&
                      !t.IsAbstract &&
@@ -41,8 +39,7 @@ namespace KubeOps.Operator.Services
                          .Any(
                              i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceFinalizer<>)));
 
-        public IEnumerable<ValidatorType> ValidatorTypes => _assemblies
-            .SelectMany(a => a.GetTypes())
+        public IEnumerable<ValidatorType> ValidatorTypes => Types
             .Where(
                 t => t.IsClass &&
                      !t.IsAbstract &&
@@ -56,7 +53,23 @@ namespace KubeOps.Operator.Services
                         .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IValidationWebhook<>))
                         .GenericTypeArguments[0]));
 
-        public void Add(Assembly assembly) => _assemblies.Add(assembly);
+        private IEnumerable<Type> Types => _assemblies
+            .SelectMany(a => a.GetTypes())
+            .Distinct(new TypeComparer());
+
+        public AdditionalTypes Add(Assembly assembly)
+        {
+            var controller = ControllerTypes.ToList();
+            var finalizer = FinalizerTypes.ToList();
+            var validator = ValidatorTypes.ToList();
+
+            _assemblies.Add(assembly);
+
+            return new AdditionalTypes(
+                ControllerTypes.Except(controller).Select(c => c.Type),
+                FinalizerTypes.Except(finalizer),
+                ValidatorTypes.Except(validator).Select(v => v.Type));
+        }
 
         public IEnumerable<Type> GetTypesWithAttribute<TAttribute>()
             where TAttribute : Attribute =>
@@ -69,8 +82,36 @@ namespace KubeOps.Operator.Services
                     assembly => assembly.GetTypes())
                 .SelectMany(type => type.GetCustomAttributes<TAttribute>(true));
 
+        internal record AdditionalTypes(
+            IEnumerable<Type> Controllers,
+            IEnumerable<Type> Finalizers,
+            IEnumerable<Type> Validators);
+
         internal record ControllerType(Type Type, Type ResourceType);
 
         internal record ValidatorType(Type Type, Type ResourceType);
+
+        private class TypeComparer : IEqualityComparer<Type?>
+        {
+            public bool Equals(Type? x, Type? y)
+            {
+                if (ReferenceEquals(x, y))
+                {
+                    return true;
+                }
+
+                if (ReferenceEquals(x, null) || ReferenceEquals(y, null))
+                {
+                    return false;
+                }
+
+                return x.GUID.Equals(y.GUID);
+            }
+
+            public int GetHashCode(Type obj)
+            {
+                return obj.GetHashCode();
+            }
+        }
     }
 }

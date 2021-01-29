@@ -17,8 +17,7 @@ namespace KubeOps.Operator.Webhooks
     /// <para>
     /// Validation webhook for kubernetes.
     /// This is used by the https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/.
-    /// Implement a class with this interface, overwrite the needed functions and register it
-    /// to the operator with <see cref="IOperatorBuilder.AddValidationWebhook{TWebhook}"/>.
+    /// Implement a class with this interface, overwrite the needed functions.
     /// </para>
     /// <para>
     /// If there are _any_ webhooks registered in the system, the build process

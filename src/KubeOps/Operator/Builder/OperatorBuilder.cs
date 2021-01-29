@@ -30,11 +30,8 @@ namespace KubeOps.Operator.Builder
         internal const string ReadinessTag = "readiness";
 
         private readonly ResourceLocator _resourceLocator = new(
-            new[]
-            {
-                Assembly.GetEntryAssembly() ?? throw new Exception("No Entry Assembly found."),
-                Assembly.GetExecutingAssembly(),
-            });
+            Assembly.GetEntryAssembly() ?? throw new Exception("No Entry Assembly found."),
+            Assembly.GetExecutingAssembly());
 
         public OperatorBuilder(IServiceCollection services)
         {
@@ -81,7 +78,25 @@ namespace KubeOps.Operator.Builder
 
         public IOperatorBuilder AddResourceAssembly(Assembly assembly)
         {
-            _resourceLocator.Add(assembly);
+            // This is kind of ugly to register the newly found controllers and stuff.
+            // Maybe this needs to be refactored.
+            var (controllers, finalizers, validators) = _resourceLocator.Add(assembly);
+
+            foreach (var controllerType in controllers)
+            {
+                Services.TryAddScoped(controllerType);
+            }
+
+            foreach (var finalizerType in finalizers)
+            {
+                Services.TryAddScoped(finalizerType);
+            }
+
+            foreach (var validatorType in validators)
+            {
+                Services.TryAddScoped(validatorType);
+            }
+
             return this;
         }
 
