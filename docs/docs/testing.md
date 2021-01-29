@@ -12,7 +12,7 @@ have a look at the test code in the repository:
 > For normal unit testing, you can just mock all the things.
 
 The main entry point for testing your custom operator is the
-@"KubeOps.Testing.KubernetesOperatorFactory`1". It is ment to be
+@"KubeOps.Testing.KubernetesOperatorFactory`1". It is meant to be
 injected into your test.
 
 > [!NOTE]
@@ -24,7 +24,7 @@ The following steps are needed for integration testing the controller:
 
 - Create a `TestStartup.cs` file (or any other name you want)
 - Inject the @"KubeOps.Testing.KubernetesOperatorFactory`1"
-- Use the mocked client / queues to test your operator
+- Use the mocked client and helper functions to test your operator
 
 ## Test Startup
 
@@ -32,26 +32,26 @@ This file is very similar to a "normal" `Startup.cs` file of an
 asp.net application. Either you subclass it and replace your test mocked
 services, or you create a new one.
 
-[!code-csharp[TestStartup.cs](../../tests/KubeOps.TestOperator.Test/TestStartup.cs?highlight=20-21)]
+[!code-csharp[TestStartup.cs](../../tests/KubeOps.TestOperator.Test/TestStartup.cs)]
 
 ## Mocked elements
 
 The main part of this operator factory does mock the used kubernetes client
-and the resource event queues.
+and helper functions to enqueue events and finalizer events.
 
 Both mocked elements can be retrieved via the operator factory with:
 
-- @"KubeOps.Testing.KubernetesOperatorFactory`1.GetMockedEventQueue``1"
 - @"KubeOps.Testing.KubernetesOperatorFactory`1.MockedKubernetesClient"
+- @"KubeOps.Testing.KubernetesOperatorFactory`1.EnqueueEvent``1(KubeOps.Operator.Kubernetes.ResourceEventType,``0)"
+- @"KubeOps.Testing.KubernetesOperatorFactory`1.EnqueueFinalization``1(``0)"
 
-### Mocked event queue
+### Mocked events
 
-The event queue does not use a channel to read and write event but directly fire
-the given events.
+With the mentioned factory functions (@"KubeOps.Testing.KubernetesOperatorFactory`1.EnqueueEvent``1(KubeOps.Operator.Kubernetes.ResourceEventType,``0)"
+and @"KubeOps.Testing.KubernetesOperatorFactory`1.EnqueueFinalization``1(``0)")
+one can fire events for entities. This can be used to test your controllers.
 
-Also, the @"KubeOps.Operator.Queue.IResourceEventQueue`1.Enqueue(`0,System.Nullable{System.TimeSpan})"
-method does not actually enqueue anything but just adds the resource to a list
-of resources.
+The controllers are normally instantiated via the scope of the DI system.
 
 ### Mocked IKubernetesClient
 
@@ -73,4 +73,4 @@ You probably need to set the solution relative content root for
 asp.net testing. But then you can run the factory
 and create a test.
 
-[!code-csharp[TestStartup.cs](../../tests/KubeOps.TestOperator.Test/TestController.Test.cs?range=10-31,84&highlight=7,13)]
+[!code-csharp[TestStartup.cs](../../tests/KubeOps.TestOperator.Test/TestController.Test.cs)]

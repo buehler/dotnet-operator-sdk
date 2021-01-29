@@ -13,18 +13,18 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Testing
 {
-    internal class MockManagedResourceController<TResource> : ManagedResourceController<TResource>
-        where TResource : class, IKubernetesObject<V1ObjectMeta>
+    internal class MockManagedResourceController<TEntity> : ManagedResourceController<TEntity>
+        where TEntity : class, IKubernetesObject<V1ObjectMeta>
     {
         public MockManagedResourceController(
-            ILogger<ManagedResourceController<TResource>> logger,
+            ILogger<ManagedResourceController<TEntity>> logger,
             IKubernetesClient client,
-            ResourceWatcher<TResource> watcher,
-            ResourceCache<TResource> cache,
+            ResourceWatcher<TEntity> watcher,
+            ResourceCache<TEntity> cache,
             IServiceProvider services,
-            ResourceControllerMetrics<TResource> metrics,
+            ResourceControllerMetrics<TEntity> metrics,
             OperatorSettings settings,
-            IFinalizerManager<TResource> finalizerManager)
+            IFinalizerManager<TEntity> finalizerManager)
             : base(logger, client, watcher, cache, services, metrics, settings, finalizerManager)
         {
         }
@@ -33,10 +33,10 @@ namespace KubeOps.Testing
 
         public override Task StopAsync() => Task.CompletedTask;
 
-        public Task EnqueueEvent(ResourceEventType type, TResource resource) =>
+        public Task EnqueueEvent(ResourceEventType type, TEntity resource) =>
             HandleResourceEvent(new QueuedEvent(type, resource));
 
-        public Task EnqueueFinalization(TResource resource) =>
+        public Task EnqueueFinalization(TEntity resource) =>
             HandleResourceFinalization(new QueuedEvent(ResourceEventType.Finalizing, resource));
     }
 }

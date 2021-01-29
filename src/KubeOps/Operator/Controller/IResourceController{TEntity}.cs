@@ -7,67 +7,67 @@ using KubeOps.Operator.Kubernetes;
 namespace KubeOps.Operator.Controller
 {
     /// <summary>
-    /// Generic resource controller interface.
+    /// Generic entity controller interface.
     /// This interface is primarily used for generic type help.
     /// </summary>
-    /// <typeparam name="TResource">The type of the kubernetes resource.</typeparam>
-    public interface IResourceController<in TResource>
-        where TResource : IKubernetesObject<V1ObjectMeta>
+    /// <typeparam name="TEntity">The type of the kubernetes entity.</typeparam>
+    public interface IResourceController<in TEntity>
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         /// <summary>
-        /// Called for <see cref="ResourceEventType.Created"/> events for a given resource.
+        /// Called for <see cref="ResourceEventType.Created"/> events for a given entity.
         /// </summary>
-        /// <param name="resource">The resource that fired the created event.</param>
+        /// <param name="entity">The entity that fired the created event.</param>
         /// <returns>
         /// A task with an optional <see cref="ResourceControllerResult"/>.
         /// Use the static constructors on the <see cref="ResourceControllerResult"/> class
         /// to create your controller function result.
         /// </returns>
-        Task<ResourceControllerResult?> CreatedAsync(TResource resource) =>
+        Task<ResourceControllerResult?> CreatedAsync(TEntity entity) =>
             Task.FromResult<ResourceControllerResult?>(null);
 
         /// <summary>
-        /// Called for <see cref="ResourceEventType.Updated"/> events for a given resource.
+        /// Called for <see cref="ResourceEventType.Updated"/> events for a given entity.
         /// </summary>
-        /// <param name="resource">The resource that fired the updated event.</param>
+        /// <param name="entity">The entity that fired the updated event.</param>
         /// <returns>
         /// A task with an optional <see cref="ResourceControllerResult"/>.
         /// Use the static constructors on the <see cref="ResourceControllerResult"/> class
         /// to create your controller function result.
         /// </returns>
-        Task<ResourceControllerResult?> UpdatedAsync(TResource resource) =>
+        Task<ResourceControllerResult?> UpdatedAsync(TEntity entity) =>
             Task.FromResult<ResourceControllerResult?>(null);
 
         /// <summary>
-        /// Called for <see cref="ResourceEventType.NotModified"/> events for a given resource.
+        /// Called for <see cref="ResourceEventType.NotModified"/> events for a given entity.
         /// </summary>
-        /// <param name="resource">The resource that fired the not-modified event.</param>
+        /// <param name="entity">The entity that fired the not-modified event.</param>
         /// <returns>
         /// A task with an optional <see cref="ResourceControllerResult"/>.
         /// Use the static constructors on the <see cref="ResourceControllerResult"/> class
         /// to create your controller function result.
         /// </returns>
-        Task<ResourceControllerResult?> NotModifiedAsync(TResource resource) =>
+        Task<ResourceControllerResult?> NotModifiedAsync(TEntity entity) =>
             Task.FromResult<ResourceControllerResult?>(null);
 
         /// <summary>
-        /// Called for <see cref="ResourceEventType.StatusUpdated"/> events for a given resource.
+        /// Called for <see cref="ResourceEventType.StatusUpdated"/> events for a given entity.
         /// </summary>
-        /// <param name="resource">The resource that fired the status-modified event.</param>
+        /// <param name="entity">The entity that fired the status-modified event.</param>
         /// <returns>
         /// A task that completes, when the reconciliation is done.
         /// </returns>
-        Task StatusModifiedAsync(TResource resource) =>
+        Task StatusModifiedAsync(TEntity entity) =>
             Task.CompletedTask;
 
         /// <summary>
-        /// Called for <see cref="ResourceEventType.Deleted"/> events for a given resource.
+        /// Called for <see cref="ResourceEventType.Deleted"/> events for a given entity.
         /// </summary>
-        /// <param name="resource">The resource that fired the deleted event.</param>
+        /// <param name="entity">The entity that fired the deleted event.</param>
         /// <returns>
         /// A task that completes, when the reconciliation is done.
         /// </returns>
-        Task DeletedAsync(TResource resource) =>
+        Task DeletedAsync(TEntity entity) =>
             Task.CompletedTask;
     }
 }

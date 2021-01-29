@@ -7,9 +7,12 @@ resources on kubernetes and queueing of the events.
 When you want to create a controller for your (or any) entity,
 read the following instructions.
 
-When you have controllers, don't forget to register them with
-<xref:KubeOps.Operator.Builder.IOperatorBuilder.AddController``1>
-to the DI system.
+When you have controllers, they are automatically added to the
+DI system via their <xref:KubeOps.Operator.Controller.IResourceController`1> interface.
+
+Controllers are registered as **scoped** elements in the DI system.
+Which means, they basically behave like asp.net api controllers.
+You can use dependency injection with all types of dependencies.
 
 ## Controller instance
 
@@ -18,16 +21,14 @@ or you want to reconcile a given entity (from the `k8s.Models` namespace,
 e.g. `V1ConfigMap`) you need to create a controller class
 as you would do for a MVC or API controller in asp.net.
 
-Make sure you have the correct baseclass
-(<xref:KubeOps.Operator.Controller.ResourceControllerBase`1>)
-inherited.
+Make sure you implement the <xref:KubeOps.Operator.Controller.IResourceController`1> interface.
 
 ```csharp
 [EntityRbac(typeof(MyCustomEntity), Verbs = RbacVerb.All)]
-public class FooCtrl: ResourceControllerBase<MyCustomEntity>
+public class FooCtrl : IResourceController<MyCustomEntity>
 {
-    protected override async Task<TimeSpan?> Created(MyCustomEntity resource){}
-    // overwrite other methods here.
+    // Implement the needed methods here.
+    // The interface provides default implementation which do a NOOP.
     // Possible overwrites:
     // "Created" (i.e. when the operator sees the entity for the first time),
     // "Updated" (i.e. when the operator knows the entity and it was updated),
@@ -86,27 +87,27 @@ which takes a list of api groups, resources, versions and a selection of
 
 ## Requeue
 
-The controller's methods have a return value of `TimeSpan?`. This means
-you can return a time span to automatically requeue the event for the
-given entity. If requeued and nothing changed, it will most likely fire
-a `NotModified` event.
+The controller's methods have a return value of <xref:KubeOps.Operator.Controller.Results.ResourceControllerResult>.
+There are multiple ways how a result of a controller can be created:
 
-This can be useful if you want to periodically check for a database
+- `null`: The controller will not requeue your entity / event.
+- <xref:KubeOps.Operator.Controller.Results.ResourceControllerResult.RequeueEvent(System.TimeSpan)>:
+  Return a result object with a <xref:System.TimeSpan> that will requeue
+  the event and the entity after the time has passed.
+
+The requeue mechanism can be useful if you want to periodically check for a database
 connection for example and update the status of a given entity.
-
-If you return `null` in an event function, the event is not requeued.
-If you return a timespan, then the event is requeued after this delay.
 
 ```csharp
 /* snip... */
-protected override async Task<TimeSpan?> Created(MyCustomEntity resource){
-    // do something useful.
-    return TimeSpan.FromSeconds(15); // This will retrigger an event in 15 secs.
+public Task<ResourceControllerResult> CreatedAsync(V1TestEntity resource)
+{
+    return Task.FromResult(ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(15)); // This will requeue the event in 15 seconds.
 }
 
-protected override async Task<TimeSpan?> Updated(MyCustomEntity resource){
-    // do something useful.
-    return null; // This will not retrigger an event.
+public Task<ResourceControllerResult> CreatedAsync(V1TestEntity resource)
+{
+    return Task.FromResult<ResourceControllerResult>(null); // This wont trigger a requeue.
 }
 /* snip... */
 ```
@@ -117,22 +118,11 @@ If the function throws an error, the event is requeued with an exponential backo
 
 ```csharp
 /* snip... */
-protected override async Task<TimeSpan?> Created(MyCustomEntity resource){
+public Task<ResourceControllerResult> CreatedAsync(V1TestEntity resource)
     // do something useful.
     throw new Exception("¯\\_(ツ)_/¯");
 }
 /* snip... */
 ```
 
-The backoff function is defined as follows:
-
-```csharp
-private const double MaxRetrySeconds = 64;
-private TimeSpan ExponentialBackoff(int retryCount) => TimeSpan
-            .FromSeconds(Math.Min(Math.Pow(2, retryCount), MaxRetrySeconds))
-            .Add(TimeSpan.FromMilliseconds(_rnd.Next(0, 1000)));
-```
-
-Which means with each retry, it calculates the new backoff time
-to a max of 64. To each of those times a random number of milliseconds
-is added to add a certain fuzzying.
+Each event that errors will be retried **four times**.

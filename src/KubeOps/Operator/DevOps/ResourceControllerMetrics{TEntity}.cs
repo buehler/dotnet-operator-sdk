@@ -5,8 +5,8 @@ using Prometheus;
 
 namespace KubeOps.Operator.DevOps
 {
-    internal class ResourceControllerMetrics<TResource>
-        where TResource : IKubernetesObject<V1ObjectMeta>
+    internal class ResourceControllerMetrics<TEntity>
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private static readonly string[] Labels =
         {
@@ -19,7 +19,7 @@ namespace KubeOps.Operator.DevOps
 
         public ResourceControllerMetrics(OperatorSettings settings)
         {
-            var crd = CustomEntityDefinitionExtensions.CreateResourceDefinition<TResource>();
+            var crd = CustomEntityDefinitionExtensions.CreateResourceDefinition<TEntity>();
             var labelValues = new[]
             {
                 settings.Name,

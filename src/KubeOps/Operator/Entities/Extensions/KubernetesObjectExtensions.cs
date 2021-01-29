@@ -14,12 +14,12 @@ namespace KubeOps.Operator.Entities.Extensions
         /// </summary>
         /// <param name="resource">The resource that is owned by another resource.</param>
         /// <param name="owner">The owner to add.</param>
-        /// <typeparam name="TResource">The type of the entity.</typeparam>
+        /// <typeparam name="TEntity">The type of the entity.</typeparam>
         /// <returns>The resource with the added owner reference.</returns>
-        public static TResource WithOwnerReference<TResource>(
-            this TResource resource,
+        public static TEntity WithOwnerReference<TEntity>(
+            this TEntity resource,
             IKubernetesObject<V1ObjectMeta> owner)
-            where TResource : IKubernetesObject<V1ObjectMeta>
+            where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             resource.Metadata.EnsureOwnerReferences().Add(owner.MakeOwnerReference());
             return resource;

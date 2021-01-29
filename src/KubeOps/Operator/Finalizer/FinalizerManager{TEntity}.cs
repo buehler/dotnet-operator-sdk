@@ -11,19 +11,19 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Finalizer
 {
-    internal class FinalizerManager<TResource> : IFinalizerManager<TResource>
-        where TResource : IKubernetesObject<V1ObjectMeta>
+    internal class FinalizerManager<TEntity> : IFinalizerManager<TEntity>
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private readonly IKubernetesClient _client;
         private readonly IServiceProvider _services;
         private readonly ResourceLocator _locator;
-        private readonly ILogger<FinalizerManager<TResource>> _logger;
+        private readonly ILogger<FinalizerManager<TEntity>> _logger;
 
         public FinalizerManager(
             IKubernetesClient client,
             IServiceProvider services,
             ResourceLocator locator,
-            ILogger<FinalizerManager<TResource>> logger)
+            ILogger<FinalizerManager<TEntity>> logger)
         {
             _client = client;
             _services = services;
@@ -31,59 +31,59 @@ namespace KubeOps.Operator.Finalizer
             _logger = logger;
         }
 
-        public async Task RegisterFinalizerAsync<TFinalizer>(TResource resource)
-            where TFinalizer : IResourceFinalizer<TResource>
+        public async Task RegisterFinalizerAsync<TFinalizer>(TEntity entity)
+            where TFinalizer : IResourceFinalizer<TEntity>
         {
             using var scope = _services.CreateScope();
             var finalizer = scope.ServiceProvider.GetRequiredService<TFinalizer>();
             _logger.LogTrace(
-                @"Try to add finalizer ""{finalizer}"" on resource ""{kind}/{name}"".",
+                @"Try to add finalizer ""{finalizer}"" on entity ""{kind}/{name}"".",
                 finalizer.Identifier,
-                resource.Kind,
-                resource.Name());
+                entity.Kind,
+                entity.Name());
 
-            if (resource.AddFinalizer(finalizer.Identifier))
+            if (entity.AddFinalizer(finalizer.Identifier))
             {
                 _logger.LogInformation(
-                    @"Added finalizer ""{finalizer}"" on resource ""{kind}/{name}"".",
+                    @"Added finalizer ""{finalizer}"" on entity ""{kind}/{name}"".",
                     finalizer.Identifier,
-                    resource.Kind,
-                    resource.Name());
+                    entity.Kind,
+                    entity.Name());
             }
 
-            await _client.Update(resource);
+            await _client.Update(entity);
         }
 
-        async Task IFinalizerManager<TResource>.FinalizeAsync(TResource resource)
+        async Task IFinalizerManager<TEntity>.FinalizeAsync(TEntity entity)
         {
             using var scope = _services.CreateScope();
             var semaphore = new SemaphoreSlim(1);
 
             _logger.LogTrace(
-                @"Try to finalize resource ""{kind}/{name}"".",
-                resource.Kind,
-                resource.Name());
+                @"Try to finalize entity ""{kind}/{name}"".",
+                entity.Kind,
+                entity.Name());
 
             await Task.WhenAll(
                 _locator
                     .FinalizerTypes
                     .Select(scope.ServiceProvider.GetService)
-                    .OfType<IResourceFinalizer<TResource>>()
-                    .Where(finalizer => resource.HasFinalizer(finalizer.Identifier))
+                    .OfType<IResourceFinalizer<TEntity>>()
+                    .Where(finalizer => entity.HasFinalizer(finalizer.Identifier))
                     .Select(
                         finalizer => Task.Run(
                             async () =>
                             {
                                 _logger.LogInformation(
-                                    @"Execute finalizer ""{finalizer}"" on resource ""{kind}/{name}"".",
+                                    @"Execute finalizer ""{finalizer}"" on entity ""{kind}/{name}"".",
                                     finalizer.Identifier,
-                                    resource.Kind,
-                                    resource.Name());
-                                await finalizer.FinalizeAsync(resource);
+                                    entity.Kind,
+                                    entity.Name());
+                                await finalizer.FinalizeAsync(entity);
                                 try
                                 {
                                     await semaphore.WaitAsync();
-                                    resource.RemoveFinalizer(finalizer.Identifier);
+                                    entity.RemoveFinalizer(finalizer.Identifier);
                                 }
                                 finally
                                 {
@@ -91,12 +91,12 @@ namespace KubeOps.Operator.Finalizer
                                 }
                             })));
 
-            await _client.Update(resource);
+            await _client.Update(entity);
             _logger.LogDebug(
-                @"Finalization on resource ""{kind}/{name}"" done. Remaining finalizers: ""{remainingFinalizer}"".",
-                resource.Kind,
-                resource.Name(),
-                string.Join(',', resource.Finalizers()));
+                @"Finalization on entity ""{kind}/{name}"" done. Remaining finalizers: ""{remainingFinalizer}"".",
+                entity.Kind,
+                entity.Name(),
+                string.Join(',', entity.Finalizers()));
         }
     }
 }

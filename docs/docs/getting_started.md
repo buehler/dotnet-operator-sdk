@@ -10,13 +10,15 @@ that activate and start the operator as a web application.
 
 ## Terminology
 
-- `Entity`: A (C#) model - an entity - that is used in kubernetes. An entity defines the CRD.
-- `Resource`: An instance of an entity.
+- `Entity`: A (C#) model - an entity - that is used in kubernetes.
+  An entity is the class for a kubernetes resource.
+- `Resource` (or `TResource`): The type of a kubernetes resource.
 - `Controller` or `ResourceController`: An instance of a resource manager
   that is responsible for the reconciliation of an entity.
 - `Finalizer`: A special resource manager that is attached to the entity
   via identifier. The finalizers are called when an entity is deleted
   on kubernetes.
+- `Validator`: An implementation for a validation admission webhook.
 - `CRD`: CustomResourceDefinition of kubernetes.
 
 ## How To Start
@@ -82,9 +84,7 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services
-            .AddKubernetesOperator() // config / settings here
-            .AddFinalizer<TestEntityFinalizer>()
-            .AddController<TestController>(); // Add controllers / finalizers / ... here
+            .AddKubernetesOperator(); // config / settings here
 
         // your own dependencies
         services.AddTransient<IManager, TestManager.TestManager>();
