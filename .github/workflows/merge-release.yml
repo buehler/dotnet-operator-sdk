@@ -11,11 +11,6 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
-      - name: Rebase release on master
+      - name: Push master to release branch
         run: |
-          git checkout master
-          git pull
-          git checkout release
-          git pull
-          git rebase master
-          git push origin release
+          git push origin master:release
