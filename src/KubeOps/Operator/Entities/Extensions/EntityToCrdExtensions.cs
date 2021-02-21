@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using DotnetKubernetesClient.Entities;
@@ -214,6 +215,8 @@ namespace KubeOps.Operator.Entities.Extensions
             // this description is on the class
             props.Description ??= type.GetCustomAttributes<DescriptionAttribute>(true).FirstOrDefault()?.Description;
 
+            var isSimpleType = IsSimpleType(type);
+
             if (type == typeof(V1ObjectMeta))
             {
                 props.Type = Object;
@@ -226,7 +229,7 @@ namespace KubeOps.Operator.Entities.Extensions
                     additionalColumns,
                     jsonPath);
             }
-            else if (!IsSimpleType(type) &&
+            else if (!isSimpleType &&
                      (typeof(IDictionary).IsAssignableFrom(type) ||
                       (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>)) ||
                       (type.IsGenericType &&
@@ -237,18 +240,16 @@ namespace KubeOps.Operator.Entities.Extensions
                 props.Type = Object;
                 props.XKubernetesPreserveUnknownFields = true;
             }
-            else if (!IsSimpleType(type) &&
-                     type.IsGenericType &&
-                     typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()))
+            else if (!isSimpleType && IsGenericEnumerableType(type, out Type? closingType))
             {
                 props.Type = Array;
-                props.Items = MapType(type.GetGenericArguments()[0], additionalColumns, jsonPath);
+                props.Items = MapType(closingType, additionalColumns, jsonPath);
             }
             else if (type == typeof(IntstrIntOrString))
             {
                 props.XKubernetesIntOrString = true;
             }
-            else if (!IsSimpleType(type))
+            else if (!isSimpleType)
             {
                 ProcessType(type, props, additionalColumns, jsonPath);
             }
@@ -348,5 +349,22 @@ namespace KubeOps.Operator.Entities.Extensions
              IsSimpleType(type.GetGenericArguments()[0]));
 
         private static string CamelCase(string str) => $"{str.Substring(0, 1).ToLower()}{str.Substring(1)}";
+
+        private static bool IsGenericEnumerableType(Type type, [NotNullWhen(true)] out Type? closingType)
+        {
+            if (type.IsGenericType && typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()))
+            {
+                closingType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            closingType = type
+                .GetInterfaces()
+                .Where(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                .Select(t => t.GetGenericArguments()[0])
+                .FirstOrDefault();
+
+            return closingType != null;
+        }
     }
 }
