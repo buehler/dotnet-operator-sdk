@@ -1,0 +1,38 @@
+﻿{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Christoph Bühler",
+  "classifications": [
+    "Kubernetes",
+    "Operator",
+    "Empty"
+  ],
+  "identity": "KubeOps.Templates.EmptyOperator.FSharp",
+  "groupIdentity": "KubeOps.Templates.EmptyOperator",
+  "name": "Kubernetes Operator Empty",
+  "description": "Create an empty kubernetes operator with the KubeOps SDK",
+  "shortName": "operator-empty",
+  "tags": {
+    "language": "F#",
+    "type": "project"
+  },
+  "sourceName": "GeneratedOperatorProject",
+  "defaultName": "Operator",
+  "preferNameDirectory": true,
+  "postActions": [
+    {
+      "actionId": "B17581D1-C5C9-4489-8F0A-004BE667B814",
+      "description": "Add KubeOps SDK reference",
+      "continueOnError": false,
+      "manualInstructions": [
+        {
+          "text": "Add the KubeOps package to your project via nuget"
+        }
+      ],
+      "args": {
+        "referenceType": "package",
+        "reference": "KubeOps",
+        "projectFileExtensions": ".fsproj"
+      }
+    }
+  ]
+}
