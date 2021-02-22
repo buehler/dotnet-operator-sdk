@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using k8s.Models;
 using KubeOps.Operator.Entities;
@@ -11,9 +12,21 @@ namespace KubeOps.Test.TestEntities
     [Description("This is the Spec Class Description")]
     public class TestSpecEntitySpec
     {
-        public string[] StringArray { get; set; } = new string[0];
+        public string[] StringArray { get; set; } = Array.Empty<string>();
 
         public string[]? NullableStringArray { get; set; }
+
+        public IEnumerable<int> EnumerableInteger { get; set; } = Array.Empty<int>();
+
+        public IEnumerable<int?> EnumerableNullableInteger { get; set; } = Array.Empty<int?>();
+
+        public IntegerList IntegerList { get; set; } = new();
+
+        public HashSet<int> IntegerHashSet { get; set; } = new();
+
+        public ISet<int> IntegerISet { get; set; } = new HashSet<int>();
+
+        public IReadOnlySet<int> IntegerIReadOnlySet { get; set; } = new HashSet<int>();
 
         [AdditionalPrinterColumn]
         public string NormalString { get; set; } = string.Empty;
@@ -80,7 +93,21 @@ namespace KubeOps.Test.TestEntities
         [Required]
         public int Required { get; set; }
 
-        public IEnumerable<TestItem> ComplexItems { get; set; } = Enumerable.Empty<TestItem>();
+        public IEnumerable<TestItem> ComplexItemsEnumerable { get; set; } = Enumerable.Empty<TestItem>();
+
+        public List<TestItem> ComplexItemsList { get; set; } = new();
+
+        public IList<TestItem> ComplexItemsIList { get; set; } = Array.Empty<TestItem>();
+
+        public IReadOnlyList<TestItem> ComplexItemsReadOnlyList { get; set; } = Array.Empty<TestItem>();
+
+        public Collection<TestItem> ComplexItemsCollection { get; set; } = new();
+
+        public ICollection<TestItem> ComplexItemsICollection { get; set; } = Array.Empty<TestItem>();
+
+        public IReadOnlyCollection<TestItem> ComplexItemsReadOnlyCollection { get; set; } = Array.Empty<TestItem>();
+
+        public TestItemList ComplexItemsDerivedList { get; set; } = new();
 
         public IDictionary Dictionary { get; set; } = new Dictionary<string, string>();
 
@@ -116,5 +143,13 @@ namespace KubeOps.Test.TestEntities
         public string Name { get; set; } = null!;
         public string Item { get; set; } = null!;
         public string Extra { get; set; } = null!;
+    }
+
+    public class TestItemList : List<TestItem>
+    {
+    }
+
+    public class IntegerList : Collection<int>
+    {
     }
 }

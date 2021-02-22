@@ -7,7 +7,6 @@ using k8s.Models;
 using KubeOps.Operator.Commands.Generators;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Errors;
-using KubeOps.Operator.Services;
 using KubeOps.Test.TestEntities;
 using Xunit;
 
@@ -74,30 +73,43 @@ namespace KubeOps.Test.Operator.Entities
             nullableField.Nullable.Should().BeTrue();
         }
 
-        [Fact]
-        public void Should_Set_The_Correct_Array_Type()
+        [Theory]
+        [InlineData(nameof(TestSpecEntitySpec.StringArray), "string", null)]
+        [InlineData(nameof(TestSpecEntitySpec.NullableStringArray), "string", true)]
+        [InlineData(nameof(TestSpecEntitySpec.EnumerableInteger), "integer", null)]
+        [InlineData(nameof(TestSpecEntitySpec.EnumerableNullableInteger), "integer", null)]
+        [InlineData(nameof(TestSpecEntitySpec.IntegerList), "integer", null)]
+        [InlineData(nameof(TestSpecEntitySpec.IntegerHashSet), "integer", null)]
+        [InlineData(nameof(TestSpecEntitySpec.IntegerISet), "integer", null)]
+        [InlineData(nameof(TestSpecEntitySpec.IntegerIReadOnlySet), "integer", null)]
+        public void Should_Set_The_Correct_Array_Type(string property, string expectedType, bool? expectedNullable)
         {
+            var propertyName = char.ToLowerInvariant(property[0]) + property[1..];
             var crd = _testSpecEntity.CreateCrd();
             var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
 
-            var normalField = specProperties.Properties["stringArray"];
+            var normalField = specProperties.Properties[propertyName];
             normalField.Type.Should().Be("array");
-            (normalField.Items as V1JSONSchemaProps)?.Type?.Should().Be("string");
-            normalField.Nullable.Should().BeNull();
-
-            var nullableField = specProperties.Properties["nullableStringArray"];
-            nullableField.Type.Should().Be("array");
-            (nullableField.Items as V1JSONSchemaProps)?.Type?.Should().Be("string");
-            nullableField.Nullable.Should().BeTrue();
+            (normalField.Items as V1JSONSchemaProps)?.Type?.Should().Be(expectedType);
+            normalField.Nullable.Should().Be(expectedNullable);
         }
 
-        [Fact]
-        public void Should_Set_The_Correct_Complex_Array_Type()
+        [Theory]
+        [InlineData(nameof(TestSpecEntitySpec.ComplexItemsEnumerable))]
+        [InlineData(nameof(TestSpecEntitySpec.ComplexItemsList))]
+        [InlineData(nameof(TestSpecEntitySpec.ComplexItemsIList))]
+        [InlineData(nameof(TestSpecEntitySpec.ComplexItemsReadOnlyList))]
+        [InlineData(nameof(TestSpecEntitySpec.ComplexItemsCollection))]
+        [InlineData(nameof(TestSpecEntitySpec.ComplexItemsICollection))]
+        [InlineData(nameof(TestSpecEntitySpec.ComplexItemsReadOnlyCollection))]
+        [InlineData(nameof(TestSpecEntitySpec.ComplexItemsDerivedList))]
+        public void Should_Set_The_Correct_Complex_Array_Type(string property)
         {
+            var propertyName = char.ToLowerInvariant(property[0]) + property[1..];
             var crd = _testSpecEntity.CreateCrd();
             var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
 
-            var complexItemsArray = specProperties.Properties["complexItems"];
+            var complexItemsArray = specProperties.Properties[propertyName];
             complexItemsArray.Type.Should().Be("array");
             (complexItemsArray.Items as V1JSONSchemaProps)?.Type?.Should().Be("object");
             complexItemsArray.Nullable.Should().BeNull();
