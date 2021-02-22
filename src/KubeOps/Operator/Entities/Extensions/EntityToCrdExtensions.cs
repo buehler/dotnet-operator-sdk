@@ -9,7 +9,9 @@ using k8s;
 using k8s.Models;
 using KubeOps.Operator.Entities.Annotations;
 using KubeOps.Operator.Errors;
+using KubeOps.Operator.Util;
 using Namotion.Reflection;
+using Newtonsoft.Json;
 
 namespace KubeOps.Operator.Entities.Extensions
 {
@@ -319,11 +321,11 @@ namespace KubeOps.Operator.Entities.Extensions
                                 !IgnoredToplevelProperties.Contains(info.Name.ToLowerInvariant()))
                     .Select(
                         prop => KeyValuePair.Create(
-                            CamelCase(prop.Name),
-                            MapProperty(prop, additionalColumns, $"{jsonPath}.{CamelCase(prop.Name)}"))));
+                            GetPropertyName(prop),
+                            MapProperty(prop, additionalColumns, $"{jsonPath}.{GetPropertyName(prop)}"))));
             props.Required = type.GetProperties()
                 .Where(prop => prop.GetCustomAttribute<RequiredAttribute>() != null)
-                .Select(prop => CamelCase(prop.Name))
+                .Select(prop => GetPropertyName(prop))
                 .ToList();
             if (props.Required.Count == 0)
             {
@@ -348,7 +350,12 @@ namespace KubeOps.Operator.Entities.Extensions
              type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
              IsSimpleType(type.GetGenericArguments()[0]));
 
-        private static string CamelCase(string str) => $"{str.Substring(0, 1).ToLower()}{str.Substring(1)}";
+        private static string GetPropertyName(PropertyInfo property)
+        {
+            var attribute = property.GetCustomAttribute<JsonPropertyAttribute>();
+            var propertyName = attribute?.PropertyName ?? property.Name;
+            return propertyName.ToCamelCase();
+        }
 
         private static bool IsGenericEnumerableType(Type type, [NotNullWhen(true)] out Type? closingType)
         {
