@@ -6,6 +6,7 @@ using System.Linq;
 using k8s.Models;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
+using Newtonsoft.Json;
 
 namespace KubeOps.Test.TestEntities
 {
@@ -123,6 +124,9 @@ namespace KubeOps.Test.TestEntities
 
         [EmbeddedResource]
         public V1ConfigMap KubernetesObject { get; set; } = new V1ConfigMap();
+
+        [JsonProperty(PropertyName = "NameFromAttribute")]
+        public string PropertyWithJsonAttribute { get; set; } = string.Empty;
 
         public enum TestSpecEnum
         {

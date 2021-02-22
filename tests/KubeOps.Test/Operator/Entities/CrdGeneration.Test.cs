@@ -7,7 +7,9 @@ using k8s.Models;
 using KubeOps.Operator.Commands.Generators;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Errors;
+using KubeOps.Operator.Util;
 using KubeOps.Test.TestEntities;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace KubeOps.Test.Operator.Entities
@@ -84,7 +86,7 @@ namespace KubeOps.Test.Operator.Entities
         [InlineData(nameof(TestSpecEntitySpec.IntegerIReadOnlySet), "integer", null)]
         public void Should_Set_The_Correct_Array_Type(string property, string expectedType, bool? expectedNullable)
         {
-            var propertyName = char.ToLowerInvariant(property[0]) + property[1..];
+            var propertyName = property.ToCamelCase();
             var crd = _testSpecEntity.CreateCrd();
             var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
 
@@ -105,7 +107,7 @@ namespace KubeOps.Test.Operator.Entities
         [InlineData(nameof(TestSpecEntitySpec.ComplexItemsDerivedList))]
         public void Should_Set_The_Correct_Complex_Array_Type(string property)
         {
-            var propertyName = char.ToLowerInvariant(property[0]) + property[1..];
+            var propertyName = property.ToCamelCase();
             var crd = _testSpecEntity.CreateCrd();
             var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
 
@@ -351,13 +353,18 @@ namespace KubeOps.Test.Operator.Entities
         }
 
         [Fact]
-        public void Should_Add_GenericAdditionalPrinterColumns()
+        public void Should_Use_PropertyName_From_JsonPropertyAttribute()
         {
             var crd = _testSpecEntity.CreateCrd();
-            var apc = crd.Spec.Versions.First().AdditionalPrinterColumns;
 
-            apc.Should().NotBeNull();
-            apc.Should().ContainSingle(def => def.JsonPath == ".metadata.creationTimestamp" && def.Name == "Age");
+            var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
+            var propertyNameFromType = nameof(TestSpecEntitySpec.PropertyWithJsonAttribute);
+            var propertyNameFromAttribute = typeof(TestSpecEntitySpec)
+                .GetProperty(propertyNameFromType)
+                ?.GetCustomAttribute<JsonPropertyAttribute>()
+                ?.PropertyName;
+            specProperties.Properties.Should().ContainKey(propertyNameFromAttribute?.ToCamelCase());
+            specProperties.Properties.Should().NotContainKey(propertyNameFromType.ToCamelCase());
         }
 
         [Fact]
@@ -381,6 +388,16 @@ namespace KubeOps.Test.Operator.Entities
 
             var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties;
             specProperties.Should().NotContainKeys("metadata", "apiVersion", "kind");
+        }
+
+        [Fact]
+        public void Should_Add_GenericAdditionalPrinterColumns()
+        {
+            var crd = _testSpecEntity.CreateCrd();
+            var apc = crd.Spec.Versions.First().AdditionalPrinterColumns;
+
+            apc.Should().NotBeNull();
+            apc.Should().ContainSingle(def => def.JsonPath == ".metadata.creationTimestamp" && def.Name == "Age");
         }
     }
 }
