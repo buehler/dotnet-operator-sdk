@@ -338,6 +338,7 @@ namespace KubeOps.Test.Operator.Entities
             var crd = _testSpecEntity.CreateCrd();
 
             var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
+            specProperties.Properties["kubernetesObject"].Type.Should().Be("object");
             specProperties.Properties["kubernetesObject"].Properties.Should().BeNull();
             specProperties.Properties["kubernetesObject"].XKubernetesPreserveUnknownFields.Should().BeTrue();
             specProperties.Properties["kubernetesObject"].XKubernetesEmbeddedResource.Should().BeTrue();
