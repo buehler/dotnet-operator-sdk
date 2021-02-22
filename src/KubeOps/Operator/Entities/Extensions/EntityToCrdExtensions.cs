@@ -180,7 +180,7 @@ namespace KubeOps.Operator.Entities.Extensions
             // check if embedded resource is set
             if (info.GetCustomAttribute<EmbeddedResourceAttribute>() != null)
             {
-                props.Type = null;
+                props.Type = Object;
                 props.Properties = null;
                 props.XKubernetesPreserveUnknownFields = true;
                 props.XKubernetesEmbeddedResource = true;
