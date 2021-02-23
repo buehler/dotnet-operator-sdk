@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using k8s;
 using k8s.Models;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
@@ -124,6 +125,12 @@ namespace KubeOps.Test.TestEntities
 
         [EmbeddedResource]
         public V1ConfigMap KubernetesObject { get; set; } = new V1ConfigMap();
+
+        public IKubernetesObject PolymorphicKubernetesObject { get; set; } = new V1Pod();
+
+        public IList<V1Pod> Pods { get; set; } = Array.Empty<V1Pod>();
+
+        public IList<IKubernetesObject> PolymorphicKubernetesObjects { get; set; } = Array.Empty<IKubernetesObject>();
 
         [JsonProperty(PropertyName = "NameFromAttribute")]
         public string PropertyWithJsonAttribute { get; set; } = string.Empty;
