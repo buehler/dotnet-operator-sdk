@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="KubeOps" Version="3.0.0" />
+      <PackageReference Include="KubeOps" Version="3.1.0" />
     </ItemGroup>
 
 </Project>
