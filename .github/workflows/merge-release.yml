@@ -13,4 +13,9 @@ jobs:
           git config user.email "<>"
       - name: Push master to release branch
         run: |
-          git push origin master:release
+          git checkout master
+          git pull
+          git checkout release
+          git pull
+          git rebase master
+          git push
