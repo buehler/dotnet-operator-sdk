@@ -126,11 +126,9 @@ namespace KubeOps.Test.TestEntities
         [EmbeddedResource]
         public V1ConfigMap KubernetesObject { get; set; } = new V1ConfigMap();
 
-        public IKubernetesObject PolymorphicKubernetesObject { get; set; } = new V1Pod();
+        public V1Pod Pod { get; set; } = new V1Pod();
 
         public IList<V1Pod> Pods { get; set; } = Array.Empty<V1Pod>();
-
-        public IList<IKubernetesObject> PolymorphicKubernetesObjects { get; set; } = Array.Empty<IKubernetesObject>();
 
         [JsonProperty(PropertyName = "NameFromAttribute")]
         public string PropertyWithJsonAttribute { get; set; } = string.Empty;

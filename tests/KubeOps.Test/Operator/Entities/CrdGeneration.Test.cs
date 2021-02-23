@@ -336,7 +336,7 @@ namespace KubeOps.Test.Operator.Entities
 
         [Theory]
         [InlineData(nameof(TestSpecEntitySpec.KubernetesObject))]
-        [InlineData(nameof(TestSpecEntitySpec.PolymorphicKubernetesObject))]
+        [InlineData(nameof(TestSpecEntitySpec.Pod))]
         public void Should_Map_Embedded_Resources(string property)
         {
             var crd = _testSpecEntity.CreateCrd();
@@ -349,13 +349,11 @@ namespace KubeOps.Test.Operator.Entities
             specProperties.Properties[propertyName].XKubernetesEmbeddedResource.Should().BeTrue();
         }
 
-        [Theory]
-        [InlineData(nameof(TestSpecEntitySpec.Pods))]
-        [InlineData(nameof(TestSpecEntitySpec.PolymorphicKubernetesObjects))]
-        public void Should_Map_List_Of_Embedded_Resource(string property)
+        [Fact]
+        public void Should_Map_List_Of_Embedded_Resource()
         {
             var crd = _testSpecEntity.CreateCrd();
-            var propertyName = property.ToCamelCase();
+            var propertyName = nameof(TestSpecEntitySpec.Pods).ToCamelCase();
 
             var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
             var arrayProperty = specProperties.Properties[propertyName];

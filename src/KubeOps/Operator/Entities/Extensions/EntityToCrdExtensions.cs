@@ -249,6 +249,8 @@ namespace KubeOps.Operator.Entities.Extensions
                 props.XKubernetesIntOrString = true;
             }
             else if (typeof(IKubernetesObject).IsAssignableFrom(type) &&
+                     !type.IsAbstract &&
+                     !type.IsInterface &&
                      type.Assembly == typeof(IKubernetesObject).Assembly)
             {
                 SetEmbeddedResourceProperties(props);
