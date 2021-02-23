@@ -182,10 +182,7 @@ namespace KubeOps.Operator.Entities.Extensions
             // check if embedded resource is set
             if (info.GetCustomAttribute<EmbeddedResourceAttribute>() != null)
             {
-                props.Type = Object;
-                props.Properties = null;
-                props.XKubernetesPreserveUnknownFields = true;
-                props.XKubernetesEmbeddedResource = true;
+                SetEmbeddedResourceProperties(props);
             }
 
             // get additional printer column information
@@ -251,6 +248,13 @@ namespace KubeOps.Operator.Entities.Extensions
             {
                 props.XKubernetesIntOrString = true;
             }
+            else if (typeof(IKubernetesObject).IsAssignableFrom(type) &&
+                     !type.IsAbstract &&
+                     !type.IsInterface &&
+                     type.Assembly == typeof(IKubernetesObject).Assembly)
+            {
+                SetEmbeddedResourceProperties(props);
+            }
             else if (!isSimpleType)
             {
                 ProcessType(type, props, additionalColumns, jsonPath);
@@ -304,6 +308,14 @@ namespace KubeOps.Operator.Entities.Extensions
             }
 
             return props;
+        }
+
+        private static void SetEmbeddedResourceProperties(V1JSONSchemaProps props)
+        {
+            props.Type = Object;
+            props.Properties = null;
+            props.XKubernetesPreserveUnknownFields = true;
+            props.XKubernetesEmbeddedResource = true;
         }
 
         private static void ProcessType(

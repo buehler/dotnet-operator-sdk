@@ -334,16 +334,35 @@ namespace KubeOps.Test.Operator.Entities
             specProperties.Properties["intOrString"].XKubernetesIntOrString.Should().BeTrue();
         }
 
-        [Fact]
-        public void Should_Map_Embedded_Resources()
+        [Theory]
+        [InlineData(nameof(TestSpecEntitySpec.KubernetesObject))]
+        [InlineData(nameof(TestSpecEntitySpec.Pod))]
+        public void Should_Map_Embedded_Resources(string property)
         {
             var crd = _testSpecEntity.CreateCrd();
+            var propertyName = property.ToCamelCase();
 
             var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
-            specProperties.Properties["kubernetesObject"].Type.Should().Be("object");
-            specProperties.Properties["kubernetesObject"].Properties.Should().BeNull();
-            specProperties.Properties["kubernetesObject"].XKubernetesPreserveUnknownFields.Should().BeTrue();
-            specProperties.Properties["kubernetesObject"].XKubernetesEmbeddedResource.Should().BeTrue();
+            specProperties.Properties[propertyName].Type.Should().Be("object");
+            specProperties.Properties[propertyName].Properties.Should().BeNull();
+            specProperties.Properties[propertyName].XKubernetesPreserveUnknownFields.Should().BeTrue();
+            specProperties.Properties[propertyName].XKubernetesEmbeddedResource.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Should_Map_List_Of_Embedded_Resource()
+        {
+            var crd = _testSpecEntity.CreateCrd();
+            var propertyName = nameof(TestSpecEntitySpec.Pods).ToCamelCase();
+
+            var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
+            var arrayProperty = specProperties.Properties[propertyName];
+            arrayProperty.Type.Should().Be("array");
+
+            var items = arrayProperty.Items as V1JSONSchemaProps;
+            items?.Type?.Should().Be("object");
+            items?.XKubernetesPreserveUnknownFields.Should().BeTrue();
+            items?.XKubernetesEmbeddedResource?.Should().BeTrue();
         }
 
         [Fact]
