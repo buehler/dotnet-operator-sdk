@@ -13,8 +13,4 @@
         <Compile Include="Program.fs" />
     </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="KubeOps" Version="3.1.0" />
-    </ItemGroup>
-
 </Project>
