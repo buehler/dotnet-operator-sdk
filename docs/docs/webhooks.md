@@ -6,6 +6,7 @@ of the master api. Those are documented on the
 
 `KubeOps` supports the following webhooks out of the box:
 - Validator / Validation
+- Mutator / Mutation
 
 The following documentation should give the user an overview
 on how to implement a webhook what this implies to the written operator.
@@ -82,13 +83,13 @@ It is suggested one uses `Docker Desktop` with kubernetes.
 The general idea of this webhook type is to validate an entity
 before it is definitely created / updated or deleted.
 
-Webhooks are registered in a **scoped** maner to the DI system.
+Webhooks are registered in a **scoped** manner to the DI system.
 They behave like asp.net api controller.
 
-The implementation of a webhook is fairly simple:
+The implementation of a validator is fairly simple:
 - Create a class somewhere in your project.
 - Implement the @"KubeOps.Operator.Webhooks.IValidationWebhook`1" interface.
-- Define the @"KubeOps.Operator.Webhooks.IValidationWebhook`1.Operations"
+- Define the @"KubeOps.Operator.Webhooks.IAdmissionWebhook`2.Operations"
   (from the interface) that the validator is interested in.
 - Overwrite the corresponding methods.
 
@@ -112,7 +113,7 @@ as well as a custom error message that is presented to the user.
 ```c#
 public class TestValidator : IValidationWebhook<EntityClass>
  {
-     public ValidatedOperations Operations => ValidatedOperations.Create | ValidatedOperations.Update;
+     public AdmissionOperations Operations => AdmissionOperations.Create | AdmissionOperations.Update;
 
      public ValidationResult Create(EntityClass newEntity, bool dryRun) =>
          CheckSpec(newEntity)
@@ -127,3 +128,34 @@ public class TestValidator : IValidationWebhook<EntityClass>
      private static bool CheckSpec(EntityClass entity) => entity.Spec.Username != "foobar";
  }
 ```
+
+## Mutation webhook
+
+Mutators are similar to validators but instead of defining if an object is
+valid or not, they are able to modify an object on the fly. The result
+of a mutator may generate a JSON Patch (http://jsonpatch.com) that patches
+the object that is later passed to the validators and to the Kubernetes
+API.
+
+The implementation of a mutator is fairly simple:
+- Create a class somewhere in your project.
+- Implement the @"KubeOps.Operator.Webhooks.IMutationWebhook`1" interface.
+- Define the @"KubeOps.Operator.Webhooks.IAdmissionWebhook`2.Operations"
+  (from the interface) that the validator is interested in.
+- Overwrite the corresponding methods.
+
+> [!WARNING]
+> The interface contains default implementations for _ALL_ methods.
+> The default of the async methods are to call the sync ones.
+> The default of the sync methods is to return a "not implemented"
+> result.
+> The async methods take precedence over the synchronous ones.
+
+The return value of the mutation methods do indicate if
+there has been a change in the model or not. If there is no
+change, return a result from @"KubeOps.Operator.Webhooks.MutationResult.NoChanges"
+and if there are changes, modify the object that is passed to the
+method and return the changed object with
+@"KubeOps.Operator.Webhooks.MutationResult.Modified(System.Object)".
+The system then calculates the diff and creates a JSON patch for
+the object.

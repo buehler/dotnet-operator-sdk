@@ -3,12 +3,12 @@
 namespace KubeOps.Operator.Webhooks
 {
     /// <summary>
-    /// Possible validator operations.
+    /// Possible admission webhook operations.
     /// Those operations are watched by the kubernetes api and webhooks
     /// are called according to their registered operations.
     /// </summary>
     [Flags]
-    public enum ValidatedOperations
+    public enum AdmissionOperations
     {
         /// <summary>
         /// Default value of "none".

@@ -6,7 +6,7 @@ namespace KubeOps.TestOperator.Webhooks
 {
     public class TestValidator : IValidationWebhook<V2TestEntity>
     {
-        public ValidatedOperations Operations => ValidatedOperations.Create | ValidatedOperations.Update;
+        public AdmissionOperations Operations => AdmissionOperations.Create | AdmissionOperations.Update;
 
         public ValidationResult Create(V2TestEntity newEntity, bool dryRun) =>
             CheckSpec(newEntity)

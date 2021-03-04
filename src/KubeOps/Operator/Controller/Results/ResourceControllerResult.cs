@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using KubeOps.Operator.Kubernetes;
 
 namespace KubeOps.Operator.Controller.Results

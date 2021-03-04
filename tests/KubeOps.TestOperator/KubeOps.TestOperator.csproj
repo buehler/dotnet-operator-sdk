@@ -12,7 +12,7 @@
     <!--<Import Project="..\..\src\KubeOps\Build\KubeOps.targets"/>-->
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\KubeOps\KubeOps.csproj"/>
+        <ProjectReference Include="..\..\src\KubeOps\KubeOps.csproj" />
     </ItemGroup>
 
     <ItemGroup>

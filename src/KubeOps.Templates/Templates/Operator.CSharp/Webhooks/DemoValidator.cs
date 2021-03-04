@@ -6,7 +6,7 @@ namespace GeneratedOperatorProject.Webhooks
 {
     public class DemoValidator : IValidationWebhook<V1DemoEntity>
     {
-        public ValidatedOperations Operations => ValidatedOperations.Create;
+        public AdmissionOperations Operations => AdmissionOperations.Create;
 
         public ValidationResult Create(V1DemoEntity newEntity, bool dryRun)
             => newEntity.Spec.Username == "forbiddenUsername"

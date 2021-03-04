@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using k8s;
-using k8s.Models;
 using KubeOps.Operator.Comparing;
 using ReferenceEqualityComparer = KubeOps.Operator.Comparing.ReferenceEqualityComparer;
 
@@ -25,13 +23,17 @@ namespace KubeOps.Operator.Entities.Extensions
         /// <param name="obj">The object to deeply clone.</param>
         /// <typeparam name="TEntity">Object type.</typeparam>
         /// <returns>A deep clone of a given object.</returns>
-        internal static TEntity DeepClone<TEntity>(this TEntity obj)
-            where TEntity : IKubernetesObject<V1ObjectMeta>
+        internal static TEntity? DeepClone<TEntity>(this TEntity? obj)
         {
+            if (obj == null)
+            {
+                return default;
+            }
+
             return (TEntity)(DeepClone_Internal(
-                                   obj,
-                                   new Dictionary<object, object>(new ReferenceEqualityComparer())) ??
-                               throw new InvalidCastException());
+                                 obj,
+                                 new Dictionary<object, object>(new ReferenceEqualityComparer())) ??
+                             throw new InvalidCastException());
         }
 
         /// <summary>

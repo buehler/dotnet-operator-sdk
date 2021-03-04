@@ -27,6 +27,7 @@ namespace KubeOps.Templates.Test.Templates
             _executor.FileExists("Entities", "V1DemoEntity.fs").Should().BeTrue();
             _executor.FileExists("Finalizer", "DemoFinalizer.fs").Should().BeTrue();
             _executor.FileExists("Webhooks", "DemoValidator.fs").Should().BeTrue();
+            _executor.FileExists("Webhooks", "DemoMutator.fs").Should().BeTrue();
         }
 
         [Fact]
@@ -80,6 +81,12 @@ namespace KubeOps.Templates.Test.Templates
                     "interface IValidationWebhook<V1DemoEntity> with",
                     "Webhooks",
                     "DemoValidator.fs")
+                .Should()
+                .BeTrue();
+            _executor.FileContains(
+                    "interface IMutationWebhook<V1DemoEntity> with",
+                    "Webhooks",
+                    "DemoMutator.fs")
                 .Should()
                 .BeTrue();
         }

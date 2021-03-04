@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using k8s;
@@ -41,6 +42,11 @@ namespace KubeOps.Operator.Caching
             result = CompareCache(resource);
 
             var clone = resource.DeepClone();
+            if (clone == null)
+            {
+                throw new ArgumentNullException(nameof(clone));
+            }
+
             _cache.AddOrUpdate(resource.Metadata.Uid, clone, (_, _) => clone);
 
             _metrics.CachedItemsSize.Set(_cache.Count);
@@ -53,6 +59,11 @@ namespace KubeOps.Operator.Caching
             foreach (var entity in resources)
             {
                 var clone = entity.DeepClone();
+                if (clone == null)
+                {
+                    throw new ArgumentNullException(nameof(clone));
+                }
+
                 _cache.AddOrUpdate(entity.Metadata.Uid, clone, (_, _) => clone);
             }
 
