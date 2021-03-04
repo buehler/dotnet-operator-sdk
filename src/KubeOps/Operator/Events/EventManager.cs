@@ -89,7 +89,10 @@ namespace KubeOps.Operator.Events
         public Task PublishAsync(Corev1Event @event)
             => _client.Save(@event);
 
-        public IEventManager.AsyncPublisher CreatePublisher(string reason, string message, EventType type = EventType.Normal)
+        public IEventManager.AsyncPublisher CreatePublisher(
+            string reason,
+            string message,
+            EventType type = EventType.Normal)
             => resource => PublishAsync(resource, reason, message, type);
 
         public IEventManager.AsyncStaticPublisher CreatePublisher(

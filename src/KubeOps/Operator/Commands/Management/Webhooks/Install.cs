@@ -9,7 +9,6 @@ using k8s.Models;
 using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Services;
-using KubeOps.Operator.Webhooks;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Management.Webhooks
@@ -82,15 +81,7 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
             }
 
             await app.Out.WriteLineAsync("Create service.");
-            try
-            {
-                await _client.Delete<V1Service>(_settings.Name, @namespace);
-            }
-            catch
-            {
-                // Ignore not found service delete.
-            }
-
+            await _client.Delete<V1Service>(_settings.Name, @namespace);
             await _client.Create(
                 new V1Service(
                     V1Service.KubeApiVersion,
@@ -126,25 +117,20 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                         },
                     }));
 
-            await app.Out.WriteLineAsync("Create validator definition.");
-            try
-            {
-                await _client.Delete<V1ValidatingWebhookConfiguration>($"validators.{_settings.Name}", @namespace);
-            }
-            catch
-            {
-                // Ignore not found service delete.
-            }
-
             var caBundle = await File.ReadAllBytesAsync(Path.Join(CertificatesPath, "ca.pem"));
-            var validator = Validators.CreateValidator(
-                (_settings.Name, null, caBundle, new Admissionregistrationv1ServiceReference
-                {
-                    Name = _settings.Name,
-                    NamespaceProperty = @namespace,
-                }),
+            var hookConfig = (_settings.Name, (string?)null, caBundle, new Admissionregistrationv1ServiceReference
+            {
+                Name = _settings.Name,
+                NamespaceProperty = @namespace,
+            });
+
+            await app.Out.WriteLineAsync("Create validator definition.");
+            var validator = Operator.Webhooks.Webhooks.CreateValidator(
+                hookConfig,
                 _resourceLocator,
                 _serviceProvider);
+            await _client.Delete<V1ValidatingWebhookConfiguration>(validator.Name(), @namespace);
+
             if (deployment != null)
             {
                 validator.Metadata.OwnerReferences = new List<V1OwnerReference>
@@ -154,6 +140,24 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
             }
 
             await _client.Create(validator);
+
+            await app.Out.WriteLineAsync("Create mutator definition.");
+            var mutator = Operator.Webhooks.Webhooks.CreateMutator(
+                hookConfig,
+                _resourceLocator,
+                _serviceProvider);
+            await _client.Delete<V1MutatingWebhookConfiguration>(mutator.Name(), @namespace);
+
+            if (deployment != null)
+            {
+                mutator.Metadata.OwnerReferences = new List<V1OwnerReference>
+                {
+                    deployment.MakeOwnerReference(),
+                };
+            }
+
+            await _client.Create(mutator);
+
             return ExitCodes.Success;
         }
     }

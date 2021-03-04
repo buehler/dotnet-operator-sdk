@@ -14,9 +14,9 @@ namespace KubeOps.TestOperator.Finalizer
             _manager = manager;
         }
 
-        public Task FinalizeAsync(V1TestEntity resource)
+        public Task FinalizeAsync(V1TestEntity entity)
         {
-            _manager.Finalized(resource);
+            _manager.Finalized(entity);
             return Task.CompletedTask;
         }
     }

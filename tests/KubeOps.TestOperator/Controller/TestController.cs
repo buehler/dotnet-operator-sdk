@@ -1,11 +1,8 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Controller.Results;
-using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
 using KubeOps.TestOperator.Entities;
-using KubeOps.TestOperator.Finalizer;
 using KubeOps.TestOperator.TestManager;
 
 namespace KubeOps.TestOperator.Controller

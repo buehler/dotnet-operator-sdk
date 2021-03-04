@@ -1,7 +1,5 @@
 ﻿using System.Threading.Tasks;
-using k8s.Models;
 using KubeOps.Operator;
-using KubeOps.Operator.Rbac;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 

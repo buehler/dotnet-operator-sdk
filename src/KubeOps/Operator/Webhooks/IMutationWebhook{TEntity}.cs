@@ -1,11 +1,15 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Text;
 using DotnetKubernetesClient.Entities;
+using JsonDiffPatch;
+using Newtonsoft.Json.Linq;
 
 namespace KubeOps.Operator.Webhooks
 {
     /// <summary>
     /// <para>
-    /// Validation webhook for kubernetes.
+    /// Mutation webhook for kubernetes.
     /// This is used by the https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/.
     /// Implement a class with this interface, overwrite the needed functions.
     /// </para>
@@ -24,7 +28,7 @@ namespace KubeOps.Operator.Webhooks
     /// The async implementations take precedence over the synchronous ones.
     /// </para>
     /// <para>
-    /// Note that the operator must use HTTPS (in some form) to use validators.
+    /// Note that the operator must use HTTPS (in some form) to use mutators.
     /// For local development, this could be done with ngrok (https://ngrok.com/).
     /// </para>
     /// <para>
@@ -33,37 +37,38 @@ namespace KubeOps.Operator.Webhooks
     /// </para>
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity that should be validated.</typeparam>
-    public interface IValidationWebhook<TEntity> : IAdmissionWebhook<TEntity, ValidationResult>
+    public interface IMutationWebhook<TEntity> : IAdmissionWebhook<TEntity, MutationResult>
     {
         /// <inheritdoc />
-        string IAdmissionWebhook<TEntity, ValidationResult>.Endpoint
+        string IAdmissionWebhook<TEntity, MutationResult>.Endpoint
         {
             get
             {
                 var crd = typeof(TEntity).CreateResourceDefinition();
-                return $"/{crd.Group}/{crd.Version}/{crd.Plural}/validate".ToLowerInvariant();
+                return $"/{crd.Group}/{crd.Version}/{crd.Plural}/mutate".ToLowerInvariant();
             }
         }
 
         /// <inheritdoc />
-        ValidationResult IAdmissionWebhook<TEntity, ValidationResult>.Create(TEntity newEntity, bool dryRun)
-            => AdmissionResult.NotImplemented<ValidationResult>();
+        MutationResult IAdmissionWebhook<TEntity, MutationResult>.Create(TEntity newEntity, bool dryRun)
+            => AdmissionResult.NotImplemented<MutationResult>();
 
         /// <inheritdoc />
-        ValidationResult IAdmissionWebhook<TEntity, ValidationResult>.Update(
+        MutationResult IAdmissionWebhook<TEntity, MutationResult>.Update(
             TEntity oldEntity,
             TEntity newEntity,
             bool dryRun)
-            => AdmissionResult.NotImplemented<ValidationResult>();
+            => AdmissionResult.NotImplemented<MutationResult>();
 
         /// <inheritdoc />
-        ValidationResult IAdmissionWebhook<TEntity, ValidationResult>.Delete(TEntity oldEntity, bool dryRun)
-            => AdmissionResult.NotImplemented<ValidationResult>();
+        MutationResult IAdmissionWebhook<TEntity, MutationResult>.Delete(TEntity oldEntity, bool dryRun)
+            => AdmissionResult.NotImplemented<MutationResult>();
 
-        AdmissionResponse IAdmissionWebhook<TEntity, ValidationResult>.TransformResult(
-            ValidationResult result,
+        AdmissionResponse IAdmissionWebhook<TEntity, MutationResult>.TransformResult(
+            MutationResult result,
             AdmissionRequest<TEntity> request)
-            => new()
+        {
+            var response = new AdmissionResponse
             {
                 Allowed = result.Valid,
                 Status = result.StatusMessage == null
@@ -75,5 +80,19 @@ namespace KubeOps.Operator.Webhooks
                     },
                 Warnings = result.Warnings.ToArray(),
             };
+
+            if (result.ModifiedObject != null)
+            {
+                response.PatchType = AdmissionResponse.JsonPatch;
+                var @object = JToken.FromObject(
+                    request.Operation == "DELETE"
+                        ? request.OldObject
+                        : request.Object);
+                var patch = new JsonDiffer().Diff(@object, result.ModifiedObject, false);
+                response.Patch = Convert.ToBase64String(Encoding.UTF8.GetBytes(patch.ToString()));
+            }
+
+            return response;
+        }
     }
 }

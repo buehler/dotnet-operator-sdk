@@ -17,19 +17,9 @@ namespace KubeOps.Operator.Services
             _assemblies = new HashSet<Assembly>(assemblies);
         }
 
-        public IEnumerable<ControllerType> ControllerTypes => Types
-            .Where(
-                t => t.IsClass &&
-                     !t.IsAbstract &&
-                     t.GetInterfaces()
-                         .Any(
-                             i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceController<>)))
-            .Select(
-                t => new ControllerType(
-                    t,
-                    t.GetInterfaces()
-                        .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceController<>))
-                        .GenericTypeArguments[0]));
+        public IEnumerable<ControllerType> ControllerTypes => TypeCombo<ControllerType>(
+            typeof(IResourceController<>),
+            (t, tt) => new(t, tt));
 
         public IEnumerable<Type> FinalizerTypes => Types
             .Where(
@@ -39,19 +29,13 @@ namespace KubeOps.Operator.Services
                          .Any(
                              i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceFinalizer<>)));
 
-        public IEnumerable<ValidatorType> ValidatorTypes => Types
-            .Where(
-                t => t.IsClass &&
-                     !t.IsAbstract &&
-                     t.GetInterfaces()
-                         .Any(
-                             i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IValidationWebhook<>)))
-            .Select(
-                t => new ValidatorType(
-                    t,
-                    t.GetInterfaces()
-                        .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IValidationWebhook<>))
-                        .GenericTypeArguments[0]));
+        public IEnumerable<ValidatorType> ValidatorTypes => TypeCombo<ValidatorType>(
+            typeof(IValidationWebhook<>),
+            (t, tt) => new(t, tt));
+
+        public IEnumerable<MutatorType> MutatorTypes => TypeCombo<MutatorType>(
+            typeof(IMutationWebhook<>),
+            (t, tt) => new(t, tt));
 
         private IEnumerable<Type> Types => _assemblies
             .SelectMany(a => a.GetTypes())
@@ -61,14 +45,16 @@ namespace KubeOps.Operator.Services
         {
             var controller = ControllerTypes.ToList();
             var finalizer = FinalizerTypes.ToList();
-            var validator = ValidatorTypes.ToList();
+            var validators = ValidatorTypes.ToList();
+            var mutators = MutatorTypes.ToList();
 
             _assemblies.Add(assembly);
 
             return new AdditionalTypes(
                 ControllerTypes.Except(controller).Select(c => c.Type),
                 FinalizerTypes.Except(finalizer),
-                ValidatorTypes.Except(validator).Select(v => v.Type));
+                ValidatorTypes.Except(validators).Select(v => v.Type),
+                MutatorTypes.Except(mutators).Select(m => m.Type));
         }
 
         public IEnumerable<Type> GetTypesWithAttribute<TAttribute>()
@@ -82,14 +68,31 @@ namespace KubeOps.Operator.Services
                     assembly => assembly.GetTypes())
                 .SelectMany(type => type.GetCustomAttributes<TAttribute>(true));
 
+        private IEnumerable<TType> TypeCombo<TType>(Type genericType, Func<Type, Type, TType> ctor)
+            => Types.Where(
+                    t => t.IsClass &&
+                         !t.IsAbstract &&
+                         t.GetInterfaces()
+                             .Any(
+                                 i => i.IsGenericType && i.GetGenericTypeDefinition() == genericType))
+                .Select(
+                    t => ctor(
+                        t,
+                        t.GetInterfaces()
+                            .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == genericType)
+                            .GenericTypeArguments[0]));
+
         internal record AdditionalTypes(
             IEnumerable<Type> Controllers,
             IEnumerable<Type> Finalizers,
-            IEnumerable<Type> Validators);
+            IEnumerable<Type> Validators,
+            IEnumerable<Type> Mutators);
 
         internal record ControllerType(Type Type, Type ResourceType);
 
         internal record ValidatorType(Type Type, Type ResourceType);
+
+        internal record MutatorType(Type Type, Type ResourceType);
 
         private class TypeComparer : IEqualityComparer<Type?>
         {

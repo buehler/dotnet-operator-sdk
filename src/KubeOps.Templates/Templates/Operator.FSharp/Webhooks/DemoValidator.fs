@@ -6,7 +6,7 @@ open Microsoft.AspNetCore.Http
 
 type DemoValidator() =
     interface IValidationWebhook<V1DemoEntity> with
-        member this.Operations = ValidatedOperations.Create
+        member this.Operations = AdmissionOperations.Create
 
         member this.Create(newEntity, _) =
             if newEntity.Spec.Username = "forbiddenUsername"

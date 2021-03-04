@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\config\Common.targets"/>
-    <Import Project="..\..\config\CodeAnalysis.targets"/>
+    <Import Project="..\..\config\Common.targets" />
+    <Import Project="..\..\config\CodeAnalysis.targets" />
 
     <PropertyGroup>
         <IsPackable>true</IsPackable>
@@ -24,8 +24,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="Templates\**\*" Exclude="Templates\**\bin\**;Templates\**\obj\**"/>
-        <Compile Remove="**\*"/>
+        <Content Include="Templates\**\*" Exclude="Templates\**\bin\**;Templates\**\obj\**" />
+        <Compile Remove="**\*" />
     </ItemGroup>
 
 </Project>

@@ -122,7 +122,7 @@ namespace KubeOps.Operator.Commands.CommandHelpers
                         WorkingDirectory = outputFolder,
                         FileName = ShellExecutor,
                         Arguments = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                            ? $"/c {_cfssl} gencert -ca={caPath} -ca-key={caKeyPath} -config={_caconfig} -profile=server {_servercsr} | {_cfssljson} -bare server -"
+                            ? $"/c {_cfssl} gencert -ca=file:{caPath.Replace('\\', '/')} -ca-key=file:{caKeyPath.Replace('\\', '/')} -config={_caconfig} -profile=server {_servercsr} | {_cfssljson} -bare server -"
                             : $@"-c ""{_cfssl} gencert -ca={caPath} -ca-key={caKeyPath} -config={_caconfig} -profile=server {_servercsr} | {_cfssljson} -bare server -""",
                     },
                 });
@@ -138,7 +138,7 @@ namespace KubeOps.Operator.Commands.CommandHelpers
                 () =>
                 {
                     process.Start();
-                    process.WaitForExit(1000);
+                    process.WaitForExit(2000);
                 });
 
         private static void Delete(string? file)

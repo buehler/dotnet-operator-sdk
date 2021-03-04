@@ -14,8 +14,8 @@ namespace KubeOps.Operator.Webhooks
 
         public string Kind { get; set; } = "AdmissionReview";
 
-        public AdmissionRequest<TEntity>? Request { get; init; }
+        public AdmissionRequest<TEntity>? Request { get; set; }
 
-        public AdmissionResponse? Response { get; init; }
+        public AdmissionResponse? Response { get; set; }
     }
 }

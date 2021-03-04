@@ -1,14 +1,22 @@
-﻿namespace KubeOps.Operator.Webhooks
+﻿using System;
+
+namespace KubeOps.Operator.Webhooks
 {
     internal sealed class AdmissionResponse
     {
-        public string Uid { get; init; } = string.Empty;
+        public const string JsonPatch = "JSONPatch";
+
+        public string Uid { get; set; } = string.Empty;
 
         public bool Allowed { get; init; }
 
         public Reason? Status { get; init; }
 
-        public string[] Warnings { get; init; } = new string[0];
+        public string[] Warnings { get; init; } = Array.Empty<string>();
+
+        public string? PatchType { get; set; }
+
+        public string? Patch { get; set; }
 
         internal sealed class Reason
         {

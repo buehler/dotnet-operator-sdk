@@ -80,7 +80,7 @@ namespace KubeOps.Operator.Builder
         {
             // This is kind of ugly to register the newly found controllers and stuff.
             // Maybe this needs to be refactored.
-            var (controllers, finalizers, validators) = _resourceLocator.Add(assembly);
+            var (controllers, finalizers, validators, mutators) = _resourceLocator.Add(assembly);
 
             foreach (var controllerType in controllers)
             {
@@ -95,6 +95,11 @@ namespace KubeOps.Operator.Builder
             foreach (var validatorType in validators)
             {
                 Services.TryAddScoped(validatorType);
+            }
+
+            foreach (var mutatorType in mutators)
+            {
+                Services.TryAddScoped(mutatorType);
             }
 
             return this;
@@ -177,6 +182,12 @@ namespace KubeOps.Operator.Builder
             foreach (var (validatorType, _) in _resourceLocator.ValidatorTypes)
             {
                 Services.TryAddScoped(validatorType);
+            }
+
+            // Register all found mutation webhooks
+            foreach (var (mutatorType, _) in _resourceLocator.MutatorTypes)
+            {
+                Services.TryAddScoped(mutatorType);
             }
 
             return this;

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s.Models;
 using KubeOps.Operator.Services;
-using KubeOps.Operator.Webhooks;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Management.Webhooks
@@ -79,24 +77,32 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
             await app.Out.WriteLineAsync($"Found {_resourceLocator.ValidatorTypes.Count()} validators.");
+            await app.Out.WriteLineAsync($"Found {_resourceLocator.MutatorTypes.Count()} mutators.");
 
-            var config = Validators.CreateValidator(
-                (
-                    _settings.Name,
-                    BaseUrl,
-                    CaBundle != null ? Encoding.UTF8.GetBytes(CaBundle) : null,
-                    ServiceName != null && ServiceNamespace != null
-                        ? new Admissionregistrationv1ServiceReference(
-                            ServiceName,
-                            ServiceNamespace,
-                            ServicePath,
-                            ServicePort)
-                        : null),
+            var hookConfig = (
+                _settings.Name,
+                BaseUrl,
+                CaBundle != null ? Encoding.UTF8.GetBytes(CaBundle) : null,
+                ServiceName != null && ServiceNamespace != null
+                    ? new Admissionregistrationv1ServiceReference(
+                        ServiceName,
+                        ServiceNamespace,
+                        ServicePath,
+                        ServicePort)
+                    : null);
+            var validatorConfig = Operator.Webhooks.Webhooks.CreateValidator(
+                hookConfig,
+                _resourceLocator,
+                _serviceProvider);
+            var mutatorConfig = Operator.Webhooks.Webhooks.CreateMutator(
+                hookConfig,
                 _resourceLocator,
                 _serviceProvider);
 
-            await app.Out.WriteLineAsync($@"Install ""{config.Metadata.Name}"" validator on cluster.");
-            await _client.Save(config);
+            await app.Out.WriteLineAsync($@"Install ""{validatorConfig.Metadata.Name}"" validator on cluster.");
+            await app.Out.WriteLineAsync($@"Install ""{mutatorConfig.Metadata.Name}"" mutator on cluster.");
+            await _client.Save(validatorConfig);
+            await _client.Save(mutatorConfig);
 
             return ExitCodes.Success;
         }

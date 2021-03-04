@@ -34,8 +34,8 @@ namespace KubeOps.Operator.Finalizer
         /// <summary>
         /// Finalize a resource that is pending for deletion.
         /// </summary>
-        /// <param name="resource">The kubernetes resource that needs to be finalized.</param>
+        /// <param name="entity">The kubernetes entity that needs to be finalized.</param>
         /// <returns>A task for when the operation is done.</returns>
-        Task FinalizeAsync(TEntity resource);
+        Task FinalizeAsync(TEntity entity);
     }
 }
