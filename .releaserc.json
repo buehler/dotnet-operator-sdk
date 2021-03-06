@@ -1,16 +1,12 @@
 {
   "branches": [
-    "release",
+    "master",
     {
-      "name": "master",
+      "name": "next",
       "prerelease": "prerelease"
     }
   ],
-  "plugins": [
-    "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
-    "@semantic-release/github"
-  ],
+  "plugins": ["@semantic-release/commit-analyzer", "@semantic-release/release-notes-generator", "@semantic-release/github"],
   "prepare": [
     [
       "@semantic-release/exec",
