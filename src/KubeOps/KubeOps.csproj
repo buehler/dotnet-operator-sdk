@@ -25,17 +25,17 @@
 
     <ItemGroup>
         <PackageReference Include="CompareNETObjects" Version="4.73.0" />
-        <PackageReference Include="DotnetKubernetesClient" Version="1.1.7" />
+        <PackageReference Include="DotnetKubernetesClient" Version="1.1.8" />
         <PackageReference Include="JsonDiffPatch" Version="2.0.52" />
         <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
         <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="3.1.0" />
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="5.0.5" />
-        <PackageReference Include="Namotion.Reflection" Version="1.0.18" />
+        <PackageReference Include="Namotion.Reflection" Version="1.0.19" />
         <PackageReference Include="prometheus-net.AspNetCore" Version="4.1.1" />
         <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="4.1.1" />
         <PackageReference Include="SimpleBase" Version="3.0.2" />
         <PackageReference Include="System.Reactive" Version="5.0.0" />
-        <PackageReference Include="YamlDotNet" Version="11.0.1" />
+        <PackageReference Include="YamlDotNet" Version="11.1.0" />
     </ItemGroup>
 
     <ItemGroup>
