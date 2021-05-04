@@ -30,7 +30,7 @@
         <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
         <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="3.1.0" />
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="5.0.5" />
-        <PackageReference Include="Namotion.Reflection" Version="1.0.19" />
+        <PackageReference Include="Namotion.Reflection" Version="1.0.20" />
         <PackageReference Include="prometheus-net.AspNetCore" Version="4.1.1" />
         <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="4.1.1" />
         <PackageReference Include="SimpleBase" Version="3.0.2" />
