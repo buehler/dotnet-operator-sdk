@@ -22,3 +22,5 @@
   href: ms_build.md
 - name: Testing
   href: testing.md
+- name: Dotnet New Templates
+  href: templates.md
