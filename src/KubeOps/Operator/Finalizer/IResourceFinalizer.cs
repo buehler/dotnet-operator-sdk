@@ -12,7 +12,7 @@ namespace KubeOps.Operator.Finalizer
     public interface IResourceFinalizer<in TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        private const byte MaxNameLength = 254;
+        private const byte MaxNameLength = 63;
 
         /// <summary>
         /// Unique identifier for this finalizer.
@@ -24,9 +24,9 @@ namespace KubeOps.Operator.Finalizer
             get
             {
                 var crd = CustomEntityDefinitionExtensions.CreateResourceDefinition<TEntity>();
-                var name = $"{GetType().Name.ToLowerInvariant()}.{crd.Singular}.finalizers.{crd.Group}";
+                var name = $"{crd.Group}/{GetType().Name.ToLowerInvariant()}finalizer";
                 return name.Length > MaxNameLength
-                    ? name.Substring(0, MaxNameLength)
+                    ? name[..MaxNameLength]
                     : name;
             }
         }
