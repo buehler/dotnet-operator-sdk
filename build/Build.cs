@@ -40,7 +40,7 @@ class Build : NukeBuild
     IEnumerable<Project> Projects => Solution.AllProjects.Where(p => p.SolutionFolder?.Name == "src");
 
     string PackageReleaseNotes => (ReleaseNotes.Length > MaxReleaseNoteLength
-            ? ReleaseNotes.Substring(0, MaxReleaseNoteLength)
+            ? ReleaseNotes[..MaxReleaseNoteLength]
             : ReleaseNotes)
         .Replace(",", "%2c")
         .Replace(";", "%3b");

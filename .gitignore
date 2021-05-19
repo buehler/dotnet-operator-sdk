@@ -11,6 +11,8 @@ nuget/
 artifacts/
 coverage/
 .tmp/
+.nuke/temp
+.nuke/build.schema.json
 
 # Build results
 [Dd]ebug/
