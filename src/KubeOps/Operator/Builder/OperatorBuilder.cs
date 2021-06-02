@@ -162,10 +162,8 @@ namespace KubeOps.Operator.Builder
             // Register event handler
             Services.AddTransient<IEventManager, EventManager>();
 
-            // Add the service provider (for instantiation)
-            // and all found controller types.
+            // Add  all found controller types.
             Services.AddHostedService<ResourceControllerManager>();
-            Services.TryAddSingleton(sp => sp);
             foreach (var (controllerType, _) in _resourceLocator.ControllerTypes)
             {
                 Services.TryAddScoped(controllerType);
