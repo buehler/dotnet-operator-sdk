@@ -139,7 +139,7 @@ namespace KubeOps.Testing
         /// <typeparam name="TEntity">Type of the resource.</typeparam>
         /// <returns>Empty completed task.</returns>
         public Task UpdateStatus<TEntity>(TEntity resource)
-            where TEntity : IKubernetesObject<V1ObjectMeta>, IStatus<object>
+            where TEntity : IKubernetesObject<V1ObjectMeta>
             => Task.CompletedTask;
 
         /// <summary>
