@@ -17,7 +17,7 @@ namespace KubeOps.Test.Operator.Commands.Generators
         [Fact]
         public void Should_Generate_Correct_Number_Of_Crds()
         {
-            _crds.Count.Should().Be(4);
+            _crds.Count.Should().Be(5);
         }
 
         [Fact]
