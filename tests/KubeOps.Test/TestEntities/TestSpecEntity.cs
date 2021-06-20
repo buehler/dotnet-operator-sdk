@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using DotnetKubernetesClient.Entities;
 using k8s.Models;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
@@ -143,6 +144,12 @@ namespace KubeOps.Test.TestEntities
     [GenericAdditionalPrinterColumn(".metadata.namespace", "Namespace", "string")]
     [GenericAdditionalPrinterColumn(".metadata.creationTimestamp", "Age", "date")]
     public class TestSpecEntity : CustomKubernetesEntity<TestSpecEntitySpec>
+    {
+    }
+
+    [KubernetesEntity(Group = "kubeops.test.dev", ApiVersion = "V1")]
+    [EntityScope(EntityScope.Cluster)]
+    public class TestClusterSpecEntity : CustomKubernetesEntity<TestSpecEntitySpec>
     {
     }
 

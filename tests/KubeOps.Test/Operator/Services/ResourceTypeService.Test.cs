@@ -26,7 +26,7 @@ namespace KubeOps.Test.Operator.Services
                 _testAssembliesResourceTypeService.GetTypesWithAttribute<KubernetesEntityAttribute>();
 
             currentAssemblyTypes.Count().Should().Be(11);
-            testAssembliesTypes.Count().Should().Be(13);
+            testAssembliesTypes.Count().Should().Be(14);
         }
 
         [Fact]
@@ -50,7 +50,7 @@ namespace KubeOps.Test.Operator.Services
                 _testAssembliesResourceTypeService.GetAttributes<KubernetesEntityAttribute>();
 
             currentAssemblyAttributes.Count().Should().Be(11);
-            testAssembliesAttributes.Count().Should().Be(13);
+            testAssembliesAttributes.Count().Should().Be(14);
         }
 
         [Fact]

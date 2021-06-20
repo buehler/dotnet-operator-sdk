@@ -17,6 +17,7 @@ namespace KubeOps.Test.Operator.Entities
     public class CrdGenerationTest
     {
         private readonly Type _testSpecEntity = typeof(TestSpecEntity);
+        private readonly Type _testClusterSpecEntity = typeof(TestClusterSpecEntity);
         private readonly Type _testStatusEntity = typeof(TestStatusEntity);
 
         [Fact]
@@ -418,6 +419,16 @@ namespace KubeOps.Test.Operator.Entities
 
             apc.Should().NotBeNull();
             apc.Should().ContainSingle(def => def.JsonPath == ".metadata.creationTimestamp" && def.Name == "Age");
+        }
+
+        [Fact]
+        public void Should_Correctly_Use_Entity_Scope_Attribute()
+        {
+            var scopedCrd = _testSpecEntity.CreateCrd();
+            var clusterCrd = _testClusterSpecEntity.CreateCrd();
+
+            scopedCrd.Spec.Scope.Should().Be("Namespaced");
+            clusterCrd.Spec.Scope.Should().Be("Cluster");
         }
     }
 }
