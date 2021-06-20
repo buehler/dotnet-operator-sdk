@@ -45,7 +45,7 @@ dotnet add package KubeOps
 
 That's it.
 
-### Replace the Run function
+### Update Entrypoint
 
 In your `Program.cs` file, replace `Build().Run()` with `Build().RunOperator(args)`:
 
@@ -55,7 +55,7 @@ public static class Program
     public static Task<int> Main(string[] args) =>
         CreateHostBuilder(args)
             .Build()
-            .RunOperator(args);
+            .RunOperatorAsync(args);
 
     private static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
