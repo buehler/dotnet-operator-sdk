@@ -33,7 +33,7 @@ namespace KubeOps.Operator.Controller
         private readonly OperatorSettings _settings;
         private readonly IFinalizerManager<TEntity> _finalizerManager;
 
-        private readonly Subject<(TEntity Resource, TimeSpan Delay)>
+        private readonly Subject<RequeuedEvent>
             _requeuedEvents = new();
 
         private readonly Subject<QueuedEvent>
@@ -85,9 +85,17 @@ namespace KubeOps.Operator.Controller
         private IObservable<Unit> RequeuedEvents => _requeuedEvents
             .Do(_ => _metrics.RequeuedEvents.Inc())
             .Select(
-                data => Observable.Return(data.Resource).Delay(data.Delay))
+                data => Observable.Return(data).Delay(data.Delay))
             .Switch()
-            .Select(data => Observable.FromAsync(() => UpdateResourceData(data)))
+            .Select(data =>
+                Observable.FromAsync(async () =>
+                {
+                    var queuedEvent = await UpdateResourceData(data.Resource);
+
+                    return data.ResourceEvent.HasValue && queuedEvent != null
+                        ? queuedEvent with { ResourceEvent = data.ResourceEvent.Value }
+                        : queuedEvent;
+                }))
             .Switch()
             .Where(data => data != null)
             .Do(
@@ -269,13 +277,28 @@ namespace KubeOps.Operator.Controller
                         resource.Name());
                     return;
                 case RequeueEventResult requeue:
-                    _logger.LogInformation(
-                        @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue requested with delay ""{requeue}"".",
-                        @event,
-                        resource.Kind,
-                        resource.Name(),
-                        requeue.RequeueIn);
-                    _requeuedEvents.OnNext((resource, requeue.RequeueIn));
+                    // TODO Add a setting to default to requeue as the same type event.
+                    if (requeue.EventType.HasValue)
+                    {
+                        _logger.LogInformation(
+                            @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue requested as type ""{requeueType}"" with delay ""{requeue}"".",
+                            @event,
+                            resource.Kind,
+                            resource.Name(),
+                            requeue.EventType,
+                            requeue.RequeueIn);
+                    }
+                    else
+                    {
+                        _logger.LogInformation(
+                            @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue requested with delay ""{requeue}"".",
+                            @event,
+                            resource.Kind,
+                            resource.Name(),
+                            requeue.RequeueIn);
+                    }
+
+                    _requeuedEvents.OnNext(new RequeuedEvent(requeue.EventType, resource, requeue.RequeueIn));
                     break;
             }
         }
@@ -401,5 +424,7 @@ namespace KubeOps.Operator.Controller
             .Add(TimeSpan.FromMilliseconds(_rnd.Next(0, 1000)));
 
         internal record QueuedEvent(ResourceEventType ResourceEvent, TEntity Resource, int RetryCount = 0);
+
+        private record RequeuedEvent(ResourceEventType? ResourceEvent, TEntity Resource, TimeSpan Delay);
     }
 }
