@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.RegularExpressions;
 using DotnetKubernetesClient;
+using Newtonsoft.Json;
 
 namespace KubeOps.Operator
 {
@@ -90,5 +91,7 @@ namespace KubeOps.Operator
         /// </para>
         /// </summary>
         public bool DefaultRequeueAsSameType { get; set; } = false;
+
+        internal JsonSerializerSettings SerializerSettings { get; set; } = null!;
     }
 }

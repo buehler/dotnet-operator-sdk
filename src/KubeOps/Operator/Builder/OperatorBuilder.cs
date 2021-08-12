@@ -107,9 +107,7 @@ namespace KubeOps.Operator.Builder
 
         internal IOperatorBuilder AddOperatorBase(OperatorSettings settings)
         {
-            Services.AddSingleton(settings);
-
-            var jsonSettings = new JsonSerializerSettings
+            settings.SerializerSettings = new JsonSerializerSettings
             {
                 DateFormatHandling = DateFormatHandling.IsoDateFormat,
                 DateTimeZoneHandling = DateTimeZoneHandling.Utc,
@@ -123,8 +121,8 @@ namespace KubeOps.Operator.Builder
                 },
                 DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
             };
-            Services.AddTransient(_ => jsonSettings);
-            JsonConvert.DefaultSettings = () => jsonSettings;
+
+            Services.AddSingleton(settings);
 
             Services.AddTransient(
                 _ => new SerializerBuilder()

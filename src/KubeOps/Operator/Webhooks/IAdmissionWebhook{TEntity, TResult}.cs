@@ -113,8 +113,11 @@ namespace KubeOps.Operator.Webhooks
                         return;
                     }
 
+                    var jsonSerializerSettings = context.RequestServices.GetRequiredService<OperatorSettings>()
+                        .SerializerSettings;
+
                     using var reader = new StreamReader(context.Request.Body);
-                    var review = JsonConvert.DeserializeObject<AdmissionReview<TEntity>>(await reader.ReadToEndAsync());
+                    var review = JsonConvert.DeserializeObject<AdmissionReview<TEntity>>(await reader.ReadToEndAsync(), jsonSerializerSettings);
 
                     if (review.Request == null)
                     {

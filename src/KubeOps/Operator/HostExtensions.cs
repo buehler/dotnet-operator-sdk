@@ -1,9 +1,7 @@
 ﻿using System.Threading.Tasks;
 using KubeOps.Operator.Commands;
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
 
 namespace KubeOps.Operator
 {
@@ -27,8 +25,6 @@ namespace KubeOps.Operator
                 .Conventions
                 .UseDefaultConventions()
                 .UseConstructorInjection(host.Services);
-
-            JsonConvert.DefaultSettings = () => host.Services.GetRequiredService<JsonSerializerSettings>();
 
             return app.ExecuteAsync(args);
         }
