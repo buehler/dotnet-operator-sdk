@@ -277,7 +277,11 @@ namespace KubeOps.Operator.Controller
                         resource.Name());
                     return;
                 case RequeueEventResult requeue:
-                    // TODO Add a setting to default to requeue as the same type event.
+                    if (_settings.DefaultRequeueAsSameType)
+                    {
+                        requeue = new RequeueEventResult(requeue.RequeueIn, @event);
+                    }
+
                     if (requeue.EventType.HasValue)
                     {
                         _logger.LogInformation(
