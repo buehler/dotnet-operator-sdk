@@ -1,7 +1,11 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using DotnetKubernetesClient;
+using KubeOps.Operator.Serialization;
+using Microsoft.Rest.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace KubeOps.Operator
 {
@@ -92,6 +96,19 @@ namespace KubeOps.Operator
         /// </summary>
         public bool DefaultRequeueAsSameType { get; set; } = false;
 
-        internal JsonSerializerSettings SerializerSettings { get; set; } = null!;
+        internal JsonSerializerSettings SerializerSettings { get; set; } = new()
+        {
+            DateFormatHandling = DateFormatHandling.IsoDateFormat,
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+            NullValueHandling = NullValueHandling.Ignore,
+            ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
+            ContractResolver = new NamingConvention(),
+            Converters = new List<JsonConverter>
+            {
+                new StringEnumConverter { CamelCaseText = true },
+                new Iso8601TimeSpanConverter(),
+            },
+            DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
+        };
     }
 }
