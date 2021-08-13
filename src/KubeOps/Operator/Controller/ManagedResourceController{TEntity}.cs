@@ -287,12 +287,28 @@ namespace KubeOps.Operator.Controller
                 return;
             }
 
+            var (_, resource, retryCount) = data;
+
             _logger.LogDebug(
                 @"Finalize resource ""{kind}/{name}"".",
-                data.Resource.Kind,
-                data.Resource.Name());
+                resource.Kind,
+                resource.Name());
 
-            await _finalizerManager.FinalizeAsync(data.Resource);
+            try
+            {
+                await _finalizerManager.FinalizeAsync(data.Resource);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(
+                    e,
+                    @"Finalize resource ""{kind}/{name}"" threw an error. Retry attempt {retryAttempt}.",
+                    resource.Kind,
+                    resource.Name(),
+                    retryCount + 1);
+                _erroredEvents.OnNext(data with { RetryCount = retryCount + 1 });
+                return;
+            }
         }
 
         private (ResourceEventType ResourceEvent, TEntity Resource) MapCacheResult(
