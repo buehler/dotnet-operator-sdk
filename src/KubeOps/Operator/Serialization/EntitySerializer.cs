@@ -9,10 +9,10 @@ namespace KubeOps.Operator.Serialization
         private readonly ISerializer _yaml;
         private readonly JsonSerializerSettings _jsonSettings;
 
-        public EntitySerializer(ISerializer yaml, JsonSerializerSettings jsonSettings)
+        public EntitySerializer(ISerializer yaml, OperatorSettings operatorSettings)
         {
             _yaml = yaml;
-            _jsonSettings = jsonSettings;
+            _jsonSettings = operatorSettings.SerializerSettings;
             _jsonSettings.Formatting = Formatting.Indented;
             _jsonSettings.NullValueHandling = NullValueHandling.Ignore;
         }

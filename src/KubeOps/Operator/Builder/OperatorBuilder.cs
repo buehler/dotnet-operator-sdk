@@ -109,23 +109,6 @@ namespace KubeOps.Operator.Builder
         {
             Services.AddSingleton(settings);
 
-            var jsonSettings = new JsonSerializerSettings
-            {
-                DateFormatHandling = DateFormatHandling.IsoDateFormat,
-                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-                NullValueHandling = NullValueHandling.Ignore,
-                ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-                ContractResolver = new NamingConvention(),
-                Converters = new List<JsonConverter>
-                {
-                    new StringEnumConverter { CamelCaseText = true },
-                    new Iso8601TimeSpanConverter(),
-                },
-                DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
-            };
-            Services.AddTransient(_ => jsonSettings);
-            JsonConvert.DefaultSettings = () => jsonSettings;
-
             Services.AddTransient(
                 _ => new SerializerBuilder()
                     .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
