@@ -96,7 +96,7 @@ namespace KubeOps.Operator
         /// </summary>
         public bool DefaultRequeueAsSameType { get; set; } = false;
 
-        internal JsonSerializerSettings SerializerSettings { get; set; } = new()
+        internal JsonSerializerSettings SerializerSettings { get; } = new()
         {
             DateFormatHandling = DateFormatHandling.IsoDateFormat,
             DateTimeZoneHandling = DateTimeZoneHandling.Utc,
