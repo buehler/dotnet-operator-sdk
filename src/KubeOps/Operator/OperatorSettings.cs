@@ -78,5 +78,17 @@ namespace KubeOps.Operator
         /// <para>The search will be performed on each "Start" of the controller.</para>
         /// </summary>
         public bool PreloadCache { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// If set to true, returning `ResourceControllerResult.RequeueEvent` will
+        /// automatically requeue the event as the same type.
+        /// </para>
+        /// <para>
+        /// For example, if done from a "Created" event, the event will be queued
+        /// again as "Created" instead of (for example) "NotModified".
+        /// </para>
+        /// </summary>
+        public bool DefaultRequeueAsSameType { get; set; } = false;
     }
 }
