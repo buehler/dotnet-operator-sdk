@@ -147,10 +147,12 @@ namespace KubeOps.Operator.Builder
 
             // Add  all found controller types.
             Services.AddHostedService<ResourceControllerManager>();
-            foreach (var (controllerType, _) in _resourceLocator.ControllerTypes)
+
+            // TODO Assembly Searching
+            /*foreach (var (controllerType, _) in _resourceLocator.ControllerTypes)
             {
                 Services.TryAddScoped(controllerType);
-            }
+            }*/
 
             // Register all found finalizer for the finalize manager
             Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using KubeOps.Operator.Leadership;
@@ -31,13 +32,13 @@ namespace KubeOps.Operator.Controller
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            foreach (var (controllerType, entityType) in _resourceLocator.ControllerTypes)
+            foreach (var controllerType in _services.GetServices<ControllerType>().Distinct())
             {
-                var managedType = typeof(ManagedResourceController<>).MakeGenericType(entityType);
+                var managedType = typeof(ManagedResourceController<>).MakeGenericType(controllerType.EntityType);
                 var managedInstance = _services.GetRequiredService(managedType) as IManagedResourceController ??
-                                      throw new Exception(
-                                          $"Could not create managed controller with type {managedType}.");
-                managedInstance.ControllerType = controllerType;
+                                      throw new Exception($"Could not create managed controller with type {managedType}.");
+
+                managedInstance.ControllerType = controllerType.InstanceType;
                 _controller.Add(managedInstance);
             }
 

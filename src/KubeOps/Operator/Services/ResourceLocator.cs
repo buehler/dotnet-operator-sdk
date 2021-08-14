@@ -17,7 +17,8 @@ namespace KubeOps.Operator.Services
             _assemblies = new HashSet<Assembly>(assemblies);
         }
 
-        public IEnumerable<ControllerType> ControllerTypes => TypeCombo<ControllerType>(
+        // public IEnumerable<ControllerType> ControllerTypes => TypeCombo<ControllerType>(
+        private IEnumerable<ControllerType> ControllerTypes => TypeCombo<ControllerType>(
             typeof(IResourceController<>),
             (t, tt) => new(t, tt));
 
