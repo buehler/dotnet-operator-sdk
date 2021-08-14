@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using KubeOps.Operator;
+using KubeOps.TestOperator.Controller;
 using KubeOps.TestOperator.TestManager;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +15,9 @@ namespace KubeOps.TestOperator.Test
         {
             services
                 .AddKubernetesOperator(s => s.Name = "test-operator")
-                .AddResourceAssembly(Assembly.GetAssembly(typeof(Startup)) ?? throw new Exception("no assembly found"));
+                .AddResourceAssembly(Assembly.GetAssembly(typeof(Startup)) ?? throw new Exception("no assembly found"))
+                .AddController<TestController>();
+
             services.AddSingleton(new Mock<IManager>());
             services.AddSingleton(typeof(IManager), provider => provider.GetRequiredService<Mock<IManager>>().Object);
         }
