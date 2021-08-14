@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using k8s;
+using k8s.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -57,5 +59,14 @@ namespace KubeOps.Operator.Builder
         /// <param name="assembly">The assembly to add.</param>
         /// <returns>The builder for chaining.</returns>
         IOperatorBuilder AddResourceAssembly(Assembly assembly);
+
+        // TODO Add Documentation
+        IOperatorBuilder AddController<TImplementation>()
+            where TImplementation : class;
+
+        // TODO Add Documentation
+        IOperatorBuilder AddController<TImplementation, TEntity>()
+            where TImplementation : class
+            where TEntity : IKubernetesObject<V1ObjectMeta>;
     }
 }

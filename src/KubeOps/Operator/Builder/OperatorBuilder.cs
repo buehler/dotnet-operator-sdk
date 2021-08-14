@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using DotnetKubernetesClient;
 using k8s;
@@ -101,6 +102,53 @@ namespace KubeOps.Operator.Builder
             {
                 Services.TryAddScoped(mutatorType);
             }
+
+            return this;
+        }
+
+        public IOperatorBuilder AddController<TImplementation>()
+            where TImplementation : class
+        {
+            Services.TryAddScoped<TImplementation>();
+
+            var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
+                t.IsConstructedGenericType &&
+                t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
+                .Select(i => i.GenericTypeArguments[0]);
+
+            foreach (var entityType in entityTypes)
+            {
+                Services.AddSingleton(new ControllerType(typeof(TImplementation), entityType));
+
+                var controllerInstanceImplType = typeof(ControllerType<>).MakeGenericType(entityType);
+
+                var controllerInstanceConstructor =
+                    controllerInstanceImplType.GetConstructor(
+                        BindingFlags.NonPublic | BindingFlags.Instance,
+                        null,
+                        new[] { typeof(Type) },
+                        null);
+
+                if (controllerInstanceConstructor is null)
+                {
+                    continue; // This should never happen, but it gets the compiler to shut up about a possible null dereference in the below factory method.
+                }
+
+                Services.AddSingleton(
+                    controllerInstanceImplType,
+                    controllerInstanceConstructor.Invoke(new object[] { typeof(TImplementation) }));
+            }
+
+            return this;
+        }
+
+        public IOperatorBuilder AddController<TImplementation, TEntity>()
+            where TImplementation : class
+            where TEntity : IKubernetesObject<V1ObjectMeta>
+        {
+            Services.TryAddScoped<TImplementation>();
+            Services.AddSingleton(new ControllerType(typeof(TImplementation), typeof(TEntity)));
+            Services.AddSingleton(new ControllerType<TEntity>(typeof(TImplementation)));
 
             return this;
         }
