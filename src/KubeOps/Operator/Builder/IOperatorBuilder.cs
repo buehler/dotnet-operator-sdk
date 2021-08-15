@@ -68,5 +68,14 @@ namespace KubeOps.Operator.Builder
         IOperatorBuilder AddController<TImplementation, TEntity>()
             where TImplementation : class
             where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+        // TODO Add Documentation
+        IOperatorBuilder AddFinalizer<TImplementation>()
+            where TImplementation : class;
+
+        // TODO Add Documentation
+        IOperatorBuilder AddFinalizer<TImplementation, TEntity>()
+            where TImplementation : class
+            where TEntity : IKubernetesObject<V1ObjectMeta>;
     }
 }

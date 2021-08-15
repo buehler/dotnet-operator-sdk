@@ -20,6 +20,9 @@ namespace KubeOps.Operator.Finalizer
         Task RegisterFinalizerAsync<TFinalizer>(TEntity entity)
             where TFinalizer : IResourceFinalizer<TEntity>;
 
+        // TODO Add Documentation
+        Task RegisterAllFinalizersAsync(TEntity entity);
+
         internal Task FinalizeAsync(TEntity entity);
     }
 }

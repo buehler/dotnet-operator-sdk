@@ -112,8 +112,8 @@ namespace KubeOps.Operator.Builder
             Services.TryAddScoped<TImplementation>();
 
             var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
-                t.IsConstructedGenericType &&
-                t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
+                    t.IsConstructedGenericType &&
+                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
                 .Select(i => i.GenericTypeArguments[0]);
 
             foreach (var entityType in entityTypes)
@@ -149,6 +149,53 @@ namespace KubeOps.Operator.Builder
             Services.TryAddScoped<TImplementation>();
             Services.AddSingleton(new ControllerType(typeof(TImplementation), typeof(TEntity)));
             Services.AddSingleton(new ControllerType<TEntity>(typeof(TImplementation)));
+
+            return this;
+        }
+
+        public IOperatorBuilder AddFinalizer<TImplementation>()
+            where TImplementation : class
+        {
+            Services.TryAddScoped<TImplementation>();
+
+            var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
+                    t.IsConstructedGenericType &&
+                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceFinalizer<>)))
+                .Select(i => i.GenericTypeArguments[0]);
+
+            foreach (var entityType in entityTypes)
+            {
+                Services.AddSingleton(new FinalizerType(typeof(TImplementation), entityType));
+
+                var finalizerInstanceImplType = typeof(FinalizerType<>).MakeGenericType(entityType);
+
+                var finalizerInstanceConstructor =
+                    finalizerInstanceImplType.GetConstructor(
+                        BindingFlags.NonPublic | BindingFlags.Instance,
+                        null,
+                        new[] { typeof(Type) },
+                        null);
+
+                if (finalizerInstanceConstructor is null)
+                {
+                    continue; // This should never happen, but it gets the compiler to shut up about a possible null dereference in the below factory method.
+                }
+
+                Services.AddSingleton(
+                    finalizerInstanceImplType,
+                    finalizerInstanceConstructor.Invoke(new object[] { typeof(TImplementation) }));
+            }
+
+            return this;
+        }
+
+        public IOperatorBuilder AddFinalizer<TImplementation, TEntity>()
+            where TImplementation : class
+            where TEntity : IKubernetesObject<V1ObjectMeta>
+        {
+            Services.TryAddScoped<TImplementation>();
+            Services.AddSingleton(new FinalizerType(typeof(TImplementation), typeof(TEntity)));
+            Services.AddSingleton(new FinalizerType<TEntity>(typeof(TImplementation)));
 
             return this;
         }
@@ -204,10 +251,12 @@ namespace KubeOps.Operator.Builder
 
             // Register all found finalizer for the finalize manager
             Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
-            foreach (var finalizerType in _resourceLocator.FinalizerTypes)
+
+            // TODO Assembly Searching
+            /*foreach (var finalizerType in _resourceLocator.FinalizerTypes)
             {
                 Services.TryAddScoped(finalizerType);
-            }
+            }*/
 
             // Register all found validation webhooks
             foreach (var (validatorType, _) in _resourceLocator.ValidatorTypes)

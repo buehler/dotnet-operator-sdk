@@ -22,7 +22,8 @@ namespace KubeOps.Operator.Services
             typeof(IResourceController<>),
             (t, tt) => new(t, tt));
 
-        public IEnumerable<Type> FinalizerTypes => Types
+        // public IEnumerable<Type> FinalizerTypes => Types
+        private IEnumerable<Type> FinalizerTypes => Types
             .Where(
                 t => t.IsClass &&
                      !t.IsAbstract &&

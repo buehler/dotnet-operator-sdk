@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,6 +55,26 @@ namespace KubeOps.Operator.Finalizer
             await _client.Update(entity);
         }
 
+        public async Task RegisterAllFinalizersAsync(TEntity entity)
+        {
+            var finalizerTypes = _services.GetServices<FinalizerType<TEntity>>();
+
+            var registerFinalizerMethod = GetType().GetMethod(nameof(RegisterFinalizerAsync));
+
+            if (registerFinalizerMethod is null)
+            {
+                return;
+            }
+
+            foreach (var type in finalizerTypes)
+            {
+                if (registerFinalizerMethod.Invoke(this, new object[] { entity }) is Task task)
+                {
+                    await task;
+                }
+            }
+        }
+
         async Task IFinalizerManager<TEntity>.FinalizeAsync(TEntity entity)
         {
             using var scope = _services.CreateScope();
@@ -65,8 +86,8 @@ namespace KubeOps.Operator.Finalizer
                 entity.Name());
 
             await Task.WhenAll(
-                _locator
-                    .FinalizerTypes
+                _services.GetServices<FinalizerType<TEntity>>()
+                    .Select(f => f.InstanceType)
                     .Select(scope.ServiceProvider.GetService)
                     .OfType<IResourceFinalizer<TEntity>>()
                     .Where(finalizer => entity.HasFinalizer(finalizer.Identifier))
