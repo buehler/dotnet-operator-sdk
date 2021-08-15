@@ -16,7 +16,6 @@ namespace KubeOps.Operator.Webhooks
         public static V1ValidatingWebhookConfiguration CreateValidator(
             (string OperatorName, string? BaseUrl, byte[]? CaBundle, Admissionregistrationv1ServiceReference? Service)
                 hookConfig,
-            ResourceLocator locator,
             IServiceProvider serviceProvider)
         {
             using var scope = serviceProvider.CreateScope();
@@ -30,12 +29,14 @@ namespace KubeOps.Operator.Webhooks
                 {
                     Name = TrimName($"validators.{hookConfig.OperatorName}").ToLowerInvariant(),
                 },
-                Webhooks = locator
-                    .ValidatorTypes
+                Webhooks = scope.ServiceProvider.GetServices<ValidatorType>()
+                    .Distinct()
                     .Select(
                         wh =>
                         {
-                            var (validatorType, resourceType) = wh;
+                            var validatorType = wh.InstanceType;
+                            var resourceType = wh.EntityType;
+
                             var instance = scope.ServiceProvider.GetRequiredService(validatorType);
 
                             var (name, endpoint) = Metadata<ValidationResult>(instance, resourceType);

@@ -127,7 +127,6 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
             await app.Out.WriteLineAsync("Create validator definition.");
             var validator = Operator.Webhooks.Webhooks.CreateValidator(
                 hookConfig,
-                _resourceLocator,
                 _serviceProvider);
             await _client.Delete<V1ValidatingWebhookConfiguration>(validator.Name(), @namespace);
 

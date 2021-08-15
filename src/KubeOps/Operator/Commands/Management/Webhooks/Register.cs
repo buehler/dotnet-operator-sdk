@@ -6,6 +6,7 @@ using DotnetKubernetesClient;
 using k8s.Models;
 using KubeOps.Operator.Services;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace KubeOps.Operator.Commands.Management.Webhooks
 {
@@ -76,7 +77,7 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
-            await app.Out.WriteLineAsync($"Found {_resourceLocator.ValidatorTypes.Count()} validators.");
+            await app.Out.WriteLineAsync($"Found {_serviceProvider.GetServices<ValidatorType>().Distinct().Count()} validators.");
             await app.Out.WriteLineAsync($"Found {_resourceLocator.MutatorTypes.Count()} mutators.");
 
             var hookConfig = (
@@ -92,7 +93,6 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                     : null);
             var validatorConfig = Operator.Webhooks.Webhooks.CreateValidator(
                 hookConfig,
-                _resourceLocator,
                 _serviceProvider);
             var mutatorConfig = Operator.Webhooks.Webhooks.CreateMutator(
                 hookConfig,

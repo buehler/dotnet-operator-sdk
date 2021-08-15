@@ -47,8 +47,11 @@ namespace KubeOps.Operator
                     using var scope = app.ApplicationServices.CreateScope();
                     var locator = scope.ServiceProvider.GetRequiredService<ResourceLocator>();
 
-                    foreach (var (validatorType, resourceType) in locator.ValidatorTypes)
+                    foreach (var wh in scope.ServiceProvider.GetServices<ValidatorType>().Distinct())
                     {
+                        var validatorType = wh.InstanceType;
+                        var resourceType = wh.EntityType;
+
                         var validator = scope.ServiceProvider.GetRequiredService(validatorType);
                         var registerMethod = typeof(IAdmissionWebhook<,>)
                             .MakeGenericType(resourceType, typeof(ValidationResult))

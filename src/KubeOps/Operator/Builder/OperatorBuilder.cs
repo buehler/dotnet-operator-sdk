@@ -14,6 +14,7 @@ using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
 using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Services;
+using KubeOps.Operator.Webhooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -200,6 +201,53 @@ namespace KubeOps.Operator.Builder
             return this;
         }
 
+        public IOperatorBuilder AddValidationWebhook<TImplementation>()
+            where TImplementation : class
+        {
+            Services.TryAddScoped<TImplementation>();
+
+            var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
+                    t.IsConstructedGenericType &&
+                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IValidationWebhook<>)))
+                .Select(i => i.GenericTypeArguments[0]);
+
+            foreach (var entityType in entityTypes)
+            {
+                Services.AddSingleton(new ValidatorType(typeof(TImplementation), entityType));
+
+                var validatorInstanceImplType = typeof(ValidatorType<>).MakeGenericType(entityType);
+
+                var validatorInstanceConstructor =
+                    validatorInstanceImplType.GetConstructor(
+                        BindingFlags.NonPublic | BindingFlags.Instance,
+                        null,
+                        new[] { typeof(Type) },
+                        null);
+
+                if (validatorInstanceConstructor is null)
+                {
+                    continue; // This should never happen, but it gets the compiler to shut up about a possible null dereference in the below factory method.
+                }
+
+                Services.AddSingleton(
+                    validatorInstanceImplType,
+                    validatorInstanceConstructor.Invoke(new object[] { typeof(TImplementation) }));
+            }
+
+            return this;
+        }
+
+        public IOperatorBuilder AddValidationWebhook<TImplementation, TEntity>()
+            where TImplementation : class
+            where TEntity : IKubernetesObject<V1ObjectMeta>
+        {
+            Services.TryAddScoped<TImplementation>();
+            Services.AddSingleton(new ValidatorType(typeof(TImplementation), typeof(TEntity)));
+            Services.AddSingleton(new ValidatorType<TEntity>(typeof(TImplementation)));
+
+            return this;
+        }
+
         internal IOperatorBuilder AddOperatorBase(OperatorSettings settings)
         {
             Services.AddSingleton(settings);
@@ -258,11 +306,12 @@ namespace KubeOps.Operator.Builder
                 Services.TryAddScoped(finalizerType);
             }*/
 
+            // TODO Assembly Searching
             // Register all found validation webhooks
-            foreach (var (validatorType, _) in _resourceLocator.ValidatorTypes)
+            /*foreach (var (validatorType, _) in _resourceLocator.ValidatorTypes)
             {
                 Services.TryAddScoped(validatorType);
-            }
+            }*/
 
             // Register all found mutation webhooks
             foreach (var (mutatorType, _) in _resourceLocator.MutatorTypes)

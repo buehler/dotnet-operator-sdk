@@ -20,13 +20,17 @@ namespace KubeOps.Operator.Commands.Generators
 
         public RbacGenerator(
             EntitySerializer serializer,
-            ResourceLocator resourceLocator)
+            ResourceLocator resourceLocator,
+            IEnumerable<ValidatorType> validators)
         {
             _serializer = serializer;
             _resourceLocator = resourceLocator;
-            _hasWebhooks = resourceLocator.ValidatorTypes.Any();
+
+            // TODO Consider Mutating Webhooks
+            _hasWebhooks = validators.Any();
         }
 
+        // TODO Remove ResourceLocator
         public V1ClusterRole GenerateManagerRbac(ResourceLocator resourceTypeService)
         {
             var entityRbacPolicyRules = resourceTypeService.GetAttributes<EntityRbacAttribute>()

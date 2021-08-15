@@ -31,7 +31,8 @@ namespace KubeOps.Operator.Services
                          .Any(
                              i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IResourceFinalizer<>)));
 
-        public IEnumerable<ValidatorType> ValidatorTypes => TypeCombo<ValidatorType>(
+        // public IEnumerable<ValidatorType> ValidatorTypes => TypeCombo<ValidatorType>(
+        private IEnumerable<ValidatorType> ValidatorTypes => TypeCombo<ValidatorType>(
             typeof(IValidationWebhook<>),
             (t, tt) => new(t, tt));
 
