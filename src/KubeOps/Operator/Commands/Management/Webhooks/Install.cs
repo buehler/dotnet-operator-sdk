@@ -22,18 +22,15 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
     {
         private readonly IKubernetesClient _client;
         private readonly OperatorSettings _settings;
-        private readonly ResourceLocator _resourceLocator;
         private readonly IServiceProvider _serviceProvider;
 
         public Install(
             IKubernetesClient client,
             OperatorSettings settings,
-            ResourceLocator resourceLocator,
             IServiceProvider serviceProvider)
         {
             _client = client;
             _settings = settings;
-            _resourceLocator = resourceLocator;
             _serviceProvider = serviceProvider;
         }
 
@@ -143,7 +140,6 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
             await app.Out.WriteLineAsync("Create mutator definition.");
             var mutator = Operator.Webhooks.Webhooks.CreateMutator(
                 hookConfig,
-                _resourceLocator,
                 _serviceProvider);
             await _client.Delete<V1MutatingWebhookConfiguration>(mutator.Name(), @namespace);
 

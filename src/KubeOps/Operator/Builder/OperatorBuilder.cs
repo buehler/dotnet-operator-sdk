@@ -248,6 +248,53 @@ namespace KubeOps.Operator.Builder
             return this;
         }
 
+        public IOperatorBuilder AddMutationWebhook<TImplementation>()
+            where TImplementation : class
+        {
+            Services.TryAddScoped<TImplementation>();
+
+            var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
+                    t.IsConstructedGenericType &&
+                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IMutationWebhook<>)))
+                .Select(i => i.GenericTypeArguments[0]);
+
+            foreach (var entityType in entityTypes)
+            {
+                Services.AddSingleton(new MutatorType(typeof(TImplementation), entityType));
+
+                var mutatorInstanceImplType = typeof(MutatorType<>).MakeGenericType(entityType);
+
+                var mutatorInstanceConstructor =
+                    mutatorInstanceImplType.GetConstructor(
+                        BindingFlags.NonPublic | BindingFlags.Instance,
+                        null,
+                        new[] { typeof(Type) },
+                        null);
+
+                if (mutatorInstanceConstructor is null)
+                {
+                    continue; // This should never happen, but it gets the compiler to shut up about a possible null dereference in the below factory method.
+                }
+
+                Services.AddSingleton(
+                    mutatorInstanceImplType,
+                    mutatorInstanceConstructor.Invoke(new object[] { typeof(TImplementation) }));
+            }
+
+            return this;
+        }
+
+        public IOperatorBuilder AddMutationWebhook<TImplementation, TEntity>()
+            where TImplementation : class
+            where TEntity : IKubernetesObject<V1ObjectMeta>
+        {
+            Services.TryAddScoped<TImplementation>();
+            Services.AddSingleton(new MutatorType(typeof(TImplementation), typeof(TEntity)));
+            Services.AddSingleton(new MutatorType<TEntity>(typeof(TImplementation)));
+
+            return this;
+        }
+
         internal IOperatorBuilder AddOperatorBase(OperatorSettings settings)
         {
             Services.AddSingleton(settings);
@@ -313,11 +360,12 @@ namespace KubeOps.Operator.Builder
                 Services.TryAddScoped(validatorType);
             }*/
 
+            // TODO Assembly Searching
             // Register all found mutation webhooks
-            foreach (var (mutatorType, _) in _resourceLocator.MutatorTypes)
+            /*foreach (var (mutatorType, _) in _resourceLocator.MutatorTypes)
             {
                 Services.TryAddScoped(mutatorType);
-            }
+            }*/
 
             return this;
         }

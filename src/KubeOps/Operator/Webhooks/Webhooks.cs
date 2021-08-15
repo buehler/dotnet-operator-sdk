@@ -91,7 +91,6 @@ namespace KubeOps.Operator.Webhooks
         public static V1MutatingWebhookConfiguration CreateMutator(
             (string OperatorName, string? BaseUrl, byte[]? CaBundle, Admissionregistrationv1ServiceReference? Service)
                 hookConfig,
-            ResourceLocator locator,
             IServiceProvider serviceProvider)
         {
             using var scope = serviceProvider.CreateScope();
@@ -105,12 +104,14 @@ namespace KubeOps.Operator.Webhooks
                 {
                     Name = TrimName($"mutators.{hookConfig.OperatorName}").ToLowerInvariant(),
                 },
-                Webhooks = locator
-                    .MutatorTypes
+                Webhooks = scope.ServiceProvider.GetServices<MutatorType>()
+                    .Distinct()
                     .Select(
                         wh =>
                         {
-                            var (mutatorType, resourceType) = wh;
+                            var mutatorType = wh.InstanceType;
+                            var resourceType = wh.EntityType;
+
                             var instance = scope.ServiceProvider.GetRequiredService(mutatorType);
 
                             var (name, endpoint) = Metadata<MutationResult>(instance, resourceType);

@@ -65,8 +65,11 @@ namespace KubeOps.Operator
                             endpoint);
                     }
 
-                    foreach (var (mutatorType, resourceType) in locator.MutatorTypes)
+                    foreach (var wh in scope.ServiceProvider.GetServices<MutatorType>().Distinct())
                     {
+                        var mutatorType = wh.InstanceType;
+                        var resourceType = wh.EntityType;
+
                         var mutator = scope.ServiceProvider.GetRequiredService(mutatorType);
                         var registerMethod = typeof(IAdmissionWebhook<,>)
                             .MakeGenericType(resourceType, typeof(MutationResult))

@@ -19,18 +19,15 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
     {
         private readonly OperatorSettings _settings;
         private readonly IKubernetesClient _client;
-        private readonly ResourceLocator _resourceLocator;
         private readonly IServiceProvider _serviceProvider;
 
         public Register(
             OperatorSettings settings,
             IKubernetesClient client,
-            ResourceLocator resourceLocator,
             IServiceProvider serviceProvider)
         {
             _settings = settings;
             _client = client;
-            _resourceLocator = resourceLocator;
             _serviceProvider = serviceProvider;
         }
 
@@ -78,7 +75,7 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
             await app.Out.WriteLineAsync($"Found {_serviceProvider.GetServices<ValidatorType>().Distinct().Count()} validators.");
-            await app.Out.WriteLineAsync($"Found {_resourceLocator.MutatorTypes.Count()} mutators.");
+            await app.Out.WriteLineAsync($"Found {_serviceProvider.GetServices<MutatorType>().Distinct().Count()} mutators.");
 
             var hookConfig = (
                 _settings.Name,
@@ -96,7 +93,6 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                 _serviceProvider);
             var mutatorConfig = Operator.Webhooks.Webhooks.CreateMutator(
                 hookConfig,
-                _resourceLocator,
                 _serviceProvider);
 
             await app.Out.WriteLineAsync($@"Install ""{validatorConfig.Metadata.Name}"" validator on cluster.");

@@ -36,7 +36,8 @@ namespace KubeOps.Operator.Services
             typeof(IValidationWebhook<>),
             (t, tt) => new(t, tt));
 
-        public IEnumerable<MutatorType> MutatorTypes => TypeCombo<MutatorType>(
+        // public IEnumerable<MutatorType> MutatorTypes => TypeCombo<MutatorType>(
+        private IEnumerable<MutatorType> MutatorTypes => TypeCombo<MutatorType>(
             typeof(IMutationWebhook<>),
             (t, tt) => new(t, tt));
 
