@@ -107,6 +107,14 @@ namespace KubeOps.Operator.Builder
             return this;
         }
 
+        public IOperatorBuilder AddEntity<TEntity>()
+            where TEntity : IKubernetesObject<V1ObjectMeta>
+        {
+            Services.AddSingleton(new EntityType(typeof(TEntity)));
+
+            return this;
+        }
+
         public IOperatorBuilder AddController<TImplementation>()
             where TImplementation : class
         {
@@ -135,6 +143,8 @@ namespace KubeOps.Operator.Builder
                     continue; // This should never happen, but it gets the compiler to shut up about a possible null dereference in the below factory method.
                 }
 
+                Services.AddSingleton(new EntityType(entityType));
+
                 Services.AddSingleton(
                     controllerInstanceImplType,
                     controllerInstanceConstructor.Invoke(new object[] { typeof(TImplementation) }));
@@ -148,6 +158,7 @@ namespace KubeOps.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             Services.TryAddScoped<TImplementation>();
+            Services.AddSingleton(new EntityType(typeof(TEntity)));
             Services.AddSingleton(new ControllerType(typeof(TImplementation), typeof(TEntity)));
             Services.AddSingleton(new ControllerType<TEntity>(typeof(TImplementation)));
 
@@ -182,6 +193,8 @@ namespace KubeOps.Operator.Builder
                     continue; // This should never happen, but it gets the compiler to shut up about a possible null dereference in the below factory method.
                 }
 
+                Services.AddSingleton(new EntityType(entityType));
+
                 Services.AddSingleton(
                     finalizerInstanceImplType,
                     finalizerInstanceConstructor.Invoke(new object[] { typeof(TImplementation) }));
@@ -195,6 +208,7 @@ namespace KubeOps.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             Services.TryAddScoped<TImplementation>();
+            Services.AddSingleton(new EntityType(typeof(TEntity)));
             Services.AddSingleton(new FinalizerType(typeof(TImplementation), typeof(TEntity)));
             Services.AddSingleton(new FinalizerType<TEntity>(typeof(TImplementation)));
 
@@ -229,6 +243,8 @@ namespace KubeOps.Operator.Builder
                     continue; // This should never happen, but it gets the compiler to shut up about a possible null dereference in the below factory method.
                 }
 
+                Services.AddSingleton(new EntityType(entityType));
+
                 Services.AddSingleton(
                     validatorInstanceImplType,
                     validatorInstanceConstructor.Invoke(new object[] { typeof(TImplementation) }));
@@ -242,6 +258,7 @@ namespace KubeOps.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             Services.TryAddScoped<TImplementation>();
+            Services.AddSingleton(new EntityType(typeof(TEntity)));
             Services.AddSingleton(new ValidatorType(typeof(TImplementation), typeof(TEntity)));
             Services.AddSingleton(new ValidatorType<TEntity>(typeof(TImplementation)));
 
@@ -276,6 +293,8 @@ namespace KubeOps.Operator.Builder
                     continue; // This should never happen, but it gets the compiler to shut up about a possible null dereference in the below factory method.
                 }
 
+                Services.AddSingleton(new EntityType(entityType));
+
                 Services.AddSingleton(
                     mutatorInstanceImplType,
                     mutatorInstanceConstructor.Invoke(new object[] { typeof(TImplementation) }));
@@ -289,6 +308,7 @@ namespace KubeOps.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             Services.TryAddScoped<TImplementation>();
+            Services.AddSingleton(new EntityType(typeof(TEntity)));
             Services.AddSingleton(new MutatorType(typeof(TImplementation), typeof(TEntity)));
             Services.AddSingleton(new MutatorType<TEntity>(typeof(TImplementation)));
 

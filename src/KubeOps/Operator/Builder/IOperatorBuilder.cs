@@ -61,6 +61,10 @@ namespace KubeOps.Operator.Builder
         IOperatorBuilder AddResourceAssembly(Assembly assembly);
 
         // TODO Add Documentation
+        IOperatorBuilder AddEntity<TEntity>()
+            where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+        // TODO Add Documentation
         IOperatorBuilder AddController<TImplementation>()
             where TImplementation : class;
 
