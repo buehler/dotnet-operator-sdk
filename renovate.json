@@ -46,6 +46,6 @@
     {
       "packageNames": ["StyleCop.Analyzers"],
       "enabled": false
-    },
+    }
   ]
 }
