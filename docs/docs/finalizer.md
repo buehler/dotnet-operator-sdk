@@ -65,3 +65,24 @@ public class TestController : IResourceController<V1TestEntity>
     }
 }
 ```
+
+Alternatively, the <xref:KubeOps.Operator.Finalizer.IFinalizerManager`1.RegisterAllFinalizersAsync(`0)>
+method can be used to attach all finalizers known to the operator for that entity type.
+
+```csharp
+public class TestController : IResourceController<V1TestEntity>
+{
+    private readonly IFinalizerManager<V1TestEntity> _manager;
+
+    public TestController(IFinalizerManager<V1TestEntity> manager)
+    {
+        _manager = manager;
+    }
+
+    public async Task<ResourceControllerResult> CreatedAsync(V1TestEntity resource)
+    {
+        await _manager.RegisterAllFinalizersAsync(resource);
+        return null;
+    }
+}
+```

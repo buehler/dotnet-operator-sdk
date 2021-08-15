@@ -62,7 +62,7 @@ namespace KubeOps.Operator.Builder
 
         /// <summary>
         /// <para>
-        /// Adds an entity to the operator to be considered for RBAC & CRD generation.
+        /// Adds an entity to the operator to be considered for RBAC / CRD generation.
         /// </para>
         /// <para>
         /// Only useful if a) the given type is not referenced by a controller, finalizer, or webhook
