@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using k8s.Models;
-using KubeOps.Operator.Rbac;
 using KubeOps.Operator.Services;
 
-namespace KubeOps.Operator.Util
+namespace KubeOps.Operator.Rbac
 {
     internal class RbacBuilder : IRbacBuilder
     {

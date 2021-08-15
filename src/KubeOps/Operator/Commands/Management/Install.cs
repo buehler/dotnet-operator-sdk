@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s.Models;
 using KubeOps.Operator.Commands.Generators;
+using KubeOps.Operator.Entities;
 using KubeOps.Operator.Services;
 using KubeOps.Operator.Util;
 using McMaster.Extensions.CommandLineUtils;

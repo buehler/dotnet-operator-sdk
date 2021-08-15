@@ -8,7 +8,7 @@ using KubeOps.Operator.Entities.Annotations;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Services;
 
-namespace KubeOps.Operator.Util
+namespace KubeOps.Operator.Entities
 {
     internal class CrdBuilder : ICrdBuilder
     {

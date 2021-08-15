@@ -1,6 +1,6 @@
 using k8s.Models;
 
-namespace KubeOps.Operator.Util
+namespace KubeOps.Operator.Rbac
 {
     public interface IRbacBuilder
     {

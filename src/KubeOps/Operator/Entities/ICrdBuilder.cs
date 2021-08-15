@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using k8s.Models;
 
-namespace KubeOps.Operator.Util
+namespace KubeOps.Operator.Entities
 {
     public interface ICrdBuilder
     {

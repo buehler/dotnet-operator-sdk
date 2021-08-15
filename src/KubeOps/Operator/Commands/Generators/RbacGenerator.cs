@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using k8s.Models;
 using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Kustomize;
+using KubeOps.Operator.Rbac;
 using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Util;
 using McMaster.Extensions.CommandLineUtils;
