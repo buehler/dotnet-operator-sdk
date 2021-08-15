@@ -96,6 +96,14 @@ namespace KubeOps.Operator
         /// </summary>
         public bool DefaultRequeueAsSameType { get; set; } = false;
 
+        /// <summary>
+        /// <para>
+        /// If set to true, the executing assembly will be scanned for controllers,
+        /// finalizers, mutators and validators.
+        /// </para>
+        /// </summary>
+        public bool EnableAssemblyScanning { get; set; } = true;
+
         internal JsonSerializerSettings SerializerSettings { get; } = new()
         {
             DateFormatHandling = DateFormatHandling.IsoDateFormat,

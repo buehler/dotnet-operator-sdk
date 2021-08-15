@@ -29,10 +29,12 @@ namespace KubeOps.Operator.Builder
     {
         internal const string LivenessTag = "liveness";
         internal const string ReadinessTag = "readiness";
+        private IAssemblyScanner _assemblyScanner;
 
         public OperatorBuilder(IServiceCollection services)
         {
             Services = services;
+            _assemblyScanner = new AssemblyScanner(this);
         }
 
         public IServiceCollection Services { get; }
@@ -75,8 +77,8 @@ namespace KubeOps.Operator.Builder
 
         public IOperatorBuilder AddResourceAssembly(Assembly assembly)
         {
-            // TODO Implement
-            // throw new NotImplementedException();
+            _assemblyScanner.AddAssembly(assembly);
+
             return this;
         }
 
@@ -226,6 +228,18 @@ namespace KubeOps.Operator.Builder
 
         internal IOperatorBuilder AddOperatorBase(OperatorSettings settings)
         {
+            if (settings.EnableAssemblyScanning)
+            {
+                _assemblyScanner
+                    .AddAssembly(Assembly.GetEntryAssembly() ?? throw new Exception("No Entry Assembly found."))
+                    .AddAssembly(Assembly.GetExecutingAssembly());
+            }
+            else
+            {
+                // This will cause calls to IOperatorBuilder.AddResourceAssembly to throw an InvalidOperationException
+                _assemblyScanner = new DisabledAssemblyScanner();
+            }
+
             Services.AddSingleton(settings);
 
             Services.AddTransient(
@@ -272,10 +286,6 @@ namespace KubeOps.Operator.Builder
             Services.TryAddSingleton<ICrdBuilder, CrdBuilder>();
             Services.TryAddSingleton<IRbacBuilder, RbacBuilder>();
 
-            // TODO Assembly Searching for Controllers
-            // TODO Assembly Searching for Finalizers
-            // TODO Assembly Searching for Validators
-            // TODO Assembly Searching for Mutators
             return this;
         }
     }
