@@ -90,28 +90,6 @@ namespace KubeOps.Operator.Builder
             return this;
         }
 
-        public IOperatorBuilder AddController<TImplementation>()
-            where TImplementation : class
-        {
-            var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
-                    t.IsConstructedGenericType &&
-                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
-                .Select(i => i.GenericTypeArguments[0]);
-
-            var genericRegistrationMethod = GetType()
-                .GetMethods()
-                .Single(m => m.Name == nameof(AddController) && m.GetGenericArguments().Length == 2);
-
-            foreach (var entityType in entityTypes)
-            {
-                var registrationMethod =
-                    genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType);
-                registrationMethod.Invoke(this, Array.Empty<object>());
-            }
-
-            return this;
-        }
-
         public IOperatorBuilder AddController<TImplementation, TEntity>()
             where TImplementation : class
             where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -120,28 +98,6 @@ namespace KubeOps.Operator.Builder
             Services.AddSingleton(new EntityType(typeof(TEntity)));
             Services.AddSingleton(new ControllerType(typeof(TImplementation), typeof(TEntity)));
             Services.AddSingleton(new ControllerType<TEntity>(typeof(TImplementation)));
-
-            return this;
-        }
-
-        public IOperatorBuilder AddFinalizer<TImplementation>()
-            where TImplementation : class
-        {
-            var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
-                    t.IsConstructedGenericType &&
-                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceFinalizer<>)))
-                .Select(i => i.GenericTypeArguments[0]);
-
-            var genericRegistrationMethod = GetType()
-                .GetMethods()
-                .Single(m => m.Name == nameof(AddFinalizer) && m.GetGenericArguments().Length == 2);
-
-            foreach (var entityType in entityTypes)
-            {
-                var registrationMethod =
-                    genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType);
-                registrationMethod.Invoke(this, Array.Empty<object>());
-            }
 
             return this;
         }
@@ -158,28 +114,6 @@ namespace KubeOps.Operator.Builder
             return this;
         }
 
-        public IOperatorBuilder AddValidationWebhook<TImplementation>()
-            where TImplementation : class
-        {
-            var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
-                    t.IsConstructedGenericType &&
-                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IValidationWebhook<>)))
-                .Select(i => i.GenericTypeArguments[0]);
-
-            var genericRegistrationMethod = GetType()
-                .GetMethods()
-                .Single(m => m.Name == nameof(AddValidationWebhook) && m.GetGenericArguments().Length == 2);
-
-            foreach (var entityType in entityTypes)
-            {
-                var registrationMethod =
-                    genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType);
-                registrationMethod.Invoke(this, Array.Empty<object>());
-            }
-
-            return this;
-        }
-
         public IOperatorBuilder AddValidationWebhook<TImplementation, TEntity>()
             where TImplementation : class
             where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -188,28 +122,6 @@ namespace KubeOps.Operator.Builder
             Services.AddSingleton(new EntityType(typeof(TEntity)));
             Services.AddSingleton(new ValidatorType(typeof(TImplementation), typeof(TEntity)));
             Services.AddSingleton(new ValidatorType<TEntity>(typeof(TImplementation)));
-
-            return this;
-        }
-
-        public IOperatorBuilder AddMutationWebhook<TImplementation>()
-            where TImplementation : class
-        {
-            var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
-                    t.IsConstructedGenericType &&
-                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IMutationWebhook<>)))
-                .Select(i => i.GenericTypeArguments[0]);
-
-            var genericRegistrationMethod = GetType()
-                .GetMethods()
-                .Single(m => m.Name == nameof(AddMutationWebhook) && m.GetGenericArguments().Length == 2);
-
-            foreach (var entityType in entityTypes)
-            {
-                var registrationMethod =
-                    genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType);
-                registrationMethod.Invoke(this, Array.Empty<object>());
-            }
 
             return this;
         }

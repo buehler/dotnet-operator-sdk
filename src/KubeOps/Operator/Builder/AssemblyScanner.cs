@@ -19,7 +19,8 @@ namespace KubeOps.Operator.Builder
         {
             _operatorBuilder = operatorBuilder;
 
-            var operatorBuilderMethods = typeof(IOperatorBuilder).GetMethods();
+            var operatorBuilderMethods = typeof(OperatorBuilderExtensions).GetMethods(
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
             _registrationDefinitions =
                 new (Type Type, string MethodName)[]
@@ -61,7 +62,7 @@ namespace KubeOps.Operator.Builder
 
             foreach (var method in registrationMethods)
             {
-                method.Invoke(_operatorBuilder, Array.Empty<object>());
+                method.Invoke(null, new object[] { _operatorBuilder });
             }
 
             return this;

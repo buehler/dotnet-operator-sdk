@@ -76,20 +76,6 @@ namespace KubeOps.Operator.Builder
 
         /// <summary>
         /// <para>
-        /// Adds an controller to the operator and registers it to be used for all entities supported
-        /// by its type definition.
-        /// </para>
-        /// <para>
-        /// Only useful if the assembly containing the given type is not already automatically scanned.
-        /// </para>
-        /// </summary>
-        /// <typeparam name="TImplementation">The type of the controller to register.</typeparam>
-        /// <returns>The builder for chaining.</returns>
-        IOperatorBuilder AddController<TImplementation>()
-            where TImplementation : class;
-
-        /// <summary>
-        /// <para>
         /// Adds an controller to the operator and registers it to be used for one specific entity type.
         /// Can be called multiple times for the same controller.
         /// </para>
@@ -103,20 +89,6 @@ namespace KubeOps.Operator.Builder
         IOperatorBuilder AddController<TImplementation, TEntity>()
             where TImplementation : class
             where TEntity : IKubernetesObject<V1ObjectMeta>;
-
-        /// <summary>
-        /// <para>
-        /// Adds a finalizer to the operator and registers it to be used for all entities supported
-        /// by its type definition.
-        /// </para>
-        /// <para>
-        /// Only useful if the assembly containing the given type is not already automatically scanned.
-        /// </para>
-        /// </summary>
-        /// <typeparam name="TImplementation">The type of the finalizer to register.</typeparam>
-        /// <returns>The builder for chaining.</returns>
-        IOperatorBuilder AddFinalizer<TImplementation>()
-            where TImplementation : class;
 
         /// <summary>
         /// <para>
@@ -136,20 +108,6 @@ namespace KubeOps.Operator.Builder
 
         /// <summary>
         /// <para>
-        /// Adds a validating webhook to the operator and registers it to be used for all entities
-        /// supported by its type definition.
-        /// </para>
-        /// <para>
-        /// Only useful if the assembly containing the given type is not already automatically scanned.
-        /// </para>
-        /// </summary>
-        /// <typeparam name="TImplementation">The type of the webhook to register.</typeparam>
-        /// <returns>The builder for chaining.</returns>
-        IOperatorBuilder AddValidationWebhook<TImplementation>()
-            where TImplementation : class;
-
-        /// <summary>
-        /// <para>
         /// Adds a validating webhook to the operator and registers it to be used for one specific
         /// entity type. Can be called multiple times for the same webhook.
         /// </para>
@@ -163,20 +121,6 @@ namespace KubeOps.Operator.Builder
         IOperatorBuilder AddValidationWebhook<TImplementation, TEntity>()
             where TImplementation : class
             where TEntity : IKubernetesObject<V1ObjectMeta>;
-
-        /// <summary>
-        /// <para>
-        /// Adds a mutating webhook to the operator and registers it to be used for all entities
-        /// supported by its type definition.
-        /// </para>
-        /// <para>
-        /// Only useful if the assembly containing the given type is not already automatically scanned.
-        /// </para>
-        /// </summary>
-        /// <typeparam name="TImplementation">The type of the webhook to register.</typeparam>
-        /// <returns>The builder for chaining.</returns>
-        IOperatorBuilder AddMutationWebhook<TImplementation>()
-            where TImplementation : class;
 
         /// <summary>
         /// <para>
