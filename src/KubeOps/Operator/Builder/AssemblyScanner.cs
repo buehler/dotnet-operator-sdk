@@ -25,11 +25,11 @@ namespace KubeOps.Operator.Builder
             _registrationDefinitions =
                 new (Type Type, string MethodName)[]
                     {
-                        new() { Type = typeof(IKubernetesObject<V1ObjectMeta>), MethodName = "AddEntity" },
-                        new() { Type = typeof(IResourceController<>), MethodName = "AddController" },
-                        new() { Type = typeof(IResourceFinalizer<>), MethodName = "AddFinalizer" },
-                        new() { Type = typeof(IValidationWebhook<>), MethodName = "AddValidationWebhook" },
-                        new() { Type = typeof(IMutationWebhook<>), MethodName = "AddMutationWebhook" },
+                        new() { Type = typeof(IKubernetesObject<V1ObjectMeta>), MethodName = nameof(OperatorBuilderExtensions.AddEntity) },
+                        new() { Type = typeof(IResourceController<>), MethodName = nameof(OperatorBuilderExtensions.AddController) },
+                        new() { Type = typeof(IResourceFinalizer<>), MethodName = nameof(OperatorBuilderExtensions.AddFinalizer) },
+                        new() { Type = typeof(IValidationWebhook<>), MethodName = nameof(OperatorBuilderExtensions.AddValidationWebhook) },
+                        new() { Type = typeof(IMutationWebhook<>), MethodName = nameof(OperatorBuilderExtensions.AddMutationWebhook) },
                     }
                     .Select<(Type Type, string MethodName), (Type Type, MethodInfo RegistrationMethod)>(
                         t => new()

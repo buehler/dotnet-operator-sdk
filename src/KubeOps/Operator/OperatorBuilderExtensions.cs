@@ -153,8 +153,8 @@ namespace KubeOps.Operator
 
         // Yes, this is here for a reason. To avoid complexity in AssemblyScanner,
         // this class needed to have a method for AddEntity, even though it is a
-        // private method that is a straight pass-through to the interface's method. 
-        private static IOperatorBuilder AddEntity<TEntity>(this IOperatorBuilder builder)
+        // private method that is a straight pass-through to the interface's method.
+        internal static IOperatorBuilder AddEntity<TEntity>(this IOperatorBuilder builder)
             where TEntity : IKubernetesObject<V1ObjectMeta>
             => builder.AddEntity<TEntity>();
     }
