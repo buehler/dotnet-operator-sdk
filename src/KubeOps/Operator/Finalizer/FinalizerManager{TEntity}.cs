@@ -18,18 +18,15 @@ namespace KubeOps.Operator.Finalizer
     {
         private readonly IKubernetesClient _client;
         private readonly IServiceProvider _services;
-        private readonly ResourceLocator _locator;
         private readonly ILogger<FinalizerManager<TEntity>> _logger;
 
         public FinalizerManager(
             IKubernetesClient client,
             IServiceProvider services,
-            ResourceLocator locator,
             ILogger<FinalizerManager<TEntity>> logger)
         {
             _client = client;
             _services = services;
-            _locator = locator;
             _logger = logger;
         }
 

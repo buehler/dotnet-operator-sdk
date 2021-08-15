@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using DotnetKubernetesClient;
@@ -14,13 +13,11 @@ using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
 using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Services;
+using KubeOps.Operator.Util;
 using KubeOps.Operator.Webhooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Rest.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Prometheus;
 using YamlDotNet.Serialization;
 
@@ -30,10 +27,6 @@ namespace KubeOps.Operator.Builder
     {
         internal const string LivenessTag = "liveness";
         internal const string ReadinessTag = "readiness";
-
-        private readonly ResourceLocator _resourceLocator = new(
-            Assembly.GetEntryAssembly() ?? throw new Exception("No Entry Assembly found."),
-            Assembly.GetExecutingAssembly());
 
         public OperatorBuilder(IServiceCollection services)
         {
@@ -80,30 +73,8 @@ namespace KubeOps.Operator.Builder
 
         public IOperatorBuilder AddResourceAssembly(Assembly assembly)
         {
-            // This is kind of ugly to register the newly found controllers and stuff.
-            // Maybe this needs to be refactored.
-            var (controllers, finalizers, validators, mutators) = _resourceLocator.Add(assembly);
-
-            foreach (var controllerType in controllers)
-            {
-                Services.TryAddScoped(controllerType);
-            }
-
-            foreach (var finalizerType in finalizers)
-            {
-                Services.TryAddScoped(finalizerType);
-            }
-
-            foreach (var validatorType in validators)
-            {
-                Services.TryAddScoped(validatorType);
-            }
-
-            foreach (var mutatorType in mutators)
-            {
-                Services.TryAddScoped(mutatorType);
-            }
-
+            // TODO Implement
+            // throw new NotImplementedException();
             return this;
         }
 
@@ -332,8 +303,6 @@ namespace KubeOps.Operator.Builder
             Services.AddTransient<IKubernetesClient, KubernetesClient>();
             Services.AddTransient<IEventManager, EventManager>();
 
-            Services.AddSingleton(_resourceLocator);
-
             Services.AddTransient(typeof(ResourceCache<>));
             Services.AddTransient(typeof(ResourceWatcher<>));
             Services.AddTransient(typeof(ManagedResourceController<>));
@@ -355,38 +324,20 @@ namespace KubeOps.Operator.Builder
             // Register event handler
             Services.AddTransient<IEventManager, EventManager>();
 
-            // Add  all found controller types.
+            // Register controller manager
             Services.AddHostedService<ResourceControllerManager>();
 
-            // TODO Assembly Searching
-            /*foreach (var (controllerType, _) in _resourceLocator.ControllerTypes)
-            {
-                Services.TryAddScoped(controllerType);
-            }*/
-
-            // Register all found finalizer for the finalize manager
+            // Register finalizer manager
             Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
 
-            // TODO Assembly Searching
-            /*foreach (var finalizerType in _resourceLocator.FinalizerTypes)
-            {
-                Services.TryAddScoped(finalizerType);
-            }*/
+            // Register builders for RBAC rules and CRDs
+            Services.TryAddSingleton<ICrdBuilder, CrdBuilder>();
+            Services.TryAddSingleton<IRbacBuilder, RbacBuilder>();
 
-            // TODO Assembly Searching
-            // Register all found validation webhooks
-            /*foreach (var (validatorType, _) in _resourceLocator.ValidatorTypes)
-            {
-                Services.TryAddScoped(validatorType);
-            }*/
-
-            // TODO Assembly Searching
-            // Register all found mutation webhooks
-            /*foreach (var (mutatorType, _) in _resourceLocator.MutatorTypes)
-            {
-                Services.TryAddScoped(mutatorType);
-            }*/
-
+            // TODO Assembly Searching for Controllers
+            // TODO Assembly Searching for Finalizers
+            // TODO Assembly Searching for Validators
+            // TODO Assembly Searching for Mutators
             return this;
         }
     }

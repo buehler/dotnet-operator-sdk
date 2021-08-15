@@ -255,14 +255,6 @@ namespace KubeOps.Test.Operator.Entities
         }
 
         [Fact]
-        public void Should_Ignore_Entity_With_Ignore_Attribute()
-        {
-            var crds = CrdGenerator.GenerateCrds(new(Assembly.GetExecutingAssembly())).ToList();
-            crds.Should().NotContain(crd => crd.Spec.Names.Kind == "TestIgnoredEntity");
-            crds.Should().Contain(crd => crd.Spec.Names.Kind == "TestSpecEntity");
-        }
-
-        [Fact]
         public void Should_Set_Preserve_Unknown_Fields()
         {
             var crd = _testSpecEntity.CreateCrd();

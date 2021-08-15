@@ -14,7 +14,6 @@ namespace KubeOps.Operator.Controller
     {
         private readonly IServiceProvider _services;
         private readonly ILeaderElection _leaderElection;
-        private readonly ResourceLocator _resourceLocator;
 
         private readonly List<IManagedResourceController> _controller = new();
 
@@ -22,12 +21,10 @@ namespace KubeOps.Operator.Controller
 
         public ResourceControllerManager(
             IServiceProvider services,
-            ILeaderElection leaderElection,
-            ResourceLocator resourceLocator)
+            ILeaderElection leaderElection)
         {
             _services = services;
             _leaderElection = leaderElection;
-            _resourceLocator = resourceLocator;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)

@@ -21,13 +21,13 @@ namespace KubeOps.Operator.Commands.Generators
         public OperatorGenerator(
             EntitySerializer serializer,
             OperatorSettings settings,
-            IEnumerable<ValidatorType> validators)
+            IEnumerable<ValidatorType> validators,
+            IEnumerable<MutatorType> mutators)
         {
             _serializer = serializer;
             _settings = settings;
 
-            // TODO Consider Mutating Webhooks
-            _hasWebhooks = validators.Any();
+            _hasWebhooks = validators.Any() || mutators.Any();
         }
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)

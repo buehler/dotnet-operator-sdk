@@ -45,7 +45,6 @@ namespace KubeOps.Operator
                         .CreateLogger("ApplicationStartup");
 
                     using var scope = app.ApplicationServices.CreateScope();
-                    var locator = scope.ServiceProvider.GetRequiredService<ResourceLocator>();
 
                     foreach (var wh in scope.ServiceProvider.GetServices<ValidatorType>().Distinct())
                     {
