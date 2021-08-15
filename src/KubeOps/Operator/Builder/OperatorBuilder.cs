@@ -89,36 +89,20 @@ namespace KubeOps.Operator.Builder
         public IOperatorBuilder AddController<TImplementation>()
             where TImplementation : class
         {
-            Services.TryAddScoped<TImplementation>();
-
             var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
                     t.IsConstructedGenericType &&
                     t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
                 .Select(i => i.GenericTypeArguments[0]);
 
+            var genericRegistrationMethod = GetType()
+                .GetMethods()
+                .Single(m => m.Name == nameof(AddController) && m.GetGenericArguments().Length == 2);
+
             foreach (var entityType in entityTypes)
             {
-                Services.AddSingleton(new ControllerType(typeof(TImplementation), entityType));
-
-                var controllerInstanceImplType = typeof(ControllerType<>).MakeGenericType(entityType);
-
-                var controllerInstanceConstructor =
-                    controllerInstanceImplType.GetConstructor(
-                        BindingFlags.NonPublic | BindingFlags.Instance,
-                        null,
-                        new[] { typeof(Type) },
-                        null);
-
-                if (controllerInstanceConstructor is null)
-                {
-                    continue; // This should never happen, but it gets the compiler to shut up about a possible null dereference in the below factory method.
-                }
-
-                Services.AddSingleton(new EntityType(entityType));
-
-                Services.AddSingleton(
-                    controllerInstanceImplType,
-                    controllerInstanceConstructor.Invoke(new object[] { typeof(TImplementation) }));
+                var registrationMethod =
+                    genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType);
+                registrationMethod.Invoke(this, Array.Empty<object>());
             }
 
             return this;
@@ -139,36 +123,20 @@ namespace KubeOps.Operator.Builder
         public IOperatorBuilder AddFinalizer<TImplementation>()
             where TImplementation : class
         {
-            Services.TryAddScoped<TImplementation>();
-
             var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
                     t.IsConstructedGenericType &&
                     t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceFinalizer<>)))
                 .Select(i => i.GenericTypeArguments[0]);
 
+            var genericRegistrationMethod = GetType()
+                .GetMethods()
+                .Single(m => m.Name == nameof(AddFinalizer) && m.GetGenericArguments().Length == 2);
+
             foreach (var entityType in entityTypes)
             {
-                Services.AddSingleton(new FinalizerType(typeof(TImplementation), entityType));
-
-                var finalizerInstanceImplType = typeof(FinalizerType<>).MakeGenericType(entityType);
-
-                var finalizerInstanceConstructor =
-                    finalizerInstanceImplType.GetConstructor(
-                        BindingFlags.NonPublic | BindingFlags.Instance,
-                        null,
-                        new[] { typeof(Type) },
-                        null);
-
-                if (finalizerInstanceConstructor is null)
-                {
-                    continue; // This should never happen, but it gets the compiler to shut up about a possible null dereference in the below factory method.
-                }
-
-                Services.AddSingleton(new EntityType(entityType));
-
-                Services.AddSingleton(
-                    finalizerInstanceImplType,
-                    finalizerInstanceConstructor.Invoke(new object[] { typeof(TImplementation) }));
+                var registrationMethod =
+                    genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType);
+                registrationMethod.Invoke(this, Array.Empty<object>());
             }
 
             return this;
@@ -189,36 +157,20 @@ namespace KubeOps.Operator.Builder
         public IOperatorBuilder AddValidationWebhook<TImplementation>()
             where TImplementation : class
         {
-            Services.TryAddScoped<TImplementation>();
-
             var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
                     t.IsConstructedGenericType &&
                     t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IValidationWebhook<>)))
                 .Select(i => i.GenericTypeArguments[0]);
 
+            var genericRegistrationMethod = GetType()
+                .GetMethods()
+                .Single(m => m.Name == nameof(AddValidationWebhook) && m.GetGenericArguments().Length == 2);
+
             foreach (var entityType in entityTypes)
             {
-                Services.AddSingleton(new ValidatorType(typeof(TImplementation), entityType));
-
-                var validatorInstanceImplType = typeof(ValidatorType<>).MakeGenericType(entityType);
-
-                var validatorInstanceConstructor =
-                    validatorInstanceImplType.GetConstructor(
-                        BindingFlags.NonPublic | BindingFlags.Instance,
-                        null,
-                        new[] { typeof(Type) },
-                        null);
-
-                if (validatorInstanceConstructor is null)
-                {
-                    continue; // This should never happen, but it gets the compiler to shut up about a possible null dereference in the below factory method.
-                }
-
-                Services.AddSingleton(new EntityType(entityType));
-
-                Services.AddSingleton(
-                    validatorInstanceImplType,
-                    validatorInstanceConstructor.Invoke(new object[] { typeof(TImplementation) }));
+                var registrationMethod =
+                    genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType);
+                registrationMethod.Invoke(this, Array.Empty<object>());
             }
 
             return this;
@@ -239,36 +191,20 @@ namespace KubeOps.Operator.Builder
         public IOperatorBuilder AddMutationWebhook<TImplementation>()
             where TImplementation : class
         {
-            Services.TryAddScoped<TImplementation>();
-
             var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
                     t.IsConstructedGenericType &&
                     t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IMutationWebhook<>)))
                 .Select(i => i.GenericTypeArguments[0]);
 
+            var genericRegistrationMethod = GetType()
+                .GetMethods()
+                .Single(m => m.Name == nameof(AddMutationWebhook) && m.GetGenericArguments().Length == 2);
+
             foreach (var entityType in entityTypes)
             {
-                Services.AddSingleton(new MutatorType(typeof(TImplementation), entityType));
-
-                var mutatorInstanceImplType = typeof(MutatorType<>).MakeGenericType(entityType);
-
-                var mutatorInstanceConstructor =
-                    mutatorInstanceImplType.GetConstructor(
-                        BindingFlags.NonPublic | BindingFlags.Instance,
-                        null,
-                        new[] { typeof(Type) },
-                        null);
-
-                if (mutatorInstanceConstructor is null)
-                {
-                    continue; // This should never happen, but it gets the compiler to shut up about a possible null dereference in the below factory method.
-                }
-
-                Services.AddSingleton(new EntityType(entityType));
-
-                Services.AddSingleton(
-                    mutatorInstanceImplType,
-                    mutatorInstanceConstructor.Invoke(new object[] { typeof(TImplementation) }));
+                var registrationMethod =
+                    genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType);
+                registrationMethod.Invoke(this, Array.Empty<object>());
             }
 
             return this;
