@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
@@ -68,7 +69,7 @@ namespace KubeOps.Operator.Finalizer
 
             foreach (var type in finalizerTypes)
             {
-                if (registerFinalizerMethod.Invoke(this, new object[] { entity }) is Task task)
+                if (registerFinalizerMethod.MakeGenericMethod(type.InstanceType).Invoke(this, new object[] { entity }) is Task task)
                 {
                     await task;
                 }
