@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 using DotnetKubernetesClient;
 using k8s;
@@ -14,8 +13,6 @@ using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
 using KubeOps.Operator.Rbac;
 using KubeOps.Operator.Serialization;
-using KubeOps.Operator.Services;
-using KubeOps.Operator.Util;
 using KubeOps.Operator.Webhooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -29,12 +26,14 @@ namespace KubeOps.Operator.Builder
     {
         internal const string LivenessTag = "liveness";
         internal const string ReadinessTag = "readiness";
+        private readonly IComponentRegistrar _componentRegistrar;
         private IAssemblyScanner _assemblyScanner;
 
         public OperatorBuilder(IServiceCollection services)
         {
             Services = services;
             _assemblyScanner = new AssemblyScanner(this);
+            _componentRegistrar = new ComponentRegistrar();
         }
 
         public IServiceCollection Services { get; }
@@ -85,55 +84,60 @@ namespace KubeOps.Operator.Builder
         public IOperatorBuilder AddEntity<TEntity>()
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
-            Services.AddSingleton(new EntityType(typeof(TEntity)));
+            _componentRegistrar.RegisterEntity<TEntity>();
 
             return this;
         }
 
         public IOperatorBuilder AddController<TImplementation, TEntity>()
-            where TImplementation : class
+            where TImplementation : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             Services.TryAddScoped<TImplementation>();
-            Services.AddSingleton(new EntityType(typeof(TEntity)));
-            Services.AddSingleton(new ControllerType(typeof(TImplementation), typeof(TEntity)));
-            Services.AddSingleton(new ControllerType<TEntity>(typeof(TImplementation)));
+
+            _componentRegistrar.RegisterController<TImplementation, TEntity>();
 
             return this;
         }
 
         public IOperatorBuilder AddFinalizer<TImplementation, TEntity>()
-            where TImplementation : class
+            where TImplementation : class, IResourceFinalizer<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             Services.TryAddScoped<TImplementation>();
-            Services.AddSingleton(new EntityType(typeof(TEntity)));
-            Services.AddSingleton(new FinalizerType(typeof(TImplementation), typeof(TEntity)));
-            Services.AddSingleton(new FinalizerType<TEntity>(typeof(TImplementation)));
+
+            // Services.AddSingleton(new EntityType(typeof(TEntity)));
+            // Services.AddSingleton(new FinalizerType(typeof(TImplementation), typeof(TEntity)));
+            // Services.AddSingleton(new FinalizerType<TEntity>(typeof(TImplementation)));
+            _componentRegistrar.RegisterFinalizer<TImplementation, TEntity>();
 
             return this;
         }
 
         public IOperatorBuilder AddValidationWebhook<TImplementation, TEntity>()
-            where TImplementation : class
+            where TImplementation : class, IValidationWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             Services.TryAddScoped<TImplementation>();
-            Services.AddSingleton(new EntityType(typeof(TEntity)));
-            Services.AddSingleton(new ValidatorType(typeof(TImplementation), typeof(TEntity)));
-            Services.AddSingleton(new ValidatorType<TEntity>(typeof(TImplementation)));
+
+            // Services.AddSingleton(new EntityType(typeof(TEntity)));
+            // Services.AddSingleton(new ValidatorType(typeof(TImplementation), typeof(TEntity)));
+            // Services.AddSingleton(new ValidatorType<TEntity>(typeof(TImplementation)));
+            _componentRegistrar.RegisterValidator<TImplementation, TEntity>();
 
             return this;
         }
 
         public IOperatorBuilder AddMutationWebhook<TImplementation, TEntity>()
-            where TImplementation : class
+            where TImplementation : class, IMutationWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             Services.TryAddScoped<TImplementation>();
-            Services.AddSingleton(new EntityType(typeof(TEntity)));
-            Services.AddSingleton(new MutatorType(typeof(TImplementation), typeof(TEntity)));
-            Services.AddSingleton(new MutatorType<TEntity>(typeof(TImplementation)));
+
+            // Services.AddSingleton(new EntityType(typeof(TEntity)));
+            // Services.AddSingleton(new MutatorType(typeof(TImplementation), typeof(TEntity)));
+            // Services.AddSingleton(new MutatorType<TEntity>(typeof(TImplementation)));
+            _componentRegistrar.RegisterMutator<TImplementation, TEntity>();
 
             return this;
         }
@@ -153,6 +157,9 @@ namespace KubeOps.Operator.Builder
             }
 
             Services.AddSingleton(settings);
+
+            Services.AddSingleton(_ => _componentRegistrar);
+            Services.AddSingleton<IControllerInstanceBuilder, ControllerInstanceBuilder>();
 
             Services.AddTransient(
                 _ => new SerializerBuilder()

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s.Models;
-using KubeOps.Operator.Services;
+using KubeOps.Operator.Builder;
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace KubeOps.Operator.Commands.Management.Webhooks
 {
@@ -20,15 +18,18 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
         private readonly OperatorSettings _settings;
         private readonly IKubernetesClient _client;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IComponentRegistrar _componentRegistrar;
 
         public Register(
             OperatorSettings settings,
             IKubernetesClient client,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            IComponentRegistrar componentRegistrar)
         {
             _settings = settings;
             _client = client;
             _serviceProvider = serviceProvider;
+            _componentRegistrar = componentRegistrar;
         }
 
         [Option(
@@ -74,8 +75,8 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
-            await app.Out.WriteLineAsync($"Found {_serviceProvider.GetServices<ValidatorType>().Distinct().Count()} validators.");
-            await app.Out.WriteLineAsync($"Found {_serviceProvider.GetServices<MutatorType>().Distinct().Count()} mutators.");
+            await app.Out.WriteLineAsync($"Found {_componentRegistrar.ValidatorRegistrations.Count} validator registrations.");
+            await app.Out.WriteLineAsync($"Found {_componentRegistrar.MutatorRegistrations.Count} mutator registrations.");
 
             var hookConfig = (
                 _settings.Name,

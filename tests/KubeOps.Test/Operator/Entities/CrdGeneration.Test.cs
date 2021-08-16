@@ -4,7 +4,6 @@ using System.Reflection;
 using DotnetKubernetesClient.Entities;
 using FluentAssertions;
 using k8s.Models;
-using KubeOps.Operator.Commands.Generators;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Errors;
 using KubeOps.Operator.Util;

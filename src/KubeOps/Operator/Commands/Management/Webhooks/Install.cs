@@ -8,7 +8,6 @@ using DotnetKubernetesClient.LabelSelectors;
 using k8s.Models;
 using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Extensions;
-using KubeOps.Operator.Services;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Management.Webhooks

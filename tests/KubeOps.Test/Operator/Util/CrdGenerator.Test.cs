@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using k8s.Models;
+using KubeOps.Operator.Builder;
 using KubeOps.Operator.Entities;
-using KubeOps.Operator.Services;
-using KubeOps.Operator.Util;
 using KubeOps.Test.TestEntities;
 using Xunit;
 
@@ -13,22 +12,27 @@ namespace KubeOps.Test.Operator.Util
 {
     public class CrdGeneratorTest
     {
-        private readonly IEnumerable<V1CustomResourceDefinition> _crds = new CrdBuilder(
-            new[]
-            {
-                new EntityType(typeof(TestIgnoredEntity)),
-                new EntityType(typeof(TestInvalidEntity)),
-                new EntityType(typeof(TestSpecEntity)),
-                new EntityType(typeof(TestClusterSpecEntity)),
-                new EntityType(typeof(TestStatusEntity)),
-                new EntityType(typeof(V1Alpha1VersionedEntity)),
-                new EntityType(typeof(V1AttributeVersionedEntity)),
-                new EntityType(typeof(V1Beta1VersionedEntity)),
-                new EntityType(typeof(V1VersionedEntity)),
-                new EntityType(typeof(V2AttributeVersionedEntity)),
-                new EntityType(typeof(V2Beta2VersionedEntity)),
-                new EntityType(typeof(V2VersionedEntity)),
-            }).BuildCrds().ToList();
+        private readonly IEnumerable<V1CustomResourceDefinition> _crds;
+
+        public CrdGeneratorTest()
+        {
+            var componentRegistrar = new ComponentRegistrar();
+            
+            componentRegistrar.RegisterEntity<TestIgnoredEntity>();
+            componentRegistrar.RegisterEntity<TestInvalidEntity>();
+            componentRegistrar.RegisterEntity<TestSpecEntity>();
+            componentRegistrar.RegisterEntity<TestClusterSpecEntity>();
+            componentRegistrar.RegisterEntity<TestStatusEntity>();
+            componentRegistrar.RegisterEntity<V1Alpha1VersionedEntity>();
+            componentRegistrar.RegisterEntity<V1AttributeVersionedEntity>();
+            componentRegistrar.RegisterEntity<V1Beta1VersionedEntity>();
+            componentRegistrar.RegisterEntity<V1VersionedEntity>();
+            componentRegistrar.RegisterEntity<V2AttributeVersionedEntity>();
+            componentRegistrar.RegisterEntity<V2Beta2VersionedEntity>();
+            componentRegistrar.RegisterEntity<V2VersionedEntity>();
+
+            _crds = new CrdBuilder(componentRegistrar).BuildCrds();
+        }
 
         [Fact]
         public void Should_Generate_Correct_Number_Of_Crds()

@@ -1,6 +1,9 @@
 ﻿using System.Reflection;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.Controller;
+using KubeOps.Operator.Finalizer;
+using KubeOps.Operator.Webhooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -66,7 +69,7 @@ namespace KubeOps.Operator.Builder
         /// </para>
         /// <para>
         /// Only useful if a) the given type is not referenced by a controller, finalizer, or webhook
-        /// and b) the assembly containing the type is not already automatically scanned.
+        /// and b) the assembly containing the type is not already autypeoftomatically scanned.
         /// </para>
         /// </summary>
         /// <typeparam name="TEntity">The type of the entity to register.</typeparam>
@@ -87,7 +90,7 @@ namespace KubeOps.Operator.Builder
         /// <typeparam name="TEntity">The type of the entity to associate the controller with.</typeparam>
         /// <returns>The builder for chaining.</returns>
         IOperatorBuilder AddController<TImplementation, TEntity>()
-            where TImplementation : class
+            where TImplementation : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>;
 
         /// <summary>
@@ -103,7 +106,7 @@ namespace KubeOps.Operator.Builder
         /// <typeparam name="TEntity">The type of the entity to associate the finalizer with.</typeparam>
         /// <returns>The builder for chaining.</returns>
         IOperatorBuilder AddFinalizer<TImplementation, TEntity>()
-            where TImplementation : class
+            where TImplementation : class, IResourceFinalizer<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>;
 
         /// <summary>
@@ -119,7 +122,7 @@ namespace KubeOps.Operator.Builder
         /// <typeparam name="TEntity">The type of the entity to associate the webhook with.</typeparam>
         /// <returns>The builder for chaining.</returns>
         IOperatorBuilder AddValidationWebhook<TImplementation, TEntity>()
-            where TImplementation : class
+            where TImplementation : class, IValidationWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>;
 
         /// <summary>
@@ -135,7 +138,7 @@ namespace KubeOps.Operator.Builder
         /// <typeparam name="TEntity">The type of the entity to associate the webhook with.</typeparam>
         /// <returns>The builder for chaining.</returns>
         IOperatorBuilder AddMutationWebhook<TImplementation, TEntity>()
-            where TImplementation : class
+            where TImplementation : class, IMutationWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>;
     }
 }

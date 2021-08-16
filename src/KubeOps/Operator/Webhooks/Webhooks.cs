@@ -4,11 +4,12 @@ using System.Linq;
 using System.Reflection;
 using DotnetKubernetesClient.Entities;
 using k8s.Models;
-using KubeOps.Operator.Services;
+using KubeOps.Operator.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace KubeOps.Operator.Webhooks
 {
+    // TODO Refactor to same pattern as IControllerInstanceBuilder
     internal static class Webhooks
     {
         private const byte MaxNameLength = 254;
@@ -19,6 +20,7 @@ namespace KubeOps.Operator.Webhooks
             IServiceProvider serviceProvider)
         {
             using var scope = serviceProvider.CreateScope();
+            var componentRegistrar = scope.ServiceProvider.GetRequiredService<IComponentRegistrar>();
 
             return new()
             {
@@ -29,17 +31,15 @@ namespace KubeOps.Operator.Webhooks
                 {
                     Name = TrimName($"validators.{hookConfig.OperatorName}").ToLowerInvariant(),
                 },
-                Webhooks = scope.ServiceProvider.GetServices<ValidatorType>()
-                    .Distinct()
+                Webhooks = componentRegistrar.ValidatorRegistrations
                     .Select(
                         wh =>
                         {
-                            var validatorType = wh.InstanceType;
-                            var resourceType = wh.EntityType;
+                            (Type validatorType, Type entityType) = wh;
 
                             var instance = scope.ServiceProvider.GetRequiredService(validatorType);
 
-                            var (name, endpoint) = Metadata<ValidationResult>(instance, resourceType);
+                            var (name, endpoint) = Metadata<ValidationResult>(instance, entityType);
 
                             var clientConfig = new Admissionregistrationv1WebhookClientConfig();
                             if (!string.IsNullOrWhiteSpace(hookConfig.BaseUrl))
@@ -58,11 +58,11 @@ namespace KubeOps.Operator.Webhooks
                             }
 
                             var operationsProperty = typeof(IAdmissionWebhook<,>)
-                                .MakeGenericType(resourceType, typeof(ValidationResult))
+                                .MakeGenericType(entityType, typeof(ValidationResult))
                                 .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
                                 .First(m => m.Name == "SupportedOperations");
 
-                            var crd = resourceType.CreateResourceDefinition();
+                            var crd = entityType.CreateResourceDefinition();
 
                             return new V1ValidatingWebhook
                             {
@@ -94,6 +94,7 @@ namespace KubeOps.Operator.Webhooks
             IServiceProvider serviceProvider)
         {
             using var scope = serviceProvider.CreateScope();
+            var componentRegistrar = scope.ServiceProvider.GetRequiredService<IComponentRegistrar>();
 
             return new()
             {
@@ -104,17 +105,15 @@ namespace KubeOps.Operator.Webhooks
                 {
                     Name = TrimName($"mutators.{hookConfig.OperatorName}").ToLowerInvariant(),
                 },
-                Webhooks = scope.ServiceProvider.GetServices<MutatorType>()
-                    .Distinct()
+                Webhooks = componentRegistrar.MutatorRegistrations
                     .Select(
                         wh =>
                         {
-                            var mutatorType = wh.InstanceType;
-                            var resourceType = wh.EntityType;
+                            (Type mutatorType, Type entityType) = wh;
 
                             var instance = scope.ServiceProvider.GetRequiredService(mutatorType);
 
-                            var (name, endpoint) = Metadata<MutationResult>(instance, resourceType);
+                            var (name, endpoint) = Metadata<MutationResult>(instance, entityType);
 
                             var clientConfig = new Admissionregistrationv1WebhookClientConfig();
                             if (!string.IsNullOrWhiteSpace(hookConfig.BaseUrl))
@@ -133,11 +132,11 @@ namespace KubeOps.Operator.Webhooks
                             }
 
                             var operationsProperty = typeof(IAdmissionWebhook<,>)
-                                .MakeGenericType(resourceType, typeof(MutationResult))
+                                .MakeGenericType(entityType, typeof(MutationResult))
                                 .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
                                 .First(m => m.Name == "SupportedOperations");
 
-                            var crd = resourceType.CreateResourceDefinition();
+                            var crd = entityType.CreateResourceDefinition();
 
                             return new V1MutatingWebhook
                             {

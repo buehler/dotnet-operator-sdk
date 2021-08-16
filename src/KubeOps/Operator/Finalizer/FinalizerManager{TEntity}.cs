@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
-using KubeOps.Operator.Services;
+using KubeOps.Operator.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -16,6 +14,7 @@ namespace KubeOps.Operator.Finalizer
     internal class FinalizerManager<TEntity> : IFinalizerManager<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        private readonly IComponentRegistrar _componentRegistrar;
         private readonly IKubernetesClient _client;
         private readonly IServiceProvider _services;
         private readonly ILogger<FinalizerManager<TEntity>> _logger;
@@ -23,11 +22,13 @@ namespace KubeOps.Operator.Finalizer
         public FinalizerManager(
             IKubernetesClient client,
             IServiceProvider services,
-            ILogger<FinalizerManager<TEntity>> logger)
+            ILogger<FinalizerManager<TEntity>> logger,
+            IComponentRegistrar componentRegistrar)
         {
             _client = client;
             _services = services;
             _logger = logger;
+            _componentRegistrar = componentRegistrar;
         }
 
         public async Task RegisterFinalizerAsync<TFinalizer>(TEntity entity)
@@ -55,8 +56,6 @@ namespace KubeOps.Operator.Finalizer
 
         public async Task RegisterAllFinalizersAsync(TEntity entity)
         {
-            var finalizerTypes = _services.GetServices<FinalizerType<TEntity>>();
-
             var registerFinalizerMethod = GetType().GetMethod(nameof(RegisterFinalizerAsync));
 
             if (registerFinalizerMethod is null)
@@ -64,9 +63,9 @@ namespace KubeOps.Operator.Finalizer
                 return;
             }
 
-            foreach (var type in finalizerTypes)
+            foreach (var registration in _componentRegistrar.FinalizerRegistrations.For<TEntity>())
             {
-                if (registerFinalizerMethod.MakeGenericMethod(type.InstanceType).Invoke(this, new object[] { entity }) is Task task)
+                if (registerFinalizerMethod.MakeGenericMethod(registration.FinalizerType).Invoke(this, new object[] { entity }) is Task task)
                 {
                     await task;
                 }
@@ -84,8 +83,8 @@ namespace KubeOps.Operator.Finalizer
                 entity.Name());
 
             await Task.WhenAll(
-                _services.GetServices<FinalizerType<TEntity>>()
-                    .Select(f => f.InstanceType)
+                _componentRegistrar.FinalizerRegistrations.For<TEntity>()
+                    .Select(r => r.FinalizerType)
                     .Select(scope.ServiceProvider.GetService)
                     .OfType<IResourceFinalizer<TEntity>>()
                     .Where(finalizer => entity.HasFinalizer(finalizer.Identifier))

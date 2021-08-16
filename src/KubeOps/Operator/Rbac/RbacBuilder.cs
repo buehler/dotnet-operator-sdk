@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using k8s.Models;
-using KubeOps.Operator.Services;
+using KubeOps.Operator.Builder;
 
 namespace KubeOps.Operator.Rbac
 {
@@ -13,26 +13,26 @@ namespace KubeOps.Operator.Rbac
 
         private readonly bool _hasWebhooks;
 
-        public RbacBuilder(
-            IEnumerable<ControllerType> controllers,
-            IEnumerable<FinalizerType> finalizers,
-            IEnumerable<ValidatorType> validators,
-            IEnumerable<MutatorType> mutators)
+        public RbacBuilder(IComponentRegistrar componentRegistrar)
         {
-            controllers = controllers.ToList();
-            finalizers = finalizers.ToList();
-            validators = validators.ToList();
-            mutators = mutators.ToList();
+            var controllerTypes = componentRegistrar.ControllerRegistrations
+                .Select(t => t.ControllerType).ToList();
+            var finalizerTypes = componentRegistrar.FinalizerRegistrations
+                .Select(t => t.FinalizerType).ToList();
+            var validatorTypes = componentRegistrar.ValidatorRegistrations
+                .Select(t => t.ValidatorType).ToList();
+            var mutatorTypes = componentRegistrar.MutatorRegistrations
+                .Select(t => t.MutatorType).ToList();
 
             _componentTypes = Enumerable.Empty<Type>()
-                .Concat(controllers.Select(c => c.InstanceType))
-                .Concat(finalizers.Select(c => c.InstanceType))
-                .Concat(validators.Select(c => c.InstanceType))
-                .Concat(mutators.Select(c => c.InstanceType))
+                .Concat(controllerTypes)
+                .Concat(finalizerTypes)
+                .Concat(validatorTypes)
+                .Concat(mutatorTypes)
                 .Distinct()
                 .ToList();
 
-            _hasWebhooks = validators.Any() || mutators.Any();
+            _hasWebhooks = validatorTypes.Any() || mutatorTypes.Any();
         }
 
         public V1ClusterRole BuildManagerRbac()
