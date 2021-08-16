@@ -176,7 +176,6 @@ namespace KubeOps.Operator.Builder
 
             Services.AddTransient(typeof(ResourceCache<>));
             Services.AddTransient(typeof(ResourceWatcher<>));
-            Services.AddTransient(typeof(ManagedResourceController<>));
 
             // Support all the metrics
             Services.AddSingleton(typeof(ResourceWatcherMetrics<>));

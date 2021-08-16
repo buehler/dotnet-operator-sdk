@@ -57,8 +57,7 @@ namespace KubeOps.Testing
         public Task EnqueueEvent<TEntity>(ResourceEventType type, TEntity resource)
             where TEntity : class, IKubernetesObject<V1ObjectMeta>
         {
-            var controller = Services.GetRequiredService<ManagedResourceController<TEntity>>() as
-                MockManagedResourceController<TEntity>;
+            var controller = GetMockController<TEntity>();
 
             return controller?.EnqueueEvent(type, resource) ?? Task.CompletedTask;
         }
@@ -66,8 +65,7 @@ namespace KubeOps.Testing
         public Task EnqueueFinalization<TEntity>(TEntity resource)
             where TEntity : class, IKubernetesObject<V1ObjectMeta>
         {
-            var controller = Services.GetRequiredService<ManagedResourceController<TEntity>>() as
-                MockManagedResourceController<TEntity>;
+            var controller = GetMockController<TEntity>();
 
             return controller?.EnqueueFinalization(resource) ?? Task.CompletedTask;
         }
@@ -106,10 +104,17 @@ namespace KubeOps.Testing
                     services.RemoveAll(typeof(IKubernetesClient));
                     services.AddSingleton<IKubernetesClient, MockKubernetesClient>();
 
-                    services.RemoveAll(typeof(ManagedResourceController<>));
-                    services.AddSingleton(typeof(ManagedResourceController<>), typeof(MockManagedResourceController<>));
+                    services.RemoveAll(typeof(IControllerInstanceBuilder));
+                    services.AddSingleton<IControllerInstanceBuilder, MockControllerInstanceBuilder>();
                 });
             builder.ConfigureLogging(logging => logging.ClearProviders());
         }
+
+        private MockManagedResourceController<TEntity>? GetMockController<TEntity>()
+            where TEntity : class, IKubernetesObject<V1ObjectMeta> =>
+            Services.GetRequiredService<IControllerInstanceBuilder>()
+                .MakeManagedControllers()
+                .OfType<MockManagedResourceController<TEntity>>()
+                .FirstOrDefault();
     }
 }
