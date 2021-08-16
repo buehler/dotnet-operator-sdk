@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s;
@@ -8,7 +7,6 @@ using KubeOps.Operator;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
-using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Kubernetes;
 using Microsoft.Extensions.Logging;
 using static KubeOps.Operator.Builder.IComponentRegistrar;

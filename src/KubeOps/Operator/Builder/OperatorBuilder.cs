@@ -105,10 +105,6 @@ namespace KubeOps.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             Services.TryAddScoped<TImplementation>();
-
-            // Services.AddSingleton(new EntityType(typeof(TEntity)));
-            // Services.AddSingleton(new FinalizerType(typeof(TImplementation), typeof(TEntity)));
-            // Services.AddSingleton(new FinalizerType<TEntity>(typeof(TImplementation)));
             _componentRegistrar.RegisterFinalizer<TImplementation, TEntity>();
 
             return this;
@@ -119,10 +115,6 @@ namespace KubeOps.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             Services.TryAddScoped<TImplementation>();
-
-            // Services.AddSingleton(new EntityType(typeof(TEntity)));
-            // Services.AddSingleton(new ValidatorType(typeof(TImplementation), typeof(TEntity)));
-            // Services.AddSingleton(new ValidatorType<TEntity>(typeof(TImplementation)));
             _componentRegistrar.RegisterValidator<TImplementation, TEntity>();
 
             return this;
@@ -133,10 +125,6 @@ namespace KubeOps.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             Services.TryAddScoped<TImplementation>();
-
-            // Services.AddSingleton(new EntityType(typeof(TEntity)));
-            // Services.AddSingleton(new MutatorType(typeof(TImplementation), typeof(TEntity)));
-            // Services.AddSingleton(new MutatorType<TEntity>(typeof(TImplementation)));
             _componentRegistrar.RegisterMutator<TImplementation, TEntity>();
 
             return this;

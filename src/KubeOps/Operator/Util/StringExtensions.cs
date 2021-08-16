@@ -1,5 +1,4 @@
 ﻿using System;
-using AutoMapper.Execution;
 
 namespace KubeOps.Operator.Util
 {
