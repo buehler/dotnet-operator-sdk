@@ -1,12 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
-using KubeOps.Operator.Builder;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Finalizer
@@ -14,67 +11,37 @@ namespace KubeOps.Operator.Finalizer
     internal class FinalizerManager<TEntity> : IFinalizerManager<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        private readonly IComponentRegistrar _componentRegistrar;
+        private readonly IFinalizerInstanceBuilder _finalizerInstanceBuilder;
         private readonly IKubernetesClient _client;
-        private readonly IServiceProvider _services;
         private readonly ILogger<FinalizerManager<TEntity>> _logger;
 
         public FinalizerManager(
             IKubernetesClient client,
-            IServiceProvider services,
             ILogger<FinalizerManager<TEntity>> logger,
-            IComponentRegistrar componentRegistrar)
+            IFinalizerInstanceBuilder finalizerInstanceBuilder)
         {
             _client = client;
-            _services = services;
             _logger = logger;
-            _componentRegistrar = componentRegistrar;
+            _finalizerInstanceBuilder = finalizerInstanceBuilder;
         }
 
         public async Task RegisterFinalizerAsync<TFinalizer>(TEntity entity)
             where TFinalizer : IResourceFinalizer<TEntity>
         {
-            using var scope = _services.CreateScope();
-            var finalizer = scope.ServiceProvider.GetRequiredService<TFinalizer>();
-            _logger.LogTrace(
-                @"Try to add finalizer ""{finalizer}"" on entity ""{kind}/{name}"".",
-                finalizer.Identifier,
-                entity.Kind,
-                entity.Name());
+            var finalizer = _finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>();
 
-            if (entity.AddFinalizer(finalizer.Identifier))
-            {
-                _logger.LogInformation(
-                    @"Added finalizer ""{finalizer}"" on entity ""{kind}/{name}"".",
-                    finalizer.Identifier,
-                    entity.Kind,
-                    entity.Name());
-            }
-
-            await _client.Update(entity);
+            await RegisterFinalizerInternalAsync(entity, finalizer);
         }
 
         public async Task RegisterAllFinalizersAsync(TEntity entity)
         {
-            var registerFinalizerMethod = GetType().GetMethod(nameof(RegisterFinalizerAsync));
-
-            if (registerFinalizerMethod is null)
-            {
-                return;
-            }
-
-            foreach (var registration in _componentRegistrar.FinalizerRegistrations.For<TEntity>())
-            {
-                if (registerFinalizerMethod.MakeGenericMethod(registration.FinalizerType).Invoke(this, new object[] { entity }) is Task task)
-                {
-                    await task;
-                }
-            }
+            await Task.WhenAll(
+                _finalizerInstanceBuilder.BuildFinalizers<TEntity>()
+                    .Select(f => RegisterFinalizerInternalAsync(entity, f)));
         }
 
         async Task IFinalizerManager<TEntity>.FinalizeAsync(TEntity entity)
         {
-            using var scope = _services.CreateScope();
             var semaphore = new SemaphoreSlim(1);
 
             _logger.LogTrace(
@@ -83,10 +50,7 @@ namespace KubeOps.Operator.Finalizer
                 entity.Name());
 
             await Task.WhenAll(
-                _componentRegistrar.FinalizerRegistrations.For<TEntity>()
-                    .Select(r => r.FinalizerType)
-                    .Select(scope.ServiceProvider.GetService)
-                    .OfType<IResourceFinalizer<TEntity>>()
+                _finalizerInstanceBuilder.BuildFinalizers<TEntity>()
                     .Where(finalizer => entity.HasFinalizer(finalizer.Identifier))
                     .Select(
                         finalizer => Task.Run(
@@ -115,6 +79,27 @@ namespace KubeOps.Operator.Finalizer
                 entity.Kind,
                 entity.Name(),
                 string.Join(',', entity.Finalizers()));
+        }
+
+        private async Task RegisterFinalizerInternalAsync<TFinalizer>(TEntity entity, TFinalizer finalizer)
+            where TFinalizer : IResourceFinalizer<TEntity>
+        {
+            _logger.LogTrace(
+                @"Try to add finalizer ""{finalizer}"" on entity ""{kind}/{name}"".",
+                finalizer.Identifier,
+                entity.Kind,
+                entity.Name());
+
+            if (entity.AddFinalizer(finalizer.Identifier))
+            {
+                _logger.LogInformation(
+                    @"Added finalizer ""{finalizer}"" on entity ""{kind}/{name}"".",
+                    finalizer.Identifier,
+                    entity.Kind,
+                    entity.Name());
+            }
+
+            await _client.Update(entity);
         }
     }
 }

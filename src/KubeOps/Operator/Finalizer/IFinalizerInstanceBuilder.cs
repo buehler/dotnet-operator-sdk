@@ -1,0 +1,15 @@
+using System.Collections.Generic;
+using k8s;
+using k8s.Models;
+
+namespace KubeOps.Operator.Finalizer
+{
+    public interface IFinalizerInstanceBuilder
+    {
+        public IEnumerable<IResourceFinalizer<TEntity>> BuildFinalizers<TEntity>()
+            where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+        IResourceFinalizer<TEntity> BuildFinalizer<TEntity, TFinalizer>()
+            where TEntity : IKubernetesObject<V1ObjectMeta>;
+    }
+}

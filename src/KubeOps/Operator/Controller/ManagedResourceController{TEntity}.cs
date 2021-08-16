@@ -32,7 +32,6 @@ namespace KubeOps.Operator.Controller
         private readonly IServiceProvider _services;
         private readonly ResourceControllerMetrics<TEntity> _metrics;
         private readonly OperatorSettings _settings;
-        private readonly IFinalizerManager<TEntity> _finalizerManager;
         private readonly ControllerRegistration _controllerRegistration;
 
         private readonly Subject<RequeuedEvent>
@@ -51,7 +50,6 @@ namespace KubeOps.Operator.Controller
             IServiceProvider services,
             ResourceControllerMetrics<TEntity> metrics,
             OperatorSettings settings,
-            IFinalizerManager<TEntity> finalizerManager,
             ControllerRegistration controllerRegistration)
         {
             _logger = logger;
@@ -61,7 +59,6 @@ namespace KubeOps.Operator.Controller
             _services = services;
             _metrics = metrics;
             _settings = settings;
-            _finalizerManager = finalizerManager;
             _controllerRegistration = controllerRegistration;
         }
 
@@ -313,6 +310,8 @@ namespace KubeOps.Operator.Controller
 
         protected async Task HandleResourceFinalization(QueuedEvent? data)
         {
+            using var scope = _services.CreateScope();
+
             if (data == null)
             {
                 return;
@@ -327,7 +326,8 @@ namespace KubeOps.Operator.Controller
 
             try
             {
-                await _finalizerManager.FinalizeAsync(data.Resource);
+                await scope.ServiceProvider.GetRequiredService<IFinalizerManager<TEntity>>()
+                    .FinalizeAsync(data.Resource);
             }
             catch (Exception e)
             {

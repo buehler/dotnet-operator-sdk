@@ -159,7 +159,17 @@ namespace KubeOps.Operator.Builder
             Services.AddSingleton(settings);
 
             Services.AddSingleton(_ => _componentRegistrar);
+
             Services.AddTransient<IControllerInstanceBuilder, ControllerInstanceBuilder>();
+            Services.AddTransient(
+                s => (Func<IComponentRegistrar.ControllerRegistration, IManagedResourceController>)(r =>
+                    (IManagedResourceController)ActivatorUtilities.CreateInstance(
+                        s,
+                        typeof(ManagedResourceController<>).MakeGenericType(r.EntityType),
+                        r)));
+
+            Services.AddTransient<IFinalizerInstanceBuilder, FinalizerInstanceBuilder>();
+
             Services.AddTransient<MutatingWebhookBuilder>();
             Services.AddTransient<ValidatingWebhookBuilder>();
             Services.AddTransient<IWebhookMetadataBuilder, WebhookMetadataBuilder>();

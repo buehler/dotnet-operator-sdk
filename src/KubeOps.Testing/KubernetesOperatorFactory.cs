@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.Builder;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
@@ -104,8 +105,13 @@ namespace KubeOps.Testing
                     services.RemoveAll(typeof(IKubernetesClient));
                     services.AddSingleton<IKubernetesClient, MockKubernetesClient>();
 
-                    services.RemoveAll(typeof(IControllerInstanceBuilder));
-                    services.AddSingleton<IControllerInstanceBuilder, MockControllerInstanceBuilder>();
+                    services.RemoveAll<Func<IComponentRegistrar.ControllerRegistration, IManagedResourceController>>();
+                    services.AddSingleton(
+                        s => (Func<IComponentRegistrar.ControllerRegistration, IManagedResourceController>)(r =>
+                            (IManagedResourceController)ActivatorUtilities.CreateInstance(
+                                s,
+                                typeof(MockManagedResourceController<>).MakeGenericType(r.EntityType),
+                                r)));
                 });
             builder.ConfigureLogging(logging => logging.ClearProviders());
         }
@@ -113,7 +119,7 @@ namespace KubeOps.Testing
         private MockManagedResourceController<TEntity>? GetMockController<TEntity>()
             where TEntity : class, IKubernetesObject<V1ObjectMeta> =>
             Services.GetRequiredService<IControllerInstanceBuilder>()
-                .MakeManagedControllers()
+                .BuildControllers<TEntity>()
                 .OfType<MockManagedResourceController<TEntity>>()
                 .FirstOrDefault();
     }

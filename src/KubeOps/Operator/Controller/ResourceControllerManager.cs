@@ -26,7 +26,7 @@ namespace KubeOps.Operator.Controller
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _controllerList.AddRange(_controllerInstanceBuilder.MakeManagedControllers());
+            _controllerList.AddRange(_controllerInstanceBuilder.BuildControllers());
 
             _leadershipSubscription = _leaderElection.LeadershipChange.Subscribe(LeadershipChanged);
             return Task.CompletedTask;

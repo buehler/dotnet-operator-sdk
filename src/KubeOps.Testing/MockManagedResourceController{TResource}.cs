@@ -26,9 +26,8 @@ namespace KubeOps.Testing
             IServiceProvider services,
             ResourceControllerMetrics<TEntity> metrics,
             OperatorSettings settings,
-            IFinalizerManager<TEntity> finalizerManager,
             ControllerRegistration controllerRegistration)
-            : base(logger, client, watcher, cache, services, metrics, settings, finalizerManager, controllerRegistration)
+            : base(logger, client, watcher, cache, services, metrics, settings, controllerRegistration)
         {
         }
 
