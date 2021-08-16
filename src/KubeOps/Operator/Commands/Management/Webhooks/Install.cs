@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +7,7 @@ using DotnetKubernetesClient.LabelSelectors;
 using k8s.Models;
 using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Extensions;
+using KubeOps.Operator.Webhooks;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Management.Webhooks
@@ -21,16 +21,19 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
     {
         private readonly IKubernetesClient _client;
         private readonly OperatorSettings _settings;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly ValidatingWebhookConfigurationBuilder _validatingWebhookConfigurationBuilder;
+        private readonly MutatingWebhookConfigurationBuilder _mutatingWebhookConfigurationBuilder;
 
         public Install(
             IKubernetesClient client,
             OperatorSettings settings,
-            IServiceProvider serviceProvider)
+            ValidatingWebhookConfigurationBuilder validatingWebhookConfigurationBuilder,
+            MutatingWebhookConfigurationBuilder mutatingWebhookConfigurationBuilder)
         {
             _client = client;
             _settings = settings;
-            _serviceProvider = serviceProvider;
+            _validatingWebhookConfigurationBuilder = validatingWebhookConfigurationBuilder;
+            _mutatingWebhookConfigurationBuilder = mutatingWebhookConfigurationBuilder;
         }
 
         [Option(
@@ -114,43 +117,45 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                     }));
 
             var caBundle = await File.ReadAllBytesAsync(Path.Join(CertificatesPath, "ca.pem"));
-            var hookConfig = (_settings.Name, (string?)null, caBundle, new Admissionregistrationv1ServiceReference
-            {
-                Name = _settings.Name,
-                NamespaceProperty = @namespace,
-            });
+            var webhookConfig = new WebhookConfig(
+                _settings.Name,
+                null,
+                caBundle,
+                new Admissionregistrationv1ServiceReference
+                {
+                    Name = _settings.Name,
+                    NamespaceProperty = @namespace,
+                });
 
             await app.Out.WriteLineAsync("Create validator definition.");
-            var validator = Operator.Webhooks.Webhooks.CreateValidator(
-                hookConfig,
-                _serviceProvider);
-            await _client.Delete<V1ValidatingWebhookConfiguration>(validator.Name(), @namespace);
+            var validatorConfig = _validatingWebhookConfigurationBuilder.BuildWebhookConfiguration(webhookConfig);
+
+            await _client.Delete<V1ValidatingWebhookConfiguration>(validatorConfig.Name(), @namespace);
 
             if (deployment != null)
             {
-                validator.Metadata.OwnerReferences = new List<V1OwnerReference>
+                validatorConfig.Metadata.OwnerReferences = new List<V1OwnerReference>
                 {
                     deployment.MakeOwnerReference(),
                 };
             }
 
-            await _client.Create(validator);
+            await _client.Create(validatorConfig);
 
             await app.Out.WriteLineAsync("Create mutator definition.");
-            var mutator = Operator.Webhooks.Webhooks.CreateMutator(
-                hookConfig,
-                _serviceProvider);
-            await _client.Delete<V1MutatingWebhookConfiguration>(mutator.Name(), @namespace);
+            var mutatorConfig = _mutatingWebhookConfigurationBuilder.BuildWebhookConfiguration(webhookConfig);
+
+            await _client.Delete<V1MutatingWebhookConfiguration>(mutatorConfig.Name(), @namespace);
 
             if (deployment != null)
             {
-                mutator.Metadata.OwnerReferences = new List<V1OwnerReference>
+                mutatorConfig.Metadata.OwnerReferences = new List<V1OwnerReference>
                 {
                     deployment.MakeOwnerReference(),
                 };
             }
 
-            await _client.Create(mutator);
+            await _client.Create(mutatorConfig);
 
             return ExitCodes.Success;
         }

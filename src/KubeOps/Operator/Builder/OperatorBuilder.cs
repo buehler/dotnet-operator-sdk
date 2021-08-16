@@ -159,7 +159,10 @@ namespace KubeOps.Operator.Builder
             Services.AddSingleton(settings);
 
             Services.AddSingleton(_ => _componentRegistrar);
-            Services.AddSingleton<IControllerInstanceBuilder, ControllerInstanceBuilder>();
+            Services.AddTransient<IControllerInstanceBuilder, ControllerInstanceBuilder>();
+            Services.AddTransient<MutatingWebhookBuilder>();
+            Services.AddTransient<ValidatingWebhookBuilder>();
+            Services.AddTransient<IWebhookMetadataBuilder, WebhookMetadataBuilder>();
 
             Services.AddTransient(
                 _ => new SerializerBuilder()

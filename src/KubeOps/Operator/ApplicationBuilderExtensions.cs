@@ -46,6 +46,7 @@ namespace KubeOps.Operator
 
                     using var scope = app.ApplicationServices.CreateScope();
                     var componentRegistrar = scope.ServiceProvider.GetRequiredService<IComponentRegistrar>();
+                    var webhookMetadataBuilder = scope.ServiceProvider.GetRequiredService<IWebhookMetadataBuilder>();
 
                     foreach (var wh in componentRegistrar.ValidatorRegistrations)
                     {
@@ -57,7 +58,8 @@ namespace KubeOps.Operator
                             .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                             .First(m => m.Name == "Register");
                         registerMethod.Invoke(validator, new object[] { endpoints });
-                        var (name, endpoint) = Webhooks.Webhooks.Metadata<ValidationResult>(validator, entityType);
+                        var (name, endpoint) =
+                            webhookMetadataBuilder.GetMetadata<ValidationResult>(validator, entityType);
                         logger.LogInformation(
                             @"Registered validation webhook ""{name}"" under ""{endpoint}"".",
                             name,
@@ -74,7 +76,8 @@ namespace KubeOps.Operator
                             .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                             .First(m => m.Name == "Register");
                         registerMethod.Invoke(mutator, new object[] { endpoints });
-                        var (name, endpoint) = Webhooks.Webhooks.Metadata<MutationResult>(mutator, entityType);
+                        var (name, endpoint) =
+                            webhookMetadataBuilder.GetMetadata<MutationResult>(mutator, entityType);
                         logger.LogInformation(
                             @"Registered mutation webhook ""{name}"" under ""{endpoint}"".",
                             name,

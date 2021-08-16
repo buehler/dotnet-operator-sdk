@@ -1,9 +1,9 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s.Models;
 using KubeOps.Operator.Builder;
+using KubeOps.Operator.Webhooks;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Management.Webhooks
@@ -17,19 +17,22 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
     {
         private readonly OperatorSettings _settings;
         private readonly IKubernetesClient _client;
-        private readonly IServiceProvider _serviceProvider;
         private readonly IComponentRegistrar _componentRegistrar;
+        private readonly ValidatingWebhookConfigurationBuilder _validatingWebhookConfigurationBuilder;
+        private readonly MutatingWebhookConfigurationBuilder _mutatingWebhookConfigurationBuilder;
 
         public Register(
             OperatorSettings settings,
             IKubernetesClient client,
-            IServiceProvider serviceProvider,
-            IComponentRegistrar componentRegistrar)
+            IComponentRegistrar componentRegistrar,
+            MutatingWebhookConfigurationBuilder mutatingWebhookConfigurationBuilder,
+            ValidatingWebhookConfigurationBuilder validatingWebhookConfigurationBuilder)
         {
             _settings = settings;
             _client = client;
-            _serviceProvider = serviceProvider;
             _componentRegistrar = componentRegistrar;
+            _mutatingWebhookConfigurationBuilder = mutatingWebhookConfigurationBuilder;
+            _validatingWebhookConfigurationBuilder = validatingWebhookConfigurationBuilder;
         }
 
         [Option(
@@ -78,7 +81,7 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
             await app.Out.WriteLineAsync($"Found {_componentRegistrar.ValidatorRegistrations.Count} validator registrations.");
             await app.Out.WriteLineAsync($"Found {_componentRegistrar.MutatorRegistrations.Count} mutator registrations.");
 
-            var hookConfig = (
+            var webhookConfig = new WebhookConfig(
                 _settings.Name,
                 BaseUrl,
                 CaBundle != null ? Encoding.UTF8.GetBytes(CaBundle) : null,
@@ -89,12 +92,9 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                         ServicePath,
                         ServicePort)
                     : null);
-            var validatorConfig = Operator.Webhooks.Webhooks.CreateValidator(
-                hookConfig,
-                _serviceProvider);
-            var mutatorConfig = Operator.Webhooks.Webhooks.CreateMutator(
-                hookConfig,
-                _serviceProvider);
+
+            var validatorConfig = _validatingWebhookConfigurationBuilder.BuildWebhookConfiguration(webhookConfig);
+            var mutatorConfig = _mutatingWebhookConfigurationBuilder.BuildWebhookConfiguration(webhookConfig);
 
             await app.Out.WriteLineAsync($@"Install ""{validatorConfig.Metadata.Name}"" validator on cluster.");
             await app.Out.WriteLineAsync($@"Install ""{mutatorConfig.Metadata.Name}"" mutator on cluster.");
