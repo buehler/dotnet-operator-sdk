@@ -5,8 +5,6 @@ namespace KubeOps.Operator.Controller
 {
     internal interface IManagedResourceController : IDisposable
     {
-        Type ControllerType { get; set; }
-
         Task StartAsync();
 
         Task StopAsync();
