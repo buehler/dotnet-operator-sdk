@@ -32,8 +32,8 @@ namespace KubeOps.Operator.Builder
         public OperatorBuilder(IServiceCollection services)
         {
             Services = services;
-            _assemblyScanner = new AssemblyScanner(this);
             _componentRegistrar = new ComponentRegistrar();
+            _assemblyScanner = new AssemblyScanner(this, _componentRegistrar);
         }
 
         public IServiceCollection Services { get; }
@@ -130,6 +130,13 @@ namespace KubeOps.Operator.Builder
             return this;
         }
 
+        public IOperatorBuilder AddRbacType<T>()
+        {
+            _componentRegistrar.RegisterRbacType(typeof(T));
+
+            return this;
+        }
+
         internal IOperatorBuilder AddOperatorBase(OperatorSettings settings)
         {
             if (settings.EnableAssemblyScanning)
@@ -142,6 +149,9 @@ namespace KubeOps.Operator.Builder
             {
                 // This will cause calls to IOperatorBuilder.AddResourceAssembly to throw an InvalidOperationException
                 _assemblyScanner = new DisabledAssemblyScanner();
+
+                // Needs to always be present for V1Lease to work
+                AddRbacType<LeaderElector>();
             }
 
             Services.AddSingleton(settings);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using k8s.Models;
@@ -10,6 +11,7 @@ namespace KubeOps.Operator.Rbac
     internal class RbacBuilder : IRbacBuilder
     {
         private readonly List<Type> _componentTypes;
+        private readonly ImmutableHashSet<Type> _rbacTypes;
 
         private readonly bool _hasWebhooks;
 
@@ -33,6 +35,7 @@ namespace KubeOps.Operator.Rbac
                 .ToList();
 
             _hasWebhooks = validatorTypes.Any() || mutatorTypes.Any();
+            _rbacTypes = componentRegistrar.RbacTypeRegistrations;
         }
 
         public V1ClusterRole BuildManagerRbac()
@@ -67,6 +70,6 @@ namespace KubeOps.Operator.Rbac
 
         private IEnumerable<TAttribute> GetAttributes<TAttribute>()
             where TAttribute : Attribute =>
-            _componentTypes.SelectMany(type => type.GetCustomAttributes<TAttribute>(true));
+            _rbacTypes.SelectMany(type => type.GetCustomAttributes<TAttribute>(true));
     }
 }

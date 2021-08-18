@@ -6,6 +6,7 @@ using k8s;
 using k8s.Models;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Finalizer;
+using KubeOps.Operator.Rbac;
 using KubeOps.Operator.Webhooks;
 
 namespace KubeOps.Operator.Builder
@@ -13,11 +14,13 @@ namespace KubeOps.Operator.Builder
     internal class AssemblyScanner : IAssemblyScanner
     {
         private readonly IOperatorBuilder _operatorBuilder;
+        private readonly IComponentRegistrar _componentRegistrar;
         private readonly List<(Type Type, MethodInfo RegistrationMethod)> _registrationDefinitions;
 
-        public AssemblyScanner(IOperatorBuilder operatorBuilder)
+        public AssemblyScanner(IOperatorBuilder operatorBuilder, IComponentRegistrar componentRegistrar)
         {
             _operatorBuilder = operatorBuilder;
+            _componentRegistrar = componentRegistrar;
 
             var operatorBuilderMethods = typeof(OperatorBuilderExtensions).GetMethods(
                 BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
@@ -63,6 +66,16 @@ namespace KubeOps.Operator.Builder
             foreach (var method in registrationMethods)
             {
                 method.Invoke(null, new object[] { _operatorBuilder });
+            }
+
+            var rbacTypes = assembly.GetTypes()
+                .Where(
+                    t => t.GetCustomAttributes<EntityRbacAttribute>().Any() ||
+                         t.GetCustomAttributes<GenericRbacAttribute>().Any());
+
+            foreach (var type in rbacTypes)
+            {
+                _componentRegistrar.RegisterRbacType(type);
             }
 
             return this;

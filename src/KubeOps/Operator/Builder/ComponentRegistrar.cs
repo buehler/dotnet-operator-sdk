@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using k8s;
@@ -16,6 +17,7 @@ namespace KubeOps.Operator.Builder
         private readonly HashSet<FinalizerRegistration> _finalizerRegistrations = new();
         private readonly HashSet<ValidatorRegistration> _validatorRegistrations = new();
         private readonly HashSet<MutatorRegistration> _mutatorRegistrations = new();
+        private readonly HashSet<Type> _rbacTypeRegistrations = new();
 
         public ImmutableHashSet<EntityRegistration> EntityRegistrations => _entityRegistrations.ToImmutableHashSet();
 
@@ -27,12 +29,14 @@ namespace KubeOps.Operator.Builder
 
         public ImmutableHashSet<MutatorRegistration> MutatorRegistrations => _mutatorRegistrations.ToImmutableHashSet();
 
+        public ImmutableHashSet<Type> RbacTypeRegistrations => _rbacTypeRegistrations.ToImmutableHashSet();
+
         public IComponentRegistrar RegisterEntity<TEntity>()
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             _entityRegistrations.Add(new EntityRegistration(typeof(TEntity)));
 
-            return this;
+            return RegisterRbacType(typeof(TEntity));
         }
 
         public IComponentRegistrar RegisterController<TController, TEntity>()
@@ -41,7 +45,8 @@ namespace KubeOps.Operator.Builder
         {
             _controllerRegistrations.Add(new ControllerRegistration(typeof(TController), typeof(TEntity)));
 
-            return RegisterEntity<TEntity>();
+            return RegisterRbacType(typeof(TController))
+                .RegisterEntity<TEntity>();
         }
 
         public IComponentRegistrar RegisterFinalizer<TFinalizer, TEntity>()
@@ -50,7 +55,8 @@ namespace KubeOps.Operator.Builder
         {
             _finalizerRegistrations.Add(new FinalizerRegistration(typeof(TFinalizer), typeof(TEntity)));
 
-            return this;
+            return RegisterRbacType(typeof(TFinalizer))
+                .RegisterEntity<TEntity>();
         }
 
         public IComponentRegistrar RegisterValidator<TValidator, TEntity>()
@@ -59,7 +65,8 @@ namespace KubeOps.Operator.Builder
         {
             _validatorRegistrations.Add(new ValidatorRegistration(typeof(TValidator), typeof(TEntity)));
 
-            return this;
+            return RegisterRbacType(typeof(TValidator))
+                .RegisterEntity<TEntity>();
         }
 
         public IComponentRegistrar RegisterMutator<TMutator, TEntity>()
@@ -68,7 +75,15 @@ namespace KubeOps.Operator.Builder
         {
             _mutatorRegistrations.Add(new MutatorRegistration(typeof(TMutator), typeof(TEntity)));
 
-            return RegisterEntity<TEntity>();
+            return RegisterRbacType(typeof(TMutator))
+                .RegisterEntity<TEntity>();
+        }
+
+        public IComponentRegistrar RegisterRbacType(Type type)
+        {
+            _rbacTypeRegistrations.Add(type);
+
+            return this;
         }
     }
 }

@@ -20,6 +20,8 @@ namespace KubeOps.Operator.Builder
 
         public ImmutableHashSet<MutatorRegistration> MutatorRegistrations { get; }
 
+        public ImmutableHashSet<Type> RbacTypeRegistrations { get; }
+
         IComponentRegistrar RegisterEntity<TEntity>()
             where TEntity : IKubernetesObject<V1ObjectMeta>;
 
@@ -38,6 +40,8 @@ namespace KubeOps.Operator.Builder
         IComponentRegistrar RegisterMutator<TMutator, TEntity>()
             where TMutator : class, IMutationWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+        IComponentRegistrar RegisterRbacType(Type type);
 
         public record EntityRegistration(Type EntityType);
 

@@ -140,5 +140,17 @@ namespace KubeOps.Operator.Builder
         IOperatorBuilder AddMutationWebhook<TImplementation, TEntity>()
             where TImplementation : class, IMutationWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+        /// <summary>
+        /// <para>
+        /// Registers a type for consideration in building RBAC rules.
+        /// </para>
+        /// <para>
+        /// Only useful if the assembly containing the given type is not already automatically scanned.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="TEntity">The type to register.</typeparam>
+        /// <returns>The builder for chaining.</returns>
+        IOperatorBuilder AddRbacType<T>();
     }
 }

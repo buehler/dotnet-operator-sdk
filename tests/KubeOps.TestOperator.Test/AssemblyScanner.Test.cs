@@ -57,5 +57,12 @@ namespace KubeOps.TestOperator.Test
                 .Select(r => r.MutatorType)
                 .Distinct().Count().Should().Be(1);
         } 
+
+        [Fact]
+        public void Should_Load_Correct_Number_Of_Rbac_Types()
+        {
+            _componentRegistrar.RbacTypeRegistrations
+                .Distinct().Count().Should().Be(8);
+        } 
     }
 }
