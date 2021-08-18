@@ -4,7 +4,7 @@ using k8s.Models;
 
 namespace KubeOps.Operator.Finalizer
 {
-    public interface IFinalizerInstanceBuilder
+    internal interface IFinalizerInstanceBuilder
     {
         public IEnumerable<IResourceFinalizer<TEntity>> BuildFinalizers<TEntity>()
             where TEntity : IKubernetesObject<V1ObjectMeta>;

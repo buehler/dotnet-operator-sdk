@@ -2,26 +2,20 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.Controller;
+using KubeOps.Operator.Finalizer;
+using KubeOps.Operator.Webhooks;
 using static KubeOps.Operator.Builder.IComponentRegistrar;
 
 namespace KubeOps.Operator.Builder
 {
     internal class ComponentRegistrar : IComponentRegistrar
     {
-        private readonly HashSet<EntityRegistration> _entityRegistrations;
-        private readonly HashSet<ControllerRegistration> _controllerRegistrations;
-        private readonly HashSet<FinalizerRegistration> _finalizerRegistrations;
-        private readonly HashSet<ValidatorRegistration> _validatorRegistrations;
-        private readonly HashSet<MutatorRegistration> _mutatorRegistrations;
-
-        public ComponentRegistrar()
-        {
-            _entityRegistrations = new HashSet<EntityRegistration>();
-            _controllerRegistrations = new HashSet<ControllerRegistration>();
-            _finalizerRegistrations = new HashSet<FinalizerRegistration>();
-            _validatorRegistrations = new HashSet<ValidatorRegistration>();
-            _mutatorRegistrations = new HashSet<MutatorRegistration>();
-        }
+        private readonly HashSet<EntityRegistration> _entityRegistrations = new();
+        private readonly HashSet<ControllerRegistration> _controllerRegistrations = new();
+        private readonly HashSet<FinalizerRegistration> _finalizerRegistrations = new();
+        private readonly HashSet<ValidatorRegistration> _validatorRegistrations = new();
+        private readonly HashSet<MutatorRegistration> _mutatorRegistrations = new();
 
         public ImmutableHashSet<EntityRegistration> EntityRegistrations => _entityRegistrations.ToImmutableHashSet();
 
@@ -42,7 +36,7 @@ namespace KubeOps.Operator.Builder
         }
 
         public IComponentRegistrar RegisterController<TController, TEntity>()
-            where TController : class
+            where TController : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             _controllerRegistrations.Add(new ControllerRegistration(typeof(TController), typeof(TEntity)));
@@ -51,7 +45,7 @@ namespace KubeOps.Operator.Builder
         }
 
         public IComponentRegistrar RegisterFinalizer<TFinalizer, TEntity>()
-            where TFinalizer : class
+            where TFinalizer : class, IResourceFinalizer<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             _finalizerRegistrations.Add(new FinalizerRegistration(typeof(TFinalizer), typeof(TEntity)));
@@ -60,7 +54,7 @@ namespace KubeOps.Operator.Builder
         }
 
         public IComponentRegistrar RegisterValidator<TValidator, TEntity>()
-            where TValidator : class
+            where TValidator : class, IValidationWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             _validatorRegistrations.Add(new ValidatorRegistration(typeof(TValidator), typeof(TEntity)));
@@ -69,7 +63,7 @@ namespace KubeOps.Operator.Builder
         }
 
         public IComponentRegistrar RegisterMutator<TMutator, TEntity>()
-            where TMutator : class
+            where TMutator : class, IMutationWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             _mutatorRegistrations.Add(new MutatorRegistration(typeof(TMutator), typeof(TEntity)));

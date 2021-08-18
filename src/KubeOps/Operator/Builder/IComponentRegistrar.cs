@@ -2,6 +2,9 @@ using System;
 using System.Collections.Immutable;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.Controller;
+using KubeOps.Operator.Finalizer;
+using KubeOps.Operator.Webhooks;
 
 namespace KubeOps.Operator.Builder
 {
@@ -21,19 +24,19 @@ namespace KubeOps.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>;
 
         IComponentRegistrar RegisterController<TController, TEntity>()
-            where TController : class
+            where TController : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>;
 
         IComponentRegistrar RegisterFinalizer<TFinalizer, TEntity>()
-            where TFinalizer : class
+            where TFinalizer : class, IResourceFinalizer<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>;
 
         IComponentRegistrar RegisterValidator<TValidator, TEntity>()
-            where TValidator : class
+            where TValidator : class, IValidationWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>;
 
         IComponentRegistrar RegisterMutator<TMutator, TEntity>()
-            where TMutator : class
+            where TMutator : class, IMutationWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>;
 
         public record EntityRegistration(Type EntityType);

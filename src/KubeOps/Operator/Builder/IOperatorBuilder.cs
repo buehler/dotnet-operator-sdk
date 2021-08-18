@@ -69,7 +69,7 @@ namespace KubeOps.Operator.Builder
         /// </para>
         /// <para>
         /// Only useful if a) the given type is not referenced by a controller, finalizer, or webhook
-        /// and b) the assembly containing the type is not already autypeoftomatically scanned.
+        /// and b) the assembly containing the type is not already automatically scanned.
         /// </para>
         /// </summary>
         /// <typeparam name="TEntity">The type of the entity to register.</typeparam>

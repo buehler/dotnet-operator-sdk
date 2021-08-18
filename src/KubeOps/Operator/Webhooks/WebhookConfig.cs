@@ -2,7 +2,7 @@ using k8s.Models;
 
 namespace KubeOps.Operator.Webhooks
 {
-    public record WebhookConfig(
+    internal record WebhookConfig(
         string OperatorName,
         string? BaseUrl,
         byte[]? CaBundle,
