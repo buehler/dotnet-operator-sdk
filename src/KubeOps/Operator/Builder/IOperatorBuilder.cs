@@ -149,7 +149,7 @@ namespace KubeOps.Operator.Builder
         /// Only useful if the assembly containing the given type is not already automatically scanned.
         /// </para>
         /// </summary>
-        /// <typeparam name="TEntity">The type to register.</typeparam>
+        /// <typeparam name="T">The type to register.</typeparam>
         /// <returns>The builder for chaining.</returns>
         IOperatorBuilder AddRbacType<T>();
     }
