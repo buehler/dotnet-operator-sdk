@@ -4,8 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s.Models;
-using KubeOps.Operator.Commands.Generators;
-using KubeOps.Operator.Services;
+using KubeOps.Operator.Entities;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Rest;
 
@@ -20,18 +19,18 @@ namespace KubeOps.Operator.Commands.Management
     {
         private readonly IKubernetesClient _client;
 
-        private readonly ResourceLocator _resourceLocator;
+        private readonly ICrdBuilder _crdBuilder;
 
-        public Install(IKubernetesClient client, ResourceLocator resourceLocator)
+        public Install(IKubernetesClient client, ICrdBuilder crdBuilder)
         {
             _client = client;
-            _resourceLocator = resourceLocator;
+            _crdBuilder = crdBuilder;
         }
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
             var error = false;
-            var crds = CrdGenerator.GenerateCrds(_resourceLocator).ToList();
+            var crds = _crdBuilder.BuildCrds().ToList();
             await app.Out.WriteLineAsync($"Found {crds.Count} CRD's.");
             await app.Out.WriteLineAsync($@"Starting install into cluster with url ""{_client.ApiClient.BaseUri}"".");
 

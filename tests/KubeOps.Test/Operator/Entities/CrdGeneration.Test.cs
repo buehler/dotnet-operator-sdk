@@ -4,7 +4,6 @@ using System.Reflection;
 using DotnetKubernetesClient.Entities;
 using FluentAssertions;
 using k8s.Models;
-using KubeOps.Operator.Commands.Generators;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Errors;
 using KubeOps.Operator.Util;
@@ -252,14 +251,6 @@ namespace KubeOps.Test.Operator.Entities
 
             var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
             specProperties.Required.Should().BeNull();
-        }
-
-        [Fact]
-        public void Should_Ignore_Entity_With_Ignore_Attribute()
-        {
-            var crds = CrdGenerator.GenerateCrds(new(Assembly.GetExecutingAssembly())).ToList();
-            crds.Should().NotContain(crd => crd.Spec.Names.Kind == "TestIgnoredEntity");
-            crds.Should().Contain(crd => crd.Spec.Names.Kind == "TestSpecEntity");
         }
 
         [Fact]

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
 using DotnetKubernetesClient;
 using k8s;
@@ -7,18 +6,17 @@ using k8s.Models;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
+using KubeOps.Operator.Entities;
 using KubeOps.Operator.Events;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
+using KubeOps.Operator.Rbac;
 using KubeOps.Operator.Serialization;
-using KubeOps.Operator.Services;
+using KubeOps.Operator.Webhooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Rest.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Prometheus;
 using YamlDotNet.Serialization;
 
@@ -28,14 +26,14 @@ namespace KubeOps.Operator.Builder
     {
         internal const string LivenessTag = "liveness";
         internal const string ReadinessTag = "readiness";
-
-        private readonly ResourceLocator _resourceLocator = new(
-            Assembly.GetEntryAssembly() ?? throw new Exception("No Entry Assembly found."),
-            Assembly.GetExecutingAssembly());
+        private readonly IComponentRegistrar _componentRegistrar;
+        private IAssemblyScanner _assemblyScanner;
 
         public OperatorBuilder(IServiceCollection services)
         {
             Services = services;
+            _assemblyScanner = new AssemblyScanner(this);
+            _componentRegistrar = new ComponentRegistrar();
         }
 
         public IServiceCollection Services { get; }
@@ -78,36 +76,91 @@ namespace KubeOps.Operator.Builder
 
         public IOperatorBuilder AddResourceAssembly(Assembly assembly)
         {
-            // This is kind of ugly to register the newly found controllers and stuff.
-            // Maybe this needs to be refactored.
-            var (controllers, finalizers, validators, mutators) = _resourceLocator.Add(assembly);
+            _assemblyScanner.AddAssembly(assembly);
 
-            foreach (var controllerType in controllers)
-            {
-                Services.TryAddScoped(controllerType);
-            }
+            return this;
+        }
 
-            foreach (var finalizerType in finalizers)
-            {
-                Services.TryAddScoped(finalizerType);
-            }
+        public IOperatorBuilder AddEntity<TEntity>()
+            where TEntity : IKubernetesObject<V1ObjectMeta>
+        {
+            _componentRegistrar.RegisterEntity<TEntity>();
 
-            foreach (var validatorType in validators)
-            {
-                Services.TryAddScoped(validatorType);
-            }
+            return this;
+        }
 
-            foreach (var mutatorType in mutators)
-            {
-                Services.TryAddScoped(mutatorType);
-            }
+        public IOperatorBuilder AddController<TImplementation, TEntity>()
+            where TImplementation : class, IResourceController<TEntity>
+            where TEntity : IKubernetesObject<V1ObjectMeta>
+        {
+            Services.TryAddScoped<TImplementation>();
+
+            _componentRegistrar.RegisterController<TImplementation, TEntity>();
+
+            return this;
+        }
+
+        public IOperatorBuilder AddFinalizer<TImplementation, TEntity>()
+            where TImplementation : class, IResourceFinalizer<TEntity>
+            where TEntity : IKubernetesObject<V1ObjectMeta>
+        {
+            Services.TryAddScoped<TImplementation>();
+            _componentRegistrar.RegisterFinalizer<TImplementation, TEntity>();
+
+            return this;
+        }
+
+        public IOperatorBuilder AddValidationWebhook<TImplementation, TEntity>()
+            where TImplementation : class, IValidationWebhook<TEntity>
+            where TEntity : IKubernetesObject<V1ObjectMeta>
+        {
+            Services.TryAddScoped<TImplementation>();
+            _componentRegistrar.RegisterValidator<TImplementation, TEntity>();
+
+            return this;
+        }
+
+        public IOperatorBuilder AddMutationWebhook<TImplementation, TEntity>()
+            where TImplementation : class, IMutationWebhook<TEntity>
+            where TEntity : IKubernetesObject<V1ObjectMeta>
+        {
+            Services.TryAddScoped<TImplementation>();
+            _componentRegistrar.RegisterMutator<TImplementation, TEntity>();
 
             return this;
         }
 
         internal IOperatorBuilder AddOperatorBase(OperatorSettings settings)
         {
+            if (settings.EnableAssemblyScanning)
+            {
+                _assemblyScanner
+                    .AddAssembly(Assembly.GetEntryAssembly() ?? throw new Exception("No Entry Assembly found."))
+                    .AddAssembly(Assembly.GetExecutingAssembly());
+            }
+            else
+            {
+                // This will cause calls to IOperatorBuilder.AddResourceAssembly to throw an InvalidOperationException
+                _assemblyScanner = new DisabledAssemblyScanner();
+            }
+
             Services.AddSingleton(settings);
+
+            Services.AddSingleton(_ => _componentRegistrar);
+
+            Services.AddTransient<IControllerInstanceBuilder, ControllerInstanceBuilder>();
+            Services.AddTransient(
+                s => (Func<IComponentRegistrar.ControllerRegistration, IManagedResourceController>)(r =>
+                    (IManagedResourceController)ActivatorUtilities.CreateInstance(
+                        s,
+                        typeof(ManagedResourceController<>).MakeGenericType(r.EntityType),
+                        r)));
+
+            Services.AddTransient<IFinalizerInstanceBuilder, FinalizerInstanceBuilder>();
+
+            Services.AddTransient<MutatingWebhookBuilder>();
+            Services.AddTransient<ValidatingWebhookBuilder>();
+            Services.AddTransient<IWebhookMetadataBuilder, WebhookMetadataBuilder>();
 
             Services.AddTransient(
                 _ => new SerializerBuilder()
@@ -122,11 +175,8 @@ namespace KubeOps.Operator.Builder
             Services.AddTransient<IKubernetesClient, KubernetesClient>();
             Services.AddTransient<IEventManager, EventManager>();
 
-            Services.AddSingleton(_resourceLocator);
-
             Services.AddTransient(typeof(ResourceCache<>));
             Services.AddTransient(typeof(ResourceWatcher<>));
-            Services.AddTransient(typeof(ManagedResourceController<>));
 
             // Support all the metrics
             Services.AddSingleton(typeof(ResourceWatcherMetrics<>));
@@ -145,31 +195,15 @@ namespace KubeOps.Operator.Builder
             // Register event handler
             Services.AddTransient<IEventManager, EventManager>();
 
-            // Add  all found controller types.
+            // Register controller manager
             Services.AddHostedService<ResourceControllerManager>();
-            foreach (var (controllerType, _) in _resourceLocator.ControllerTypes)
-            {
-                Services.TryAddScoped(controllerType);
-            }
 
-            // Register all found finalizer for the finalize manager
+            // Register finalizer manager
             Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
-            foreach (var finalizerType in _resourceLocator.FinalizerTypes)
-            {
-                Services.TryAddScoped(finalizerType);
-            }
 
-            // Register all found validation webhooks
-            foreach (var (validatorType, _) in _resourceLocator.ValidatorTypes)
-            {
-                Services.TryAddScoped(validatorType);
-            }
-
-            // Register all found mutation webhooks
-            foreach (var (mutatorType, _) in _resourceLocator.MutatorTypes)
-            {
-                Services.TryAddScoped(mutatorType);
-            }
+            // Register builders for RBAC rules and CRDs
+            Services.TryAddSingleton<ICrdBuilder, CrdBuilder>();
+            Services.TryAddSingleton<IRbacBuilder, RbacBuilder>();
 
             return this;
         }

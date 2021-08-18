@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using k8s.Models;
 using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Kustomize;
 using KubeOps.Operator.Rbac;
 using KubeOps.Operator.Serialization;
-using KubeOps.Operator.Services;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Generators
@@ -15,46 +13,14 @@ namespace KubeOps.Operator.Commands.Generators
     internal class RbacGenerator : GeneratorBase
     {
         private readonly EntitySerializer _serializer;
-        private readonly ResourceLocator _resourceLocator;
-        private readonly bool _hasWebhooks;
+        private readonly IRbacBuilder _rbacBuilder;
 
         public RbacGenerator(
             EntitySerializer serializer,
-            ResourceLocator resourceLocator)
+            IRbacBuilder rbacBuilder)
         {
             _serializer = serializer;
-            _resourceLocator = resourceLocator;
-            _hasWebhooks = resourceLocator.ValidatorTypes.Any();
-        }
-
-        public V1ClusterRole GenerateManagerRbac(ResourceLocator resourceTypeService)
-        {
-            var entityRbacPolicyRules = resourceTypeService.GetAttributes<EntityRbacAttribute>()
-                .SelectMany(attribute => attribute.CreateRbacPolicies());
-
-            var genericRbacPolicyRules = resourceTypeService.GetAttributes<GenericRbacAttribute>()
-                .Select(attribute => attribute.CreateRbacPolicy());
-
-            var rules = entityRbacPolicyRules.Concat(genericRbacPolicyRules).ToList();
-
-            if (_hasWebhooks)
-            {
-                var servicePolicies = new EntityRbacAttribute(
-                    typeof(V1Service),
-                    typeof(V1ValidatingWebhookConfiguration))
-                {
-                    Verbs = RbacVerb.Get | RbacVerb.Create | RbacVerb.Update | RbacVerb.Patch,
-                }.CreateRbacPolicies();
-
-                rules = rules.Concat(servicePolicies).ToList();
-            }
-
-            return new V1ClusterRole(
-                null,
-                $"{V1ClusterRole.KubeGroup}/{V1ClusterRole.KubeApiVersion}",
-                V1ClusterRole.KubeKind,
-                new V1ObjectMeta { Name = "operator-role" },
-                new List<V1PolicyRule>(rules));
+            _rbacBuilder = rbacBuilder;
         }
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
@@ -62,7 +28,7 @@ namespace KubeOps.Operator.Commands.Generators
             var fileWriter = new FileWriter(app.Out);
             fileWriter.Add(
                 $"operator-role.{Format.ToString().ToLower()}",
-                _serializer.Serialize(GenerateManagerRbac(_resourceLocator), Format));
+                _serializer.Serialize(_rbacBuilder.BuildManagerRbac(), Format));
             fileWriter.Add(
                 $"operator-role-binding.{Format.ToString().ToLower()}",
                 _serializer.Serialize(

@@ -7,9 +7,9 @@ using KubeOps.Operator;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
-using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Kubernetes;
 using Microsoft.Extensions.Logging;
+using static KubeOps.Operator.Builder.IComponentRegistrar;
 
 namespace KubeOps.Testing
 {
@@ -24,8 +24,8 @@ namespace KubeOps.Testing
             IServiceProvider services,
             ResourceControllerMetrics<TEntity> metrics,
             OperatorSettings settings,
-            IFinalizerManager<TEntity> finalizerManager)
-            : base(logger, client, watcher, cache, services, metrics, settings, finalizerManager)
+            ControllerRegistration controllerRegistration)
+            : base(logger, client, watcher, cache, services, metrics, settings, controllerRegistration)
         {
         }
 

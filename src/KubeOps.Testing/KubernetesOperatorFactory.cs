@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
+using KubeOps.Operator.Builder;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
@@ -57,8 +58,7 @@ namespace KubeOps.Testing
         public Task EnqueueEvent<TEntity>(ResourceEventType type, TEntity resource)
             where TEntity : class, IKubernetesObject<V1ObjectMeta>
         {
-            var controller = Services.GetRequiredService<ManagedResourceController<TEntity>>() as
-                MockManagedResourceController<TEntity>;
+            var controller = GetMockController<TEntity>();
 
             return controller?.EnqueueEvent(type, resource) ?? Task.CompletedTask;
         }
@@ -66,8 +66,7 @@ namespace KubeOps.Testing
         public Task EnqueueFinalization<TEntity>(TEntity resource)
             where TEntity : class, IKubernetesObject<V1ObjectMeta>
         {
-            var controller = Services.GetRequiredService<ManagedResourceController<TEntity>>() as
-                MockManagedResourceController<TEntity>;
+            var controller = GetMockController<TEntity>();
 
             return controller?.EnqueueFinalization(resource) ?? Task.CompletedTask;
         }
@@ -106,10 +105,22 @@ namespace KubeOps.Testing
                     services.RemoveAll(typeof(IKubernetesClient));
                     services.AddSingleton<IKubernetesClient, MockKubernetesClient>();
 
-                    services.RemoveAll(typeof(ManagedResourceController<>));
-                    services.AddSingleton(typeof(ManagedResourceController<>), typeof(MockManagedResourceController<>));
+                    services.RemoveAll<Func<IComponentRegistrar.ControllerRegistration, IManagedResourceController>>();
+                    services.AddSingleton(
+                        s => (Func<IComponentRegistrar.ControllerRegistration, IManagedResourceController>)(r =>
+                            (IManagedResourceController)ActivatorUtilities.CreateInstance(
+                                s,
+                                typeof(MockManagedResourceController<>).MakeGenericType(r.EntityType),
+                                r)));
                 });
             builder.ConfigureLogging(logging => logging.ClearProviders());
         }
+
+        private MockManagedResourceController<TEntity>? GetMockController<TEntity>()
+            where TEntity : class, IKubernetesObject<V1ObjectMeta> =>
+            Services.GetRequiredService<IControllerInstanceBuilder>()
+                .BuildControllers<TEntity>()
+                .OfType<MockManagedResourceController<TEntity>>()
+                .FirstOrDefault();
     }
 }

@@ -1,7 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reflection;
 using KubeOps.Operator.Builder;
-using KubeOps.Operator.Services;
 using KubeOps.Operator.Webhooks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -45,32 +45,39 @@ namespace KubeOps.Operator
                         .CreateLogger("ApplicationStartup");
 
                     using var scope = app.ApplicationServices.CreateScope();
-                    var locator = scope.ServiceProvider.GetRequiredService<ResourceLocator>();
+                    var componentRegistrar = scope.ServiceProvider.GetRequiredService<IComponentRegistrar>();
+                    var webhookMetadataBuilder = scope.ServiceProvider.GetRequiredService<IWebhookMetadataBuilder>();
 
-                    foreach (var (validatorType, resourceType) in locator.ValidatorTypes)
+                    foreach (var wh in componentRegistrar.ValidatorRegistrations)
                     {
+                        (Type validatorType, Type entityType) = wh;
+
                         var validator = scope.ServiceProvider.GetRequiredService(validatorType);
                         var registerMethod = typeof(IAdmissionWebhook<,>)
-                            .MakeGenericType(resourceType, typeof(ValidationResult))
+                            .MakeGenericType(entityType, typeof(ValidationResult))
                             .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                             .First(m => m.Name == "Register");
                         registerMethod.Invoke(validator, new object[] { endpoints });
-                        var (name, endpoint) = Webhooks.Webhooks.Metadata<ValidationResult>(validator, resourceType);
+                        var (name, endpoint) =
+                            webhookMetadataBuilder.GetMetadata<ValidationResult>(validator, entityType);
                         logger.LogInformation(
                             @"Registered validation webhook ""{name}"" under ""{endpoint}"".",
                             name,
                             endpoint);
                     }
 
-                    foreach (var (mutatorType, resourceType) in locator.MutatorTypes)
+                    foreach (var wh in componentRegistrar.MutatorRegistrations)
                     {
+                        (Type mutatorType, Type entityType) = wh;
+
                         var mutator = scope.ServiceProvider.GetRequiredService(mutatorType);
                         var registerMethod = typeof(IAdmissionWebhook<,>)
-                            .MakeGenericType(resourceType, typeof(MutationResult))
+                            .MakeGenericType(entityType, typeof(MutationResult))
                             .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                             .First(m => m.Name == "Register");
                         registerMethod.Invoke(mutator, new object[] { endpoints });
-                        var (name, endpoint) = Webhooks.Webhooks.Metadata<MutationResult>(mutator, resourceType);
+                        var (name, endpoint) =
+                            webhookMetadataBuilder.GetMetadata<MutationResult>(mutator, entityType);
                         logger.LogInformation(
                             @"Registered mutation webhook ""{name}"" under ""{endpoint}"".",
                             name,

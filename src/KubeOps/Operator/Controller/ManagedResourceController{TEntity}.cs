@@ -14,6 +14,7 @@ using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Kubernetes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using static KubeOps.Operator.Builder.IComponentRegistrar;
 
 namespace KubeOps.Operator.Controller
 {
@@ -31,7 +32,7 @@ namespace KubeOps.Operator.Controller
         private readonly IServiceProvider _services;
         private readonly ResourceControllerMetrics<TEntity> _metrics;
         private readonly OperatorSettings _settings;
-        private readonly IFinalizerManager<TEntity> _finalizerManager;
+        private readonly ControllerRegistration _controllerRegistration;
 
         private readonly Subject<RequeuedEvent>
             _requeuedEvents = new();
@@ -49,7 +50,7 @@ namespace KubeOps.Operator.Controller
             IServiceProvider services,
             ResourceControllerMetrics<TEntity> metrics,
             OperatorSettings settings,
-            IFinalizerManager<TEntity> finalizerManager)
+            ControllerRegistration controllerRegistration)
         {
             _logger = logger;
             _client = client;
@@ -58,10 +59,8 @@ namespace KubeOps.Operator.Controller
             _services = services;
             _metrics = metrics;
             _settings = settings;
-            _finalizerManager = finalizerManager;
+            _controllerRegistration = controllerRegistration;
         }
-
-        public Type ControllerType { get; set; } = typeof(IResourceController<>);
 
         private IObservable<Unit> WatcherEvents => _watcher
             .WatchEvents
@@ -201,19 +200,21 @@ namespace KubeOps.Operator.Controller
                 resource.Kind,
                 resource.Name());
 
+            var controllerType = _controllerRegistration.ControllerType;
+
             ResourceControllerResult? result = null;
-            _logger.LogTrace(@"Instantiating new DI scope for controller ""{name}"".", ControllerType.Name);
+            _logger.LogTrace(@"Instantiating new DI scope for controller ""{name}"".", controllerType.Name);
             using (var scope = _services.CreateScope())
             {
-                if (!(scope.ServiceProvider.GetRequiredService(ControllerType) is IResourceController<TEntity>
+                if (!(scope.ServiceProvider.GetRequiredService(controllerType) is IResourceController<TEntity>
                     controller))
                 {
                     var ex = new InvalidCastException(
-                        $@"The type ""{ControllerType.Namespace}.{ControllerType.Name}"" is not a valid IResourceController<TEntity> type.");
+                        $@"The type ""{controllerType.Namespace}.{controllerType.Name}"" is not a valid IResourceController<TEntity> type.");
                     _logger.LogCritical(
                         @"The type ""{namespace}.{name}"" is not a valid IResourceController<TEntity> type.",
-                        ControllerType.Namespace,
-                        ControllerType.Name);
+                        controllerType.Namespace,
+                        controllerType.Name);
                     throw ex;
                 }
 
@@ -309,6 +310,8 @@ namespace KubeOps.Operator.Controller
 
         protected async Task HandleResourceFinalization(QueuedEvent? data)
         {
+            using var scope = _services.CreateScope();
+
             if (data == null)
             {
                 return;
@@ -323,7 +326,8 @@ namespace KubeOps.Operator.Controller
 
             try
             {
-                await _finalizerManager.FinalizeAsync(data.Resource);
+                await scope.ServiceProvider.GetRequiredService<IFinalizerManager<TEntity>>()
+                    .FinalizeAsync(data.Resource);
             }
             catch (Exception e)
             {

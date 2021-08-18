@@ -18,6 +18,8 @@
   href: utilities.md
 - name: CLI Commands
   href: commands.md
+- name: Advanced Topics
+  href: advanced.md
 - name: MS Build extensions
   href: ms_build.md
 - name: Testing

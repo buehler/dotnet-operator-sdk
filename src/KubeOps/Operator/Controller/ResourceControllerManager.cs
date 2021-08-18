@@ -3,43 +3,30 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using KubeOps.Operator.Leadership;
-using KubeOps.Operator.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace KubeOps.Operator.Controller
 {
     internal class ResourceControllerManager : IHostedService
     {
-        private readonly IServiceProvider _services;
+        private readonly IControllerInstanceBuilder _controllerInstanceBuilder;
         private readonly ILeaderElection _leaderElection;
-        private readonly ResourceLocator _resourceLocator;
-
-        private readonly List<IManagedResourceController> _controller = new();
+        private readonly List<IManagedResourceController> _controllerList;
 
         private IDisposable? _leadershipSubscription;
 
         public ResourceControllerManager(
-            IServiceProvider services,
-            ILeaderElection leaderElection,
-            ResourceLocator resourceLocator)
+            IControllerInstanceBuilder controllerInstanceBuilder,
+            ILeaderElection leaderElection)
         {
-            _services = services;
+            _controllerInstanceBuilder = controllerInstanceBuilder;
             _leaderElection = leaderElection;
-            _resourceLocator = resourceLocator;
+            _controllerList = new List<IManagedResourceController>();
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            foreach (var (controllerType, entityType) in _resourceLocator.ControllerTypes)
-            {
-                var managedType = typeof(ManagedResourceController<>).MakeGenericType(entityType);
-                var managedInstance = _services.GetRequiredService(managedType) as IManagedResourceController ??
-                                      throw new Exception(
-                                          $"Could not create managed controller with type {managedType}.");
-                managedInstance.ControllerType = controllerType;
-                _controller.Add(managedInstance);
-            }
+            _controllerList.AddRange(_controllerInstanceBuilder.BuildControllers());
 
             _leadershipSubscription = _leaderElection.LeadershipChange.Subscribe(LeadershipChanged);
             return Task.CompletedTask;
@@ -48,13 +35,13 @@ namespace KubeOps.Operator.Controller
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _leadershipSubscription?.Dispose();
-            foreach (var controller in _controller)
+            foreach (var controller in _controllerList)
             {
                 controller.StopAsync();
                 controller.Dispose();
             }
 
-            _controller.Clear();
+            _controllerList.Clear();
             return Task.CompletedTask;
         }
 
@@ -65,7 +52,7 @@ namespace KubeOps.Operator.Controller
                 return;
             }
 
-            foreach (var controller in _controller)
+            foreach (var controller in _controllerList)
             {
                 if (state == LeaderState.Leader)
                 {

@@ -3,10 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using k8s.Models;
+using KubeOps.Operator.Builder;
 using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Kustomize;
 using KubeOps.Operator.Serialization;
-using KubeOps.Operator.Services;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Generators
@@ -21,11 +21,13 @@ namespace KubeOps.Operator.Commands.Generators
         public OperatorGenerator(
             EntitySerializer serializer,
             OperatorSettings settings,
-            ResourceLocator resourceLocator)
+            IComponentRegistrar componentRegistrar)
         {
             _serializer = serializer;
             _settings = settings;
-            _hasWebhooks = resourceLocator.ValidatorTypes.Any();
+
+            _hasWebhooks = componentRegistrar.ValidatorRegistrations.Any() ||
+                           componentRegistrar.MutatorRegistrations.Any();
         }
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)

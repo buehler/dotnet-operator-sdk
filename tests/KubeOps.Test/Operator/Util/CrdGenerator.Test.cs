@@ -1,23 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using FluentAssertions;
 using k8s.Models;
-using KubeOps.Operator.Commands.Generators;
+using KubeOps.Operator.Builder;
+using KubeOps.Operator.Entities;
+using KubeOps.Test.TestEntities;
 using Xunit;
 
-namespace KubeOps.Test.Operator.Commands.Generators
+namespace KubeOps.Test.Operator.Util
 {
     public class CrdGeneratorTest
     {
-        private readonly IList<V1CustomResourceDefinition> _crds =
-            CrdGenerator.GenerateCrds(new(Assembly.GetExecutingAssembly())).ToList();
+        private readonly IEnumerable<V1CustomResourceDefinition> _crds;
+
+        public CrdGeneratorTest()
+        {
+            var componentRegistrar = new ComponentRegistrar();
+            
+            componentRegistrar.RegisterEntity<TestIgnoredEntity>();
+            componentRegistrar.RegisterEntity<TestInvalidEntity>();
+            componentRegistrar.RegisterEntity<TestSpecEntity>();
+            componentRegistrar.RegisterEntity<TestClusterSpecEntity>();
+            componentRegistrar.RegisterEntity<TestStatusEntity>();
+            componentRegistrar.RegisterEntity<V1Alpha1VersionedEntity>();
+            componentRegistrar.RegisterEntity<V1AttributeVersionedEntity>();
+            componentRegistrar.RegisterEntity<V1Beta1VersionedEntity>();
+            componentRegistrar.RegisterEntity<V1VersionedEntity>();
+            componentRegistrar.RegisterEntity<V2AttributeVersionedEntity>();
+            componentRegistrar.RegisterEntity<V2Beta2VersionedEntity>();
+            componentRegistrar.RegisterEntity<V2VersionedEntity>();
+
+            _crds = new CrdBuilder(componentRegistrar).BuildCrds();
+        }
 
         [Fact]
         public void Should_Generate_Correct_Number_Of_Crds()
         {
-            _crds.Count.Should().Be(5);
+            _crds.Count().Should().Be(5);
         }
 
         [Fact]
