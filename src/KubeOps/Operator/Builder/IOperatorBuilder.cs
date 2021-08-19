@@ -140,5 +140,37 @@ namespace KubeOps.Operator.Builder
         IOperatorBuilder AddMutationWebhook<TImplementation, TEntity>()
             where TImplementation : class, IMutationWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+        /// <summary>
+        /// <para>
+        /// Adds a hosted service to the system that creates a "localtunnel"
+        /// (http://localtunnel.github.io/www/) to the running application.
+        /// The tunnel points to the configured host/port configuration and then
+        /// registers itself as webhook target within Kubernetes. This
+        /// enables developers to easily create webhooks without the requirement
+        /// of registering ngrok / localtunnel urls themselves.
+        /// </para>
+        /// <para>
+        /// This is a convenience method to improve the developer experience.
+        /// Since some IDEs do not gracefully shutdown applications that
+        /// have a debugger attached, the registration may not be removed.
+        /// </para>
+        /// <para>
+        /// It is strongly recommended to use this method only while developing
+        /// or debugging an operator. *Never* use this in production.
+        /// </para>
+        /// </summary>
+        /// <param name="hostname">The hostname that the tunnel should target to proxy.</param>
+        /// <param name="port">The target port to proxy.</param>
+        /// <param name="isHttps">If set to true, the target uses HTTPS.</param>
+        /// <param name="allowUntrustedCertificates">
+        /// If the target uses HTTPS, should self signed / untrusted certificates be allowed or not.
+        /// </param>
+        /// <returns>The builder for chaining.</returns>
+        IOperatorBuilder AddWebhookLocaltunnel(
+            string hostname = "localhost",
+            short port = 5000,
+            bool isHttps = false,
+            bool allowUntrustedCertificates = true);
     }
 }
