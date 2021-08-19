@@ -19,9 +19,9 @@ namespace KubeOps.Operator.Commands.Management
     {
         private readonly IKubernetesClient _client;
 
-        private readonly CrdBuilder _crdBuilder;
+        private readonly ICrdBuilder _crdBuilder;
 
-        public Uninstall(IKubernetesClient client, CrdBuilder crdBuilder)
+        public Uninstall(IKubernetesClient client, ICrdBuilder crdBuilder)
         {
             _client = client;
             _crdBuilder = crdBuilder;
