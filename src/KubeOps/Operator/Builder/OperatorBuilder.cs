@@ -159,7 +159,9 @@ namespace KubeOps.Operator.Builder
             Services.AddTransient<IFinalizerInstanceBuilder, FinalizerInstanceBuilder>();
 
             Services.AddTransient<MutatingWebhookBuilder>();
+            Services.AddTransient<MutatingWebhookConfigurationBuilder>();
             Services.AddTransient<ValidatingWebhookBuilder>();
+            Services.AddTransient<ValidatingWebhookConfigurationBuilder>();
             Services.AddTransient<IWebhookMetadataBuilder, WebhookMetadataBuilder>();
 
             Services.AddTransient(
