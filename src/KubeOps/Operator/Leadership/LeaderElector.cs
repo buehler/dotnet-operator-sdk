@@ -16,8 +16,6 @@ using Timer = System.Timers.Timer;
 
 namespace KubeOps.Operator.Leadership
 {
-    [EntityRbac(typeof(V1Lease), Verbs = RbacVerb.All)]
-    [EntityRbac(typeof(V1Deployment), Verbs = RbacVerb.Get | RbacVerb.List)]
     internal class LeaderElector : IHostedService
     {
         private readonly ILogger<LeaderElector> _logger;

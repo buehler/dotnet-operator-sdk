@@ -215,8 +215,15 @@ namespace KubeOps.Operator.Builder
                 .ForwardToPrometheus();
 
             // Support for leader election via V1Leases.
-            Services.AddHostedService<LeaderElector>();
-            Services.AddSingleton<ILeaderElection, LeaderElection>();
+            if (settings.EnableLeaderElection)
+            {
+                Services.AddHostedService<LeaderElector>();
+                Services.AddSingleton<ILeaderElection, LeaderElection>();
+            }
+            else
+            {
+                Services.AddSingleton<ILeaderElection, DisabledLeaderElection>();
+            }
 
             // Register event handler
             Services.AddTransient<IEventManager, EventManager>();

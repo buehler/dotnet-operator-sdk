@@ -12,8 +12,9 @@ namespace KubeOps.Operator.Rbac
         private readonly List<Type> _componentTypes;
 
         private readonly bool _hasWebhooks;
+        private readonly bool _hasLeaderElection;
 
-        public RbacBuilder(IComponentRegistrar componentRegistrar)
+        public RbacBuilder(IComponentRegistrar componentRegistrar, OperatorSettings settings)
         {
             var controllerTypes = componentRegistrar.ControllerRegistrations
                 .Select(t => t.ControllerType)
@@ -37,6 +38,7 @@ namespace KubeOps.Operator.Rbac
                 .ToList();
 
             _hasWebhooks = validatorTypes.Any() || mutatorTypes.Any();
+            _hasLeaderElection = settings.EnableLeaderElection;
         }
 
         public V1ClusterRole BuildManagerRbac()
@@ -59,6 +61,16 @@ namespace KubeOps.Operator.Rbac
                 }.CreateRbacPolicies();
 
                 rules = rules.Concat(servicePolicies).ToList();
+            }
+
+            if (_hasLeaderElection)
+            {
+                rules = rules
+                    .Concat(new EntityRbacAttribute(typeof(V1Lease)) { Verbs = RbacVerb.All }.CreateRbacPolicies())
+                    .Concat(
+                        new EntityRbacAttribute(typeof(V1Deployment)) { Verbs = RbacVerb.Get | RbacVerb.List }
+                            .CreateRbacPolicies())
+                    .ToList();
             }
 
             return new V1ClusterRole(
