@@ -27,15 +27,18 @@ namespace KubeOps.Operator.Webhooks
         }
 
         public List<V1ValidatingWebhook> BuildWebhooks(WebhookConfig webhookConfig)
-            => _componentRegistrar.ValidatorRegistrations
+        {
+            using var scope = _services.CreateScope();
+            return _componentRegistrar.ValidatorRegistrations
                 .Select(
                     wh =>
                     {
                         (Type validatorType, Type entityType) = wh;
 
-                        var instance = _services.GetRequiredService(validatorType);
+                        var instance = scope.ServiceProvider.GetRequiredService(validatorType);
 
-                        var (name, endpoint) = _webhookMetadataBuilder.GetMetadata<ValidationResult>(instance, entityType);
+                        var (name, endpoint) =
+                            _webhookMetadataBuilder.GetMetadata<ValidationResult>(instance, entityType);
 
                         var clientConfig = new Admissionregistrationv1WebhookClientConfig();
                         if (!string.IsNullOrWhiteSpace(webhookConfig.BaseUrl))
@@ -81,5 +84,6 @@ namespace KubeOps.Operator.Webhooks
                         };
                     })
                 .ToList();
+        }
     }
 }
