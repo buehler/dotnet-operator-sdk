@@ -25,11 +25,31 @@ namespace KubeOps.Operator.Builder
             _registrationDefinitions =
                 new (Type Type, string MethodName)[]
                     {
-                        new() { Type = typeof(IKubernetesObject<V1ObjectMeta>), MethodName = nameof(OperatorBuilderExtensions.AddEntity) },
-                        new() { Type = typeof(IResourceController<>), MethodName = nameof(OperatorBuilderExtensions.AddController) },
-                        new() { Type = typeof(IResourceFinalizer<>), MethodName = nameof(OperatorBuilderExtensions.AddFinalizer) },
-                        new() { Type = typeof(IValidationWebhook<>), MethodName = nameof(OperatorBuilderExtensions.AddValidationWebhook) },
-                        new() { Type = typeof(IMutationWebhook<>), MethodName = nameof(OperatorBuilderExtensions.AddMutationWebhook) },
+                        new()
+                        {
+                            Type = typeof(IKubernetesObject<V1ObjectMeta>),
+                            MethodName = nameof(OperatorBuilderExtensions.AddEntity),
+                        },
+                        new()
+                        {
+                            Type = typeof(IResourceController<>),
+                            MethodName = nameof(OperatorBuilderExtensions.AddController),
+                        },
+                        new()
+                        {
+                            Type = typeof(IResourceFinalizer<>),
+                            MethodName = nameof(OperatorBuilderExtensions.AddFinalizer),
+                        },
+                        new()
+                        {
+                            Type = typeof(IValidationWebhook<>),
+                            MethodName = nameof(OperatorBuilderExtensions.AddValidationWebhook),
+                        },
+                        new()
+                        {
+                            Type = typeof(IMutationWebhook<>),
+                            MethodName = nameof(OperatorBuilderExtensions.AddMutationWebhook),
+                        },
                     }
                     .Select<(Type Type, string MethodName), (Type Type, MethodInfo RegistrationMethod)>(
                         t => new()
@@ -55,8 +75,10 @@ namespace KubeOps.Operator.Builder
                 .Where(
                     t => t.ComponentType.GetInterfaces()
                         .Any(
-                            i => (i.IsConstructedGenericType && i.GetGenericTypeDefinition().IsEquivalentTo(t.RegistrationDefinition.Type)) ||
-                            (t.RegistrationDefinition.Type.IsConstructedGenericType && i.IsEquivalentTo(t.RegistrationDefinition.Type))))
+                            i => (i.IsConstructedGenericType &&
+                                  i.GetGenericTypeDefinition().IsEquivalentTo(t.RegistrationDefinition.Type)) ||
+                                 (t.RegistrationDefinition.Type.IsConstructedGenericType &&
+                                  i.IsEquivalentTo(t.RegistrationDefinition.Type))))
                 .Select(
                     t => t.RegistrationDefinition.RegistrationMethod.MakeGenericMethod(t.ComponentType));
 

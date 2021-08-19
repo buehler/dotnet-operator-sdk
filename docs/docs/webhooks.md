@@ -1,10 +1,11 @@
 ﻿# Webhooks
 
 Kubernetes supports various webhooks to extend the normal api behaviour
-of the master api. Those are documented on the 
+of the master api. Those are documented on the
 [kubernetes website](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/).
 
 `KubeOps` supports the following webhooks out of the box:
+
 - Validator / Validation
 - Mutator / Mutation
 
@@ -24,6 +25,7 @@ generate a CA certificate for you.
 
 So if you add a webhook to your operator the following changes
 to the normal deployment of the operator will happen:
+
 1. During "after build" phase, the sdk will generate
    a CA-certificate for self signed certificates for you.
 2. The ca certificate and the corresponding key are added
@@ -61,9 +63,64 @@ trigger a POST call to the operator.
 
 ## Local development
 
-It is possible to test webhooks locally. For this, you need
-to register the webhook via dependency injection with the corresponding
-method (in the builder) and then start your operator.
+It is possible to test / debug webhooks locally. For this, you need
+to implement the webhook and use assembly-scanning (or the
+operator builder if you disabled scanning) to register
+the webhook type.
+
+There are two possibilities to tell Kubernetes that it should
+call your local running operator for the webhooks. The url
+that Kubernetes addresses _must_ be an HTTPS address.
+
+### Using `AddWebhookLocaltunnel`
+
+In your `Startup.cs` you can use the `IOperatorBuilder`
+method `AddWebhookLocaltunnel` to add an automatic
+localtunnel instance to your operator.
+
+This will cause the operator to register a hosted service that
+creates a tunnel and then registers itself to Kubernetes
+with the created proxy-url. Now all calls are automatically
+forwarded via HTTPS to your operator.
+
+```csharp
+namespace KubeOps.TestOperator
+{
+    public class Startup
+    {
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services
+               .AddKubernetesOperator()
+#if DEBUG
+               .AddWebhookLocaltunnel()
+#endif
+               ;
+            services.AddTransient<IManager, TestManager.TestManager>();
+        }
+
+        public void Configure(IApplicationBuilder app)
+        {
+            app.UseKubernetesOperator();
+        }
+    }
+}
+```
+
+> [!WARNING]
+> It is _strongly_ advices against using auto-webhooks
+> with localtunnel in production. This feature
+> is intended to improve the developer experience
+> while coding operators.
+
+> [!NOTE]
+> Some IDEs (like Rider from JetBrains) do not correctly
+> terminate debugged applications. Hence, the
+> webhook registration remains in Kubernetes. If you remove
+> webhooks from your operator, you need to remove the
+> registration within Kubernetes as well.
+
+### Using external proxy
 
 The operator will run on a specific http address, depending on your
 configuration.
@@ -87,6 +144,7 @@ Webhooks are registered in a **scoped** manner to the DI system.
 They behave like asp.net api controller.
 
 The implementation of a validator is fairly simple:
+
 - Create a class somewhere in your project.
 - Implement the @"KubeOps.Operator.Webhooks.IValidationWebhook`1" interface.
 - Define the @"KubeOps.Operator.Webhooks.IAdmissionWebhook`2.Operations"
@@ -138,6 +196,7 @@ the object that is later passed to the validators and to the Kubernetes
 API.
 
 The implementation of a mutator is fairly simple:
+
 - Create a class somewhere in your project.
 - Implement the @"KubeOps.Operator.Webhooks.IMutationWebhook`1" interface.
 - Define the @"KubeOps.Operator.Webhooks.IAdmissionWebhook`2.Operations"

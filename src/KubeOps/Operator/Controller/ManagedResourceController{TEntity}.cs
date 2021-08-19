@@ -86,15 +86,17 @@ namespace KubeOps.Operator.Controller
             .Select(
                 data => Observable.Return(data).Delay(data.Delay))
             .Switch()
-            .Select(data =>
-                Observable.FromAsync(async () =>
-                {
-                    var queuedEvent = await UpdateResourceData(data.Resource);
+            .Select(
+                data =>
+                    Observable.FromAsync(
+                        async () =>
+                        {
+                            var queuedEvent = await UpdateResourceData(data.Resource);
 
-                    return data.ResourceEvent.HasValue && queuedEvent != null
-                        ? queuedEvent with { ResourceEvent = data.ResourceEvent.Value }
-                        : queuedEvent;
-                }))
+                            return data.ResourceEvent.HasValue && queuedEvent != null
+                                ? queuedEvent with { ResourceEvent = data.ResourceEvent.Value }
+                                : queuedEvent;
+                        }))
             .Switch()
             .Where(data => data != null)
             .Do(
@@ -338,7 +340,6 @@ namespace KubeOps.Operator.Controller
                     resource.Name(),
                     retryCount + 1);
                 _erroredEvents.OnNext(data with { RetryCount = retryCount + 1 });
-                return;
             }
         }
 

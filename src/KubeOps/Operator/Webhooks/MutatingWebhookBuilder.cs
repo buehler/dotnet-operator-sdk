@@ -37,7 +37,8 @@ namespace KubeOps.Operator.Webhooks
 
                         var instance = scope.ServiceProvider.GetRequiredService(mutatorType);
 
-                        var (name, endpoint) = _webhookMetadataBuilder.GetMetadata<MutationResult>(instance, entityType);
+                        var (name, endpoint) =
+                            _webhookMetadataBuilder.GetMetadata<MutationResult>(instance, entityType);
 
                         var clientConfig = new Admissionregistrationv1WebhookClientConfig();
                         if (!string.IsNullOrWhiteSpace(webhookConfig.BaseUrl))

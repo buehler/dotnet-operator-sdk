@@ -19,11 +19,14 @@ namespace KubeOps.Operator.Builder
 
         public ImmutableHashSet<EntityRegistration> EntityRegistrations => _entityRegistrations.ToImmutableHashSet();
 
-        public ImmutableHashSet<ControllerRegistration> ControllerRegistrations => _controllerRegistrations.ToImmutableHashSet();
+        public ImmutableHashSet<ControllerRegistration> ControllerRegistrations =>
+            _controllerRegistrations.ToImmutableHashSet();
 
-        public ImmutableHashSet<FinalizerRegistration> FinalizerRegistrations => _finalizerRegistrations.ToImmutableHashSet();
+        public ImmutableHashSet<FinalizerRegistration> FinalizerRegistrations =>
+            _finalizerRegistrations.ToImmutableHashSet();
 
-        public ImmutableHashSet<ValidatorRegistration> ValidatorRegistrations => _validatorRegistrations.ToImmutableHashSet();
+        public ImmutableHashSet<ValidatorRegistration> ValidatorRegistrations =>
+            _validatorRegistrations.ToImmutableHashSet();
 
         public ImmutableHashSet<MutatorRegistration> MutatorRegistrations => _mutatorRegistrations.ToImmutableHashSet();
 

@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace KubeOps.Operator.Webhooks
+﻿namespace KubeOps.Operator.Webhooks
 {
     /// <summary>
     /// Result that should be returned to kubernetes.
@@ -9,7 +7,7 @@ namespace KubeOps.Operator.Webhooks
     /// </summary>
     public sealed class MutationResult : AdmissionResult
     {
-        internal JToken? ModifiedObject { get; init; }
+        internal object? ModifiedObject { get; init; }
 
         /// <summary>
         /// Utility method that creates a return value that indicates that no changes must be applied.
@@ -24,10 +22,15 @@ namespace KubeOps.Operator.Webhooks
         /// that describes the diff from the original object to the modified object.
         /// </summary>
         /// <param name="modifiedEntity">The modified object.</param>
+        /// <param name="warnings">
+        /// An optional list of warnings/messages given back to the user.
+        /// This could contain a reason why an object was mutated.
+        /// </param>
         /// <returns>A <see cref="MutationResult"/> with a modified object.</returns>
-        public static MutationResult Modified(object modifiedEntity) => new()
+        public static MutationResult Modified(object modifiedEntity, params string[] warnings) => new()
         {
-            ModifiedObject = JToken.FromObject(modifiedEntity),
+            ModifiedObject = modifiedEntity,
+            Warnings = warnings,
         };
 
         internal static MutationResult Fail(int statusCode, string statusMessage) => new()
