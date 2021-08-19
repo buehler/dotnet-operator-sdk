@@ -56,6 +56,21 @@ namespace KubeOps.Operator
         public string ReadinessEndpoint { get; set; } = "/ready";
 
         /// <summary>
+        /// <para>
+        /// Defines if the leader elector should run. You may disable this,
+        /// if you don't intend to run your operator multiple times.
+        /// </para>
+        /// <para>
+        /// If this is disabled, and an operator runs in multiple instance
+        /// (in the same namespace) it can lead to a "split brain" problem.
+        /// </para>
+        /// <para>
+        /// This could be disabled when developing locally.
+        /// </para>
+        /// </summary>
+        public bool EnableLeaderElection { get; set; } = true;
+
+        /// <summary>
         /// The interval in seconds in which this particular instance of the operator
         /// will check for leader election.
         /// </summary>
