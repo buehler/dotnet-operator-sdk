@@ -27,13 +27,15 @@ namespace KubeOps.Operator.Webhooks
         }
 
         public List<V1MutatingWebhook> BuildWebhooks(WebhookConfig webhookConfig)
-            => _componentRegistrar.MutatorRegistrations
+        {
+            using var scope = _services.CreateScope();
+            return _componentRegistrar.MutatorRegistrations
                 .Select(
                     wh =>
                     {
                         (Type mutatorType, Type entityType) = wh;
 
-                        var instance = _services.GetRequiredService(mutatorType);
+                        var instance = scope.ServiceProvider.GetRequiredService(mutatorType);
 
                         var (name, endpoint) = _webhookMetadataBuilder.GetMetadata<MutationResult>(instance, entityType);
 
@@ -81,5 +83,6 @@ namespace KubeOps.Operator.Webhooks
                         };
                     })
                 .ToList();
+        }
     }
 }
