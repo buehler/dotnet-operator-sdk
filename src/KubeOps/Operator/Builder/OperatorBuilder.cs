@@ -17,6 +17,7 @@ using KubeOps.Operator.Webhooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
 using Prometheus;
 using YamlDotNet.Serialization;
 
@@ -126,6 +127,29 @@ namespace KubeOps.Operator.Builder
         {
             Services.TryAddScoped<TImplementation>();
             _componentRegistrar.RegisterMutator<TImplementation, TEntity>();
+
+            return this;
+        }
+
+        public IOperatorBuilder AddWebhookLocaltunnel(
+            string hostname = "localhost",
+            short port = 5000,
+            bool isHttps = false,
+            bool allowUntrustedCertificates = true)
+        {
+            Services.AddHostedService(
+                services => new WebhookLocalTunnel(
+                    services.GetRequiredService<ILogger<WebhookLocalTunnel>>(),
+                    services.GetRequiredService<OperatorSettings>(),
+                    services.GetRequiredService<IKubernetesClient>(),
+                    services.GetRequiredService<MutatingWebhookConfigurationBuilder>(),
+                    services.GetRequiredService<ValidatingWebhookConfigurationBuilder>())
+                {
+                    Host = hostname,
+                    Port = port,
+                    IsHttps = isHttps,
+                    AllowUntrustedCertificates = allowUntrustedCertificates,
+                });
 
             return this;
         }

@@ -78,8 +78,10 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
 
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
-            await app.Out.WriteLineAsync($"Found {_componentRegistrar.ValidatorRegistrations.Count} validator registrations.");
-            await app.Out.WriteLineAsync($"Found {_componentRegistrar.MutatorRegistrations.Count} mutator registrations.");
+            await app.Out.WriteLineAsync(
+                $"Found {_componentRegistrar.ValidatorRegistrations.Count} validator registrations.");
+            await app.Out.WriteLineAsync(
+                $"Found {_componentRegistrar.MutatorRegistrations.Count} mutator registrations.");
 
             var webhookConfig = new WebhookConfig(
                 _settings.Name,

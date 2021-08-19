@@ -26,9 +26,11 @@ namespace KubeOps.Operator
         public static IOperatorBuilder AddController<TImplementation>(this IOperatorBuilder builder)
             where TImplementation : class
         {
-            var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
-                    t.IsConstructedGenericType &&
-                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
+            var entityTypes = typeof(TImplementation).GetInterfaces()
+                .Where(
+                    t =>
+                        t.IsConstructedGenericType &&
+                        t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
                 .Select(i => i.GenericTypeArguments[0]);
 
             var genericRegistrationMethod = builder
@@ -61,9 +63,11 @@ namespace KubeOps.Operator
         public static IOperatorBuilder AddFinalizer<TImplementation>(this IOperatorBuilder builder)
             where TImplementation : class
         {
-            var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
-                    t.IsConstructedGenericType &&
-                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceFinalizer<>)))
+            var entityTypes = typeof(TImplementation).GetInterfaces()
+                .Where(
+                    t =>
+                        t.IsConstructedGenericType &&
+                        t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceFinalizer<>)))
                 .Select(i => i.GenericTypeArguments[0]);
 
             var genericRegistrationMethod = builder
@@ -96,9 +100,11 @@ namespace KubeOps.Operator
         public static IOperatorBuilder AddValidationWebhook<TImplementation>(this IOperatorBuilder builder)
             where TImplementation : class
         {
-            var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
-                    t.IsConstructedGenericType &&
-                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IValidationWebhook<>)))
+            var entityTypes = typeof(TImplementation).GetInterfaces()
+                .Where(
+                    t =>
+                        t.IsConstructedGenericType &&
+                        t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IValidationWebhook<>)))
                 .Select(i => i.GenericTypeArguments[0]);
 
             var genericRegistrationMethod = builder
@@ -131,9 +137,11 @@ namespace KubeOps.Operator
         public static IOperatorBuilder AddMutationWebhook<TImplementation>(this IOperatorBuilder builder)
             where TImplementation : class
         {
-            var entityTypes = typeof(TImplementation).GetInterfaces().Where(t =>
-                    t.IsConstructedGenericType &&
-                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IMutationWebhook<>)))
+            var entityTypes = typeof(TImplementation).GetInterfaces()
+                .Where(
+                    t =>
+                        t.IsConstructedGenericType &&
+                        t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IMutationWebhook<>)))
                 .Select(i => i.GenericTypeArguments[0]);
 
             var genericRegistrationMethod = builder

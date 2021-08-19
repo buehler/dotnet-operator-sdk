@@ -9,7 +9,7 @@ namespace KubeOps.TestOperator
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddKubernetesOperator();
+            services.AddKubernetesOperator().AddWebhookLocaltunnel();
             services.AddTransient<IManager, TestManager.TestManager>();
         }
 

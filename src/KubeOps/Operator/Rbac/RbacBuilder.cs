@@ -16,13 +16,17 @@ namespace KubeOps.Operator.Rbac
         public RbacBuilder(IComponentRegistrar componentRegistrar)
         {
             var controllerTypes = componentRegistrar.ControllerRegistrations
-                .Select(t => t.ControllerType).ToList();
+                .Select(t => t.ControllerType)
+                .ToList();
             var finalizerTypes = componentRegistrar.FinalizerRegistrations
-                .Select(t => t.FinalizerType).ToList();
+                .Select(t => t.FinalizerType)
+                .ToList();
             var validatorTypes = componentRegistrar.ValidatorRegistrations
-                .Select(t => t.ValidatorType).ToList();
+                .Select(t => t.ValidatorType)
+                .ToList();
             var mutatorTypes = componentRegistrar.MutatorRegistrations
-                .Select(t => t.MutatorType).ToList();
+                .Select(t => t.MutatorType)
+                .ToList();
 
             _componentTypes = Enumerable.Empty<Type>()
                 .Concat(controllerTypes)
