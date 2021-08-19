@@ -19,7 +19,7 @@ namespace KubeOps.Operator.Webhooks
         private readonly IKubernetesClient _kubernetesClient;
         private readonly MutatingWebhookConfigurationBuilder _mutatorBuilder;
         private readonly ValidatingWebhookConfigurationBuilder _validatorBuilder;
-        private readonly LocaltunnelClient _localtunnelClient = new();
+        private readonly LocaltunnelClient _localtunnelClient;
         private Tunnel? _tunnel;
 
         public WebhookLocalTunnel(
@@ -27,8 +27,10 @@ namespace KubeOps.Operator.Webhooks
             OperatorSettings settings,
             IKubernetesClient kubernetesClient,
             MutatingWebhookConfigurationBuilder mutatorBuilder,
-            ValidatingWebhookConfigurationBuilder validatorBuilder)
+            ValidatingWebhookConfigurationBuilder validatorBuilder,
+            ILoggerFactory f)
         {
+            _localtunnelClient = new(f.CreateLogger<LocaltunnelClient>());
             _logger = logger;
             _settings = settings;
             _kubernetesClient = kubernetesClient;

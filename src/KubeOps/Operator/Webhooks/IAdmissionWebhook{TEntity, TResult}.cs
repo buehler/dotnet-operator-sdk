@@ -117,7 +117,8 @@ namespace KubeOps.Operator.Webhooks
                         .SerializerSettings;
 
                     using var reader = new StreamReader(context.Request.Body);
-                    var review = JsonConvert.DeserializeObject<AdmissionReview<TEntity>>(await reader.ReadToEndAsync(), jsonSerializerSettings);
+                    var data = await reader.ReadToEndAsync();
+                    var review = JsonConvert.DeserializeObject<AdmissionReview<TEntity>>(data, jsonSerializerSettings);
 
                     if (review.Request == null)
                     {
