@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using DotnetKubernetesClient.Entities;
 using JsonDiffPatch;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace KubeOps.Operator.Webhooks
@@ -66,7 +67,8 @@ namespace KubeOps.Operator.Webhooks
 
         AdmissionResponse IAdmissionWebhook<TEntity, MutationResult>.TransformResult(
             MutationResult result,
-            AdmissionRequest<TEntity> request)
+            AdmissionRequest<TEntity> request,
+            JsonSerializerSettings jsonSettings)
         {
             var response = new AdmissionResponse
             {
@@ -83,12 +85,14 @@ namespace KubeOps.Operator.Webhooks
 
             if (result.ModifiedObject != null)
             {
+                var serializer = JsonSerializer.Create(jsonSettings);
                 response.PatchType = AdmissionResponse.JsonPatch;
                 var @object = JToken.FromObject(
                     request.Operation == "DELETE"
                         ? request.OldObject
-                        : request.Object);
-                var patch = new JsonDiffer().Diff(@object, result.ModifiedObject, false);
+                        : request.Object,
+                    serializer);
+                var patch = new JsonDiffer().Diff(@object, JToken.FromObject(result.ModifiedObject, serializer), false);
                 response.Patch = Convert.ToBase64String(Encoding.UTF8.GetBytes(patch.ToString()));
             }
 

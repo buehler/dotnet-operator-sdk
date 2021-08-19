@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using DotnetKubernetesClient.Entities;
+using Newtonsoft.Json;
 
 namespace KubeOps.Operator.Webhooks
 {
@@ -62,7 +63,8 @@ namespace KubeOps.Operator.Webhooks
 
         AdmissionResponse IAdmissionWebhook<TEntity, ValidationResult>.TransformResult(
             ValidationResult result,
-            AdmissionRequest<TEntity> request)
+            AdmissionRequest<TEntity> request,
+            JsonSerializerSettings jsonSettings)
             => new()
             {
                 Allowed = result.Valid,

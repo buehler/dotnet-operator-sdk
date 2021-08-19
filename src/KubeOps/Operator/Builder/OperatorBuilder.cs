@@ -143,8 +143,7 @@ namespace KubeOps.Operator.Builder
                     services.GetRequiredService<OperatorSettings>(),
                     services.GetRequiredService<IKubernetesClient>(),
                     services.GetRequiredService<MutatingWebhookConfigurationBuilder>(),
-                    services.GetRequiredService<ValidatingWebhookConfigurationBuilder>(),
-                    services.GetRequiredService<ILoggerFactory>())
+                    services.GetRequiredService<ValidatingWebhookConfigurationBuilder>())
                 {
                     Host = hostname,
                     Port = port,

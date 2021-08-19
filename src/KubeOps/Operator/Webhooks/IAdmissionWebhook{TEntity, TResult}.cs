@@ -97,7 +97,10 @@ namespace KubeOps.Operator.Webhooks
         Task<TResult> DeleteAsync(TEntity oldEntity, bool dryRun)
             => Task.FromResult(Delete(oldEntity, dryRun));
 
-        internal AdmissionResponse TransformResult(TResult result, AdmissionRequest<TEntity> request);
+        internal AdmissionResponse TransformResult(
+            TResult result,
+            AdmissionRequest<TEntity> request,
+            JsonSerializerSettings jsonSettings);
 
         internal void Register(IEndpointRouteBuilder endpoints) =>
             endpoints.MapPost(
@@ -113,12 +116,15 @@ namespace KubeOps.Operator.Webhooks
                         return;
                     }
 
-                    var jsonSerializerSettings = context.RequestServices.GetRequiredService<OperatorSettings>()
+                    var jsonSerializerSettings = context
+                        .RequestServices
+                        .GetRequiredService<OperatorSettings>()
                         .SerializerSettings;
 
                     using var reader = new StreamReader(context.Request.Body);
-                    var data = await reader.ReadToEndAsync();
-                    var review = JsonConvert.DeserializeObject<AdmissionReview<TEntity>>(data, jsonSerializerSettings);
+                    var review = JsonConvert.DeserializeObject<AdmissionReview<TEntity>>(
+                        await reader.ReadToEndAsync(),
+                        jsonSerializerSettings);
 
                     if (review.Request == null)
                     {
@@ -132,8 +138,9 @@ namespace KubeOps.Operator.Webhooks
                     try
                     {
                         using var scope = context.RequestServices.CreateScope();
-                        if (!(scope.ServiceProvider.GetRequiredService(GetType()) is IAdmissionWebhook<TEntity, TResult>
-                            webhook))
+                        if (scope.ServiceProvider.GetRequiredService(GetType()) is not
+                            IAdmissionWebhook<TEntity, TResult>
+                            webhook)
                         {
                             throw new Exception("Object is not a valid IAdmissionWebhook<TEntity, TResult>");
                         }
@@ -160,7 +167,7 @@ namespace KubeOps.Operator.Webhooks
                                 $@"Operation ""{review.Request.Operation}"" not implemented."),
                         };
 
-                        response = TransformResult(result, review.Request);
+                        response = TransformResult(result, review.Request, jsonSerializerSettings);
                     }
                     catch (Exception ex)
                     {
