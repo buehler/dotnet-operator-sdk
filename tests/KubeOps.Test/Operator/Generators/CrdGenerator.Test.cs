@@ -8,7 +8,7 @@ using KubeOps.Operator.Entities;
 using KubeOps.Test.TestEntities;
 using Xunit;
 
-namespace KubeOps.Test.Operator.Util
+namespace KubeOps.Test.Operator.Generators
 {
     public class CrdGeneratorTest
     {
@@ -17,7 +17,7 @@ namespace KubeOps.Test.Operator.Util
         public CrdGeneratorTest()
         {
             var componentRegistrar = new ComponentRegistrar();
-            
+
             componentRegistrar.RegisterEntity<TestIgnoredEntity>();
             componentRegistrar.RegisterEntity<TestInvalidEntity>();
             componentRegistrar.RegisterEntity<TestSpecEntity>();

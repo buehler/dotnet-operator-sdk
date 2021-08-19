@@ -28,12 +28,16 @@ namespace KubeOps.Operator.Rbac
             var mutatorTypes = componentRegistrar.MutatorRegistrations
                 .Select(t => t.MutatorType)
                 .ToList();
+            var entityTypes = componentRegistrar.EntityRegistrations
+                .Select(t => t.EntityType)
+                .ToList();
 
             _componentTypes = Enumerable.Empty<Type>()
                 .Concat(controllerTypes)
                 .Concat(finalizerTypes)
                 .Concat(validatorTypes)
                 .Concat(mutatorTypes)
+                .Concat(entityTypes)
                 .Distinct()
                 .ToList();
 
