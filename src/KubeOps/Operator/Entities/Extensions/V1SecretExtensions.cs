@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 using k8s.Models;
 
 namespace KubeOps.Operator.Entities.Extensions
@@ -16,7 +17,7 @@ namespace KubeOps.Operator.Entities.Extensions
         /// <param name="key">The key for the data value.</param>
         /// <returns>The <see cref="Encoding.UTF8"/> decoded string.</returns>
         public static string ReadData(this V1Secret secret, string key)
-            => Encoding.UTF8.GetString(secret.Data[key]);
+            => Encoding.UTF8.GetString(secret.EnsureData()[key]);
 
         /// <summary>
         /// Write a given string to the <see cref="V1Secret"/>.
@@ -25,7 +26,14 @@ namespace KubeOps.Operator.Entities.Extensions
         /// <param name="secret">The secret to write to.</param>
         /// <param name="key">The key for the data value.</param>
         /// <param name="value">The value to write.</param>
-        public static void WriteData(this V1Secret secret, string key, string value)
-            => secret.Data[key] = Encoding.UTF8.GetBytes(value);
+        /// <returns>The <see cref="V1Secret"/> for chaining.</returns>
+        public static V1Secret WriteData(this V1Secret secret, string key, string value)
+        {
+            secret.EnsureData()[key] = Encoding.UTF8.GetBytes(value);
+            return secret;
+        }
+
+        private static IDictionary<string, byte[]> EnsureData(this V1Secret secret) =>
+            secret.Data ??= new Dictionary<string, byte[]>();
     }
 }
