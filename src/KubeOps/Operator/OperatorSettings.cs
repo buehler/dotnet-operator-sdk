@@ -128,7 +128,7 @@ namespace KubeOps.Operator
             ContractResolver = new NamingConvention(),
             Converters = new List<JsonConverter>
             {
-                new StringEnumConverter { CamelCaseText = true },
+                new StringEnumConverter(),
                 new Iso8601TimeSpanConverter(),
             },
             DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
