@@ -50,14 +50,7 @@ namespace KubeOps.Operator.Commands.Management
                     $@"Uninstall ""{crd.Spec.Group}/{crd.Spec.Names.Kind}"" from the cluster");
                 try
                 {
-                    try
-                    {
-                        await _client.Delete(crd);
-                    }
-                    catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
-                    {
-                        await _client.Delete((V1beta1CustomResourceDefinition)crd);
-                    }
+                    await _client.Delete(crd);
                 }
                 catch (HttpOperationException e)
                 {

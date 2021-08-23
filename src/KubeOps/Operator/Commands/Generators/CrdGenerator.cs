@@ -22,9 +22,6 @@ namespace KubeOps.Operator.Commands.Generators
             _crdBuilder = crdBuilder;
         }
 
-        [Option("--use-old-crds", Description = "Defines that the old crd definitions (V1Beta1) should be used.")]
-        public bool UseOldCrds { get; set; }
-
         public async Task<int> OnExecuteAsync(CommandLineApplication app)
         {
             var crds = _crdBuilder.BuildCrds().ToList();
@@ -32,11 +29,9 @@ namespace KubeOps.Operator.Commands.Generators
             var fileWriter = new FileWriter(app.Out);
             foreach (var crd in crds)
             {
-                var output = UseOldCrds
-                    ? _serializer.Serialize((V1beta1CustomResourceDefinition)crd, Format)
-                    : _serializer.Serialize(crd, Format);
-
-                fileWriter.Add($"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLower()}", output);
+                fileWriter.Add(
+                    $"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLower()}",
+                    _serializer.Serialize(crd, Format));
             }
 
             fileWriter.Add(

@@ -41,14 +41,7 @@ namespace KubeOps.Operator.Commands.Management
 
                 try
                 {
-                    try
-                    {
-                        await _client.Save(crd);
-                    }
-                    catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
-                    {
-                        await _client.Save((V1beta1CustomResourceDefinition)crd);
-                    }
+                    await _client.Save(crd);
                 }
                 catch (HttpOperationException e)
                 {
