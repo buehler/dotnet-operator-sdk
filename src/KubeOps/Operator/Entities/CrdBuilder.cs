@@ -29,13 +29,13 @@ namespace KubeOps.Operator.Entities
                 .Select(
                     group =>
                     {
-                        if (@group.Count(def => def.Item2) > 1)
+                        if (group.Count(def => def.Item2) > 1)
                         {
                             throw new Exception("There are multiple stored versions on an entity.");
                         }
 
-                        var crd = @group.First().Item1;
-                        crd.Spec.Versions = @group
+                        var crd = group.First().Item1;
+                        crd.Spec.Versions = group
                             .SelectMany(
                                 c => c.Item1.Spec.Versions.Select(
                                     v =>
