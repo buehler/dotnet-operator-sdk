@@ -31,19 +31,21 @@ namespace KubeOps.Operator.Events
             string message,
             EventType type = EventType.Normal)
         {
+            var resourceNamespace = resource.Namespace() ?? await _client.GetCurrentNamespace();
+
             _logger.LogTrace(
                 "Encoding event name with: {resourceName}.{resourceNamespace}.{reason}.{message}.{type}.",
                 resource.Name(),
-                resource.Namespace(),
+                resourceNamespace,
                 reason,
                 message,
                 type);
             var eventName =
                 Base32.Rfc4648.Encode(
                     SHA512.HashData(
-                        Encoding.UTF8.GetBytes($"{resource.Name()}.{resource.Namespace()}.{reason}.{message}.{type}")));
+                        Encoding.UTF8.GetBytes($"{resource.Name()}.{resourceNamespace}.{reason}.{message}.{type}")));
             _logger.LogTrace(@"Search or create event with name ""{name}"".", eventName);
-            var @event = await _client.Get<Corev1Event>(eventName, resource.Namespace()) ??
+            var @event = await _client.Get<Corev1Event>(eventName, resourceNamespace) ??
                          new Corev1Event
                          {
                              Kind = Corev1Event.KubeKind,
@@ -51,7 +53,7 @@ namespace KubeOps.Operator.Events
                              Metadata = new V1ObjectMeta
                              {
                                  Name = eventName,
-                                 NamespaceProperty = resource.Namespace(),
+                                 NamespaceProperty = resourceNamespace,
                                  Annotations = new Dictionary<string, string>
                                  {
                                      { "nameHash", "sha512" },
