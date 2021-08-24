@@ -30,6 +30,17 @@ namespace KubeOps.Operator.Events
         public delegate Task AsyncPublisher(IKubernetesObject<V1ObjectMeta> resource);
 
         /// <summary>
+        /// Delegate that publishes a given message to a predefined reason/severity.
+        /// This delegate should be created with <see cref="IEventManager.CreatePublisher(string,KubeOps.Operator.Events.EventType)"/>
+        /// When called with the resource and a message, the publisher creates or updates the event
+        /// given by the params.
+        /// </summary>
+        /// <param name="resource">The resource on which the event should be published.</param>
+        /// <param name="message">The message that the event should contain.</param>
+        /// <returns>A task that completes when the event is published.</returns>
+        public delegate Task AsyncMessagePublisher(IKubernetesObject<V1ObjectMeta> resource, string message);
+
+        /// <summary>
         /// PublishAsync an event in relation to a given resource.
         /// The event is created or updated if it exists.
         /// </summary>
@@ -79,6 +90,18 @@ namespace KubeOps.Operator.Events
             IKubernetesObject<V1ObjectMeta> resource,
             string reason,
             string message,
+            EventType type = EventType.Normal);
+
+        /// <summary>
+        /// Create a <see cref="AsyncMessagePublisher"/> for a predefined reason and severity.
+        /// The <see cref="AsyncMessagePublisher"/> can then be called with a "message" and
+        /// a resource to create/update the event.
+        /// </summary>
+        /// <param name="reason">The predefined reason (machine readable reason) for the event.</param>
+        /// <param name="type">The type of the event.</param>
+        /// <returns>A <see cref="AsyncMessagePublisher"/> delegate that can be called to create or update events.</returns>
+        AsyncMessagePublisher CreatePublisher(
+            string reason,
             EventType type = EventType.Normal);
     }
 }

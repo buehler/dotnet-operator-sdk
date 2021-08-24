@@ -103,5 +103,8 @@ namespace KubeOps.Operator.Events
             string message,
             EventType type = EventType.Normal)
             => () => PublishAsync(resource, reason, message, type);
+
+        public IEventManager.AsyncMessagePublisher CreatePublisher(string reason, EventType type = EventType.Normal)
+            => (resource, message) => PublishAsync(resource, reason, message, type);
     }
 }
