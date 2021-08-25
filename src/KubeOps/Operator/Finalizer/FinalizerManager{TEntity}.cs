@@ -79,10 +79,10 @@ namespace KubeOps.Operator.Finalizer
                                     finalizer.Identifier,
                                     entity.Kind,
                                     entity.Name());
-                                await finalizer.FinalizeAsync(entity);
                                 try
                                 {
                                     await semaphore.WaitAsync();
+                                    await finalizer.FinalizeAsync(entity);
                                     entity.RemoveFinalizer(finalizer.Identifier);
                                 }
                                 finally
