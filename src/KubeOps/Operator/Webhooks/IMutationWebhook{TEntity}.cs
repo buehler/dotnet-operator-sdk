@@ -46,7 +46,7 @@ namespace KubeOps.Operator.Webhooks
             get
             {
                 var crd = typeof(TEntity).CreateResourceDefinition();
-                return $"/{crd.Group}/{crd.Version}/{crd.Plural}/mutate".ToLowerInvariant();
+                return $"/{crd.Group}/{crd.Version}/{crd.Plural}/{GetType().Name}/mutate".ToLowerInvariant();
             }
         }
 

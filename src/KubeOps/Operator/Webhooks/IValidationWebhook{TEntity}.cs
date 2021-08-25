@@ -42,7 +42,7 @@ namespace KubeOps.Operator.Webhooks
             get
             {
                 var crd = typeof(TEntity).CreateResourceDefinition();
-                return $"/{crd.Group}/{crd.Version}/{crd.Plural}/validate".ToLowerInvariant();
+                return $"/{crd.Group}/{crd.Version}/{crd.Plural}/{GetType().Name}/validate".ToLowerInvariant();
             }
         }
 

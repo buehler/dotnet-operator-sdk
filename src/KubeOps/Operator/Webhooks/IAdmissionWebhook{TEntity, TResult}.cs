@@ -26,7 +26,8 @@ namespace KubeOps.Operator.Webhooks
         /// </summary>
         AdmissionOperations Operations { get; }
 
-        internal string Name => $"{GetType().Namespace ?? "root"}.{GetType().Name}".ToLowerInvariant();
+        internal string Name =>
+            $"{GetType().Namespace ?? "root"}.{typeof(TEntity).Name}.{GetType().Name}".ToLowerInvariant();
 
         internal string Endpoint { get; }
 
