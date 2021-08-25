@@ -44,7 +44,7 @@ as scoped resources in DI.
 ## Register a finalizer
 
 To attach a finalizer for a resource, call the
-<xref:KubeOps.Operator.Finalizer.IFinalizerManager`1.RegisterFinalizerAsync``1(`0)>
+<xref:KubeOps.Operator.Finalizer.IFinalizerManager` 1.RegisterFinalizerAsync``1( `0)>
 method in the controller during reconciliation.
 
 ```csharp
@@ -82,6 +82,30 @@ public class TestController : IResourceController<V1TestEntity>
     public async Task<ResourceControllerResult> CreatedAsync(V1TestEntity resource)
     {
         await _manager.RegisterAllFinalizersAsync(resource);
+        return null;
+    }
+}
+```
+
+## Unregistering a finalizer
+
+When a resource is finalized, the finalizer is removed automatically.
+However, if you want to remove a finalizer before a resource is deleted/finalized,
+you can use <xref:KubeOps.Operator.Finalizer.IFinalizerManager` 1.RemoveFinalizerAsync``1( `0)>.
+
+```csharp
+public class TestController : IResourceController<V1TestEntity>
+{
+    private readonly IFinalizerManager<V1TestEntity> _manager;
+
+    public TestController(IFinalizerManager<V1TestEntity> manager)
+    {
+        _manager = manager;
+    }
+
+    public async Task<ResourceControllerResult> CreatedAsync(V1TestEntity resource)
+    {
+        await _manager.RemoveFinalizerAsync<MyFinalizer>(resource);
         return null;
     }
 }

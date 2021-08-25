@@ -25,19 +25,37 @@ namespace KubeOps.Operator.Finalizer
             _finalizerInstanceBuilder = finalizerInstanceBuilder;
         }
 
-        public async Task RegisterFinalizerAsync<TFinalizer>(TEntity entity)
+        public Task RegisterFinalizerAsync<TFinalizer>(TEntity entity)
             where TFinalizer : IResourceFinalizer<TEntity>
-        {
-            var finalizer = _finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>();
-
-            await RegisterFinalizerInternalAsync(entity, finalizer);
-        }
+            => RegisterFinalizerInternalAsync(entity, _finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>());
 
         public async Task RegisterAllFinalizersAsync(TEntity entity)
         {
             await Task.WhenAll(
                 _finalizerInstanceBuilder.BuildFinalizers<TEntity>()
                     .Select(f => RegisterFinalizerInternalAsync(entity, f)));
+        }
+
+        public async Task RemoveFinalizerAsync<TFinalizer>(TEntity entity)
+            where TFinalizer : IResourceFinalizer<TEntity>
+        {
+            var finalizer = _finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>();
+
+            _logger.LogTrace(
+                @"Try to add finalizer ""{finalizer}"" on entity ""{kind}/{name}"".",
+                finalizer.Identifier,
+                entity.Kind,
+                entity.Name());
+
+            if (entity.RemoveFinalizer(finalizer.Identifier))
+            {
+                _logger.LogInformation(
+                    @"Removed finalizer ""{finalizer}"" on entity ""{kind}/{name}"".",
+                    finalizer.Identifier,
+                    entity.Kind,
+                    entity.Name());
+                await _client.Update(entity);
+            }
         }
 
         async Task IFinalizerManager<TEntity>.FinalizeAsync(TEntity entity)
