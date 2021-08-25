@@ -67,6 +67,7 @@ namespace KubeOps.Operator.Finalizer
                 entity.Kind,
                 entity.Name());
 
+            var finalizerCalled = false;
             await Task.WhenAll(
                 _finalizerInstanceBuilder.BuildFinalizers<TEntity>()
                     .Where(finalizer => entity.HasFinalizer(finalizer.Identifier))
@@ -74,6 +75,7 @@ namespace KubeOps.Operator.Finalizer
                         finalizer => Task.Run(
                             async () =>
                             {
+                                finalizerCalled = true;
                                 _logger.LogInformation(
                                     @"Execute finalizer ""{finalizer}"" on entity ""{kind}/{name}"".",
                                     finalizer.Identifier,
@@ -91,7 +93,11 @@ namespace KubeOps.Operator.Finalizer
                                 }
                             })));
 
-            await _client.Update(entity);
+            if (finalizerCalled)
+            {
+                await _client.Update(entity);
+            }
+
             _logger.LogDebug(
                 @"Finalization on entity ""{kind}/{name}"" done. Remaining finalizers: ""{remainingFinalizer}"".",
                 entity.Kind,
