@@ -115,9 +115,8 @@ namespace KubeOps.Operator.Finalizer
                     finalizer.Identifier,
                     entity.Kind,
                     entity.Name());
+                await _client.Update(entity);
             }
-
-            await _client.Update(entity);
         }
     }
 }
