@@ -58,7 +58,7 @@ namespace KubeOps.Operator.Rbac
                             typeof(V1Service),
                             typeof(V1ValidatingWebhookConfiguration))
                         {
-                            Verbs = RbacVerb.Get | RbacVerb.Create | RbacVerb.Update | RbacVerb.Patch,
+                            Verbs = RbacVerb.Get | RbacVerb.Create | RbacVerb.Update | RbacVerb.Patch | RbacVerb.Delete,
                         },
                     });
             }
