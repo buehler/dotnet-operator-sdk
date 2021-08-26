@@ -7,56 +7,56 @@ namespace KubeOps.Operator.Rbac
 {
     internal static class RbacAttributeExtensions
     {
-        public static IEnumerable<V1PolicyRule> CreateRbacPolicies(this EntityRbacAttribute attribute) =>
-            new[]
-                {
-                    attribute.CreateRbacPolicy(),
-                    attribute.CreateStatusRbacPolicy(),
-                }
-                .Where(p => p != null)
-                .ToList() as List<V1PolicyRule>;
-
-        public static V1PolicyRule CreateRbacPolicy(this EntityRbacAttribute attribute)
+        public static IEnumerable<V1PolicyRule> CreateRbacPolicies(this IEnumerable<EntityRbacAttribute> attributes)
         {
-            var crds = attribute.Entities.Select(CustomEntityDefinitionExtensions.CreateResourceDefinition).ToList();
-            var policy = new V1PolicyRule
-            {
-                ApiGroups = crds.Select(crd => crd.Group).Distinct().ToList(),
-                Resources = crds.Select(crd => crd.Plural).Distinct().ToList(),
-                Verbs = attribute.Verbs.ConvertToStrings(),
-            };
+            var attributeList = attributes.ToList();
 
-            return policy;
+            return attributeList.CreateEntityPolicies().Concat(attributeList.CreateEntityStatusPolicies());
         }
 
-        public static V1PolicyRule? CreateStatusRbacPolicy(this EntityRbacAttribute attribute)
-        {
-            var crds = attribute.Entities
-                .Where(type => type.GetProperty("Status") != null)
-                .Select(CustomEntityDefinitionExtensions.CreateResourceDefinition)
-                .ToList();
-            if (crds.Count == 0)
-            {
-                return null;
-            }
-
-            var policy = new V1PolicyRule
-            {
-                ApiGroups = crds.Select(crd => crd.Group).Distinct().ToList(),
-                Resources = crds.Select(crd => crd.Plural).Distinct().Select(name => $"{name}/status").ToList(),
-                Verbs = (RbacVerb.Get | RbacVerb.Patch | RbacVerb.Update).ConvertToStrings(),
-            };
-
-            return policy;
-        }
-
-        public static V1PolicyRule CreateRbacPolicy(this GenericRbacAttribute attribute) => new V1PolicyRule
+        public static V1PolicyRule CreateRbacPolicy(this GenericRbacAttribute attribute) => new()
         {
             ApiGroups = attribute.Groups,
             Resources = attribute.Resources,
             NonResourceURLs = attribute.Urls,
             Verbs = attribute.Verbs.ConvertToStrings(),
         };
+
+        private static IEnumerable<V1PolicyRule> CreateEntityPolicies(this IEnumerable<EntityRbacAttribute> attributes)
+            => attributes
+                .SelectMany(attribute => attribute.Entities.Select(type => (EntityType: type, attribute.Verbs)))
+                .GroupBy(e => e.EntityType)
+                .Select(
+                    group => (
+                        Crd: group.Key.CreateResourceDefinition(),
+                        Verbs: group.Aggregate(RbacVerb.None, (accumulator, element) => accumulator | element.Verbs)))
+                .GroupBy(group => group.Verbs)
+                .Select(
+                    group => (
+                        Verbs: group.Key,
+                        Crds: group.Select(element => element.Crd).ToList()))
+                .Select(
+                    group => new V1PolicyRule
+                    {
+                        ApiGroups = group.Crds.Select(crd => crd.Group).Distinct().ToList(),
+                        Resources = group.Crds.Select(crd => crd.Plural).Distinct().ToList(),
+                        Verbs = group.Verbs.ConvertToStrings(),
+                    });
+
+        private static IEnumerable<V1PolicyRule> CreateEntityStatusPolicies(
+            this IEnumerable<EntityRbacAttribute> attributes)
+            => attributes
+                .SelectMany(attribute => attribute.Entities.Select(type => (EntityType: type, attribute.Verbs)))
+                .Where(e => e.EntityType.GetProperty("Status") != null)
+                .GroupBy(e => e.EntityType)
+                .Select(group => group.Key.CreateResourceDefinition())
+                .Select(
+                    crd => new V1PolicyRule()
+                    {
+                        ApiGroups = new[] { crd.Group },
+                        Resources = new[] { $"{crd.Plural}/status" },
+                        Verbs = (RbacVerb.Get | RbacVerb.Patch | RbacVerb.Update).ConvertToStrings(),
+                    });
 
         private static IList<string> ConvertToStrings(this RbacVerb verbs)
         {

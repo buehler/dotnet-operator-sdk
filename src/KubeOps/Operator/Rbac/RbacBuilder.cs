@@ -47,41 +47,45 @@ namespace KubeOps.Operator.Rbac
 
         public V1ClusterRole BuildManagerRbac()
         {
-            var entityRbacPolicyRules = GetAttributes<EntityRbacAttribute>()
-                .SelectMany(attribute => attribute.CreateRbacPolicies());
-
-            var genericRbacPolicyRules = GetAttributes<GenericRbacAttribute>()
-                .Select(attribute => attribute.CreateRbacPolicy());
-
-            var rules = entityRbacPolicyRules.Concat(genericRbacPolicyRules).ToList();
+            var entityAttributes = GetAttributes<EntityRbacAttribute>();
 
             if (_hasWebhooks)
             {
-                var servicePolicies = new EntityRbacAttribute(
-                    typeof(V1Service),
-                    typeof(V1ValidatingWebhookConfiguration))
-                {
-                    Verbs = RbacVerb.Get | RbacVerb.Create | RbacVerb.Update | RbacVerb.Patch,
-                }.CreateRbacPolicies();
-
-                rules = rules.Concat(servicePolicies).ToList();
+                entityAttributes = entityAttributes.Concat(
+                    new[]
+                    {
+                        new EntityRbacAttribute(
+                            typeof(V1Service),
+                            typeof(V1ValidatingWebhookConfiguration))
+                        {
+                            Verbs = RbacVerb.Get | RbacVerb.Create | RbacVerb.Update | RbacVerb.Patch,
+                        },
+                    });
             }
 
             if (_hasLeaderElection)
             {
-                rules = rules
-                    .Concat(new EntityRbacAttribute(typeof(V1Lease)) { Verbs = RbacVerb.All }.CreateRbacPolicies())
-                    .Concat(
-                        new EntityRbacAttribute(typeof(V1Deployment)) { Verbs = RbacVerb.Get | RbacVerb.List }
-                            .CreateRbacPolicies())
-                    .ToList();
+                entityAttributes = entityAttributes.Concat(
+                    new[]
+                    {
+                        new EntityRbacAttribute(typeof(V1Lease)) { Verbs = RbacVerb.All },
+                        new EntityRbacAttribute(typeof(V1Deployment)) { Verbs = RbacVerb.Get | RbacVerb.List },
+                    });
             }
 
-            return new V1ClusterRole(
+            var genericRbacPolicyRules = GetAttributes<GenericRbacAttribute>()
+                .Select(attribute => attribute.CreateRbacPolicy());
+
+            var rules = entityAttributes
+                .CreateRbacPolicies()
+                .Concat(genericRbacPolicyRules)
+                .ToList();
+
+            return new(
                 null,
                 $"{V1ClusterRole.KubeGroup}/{V1ClusterRole.KubeApiVersion}",
                 V1ClusterRole.KubeKind,
-                new V1ObjectMeta { Name = "operator-role" },
+                new() { Name = "operator-role" },
                 new List<V1PolicyRule>(rules));
         }
 

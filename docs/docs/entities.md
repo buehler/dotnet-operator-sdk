@@ -69,6 +69,36 @@ public class Mapping : CustomKubernetesEntity<MappingSpec>
 You need it to be a `KubernetesEntity` and a `IKubernetesObject<V1ObjectMeta>`, but
 you don't want a CRD generated for it (thus the `IgnoreEntity` attribute).
 
+## RBAC
+
+The operator (SDK) will generate the role config for your
+operator to be installed. When your operator needs access to
+Kubernetes objects, they must be mentioned with the
+RBAC attributes. During build, the SDK scans the configured
+types and generates the RBAC role that the operator needs
+to function.
+
+There exist two versions of the attribute:
+<xref:KubeOps.Operator.Rbac.EntityRbacAttribute> and
+<xref:KubeOps.Operator.Rbac.GenericRbacAttribute>.
+
+The generic RBAC attribute will be translated into a `V1PolicyRole`
+according to the properties set in the attribute.
+
+```csharp
+[GenericRbac(Groups = new []{"apps"}, Resources = new[]{"deployments"}, Verbs = RbacVerb.All)]
+```
+
+The entity RBAC attribute is the elegant option to use
+dotnet mechanisms. The CRD information is generated out of
+the given types and then grouped by type and used RBAC verbs.
+If you create multiple attributes with the same type, they are
+concatenated.
+
+```csharp
+[EntityRbac(typeof(RbacTest1), Verbs = RbacVerb.Get | RbacVerb.Update)]
+```
+
 ## Validation
 
 During CRD generation, the generated json schema uses the types
