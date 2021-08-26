@@ -56,7 +56,8 @@ namespace KubeOps.Operator.Rbac
                     {
                         new EntityRbacAttribute(
                             typeof(V1Service),
-                            typeof(V1ValidatingWebhookConfiguration))
+                            typeof(V1ValidatingWebhookConfiguration),
+                            typeof(V1MutatingWebhookConfiguration))
                         {
                             Verbs = RbacVerb.Get | RbacVerb.Create | RbacVerb.Update | RbacVerb.Patch | RbacVerb.Delete,
                         },
