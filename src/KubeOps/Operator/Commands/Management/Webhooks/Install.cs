@@ -135,7 +135,7 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
             await app.Out.WriteLineAsync("Create validator definition.");
             var validatorConfig = _validatingWebhookConfigurationBuilder.BuildWebhookConfiguration(webhookConfig);
 
-            await _client.Delete<V1ValidatingWebhookConfiguration>(validatorConfig.Name(), @namespace);
+            await _client.Delete<V1ValidatingWebhookConfiguration>(validatorConfig.Name());
 
             if (deployment != null)
             {
@@ -150,7 +150,7 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
             await app.Out.WriteLineAsync("Create mutator definition.");
             var mutatorConfig = _mutatingWebhookConfigurationBuilder.BuildWebhookConfiguration(webhookConfig);
 
-            await _client.Delete<V1MutatingWebhookConfiguration>(mutatorConfig.Name(), @namespace);
+            await _client.Delete<V1MutatingWebhookConfiguration>(mutatorConfig.Name());
 
             if (deployment != null)
             {
