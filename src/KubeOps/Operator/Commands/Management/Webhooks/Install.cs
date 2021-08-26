@@ -62,6 +62,11 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
 #endif
 
             Directory.CreateDirectory(CertificatesPath);
+            if (File.Exists(Path.Join(Path.Join(CertificatesPath, "ca.pem"))))
+            {
+                File.Delete(Path.Join(Path.Join(CertificatesPath, "ca.pem")));
+            }
+
             File.Copy(Path.Join(CaCertificatesPath, "ca.pem"), Path.Join(Path.Join(CertificatesPath, "ca.pem")));
             await certManager.CreateServerCertificateAsync(
                 CertificatesPath,
