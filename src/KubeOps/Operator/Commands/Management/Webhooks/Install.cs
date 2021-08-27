@@ -90,7 +90,7 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                 new V1Service(
                     V1Service.KubeApiVersion,
                     V1Service.KubeKind,
-                    new V1ObjectMeta(
+                    new(
                         name: _settings.Name,
                         namespaceProperty: @namespace,
                         ownerReferences: deployment != null
@@ -104,7 +104,7 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                             { "operator", _settings.Name },
                             { "usage", "webhook-service" },
                         }),
-                    new V1ServiceSpec
+                    new()
                     {
                         Ports = new List<V1ServicePort>
                         {
@@ -126,7 +126,7 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                 _settings.Name,
                 null,
                 caBundle,
-                new Admissionregistrationv1ServiceReference
+                new()
                 {
                     Name = _settings.Name,
                     NamespaceProperty = @namespace,
@@ -134,9 +134,6 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
 
             await app.Out.WriteLineAsync("Create validator definition.");
             var validatorConfig = _validatingWebhookConfigurationBuilder.BuildWebhookConfiguration(webhookConfig);
-
-            await _client.Delete<V1ValidatingWebhookConfiguration>(validatorConfig.Name());
-
             if (deployment != null)
             {
                 validatorConfig.Metadata.OwnerReferences = new List<V1OwnerReference>
@@ -145,13 +142,10 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                 };
             }
 
-            await _client.Create(validatorConfig);
+            await _client.Save(validatorConfig);
 
             await app.Out.WriteLineAsync("Create mutator definition.");
             var mutatorConfig = _mutatingWebhookConfigurationBuilder.BuildWebhookConfiguration(webhookConfig);
-
-            await _client.Delete<V1MutatingWebhookConfiguration>(mutatorConfig.Name());
-
             if (deployment != null)
             {
                 mutatorConfig.Metadata.OwnerReferences = new List<V1OwnerReference>
@@ -160,7 +154,9 @@ namespace KubeOps.Operator.Commands.Management.Webhooks
                 };
             }
 
-            await _client.Create(mutatorConfig);
+            await _client.Save(mutatorConfig);
+
+            await app.Out.WriteLineAsync("Installed webhook service and admission configurations.");
 
             return ExitCodes.Success;
         }

@@ -5,6 +5,7 @@ using System.Reflection;
 using DotnetKubernetesClient.Entities;
 using k8s.Models;
 using KubeOps.Operator.Builder;
+using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Util;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -47,7 +48,7 @@ namespace KubeOps.Operator.Webhooks
                         }
                         else
                         {
-                            clientConfig.Service = webhookConfig.Service;
+                            clientConfig.Service = webhookConfig.Service?.DeepClone();
                             if (clientConfig.Service != null)
                             {
                                 clientConfig.Service.Path = endpoint;

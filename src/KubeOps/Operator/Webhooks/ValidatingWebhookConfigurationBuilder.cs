@@ -18,7 +18,7 @@ namespace KubeOps.Operator.Webhooks
                 Kind = V1ValidatingWebhookConfiguration.KubeKind,
                 ApiVersion =
                     $"{V1ValidatingWebhookConfiguration.KubeGroup}/{V1ValidatingWebhookConfiguration.KubeApiVersion}",
-                Metadata = new V1ObjectMeta
+                Metadata = new()
                 {
                     Name = webhookConfig.OperatorName.TrimWebhookName("validators."),
                 },
