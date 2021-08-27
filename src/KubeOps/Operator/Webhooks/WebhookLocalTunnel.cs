@@ -45,26 +45,35 @@ namespace KubeOps.Operator.Webhooks
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogTrace("Try to open localtunnel.");
-            _tunnel ??= await _localtunnelClient.OpenAsync(
-                handle => IsHttps
-                    ? new ProxiedSslTunnelConnection(
-                        handle,
-                        new()
-                        {
-                            Host = Host,
-                            Port = Port,
-                            AllowUntrustedCertificates = AllowUntrustedCertificates,
-                            RequestProcessor = null,
-                        })
-                    : new ProxiedHttpTunnelConnection(
-                        handle,
-                        new()
-                        {
-                            Host = Host,
-                            Port = Port,
-                            RequestProcessor = null,
-                        }),
-                cancellationToken: cancellationToken);
+            try
+            {
+                _tunnel ??= await _localtunnelClient.OpenAsync(
+                    handle => IsHttps
+                        ? new ProxiedSslTunnelConnection(
+                            handle,
+                            new()
+                            {
+                                Host = Host,
+                                Port = Port,
+                                AllowUntrustedCertificates = AllowUntrustedCertificates,
+                                RequestProcessor = null,
+                            })
+                        : new ProxiedHttpTunnelConnection(
+                            handle,
+                            new()
+                            {
+                                Host = Host,
+                                Port = Port,
+                                RequestProcessor = null,
+                            }),
+                    cancellationToken: cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "The localtunnel could not be started! Proceeding without.");
+                _tunnel = null;
+                return;
+            }
 
             _logger.LogDebug(@"Created localtunnel with id ""{id}""", _tunnel.Information.Id);
             await _tunnel.StartAsync();
