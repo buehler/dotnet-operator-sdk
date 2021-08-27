@@ -47,7 +47,13 @@ namespace KubeOps.Operator.Rbac
 
         public V1ClusterRole BuildManagerRbac()
         {
-            var entityAttributes = GetAttributes<EntityRbacAttribute>();
+            var entityAttributes = GetAttributes<EntityRbacAttribute>()
+                .Concat(
+                    new[]
+                    {
+                        new EntityRbacAttribute(typeof(Corev1Event))
+                            { Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Create | RbacVerb.Update },
+                    });
 
             if (_hasWebhooks)
             {
