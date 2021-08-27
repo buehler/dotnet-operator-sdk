@@ -25,7 +25,7 @@ namespace KubeOps.Test.Operator.Generators
 
             var builder = new RbacBuilder(_componentRegistrar, new OperatorSettings());
             var clusterRole = builder.BuildManagerRbac();
-            clusterRole.Rules.Should().HaveCount(3);
+            clusterRole.Rules.Should().HaveCount(4);
             clusterRole.Rules.Should().Contain(rule => rule.Resources.Any(resource => resource == "entitywithrbacs"));
             clusterRole.Rules.Should().Contain(rule => rule.Resources.Any(resource => resource == "leases"));
             clusterRole.Rules.Should().Contain(rule => rule.Resources.Any(resource => resource == "deployments"));
@@ -43,16 +43,17 @@ namespace KubeOps.Test.Operator.Generators
 
             var builder = new RbacBuilder(_componentRegistrar, new OperatorSettings { EnableLeaderElection = false });
             var clusterRole = builder.BuildManagerRbac();
-            clusterRole.Rules.Should().HaveCount(1);
+            clusterRole.Rules.Should().HaveCount(2);
             clusterRole.Rules.Should().Contain(rule => rule.Resources.Any(resource => resource == "entitywithrbacs"));
         }
 
         [Fact]
-        public void Should_Generate_No_Rules_When_Able()
+        public void Should_Generate_Base_Rules_When_Able()
         {
             var builder = new RbacBuilder(_componentRegistrar, new OperatorSettings { EnableLeaderElection = false });
             var clusterRole = builder.BuildManagerRbac();
-            clusterRole.Rules.Should().HaveCount(0);
+            clusterRole.Rules.Should().HaveCount(1);
+            clusterRole.Rules.Should().Contain(rule => rule.Resources.Any(resource => resource == "events"));
         }
 
         [Fact]
@@ -111,7 +112,7 @@ namespace KubeOps.Test.Operator.Generators
             clusterRole.Rules.Should()
                 .Contain(
                     rule => rule.Resources.Contains("rbactest2s"));
-            clusterRole.Rules.Should().HaveCount(2);
+            clusterRole.Rules.Should().HaveCount(3);
         }
 
         [Fact]
@@ -131,7 +132,7 @@ namespace KubeOps.Test.Operator.Generators
                     rule => rule.Resources.Contains("rbactest2s") &&
                             rule.Resources.Contains("rbactest3s") &&
                             rule.Verbs.Contains("delete"));
-            clusterRole.Rules.Should().HaveCount(2);
+            clusterRole.Rules.Should().HaveCount(3);
         }
 
         [EntityRbac(typeof(EntityWithRbac), Verbs = RbacVerb.All)]
