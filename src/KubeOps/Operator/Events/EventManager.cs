@@ -31,7 +31,7 @@ namespace KubeOps.Operator.Events
             string message,
             EventType type = EventType.Normal)
         {
-            var resourceNamespace = resource.Namespace() ?? await _client.GetCurrentNamespace();
+            var resourceNamespace = resource.Namespace() ?? "default";
 
             _logger.LogTrace(
                 "Encoding event name with: {resourceName}.{resourceNamespace}.{reason}.{message}.{type}.",
@@ -50,7 +50,7 @@ namespace KubeOps.Operator.Events
                          {
                              Kind = Corev1Event.KubeKind,
                              ApiVersion = $"{Corev1Event.KubeGroup}/{Corev1Event.KubeApiVersion}",
-                             Metadata = new V1ObjectMeta
+                             Metadata = new()
                              {
                                  Name = eventName,
                                  NamespaceProperty = resourceNamespace,
@@ -65,7 +65,10 @@ namespace KubeOps.Operator.Events
                              Message = message,
                              ReportingComponent = _settings.Name,
                              ReportingInstance = Environment.MachineName,
-                             Source = new V1EventSource { Component = _settings.Name },
+                             Source = new()
+                             {
+                                 Component = _settings.Name,
+                             },
                              InvolvedObject = resource.MakeObjectReference(),
                              FirstTimestamp = DateTime.UtcNow,
                              LastTimestamp = DateTime.UtcNow,
@@ -79,13 +82,25 @@ namespace KubeOps.Operator.Events
                 @event.Count,
                 @event.LastTimestamp);
 
-            await _client.Save(@event);
-            _logger.LogInformation(
-                @"Created or updated event with name ""{name}"" to new count {count} on resource ""{kind}/{name}"".",
-                eventName,
-                @event.Count,
-                resource.Kind,
-                resource.Name());
+            try
+            {
+                await _client.Save(@event);
+                _logger.LogInformation(
+                    @"Created or updated event with name ""{name}"" to new count {count} on resource ""{kind}/{name}"".",
+                    eventName,
+                    @event.Count,
+                    resource.Kind,
+                    resource.Name());
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(
+                    e,
+                    @"Could not publish event with name ""{name}"" on resource ""{kind}/{name}"".",
+                    eventName,
+                    resource.Kind,
+                    resource.Name());
+            }
         }
 
         public Task PublishAsync(Corev1Event @event)
