@@ -96,6 +96,8 @@ namespace KubeOps.Operator.Commands.Generators
                         {
                             Replicas = 1,
                             RevisionHistoryLimit = 0,
+                            Selector = new V1LabelSelector(
+                                matchLabels: new Dictionary<string, string> { { "operator", _settings.Name } }),
                             Template = new V1PodTemplateSpec
                             {
                                 Metadata = new V1ObjectMeta(
