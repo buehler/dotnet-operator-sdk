@@ -42,6 +42,18 @@
         </PropertyGroup>
     </Target>
 
+    <Target Name="GetAssemblyBeforeTimestamp" AfterTargets="BeforeCompile">
+        <PropertyGroup>
+            <KubeOpsAssemblyTimestampBeforeCompile>%(IntermediateAssembly.ModifiedTime)</KubeOpsAssemblyTimestampBeforeCompile>
+        </PropertyGroup>
+    </Target>
+
+    <Target Name="GetAssemblyAfterTimestamp" AfterTargets="CoreCompile">
+        <PropertyGroup>
+            <KubeOpsAssemblyTimestampAfterCompile>%(IntermediateAssembly.ModifiedTime)</KubeOpsAssemblyTimestampAfterCompile>
+        </PropertyGroup>
+    </Target>
+
     <Target Name="GenerateDockerfile" DependsOnTargets="BaseConfig">
         <Message Text="Generating Dockerfile" Importance="high" />
         <Message Text="Dockerfile path: $(KubeOpsDockerfilePath)" Importance="normal" />
@@ -88,7 +100,7 @@
               Command="dotnet $(OutputPath)$(TargetFileName) generator installer --out $(KubeOpsInstallerDir) --format $(KubeOpsInstallerFormat) --crds-dir $(KubeOpsCrdDir) --rbac-dir $(KubeOpsRbacDir) --operator-dir $(KubeOpsOperatorDir)" />
     </Target>
 
-    <Target Name="GenerateAfterBuild" AfterTargets="Build" DependsOnTargets="BaseConfig">
+    <Target Name="GenerateAfterBuild" AfterTargets="Build" DependsOnTargets="BaseConfig" Condition="'$(KubeOpsAssemblyTimestampBeforeCompile)' != '$(KubeOpsAssemblyTimestampAfterCompile)'">
         <CallTarget Condition="'$(KubeOpsSkipDockerfile)' == ''" Targets="GenerateDockerfile" />
         <CallTarget Condition="'$(KubeOpsSkipCrds)' == ''" Targets="GenerateCrds" />
         <CallTarget Condition="'$(KubeOpsSkipRbac)' == ''" Targets="GenerateRbac" />
