@@ -224,17 +224,9 @@ namespace KubeOps.Operator.Controller
                 {
                     switch (@event)
                     {
-                        case ResourceEventType.Created:
-                            result = await controller.CreatedAsync(resource);
-                            _metrics.CreatedEvents.Inc();
-                            break;
-                        case ResourceEventType.Updated:
-                            result = await controller.UpdatedAsync(resource);
-                            _metrics.UpdatedEvents.Inc();
-                            break;
-                        case ResourceEventType.NotModified:
-                            result = await controller.NotModifiedAsync(resource);
-                            _metrics.NotModifiedEvents.Inc();
+                        case ResourceEventType.Reconcile:
+                            result = await controller.ReconcileAsync(resource);
+                            _metrics.ReconciledEvents.Inc();
                             break;
                         case ResourceEventType.Deleted:
                             await controller.DeletedAsync(resource);
@@ -355,18 +347,12 @@ namespace KubeOps.Operator.Controller
 
             switch (state)
             {
-                case CacheComparisonResult.New when resource.Metadata.DeletionTimestamp != null:
-                case CacheComparisonResult.Modified when resource.Metadata.DeletionTimestamp != null:
-                case CacheComparisonResult.NotModified when resource.Metadata.DeletionTimestamp != null:
+                case CacheComparisonResult.Other when resource.Metadata.DeletionTimestamp != null:
                     return (ResourceEventType.Finalizing, resource);
-                case CacheComparisonResult.New:
-                    return (ResourceEventType.Created, resource);
-                case CacheComparisonResult.Modified:
-                    return (ResourceEventType.Updated, resource);
+                case CacheComparisonResult.Other:
+                    return (ResourceEventType.Reconcile, resource);
                 case CacheComparisonResult.StatusModified:
                     return (ResourceEventType.StatusUpdated, resource);
-                case CacheComparisonResult.NotModified:
-                    return (ResourceEventType.NotModified, resource);
                 case CacheComparisonResult.FinalizersModified:
                     return (ResourceEventType.FinalizerModified, resource);
                 default:
