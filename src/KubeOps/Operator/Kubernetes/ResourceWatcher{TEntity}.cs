@@ -15,8 +15,6 @@ namespace KubeOps.Operator.Kubernetes
     internal class ResourceWatcher<TEntity> : IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        private const double MaxRetrySeconds = 32;
-
         private readonly Subject<(WatchEventType Event, TEntity Resource)> _watchEvents = new();
         private readonly IKubernetesClient _client;
         private readonly ILogger<ResourceWatcher<TEntity>> _logger;
@@ -24,7 +22,6 @@ namespace KubeOps.Operator.Kubernetes
         private readonly OperatorSettings _settings;
         private readonly Subject<TimeSpan> _reconnectHandler = new();
         private readonly IDisposable _reconnectSubscription;
-        private readonly Random _rnd = new();
 
         private IDisposable? _resetReconnectCounter;
         private int _reconnectAttempts;
@@ -169,7 +166,12 @@ namespace KubeOps.Operator.Kubernetes
             }
 
             _logger.LogError(e, @"There was an error while watching the resource ""{resource}"".", typeof(TEntity));
-            var backoff = ExponentialBackoff(++_reconnectAttempts);
+            var backoff = _settings.ErrorBackoffStrategy(++_reconnectAttempts);
+            if (backoff.TotalSeconds > _settings.WatcherMaxRetrySeconds)
+            {
+                backoff = TimeSpan.FromSeconds(_settings.WatcherMaxRetrySeconds);
+            }
+
             _logger.LogInformation("Trying to reconnect with exponential backoff {backoff}.", backoff);
             _resetReconnectCounter?.Dispose();
             _resetReconnectCounter = Observable
@@ -191,9 +193,5 @@ namespace KubeOps.Operator.Kubernetes
                 RestartWatcher();
             }
         }
-
-        private TimeSpan ExponentialBackoff(int retryCount) => TimeSpan
-            .FromSeconds(Math.Min(Math.Pow(2, retryCount), MaxRetrySeconds))
-            .Add(TimeSpan.FromMilliseconds(_rnd.Next(0, 1000)));
     }
 }
