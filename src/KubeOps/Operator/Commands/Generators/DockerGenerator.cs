@@ -1,6 +1,8 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KubeOps.Operator.Builder;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Generators
@@ -8,6 +10,17 @@ namespace KubeOps.Operator.Commands.Generators
     [Command("docker", Description = "Generates the docker file for building.")]
     internal class DockerGenerator : GeneratorBase
     {
+        private readonly OperatorSettings _settings;
+        private readonly bool _hasWebhooks;
+
+        public DockerGenerator(IComponentRegistrar componentRegistrar, OperatorSettings settings)
+        {
+            _settings = settings;
+            _hasWebhooks =
+                componentRegistrar.ValidatorRegistrations.Any() ||
+                componentRegistrar.MutatorRegistrations.Any();
+        }
+
         [Option(
             "--dotnet-tag",
             Description = @"Defines the used dotnet docker image tag for the dockerfile (default: ""latest"").")]
@@ -50,9 +63,14 @@ RUN dotnet publish -c Release -o out {ProjectToBuild}
 
 # The runner for the application
 FROM mcr.microsoft.com/dotnet/aspnet:{DotnetImageTag} as final
-WORKDIR /operator
 
+RUN addgroup k8s-operator && useradd -G k8s-operator operator-user
+
+WORKDIR /operator
 COPY --from=build /operator/out/ ./
+RUN chown operator-user:k8s-operator -R .
+
+USER operator-user
 
 ENTRYPOINT [ ""dotnet"", ""{TargetFile}"" ]
 ";
