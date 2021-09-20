@@ -47,39 +47,35 @@ namespace KubeOps.Operator.Commands.Generators
                 _serializer.Serialize(
                     new KustomizationConfig
                     {
-                        Resources = new List<string>
-                        {
-                            $"deployment.{Format.ToString().ToLower()}",
-                        },
-                        CommonLabels = new Dictionary<string, string>
-                        {
-                            { "operator-element", "operator-instance" },
-                        },
+                        Resources = new List<string> { $"deployment.{Format.ToString().ToLower()}", },
+                        CommonLabels = new Dictionary<string, string> { { "operator-element", "operator-instance" }, },
                         ConfigMapGenerator = _hasWebhooks
                             ? new List<KustomizationConfigMapGenerator>
                             {
-                                new()
-                                {
-                                    Name = "webhook-ca",
-                                    Files = new List<string>
-                                    {
-                                        "ca.pem",
-                                        "ca-key.pem",
-                                    },
-                                },
+                                new() { Name = "webhook-ca", Files = new List<string> { "ca.pem", "ca-key.pem", }, },
                                 new()
                                 {
                                     Name = "webhook-config",
                                     Literals = new List<string>
                                     {
-                                        "KESTREL__ENDPOINTS__HTTP__URL=http://0.0.0.0:80",
-                                        "KESTREL__ENDPOINTS__HTTPS__URL=https://0.0.0.0:443",
+                                        $"KESTREL__ENDPOINTS__HTTP__URL=http://0.0.0.0:{_settings.HttpPort}",
+                                        $"KESTREL__ENDPOINTS__HTTPS__URL=https://0.0.0.0:{_settings.HttpsPort}",
                                         "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__PATH=/certs/server.pem",
                                         "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__KEYPATH=/certs/server-key.pem",
                                     },
                                 },
                             }
-                            : null,
+                            : new List<KustomizationConfigMapGenerator>
+                            {
+                                new()
+                                {
+                                    Name = "webhook-config",
+                                    Literals = new List<string>
+                                    {
+                                        $"KESTREL__ENDPOINTS__HTTP__URL=http://0.0.0.0:{_settings.HttpPort}",
+                                    },
+                                },
+                            },
                     },
                     Format));
 
@@ -109,11 +105,7 @@ namespace KubeOps.Operator.Commands.Generators
                                         ? null
                                         : new List<V1Volume>
                                         {
-                                            new()
-                                            {
-                                                Name = "certificates",
-                                                EmptyDir = new(),
-                                            },
+                                            new() { Name = "certificates", EmptyDir = new(), },
                                             new()
                                             {
                                                 Name = "ca-certificates",
@@ -128,11 +120,7 @@ namespace KubeOps.Operator.Commands.Generators
                                             {
                                                 Image = "operator",
                                                 Name = "webhook-installer",
-                                                Args = new[]
-                                                {
-                                                    "webhooks",
-                                                    "install",
-                                                },
+                                                Args = new[] { "webhooks", "install", },
                                                 Env = new List<V1EnvVar>
                                                 {
                                                     new()
@@ -149,11 +137,7 @@ namespace KubeOps.Operator.Commands.Generators
                                                 },
                                                 VolumeMounts = new List<V1VolumeMount>
                                                 {
-                                                    new()
-                                                    {
-                                                        Name = "certificates",
-                                                        MountPath = "/certs",
-                                                    },
+                                                    new() { Name = "certificates", MountPath = "/certs", },
                                                     new()
                                                     {
                                                         Name = "ca-certificates",
@@ -183,15 +167,10 @@ namespace KubeOps.Operator.Commands.Generators
                                                     },
                                                 },
                                             },
-                                            EnvFrom = !_hasWebhooks
-                                                ? null
-                                                : new List<V1EnvFromSource>
-                                                {
-                                                    new()
-                                                    {
-                                                        ConfigMapRef = new() { Name = "webhook-config" },
-                                                    },
-                                                },
+                                            EnvFrom = new List<V1EnvFromSource>
+                                            {
+                                                new() { ConfigMapRef = new() { Name = "webhook-config" } },
+                                            },
                                             VolumeMounts = !_hasWebhooks
                                                 ? null
                                                 : new List<V1VolumeMount>
@@ -203,11 +182,13 @@ namespace KubeOps.Operator.Commands.Generators
                                                         ReadOnlyProperty = true,
                                                     },
                                                 },
-                                            Ports = new List<V1ContainerPort>
-                                            {
-                                                new(80, name: "http"),
-                                                new(443, name: "https"),
-                                            },
+                                            Ports = _hasWebhooks
+                                                ? new List<V1ContainerPort>
+                                                {
+                                                    new(_settings.HttpPort, name: "http"),
+                                                    new(_settings.HttpsPort, name: "https"),
+                                                }
+                                                : new List<V1ContainerPort> { new(_settings.HttpPort, name: "http"), },
                                             LivenessProbe = new V1Probe(
                                                 timeoutSeconds: 1,
                                                 initialDelaySeconds: 30,
