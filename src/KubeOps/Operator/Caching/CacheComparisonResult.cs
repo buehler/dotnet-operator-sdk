@@ -6,16 +6,23 @@
     internal enum CacheComparisonResult
     {
         /// <summary>
-        /// The resource is new to the cache
-        /// and was never seen.
+        /// <para>
+        /// The resource is either:
+        /// <list type="bullet">
+        /// <item>
+        /// <term>New to the cache</term>
+        /// </item>
+        /// <item>
+        /// <term>Modified</term>
+        /// </item>
+        /// <item>
+        /// <term>Not Modified</term>
+        /// </item>
+        /// </list>
+        /// </para>
+        /// <para>But not status or finalizer modified. This is used to reconcile objects.</para>
         /// </summary>
-        New,
-
-        /// <summary>
-        /// The resource was in the cache and some
-        /// properties changed (but not resourceVersion).
-        /// </summary>
-        Modified,
+        Other,
 
         /// <summary>
         /// The resource has changed, but only the "status" of it.
@@ -26,10 +33,5 @@
         /// The resource has changed, but only the "finalizers" list.
         /// </summary>
         FinalizersModified,
-
-        /// <summary>
-        /// The resource stayed the same.
-        /// </summary>
-        NotModified,
     }
 }

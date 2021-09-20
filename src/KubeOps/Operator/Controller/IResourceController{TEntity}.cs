@@ -15,39 +15,15 @@ namespace KubeOps.Operator.Controller
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         /// <summary>
-        /// Called for <see cref="ResourceEventType.Created"/> events for a given entity.
+        /// Called for <see cref="ResourceEventType.Reconcile"/> events for a given entity.
         /// </summary>
-        /// <param name="entity">The entity that fired the created event.</param>
+        /// <param name="entity">The entity that fired the reconcile event.</param>
         /// <returns>
         /// A task with an optional <see cref="ResourceControllerResult"/>.
         /// Use the static constructors on the <see cref="ResourceControllerResult"/> class
         /// to create your controller function result.
         /// </returns>
-        Task<ResourceControllerResult?> CreatedAsync(TEntity entity) =>
-            Task.FromResult<ResourceControllerResult?>(null);
-
-        /// <summary>
-        /// Called for <see cref="ResourceEventType.Updated"/> events for a given entity.
-        /// </summary>
-        /// <param name="entity">The entity that fired the updated event.</param>
-        /// <returns>
-        /// A task with an optional <see cref="ResourceControllerResult"/>.
-        /// Use the static constructors on the <see cref="ResourceControllerResult"/> class
-        /// to create your controller function result.
-        /// </returns>
-        Task<ResourceControllerResult?> UpdatedAsync(TEntity entity) =>
-            Task.FromResult<ResourceControllerResult?>(null);
-
-        /// <summary>
-        /// Called for <see cref="ResourceEventType.NotModified"/> events for a given entity.
-        /// </summary>
-        /// <param name="entity">The entity that fired the not-modified event.</param>
-        /// <returns>
-        /// A task with an optional <see cref="ResourceControllerResult"/>.
-        /// Use the static constructors on the <see cref="ResourceControllerResult"/> class
-        /// to create your controller function result.
-        /// </returns>
-        Task<ResourceControllerResult?> NotModifiedAsync(TEntity entity) =>
+        Task<ResourceControllerResult?> ReconcileAsync(TEntity entity) =>
             Task.FromResult<ResourceControllerResult?>(null);
 
         /// <summary>

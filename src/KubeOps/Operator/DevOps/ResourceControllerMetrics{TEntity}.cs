@@ -57,24 +57,10 @@ namespace KubeOps.Operator.DevOps
                     Labels)
                 .WithLabels(labelValues);
 
-            CreatedEvents = Metrics
+            ReconciledEvents = Metrics
                 .CreateCounter(
-                    "operator_resource_controller_created_events",
-                    "The count of total 'created' events reconciled by the controller",
-                    Labels)
-                .WithLabels(labelValues);
-
-            UpdatedEvents = Metrics
-                .CreateCounter(
-                    "operator_resource_controller_updated_events",
-                    "The count of total 'updated' events reconciled by the controller",
-                    Labels)
-                .WithLabels(labelValues);
-
-            NotModifiedEvents = Metrics
-                .CreateCounter(
-                    "operator_resource_controller_not_modified_events",
-                    "The count of total 'not modified' events reconciled by the controller",
+                    "operator_resource_controller_reconciled_events",
+                    "The count of total events reconciled by the controller",
                     Labels)
                 .WithLabels(labelValues);
 
@@ -108,13 +94,9 @@ namespace KubeOps.Operator.DevOps
 
         public Counter.Child ErroredEvents { get; }
 
-        public Counter.Child CreatedEvents { get; }
-
-        public Counter.Child UpdatedEvents { get; }
+        public Counter.Child ReconciledEvents { get; }
 
         public Counter.Child DeletedEvents { get; }
-
-        public Counter.Child NotModifiedEvents { get; }
 
         public Counter.Child StatusUpdatedEvents { get; }
 

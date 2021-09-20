@@ -12,24 +12,14 @@ namespace KubeOps.TestOperator.TestManager
             _logger = logger;
         }
 
-        public void Created(V1TestEntity entity)
+        public void Reconciled(V1TestEntity entity)
         {
-            _logger.LogDebug(nameof(Created));
-        }
-
-        public void Updated(V1TestEntity entity)
-        {
-            _logger.LogDebug(nameof(Updated));
+            _logger.LogDebug(nameof(Reconciled));
         }
 
         public void StatusModified(V1TestEntity entity)
         {
             _logger.LogDebug(nameof(StatusModified));
-        }
-
-        public void NotModified(V1TestEntity entity)
-        {
-            _logger.LogDebug(nameof(NotModified));
         }
 
         public void Deleted(V1TestEntity entity)
