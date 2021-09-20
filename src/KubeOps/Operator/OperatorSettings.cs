@@ -142,6 +142,22 @@ namespace KubeOps.Operator
         /// </summary>
         public bool EnableAssemblyScanning { get; set; } = true;
 
+        /// <summary>
+        /// The configured http port that the operator should run
+        /// on Kubernetes. This has no direct impact on the startup call in `Program.cs`,
+        /// but on the generated yaml files of the operator. This setting modifies
+        /// the environment variable "KESTREL__ENDPOINTS__HTTP__URL" in the yaml file.
+        /// </summary>
+        public short HttpPort { get; set; } = 5000;
+
+        /// <summary>
+        /// The configured https port that the operator should run
+        /// on Kubernetes. This has no direct impact on the startup call in `Program.cs`,
+        /// but on the generated yaml files of the operator. This setting modifies
+        /// the environment variable "KESTREL__ENDPOINTS__HTTPS__URL" in the yaml file.
+        /// </summary>
+        public short HttpsPort { get; set; } = 5001;
+
         internal JsonSerializerSettings SerializerSettings { get; } = new()
         {
             DateFormatHandling = DateFormatHandling.IsoDateFormat,

@@ -9,7 +9,7 @@
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
-    <!--<Import Project="..\..\src\KubeOps\Build\KubeOps.targets"/>-->
+<!--    <Import Project="..\..\src\KubeOps\Build\KubeOps.targets"/>-->
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\KubeOps\KubeOps.csproj" />
