@@ -21,10 +21,6 @@ namespace KubeOps.Operator.Controller
     internal class ManagedResourceController<TEntity> : IManagedResourceController
         where TEntity : class, IKubernetesObject<V1ObjectMeta>
     {
-        private const byte MaxRetries = 4;
-
-        private readonly Random _rnd = new();
-
         private readonly ILogger<ManagedResourceController<TEntity>> _logger;
         private readonly IKubernetesClient _client;
         private readonly ResourceWatcher<TEntity> _watcher;
@@ -121,9 +117,9 @@ namespace KubeOps.Operator.Controller
                 data =>
                 {
                     var (resourceEventType, resource, retryCount) = data;
-                    if (retryCount <= MaxRetries)
+                    if (retryCount <= _settings.MaxErrorRetries)
                     {
-                        var backoff = ExponentialBackoff(retryCount);
+                        var backoff = _settings.ErrorBackoffStrategy(retryCount);
                         _logger.LogDebug(
                             @"Retry attempt {retryCount} for event ""{eventType}"" on resource ""{kind}/{name}"" with exponential backoff ""{backoff}"".",
                             retryCount,
@@ -429,10 +425,6 @@ namespace KubeOps.Operator.Controller
             var (@event, cachedResource) = MapCacheResult(state, newResource);
             return new QueuedEvent(@event, cachedResource);
         }
-
-        private TimeSpan ExponentialBackoff(int retryCount) => TimeSpan
-            .FromSeconds(Math.Pow(2, retryCount))
-            .Add(TimeSpan.FromMilliseconds(_rnd.Next(0, 1000)));
 
         internal record QueuedEvent(ResourceEventType ResourceEvent, TEntity Resource, int RetryCount = 0);
 

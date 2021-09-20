@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using DotnetKubernetesClient;
+using KubeOps.Operator.Errors;
 using KubeOps.Operator.Serialization;
 using Microsoft.Rest.Serialization;
 using Newtonsoft.Json;
@@ -39,6 +40,28 @@ namespace KubeOps.Operator
         /// </para>
         /// </summary>
         public string? Namespace { get; set; }
+
+        /// <summary>
+        /// The maximal number of retries for an error during reconciliation.
+        /// The controller skips the reconciliation event if an entity throws errors during
+        /// reconciliation. Depending on the <see cref="ErrorBackoffStrategy"/>, this could
+        /// result in endless waiting times.
+        /// </summary>
+        public int MaxErrorRetries { get; set; } = 4;
+
+        /// <summary>
+        /// The maximal number of seconds that the resource watcher waits until it retries to connect to Kubernetes.
+        /// The amount of time is determined by <see cref="ErrorBackoffStrategy"/> and the minimal value of
+        /// the calculated one and this configuration is used.
+        /// </summary>
+        public int WatcherMaxRetrySeconds { get; set; } = 32;
+
+        /// <summary>
+        /// Configures the <see cref="BackoffStrategy"/> for error events during reconciliation.
+        /// When the controller faces an error, it waits for the returned amount of time of this strategy
+        /// and retries until the controller drops the event configured by <see cref="MaxErrorRetries"/>.
+        /// </summary>
+        public BackoffStrategy ErrorBackoffStrategy { get; set; } = BackoffStrategies.ExponentialBackoffStrategy;
 
         /// <summary>
         /// The http endpoint, where the metrics are exposed.
@@ -126,11 +149,7 @@ namespace KubeOps.Operator
             NullValueHandling = NullValueHandling.Ignore,
             ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
             ContractResolver = new NamingConvention(),
-            Converters = new List<JsonConverter>
-            {
-                new StringEnumConverter(),
-                new Iso8601TimeSpanConverter(),
-            },
+            Converters = new List<JsonConverter> { new StringEnumConverter(), new Iso8601TimeSpanConverter(), },
             DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
         };
     }
