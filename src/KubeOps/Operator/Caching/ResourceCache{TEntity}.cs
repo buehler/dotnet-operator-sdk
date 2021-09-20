@@ -84,14 +84,14 @@ namespace KubeOps.Operator.Caching
         {
             if (!Exists(resource))
             {
-                return CacheComparisonResult.New;
+                return CacheComparisonResult.Other;
             }
 
             var cacheObject = _cache[resource.Metadata.Uid];
             var comparison = _compare.Compare(resource, cacheObject);
             if (comparison.AreEqual)
             {
-                return CacheComparisonResult.NotModified;
+                return CacheComparisonResult.Other;
             }
 
             if (comparison.Differences.All(d => d.PropertyName.Split('.')[0] == Status))
@@ -104,7 +104,7 @@ namespace KubeOps.Operator.Caching
                 return CacheComparisonResult.FinalizersModified;
             }
 
-            return CacheComparisonResult.Modified;
+            return CacheComparisonResult.Other;
         }
 
         private bool Exists(TEntity resource) => _cache.ContainsKey(resource.Metadata.Uid);

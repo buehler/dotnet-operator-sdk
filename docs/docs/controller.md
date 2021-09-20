@@ -30,11 +30,9 @@ public class FooCtrl : IResourceController<MyCustomEntity>
     // Implement the needed methods here.
     // The interface provides default implementation which do a NOOP.
     // Possible overwrites:
-    // "Created" (i.e. when the operator sees the entity for the first time),
-    // "Updated" (i.e. when the operator knows the entity and it was updated),
-    // "NotModified" (i.e. when nothing changed but a timed requeue happend),
-    // "StatusModified" (i.e. when only the status was updated),
-    // "Deleted" (i.e. when the entity was deleted and all finalizers are done)
+    // "ReconcileAsync": when the operator sees the entity for the first time, it was modified or just fired an event,
+    // "StatusModifiedAsync" (i.e. when only the status was updated),
+    // "DeletedAsync" (i.e. when the entity was deleted and all finalizers are done)
 }
 ```
 
@@ -87,7 +85,8 @@ which takes a list of api groups, resources, versions and a selection of
 
 ## Requeue
 
-The controller's methods have a return value of <xref:KubeOps.Operator.Controller.Results.ResourceControllerResult>.
+The controller's methods (reconcile) have
+a return value of <xref:KubeOps.Operator.Controller.Results.ResourceControllerResult>.
 There are multiple ways how a result of a controller can be created:
 
 - `null`: The controller will not requeue your entity / event.

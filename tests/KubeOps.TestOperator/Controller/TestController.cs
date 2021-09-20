@@ -17,21 +17,9 @@ namespace KubeOps.TestOperator.Controller
             _manager = manager;
         }
 
-        public Task<ResourceControllerResult> CreatedAsync(V1TestEntity entity)
+        public Task<ResourceControllerResult> ReconcileAsync(V1TestEntity entity)
         {
-            _manager.Created(entity);
-            return Task.FromResult<ResourceControllerResult>(null);
-        }
-
-        public Task<ResourceControllerResult> UpdatedAsync(V1TestEntity entity)
-        {
-            _manager.Updated(entity);
-            return Task.FromResult<ResourceControllerResult>(null);
-        }
-
-        public Task<ResourceControllerResult> NotModifiedAsync(V1TestEntity entity)
-        {
-            _manager.NotModified(entity);
+            _manager.Reconciled(entity);
             return Task.FromResult<ResourceControllerResult>(null);
         }
 
