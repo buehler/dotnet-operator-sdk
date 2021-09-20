@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using k8s.Models;
 using KubeOps.Operator.Entities;
+using KubeOps.Operator.Entities.Annotations;
 
 namespace KubeOps.Test.TestEntities
 {
@@ -23,6 +24,7 @@ namespace KubeOps.Test.TestEntities
     }
 
     [KubernetesEntity(Group = "kubeops.test.dev", ApiVersion = "V1")]
+    [KubernetesEntityShortNames("foo", "bar", "baz")]
     public class TestStatusEntity : CustomKubernetesEntity<TestStatusEntitySpec, TestStatusEntityStatus>
     {
     }
