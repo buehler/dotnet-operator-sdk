@@ -9,9 +9,7 @@ As of now, the operator sdk supports - roughly - the following features:
   - Normal entities
   - Multi version entities
 - Controller with all operations of an entity
-  - Created
-  - Updated
-  - NotModified
+  - Reconcile
   - StatusModified
   - Deleted
 - Finalizers for entities

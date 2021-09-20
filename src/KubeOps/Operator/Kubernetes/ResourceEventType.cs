@@ -6,24 +6,14 @@
     public enum ResourceEventType
     {
         /// <summary>
-        /// Fired when a resource (even requeued) is new to the system.
+        /// Fired when a resource (even requeued) is catched by the watcher and needs to be reconciled.
         /// </summary>
-        Created,
-
-        /// <summary>
-        /// Fired when a resource (even requeued) has changed in the system.
-        /// </summary>
-        Updated,
+        Reconcile,
 
         /// <summary>
         /// Fired when a resource was removed from the system.
         /// </summary>
         Deleted,
-
-        /// <summary>
-        /// Fired when a resource (even requeued) has not changed.
-        /// </summary>
-        NotModified,
 
         /// <summary>
         /// Fired when the status part of a resource changed but nothing else.

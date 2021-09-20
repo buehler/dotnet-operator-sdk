@@ -55,7 +55,7 @@ namespace KubeOps.Test.Operator.Caching
                 {
                     null,
                     new TestStatusEntity { Metadata = new V1ObjectMeta { Uid = "test" } },
-                    CacheComparisonResult.New,
+                    CacheComparisonResult.Other,
                 },
                 new object?[]
                 {
@@ -69,13 +69,13 @@ namespace KubeOps.Test.Operator.Caching
                         Metadata = new V1ObjectMeta { Uid = "test2" },
                         Spec = new TestStatusEntitySpec { SpecString = "test" },
                     },
-                    CacheComparisonResult.New,
+                    CacheComparisonResult.Other,
                 },
                 new object?[]
                 {
                     new TestStatusEntity { Metadata = new V1ObjectMeta { Uid = "test" } },
                     new TestStatusEntity { Metadata = new V1ObjectMeta { Uid = "test" } },
-                    CacheComparisonResult.NotModified,
+                    CacheComparisonResult.Other,
                 },
                 new object?[]
                 {
@@ -89,7 +89,7 @@ namespace KubeOps.Test.Operator.Caching
                         Metadata = new V1ObjectMeta { Uid = "test" },
                         Spec = new TestStatusEntitySpec { SpecString = "test" },
                     },
-                    CacheComparisonResult.NotModified,
+                    CacheComparisonResult.Other,
                 },
                 new object?[]
                 {
@@ -103,7 +103,7 @@ namespace KubeOps.Test.Operator.Caching
                         Metadata = new V1ObjectMeta { Uid = "test" },
                         Spec = new TestStatusEntitySpec { SpecString = "test2" },
                     },
-                    CacheComparisonResult.Modified,
+                    CacheComparisonResult.Other,
                 },
                 new object?[]
                 {
@@ -117,7 +117,7 @@ namespace KubeOps.Test.Operator.Caching
                         Metadata = new V1ObjectMeta { Uid = "test" },
                         Status = new TestStatusEntityStatus { StatusString = "status" },
                     },
-                    CacheComparisonResult.NotModified,
+                    CacheComparisonResult.Other,
                 },
                 new object?[]
                 {
