@@ -83,5 +83,16 @@ namespace KubeOps.Test.Operator.Generators
                 .Spec.Versions.Should()
                 .HaveCount(2);
         }
+
+        [Fact]
+        public void Should_Add_ShortNames_To_Crd()
+        {
+            _crds
+                .First(c => c.Spec.Names.Kind.Contains("teststatusentity", StringComparison.InvariantCultureIgnoreCase))
+                .Spec.Names.ShortNames.Should()
+                .NotBeNull()
+                .And
+                .Contain(new[] { "foo", "bar", "baz" });
+        }
     }
 }
