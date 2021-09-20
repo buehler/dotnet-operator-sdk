@@ -48,6 +48,15 @@ namespace KubeOps.Operator.Entities.Extensions
                 V1CustomResourceDefinition.KubeKind,
                 new V1ObjectMeta { Name = $"{entityDefinition.Plural}.{entityDefinition.Group}" });
 
+            var shortNames = entityType.GetCustomAttributes<KubernetesEntityShortNamesAttribute>(true)
+                .Aggregate(
+                    new List<string>(),
+                    (list, attribute) =>
+                    {
+                        list.AddRange(attribute.ShortNames);
+                        return list;
+                    });
+
             var spec = crd.Spec;
             spec.Group = entityDefinition.Group;
             spec.Names = new V1CustomResourceDefinitionNames
@@ -56,6 +65,7 @@ namespace KubeOps.Operator.Entities.Extensions
                 ListKind = entityDefinition.ListKind,
                 Singular = entityDefinition.Singular,
                 Plural = entityDefinition.Plural,
+                ShortNames = shortNames.Any() ? shortNames : null,
             };
             spec.Scope = entityDefinition.Scope.ToString();
 
