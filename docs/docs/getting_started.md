@@ -47,7 +47,7 @@ That's it.
 
 ### Update Entrypoint
 
-In your `Program.cs` file, replace `Build().Run()` with `Build().RunOperator(args)`:
+In your `Program.cs` file, replace `Build().Run()` with `Build().RunOperatorAsync(args)`:
 
 ```csharp
 public static class Program
@@ -72,7 +72,7 @@ The commands are documentated under the [CLI Commands](./commands.md) section.
 > [!NOTE]
 > Technically you don't need to replace the function,
 > but if you don't, the other commands like yaml generation
-> are not available to your application. Also namespaceing is not
+> are not available to your application. Also namespacing is not
 > possible via run flag.
 
 ### Add to Startup.cs
