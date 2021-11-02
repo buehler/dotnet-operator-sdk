@@ -25,7 +25,7 @@
 
     <ItemGroup>
         <PackageReference Include="CompareNETObjects" Version="4.74.0" />
-        <PackageReference Include="DotnetKubernetesClient" Version="2.0.20" />
+        <PackageReference Include="DotnetKubernetesClient" Version="2.0.21" />
         <PackageReference Include="JsonDiffPatch" Version="2.0.55" />
         <PackageReference Include="Localtunnel" Version="1.0.4" />
         <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
