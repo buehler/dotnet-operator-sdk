@@ -2,7 +2,7 @@
 
     <ItemGroup>
         <PackageReference Include="Roslynator.Analyzers" Version="3.2.2" PrivateAssets="All" />
-        <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.354" PrivateAssets="All" />
+        <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.66" PrivateAssets="All" />
         <AdditionalFiles Include="$(MSBuildThisFileDirectory)/stylecop.json" />
     </ItemGroup>
 
