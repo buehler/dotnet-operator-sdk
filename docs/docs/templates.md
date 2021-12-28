@@ -36,7 +36,7 @@ _Type_: Generate a project
 
 _Templatename_: `operator-empty`
 
-_Example installation_: `dotnet new -n MyOperator operator-empty`
+_Example installation_: `dotnet new operator-empty -n MyOperator`
 
 _Description_:
 This template contains the well known `Program.cs`
@@ -52,7 +52,7 @@ _Type_: Generate a project
 
 _Templatename_: `operator`
 
-_Example installation_: `dotnet new -n MyOperator operator`
+_Example installation_: `dotnet new operator -n MyOperator`
 
 _Description_:
 This template contains the well known `Program.cs`
