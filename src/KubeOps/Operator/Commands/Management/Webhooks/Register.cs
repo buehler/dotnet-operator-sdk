@@ -5,6 +5,7 @@ using k8s.Models;
 using KubeOps.Operator.Builder;
 using KubeOps.Operator.Webhooks;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace KubeOps.Operator.Commands.Management.Webhooks;
 
@@ -16,20 +17,17 @@ namespace KubeOps.Operator.Commands.Management.Webhooks;
 internal class Register
 {
     private readonly OperatorSettings _settings;
-    private readonly IKubernetesClient _client;
     private readonly IComponentRegistrar _componentRegistrar;
     private readonly ValidatingWebhookConfigurationBuilder _validatingWebhookConfigurationBuilder;
     private readonly MutatingWebhookConfigurationBuilder _mutatingWebhookConfigurationBuilder;
 
     public Register(
         OperatorSettings settings,
-        IKubernetesClient client,
         IComponentRegistrar componentRegistrar,
         MutatingWebhookConfigurationBuilder mutatingWebhookConfigurationBuilder,
         ValidatingWebhookConfigurationBuilder validatingWebhookConfigurationBuilder)
     {
         _settings = settings;
-        _client = client;
         _componentRegistrar = componentRegistrar;
         _mutatingWebhookConfigurationBuilder = mutatingWebhookConfigurationBuilder;
         _validatingWebhookConfigurationBuilder = validatingWebhookConfigurationBuilder;
@@ -78,6 +76,7 @@ internal class Register
 
     public async Task<int> OnExecuteAsync(CommandLineApplication app)
     {
+        var client = app.GetRequiredService<IKubernetesClient>();
         await app.Out.WriteLineAsync(
             $"Found {_componentRegistrar.ValidatorRegistrations.Count} validator registrations.");
         await app.Out.WriteLineAsync(
@@ -100,8 +99,8 @@ internal class Register
 
         await app.Out.WriteLineAsync($@"Install ""{validatorConfig.Metadata.Name}"" validator on cluster.");
         await app.Out.WriteLineAsync($@"Install ""{mutatorConfig.Metadata.Name}"" mutator on cluster.");
-        await _client.Save(validatorConfig);
-        await _client.Save(mutatorConfig);
+        await client.Save(validatorConfig);
+        await client.Save(mutatorConfig);
 
         return ExitCodes.Success;
     }

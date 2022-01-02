@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using KubeOps.Operator.Entities;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Rest;
 
 namespace KubeOps.Operator.Commands.Management;
@@ -15,13 +16,10 @@ namespace KubeOps.Operator.Commands.Management;
         "Uninstall the current custom resources (crd's) from the cluster of the actually selected context.")]
 internal class Uninstall
 {
-    private readonly IKubernetesClient _client;
-
     private readonly ICrdBuilder _crdBuilder;
 
-    public Uninstall(IKubernetesClient client, ICrdBuilder crdBuilder)
+    public Uninstall(ICrdBuilder crdBuilder)
     {
-        _client = client;
         _crdBuilder = crdBuilder;
     }
 
@@ -30,6 +28,8 @@ internal class Uninstall
 
     public async Task<int> OnExecuteAsync(CommandLineApplication app)
     {
+        var client = app.GetRequiredService<IKubernetesClient>();
+
         var error = false;
         var crds = _crdBuilder.BuildCrds().ToList();
         await app.Out.WriteLineAsync($"Found {crds.Count} CRD's.");
@@ -40,7 +40,7 @@ internal class Uninstall
         }
 
         await app.Out.WriteLineAsync(
-            $@"Starting uninstall from the cluster with url ""{_client.ApiClient.BaseUri}"".");
+            $@"Starting uninstall from the cluster with url ""{client.ApiClient.BaseUri}"".");
 
         foreach (var crd in crds)
         {
@@ -48,7 +48,7 @@ internal class Uninstall
                 $@"Uninstall ""{crd.Spec.Group}/{crd.Spec.Names.Kind}"" from the cluster");
             try
             {
-                await _client.Delete(crd);
+                await client.Delete(crd);
             }
             catch (HttpOperationException e)
             {

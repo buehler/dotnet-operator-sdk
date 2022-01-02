@@ -9,6 +9,7 @@ using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Webhooks;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace KubeOps.Operator.Commands.Management.Webhooks;
 
@@ -19,18 +20,15 @@ namespace KubeOps.Operator.Commands.Management.Webhooks;
                   "First, certificates will be generated, then a service is created and the validation config is created.")]
 internal class Install
 {
-    private readonly IKubernetesClient _client;
     private readonly OperatorSettings _settings;
     private readonly ValidatingWebhookConfigurationBuilder _validatingWebhookConfigurationBuilder;
     private readonly MutatingWebhookConfigurationBuilder _mutatingWebhookConfigurationBuilder;
 
     public Install(
-        IKubernetesClient client,
         OperatorSettings settings,
         ValidatingWebhookConfigurationBuilder validatingWebhookConfigurationBuilder,
         MutatingWebhookConfigurationBuilder mutatingWebhookConfigurationBuilder)
     {
-        _client = client;
         _settings = settings;
         _validatingWebhookConfigurationBuilder = validatingWebhookConfigurationBuilder;
         _mutatingWebhookConfigurationBuilder = mutatingWebhookConfigurationBuilder;
@@ -52,7 +50,9 @@ internal class Install
 
     public async Task<int> OnExecuteAsync(CommandLineApplication app)
     {
-        var @namespace = await _client.GetCurrentNamespace();
+        var client = app.GetRequiredService<IKubernetesClient>();
+
+        var @namespace = await client.GetCurrentNamespace();
         using var certManager = new CertificateGenerator(app.Out);
 
 #if DEBUG
@@ -75,7 +75,7 @@ internal class Install
             Path.Join(CaCertificatesPath, "ca.pem"),
             Path.Join(CaCertificatesPath, "ca-key.pem"));
 
-        var deployment = (await _client.List<V1Deployment>(
+        var deployment = (await client.List<V1Deployment>(
             @namespace,
             new EqualsSelector("operator-deployment", _settings.Name))).FirstOrDefault();
         if (deployment != null)
@@ -85,8 +85,8 @@ internal class Install
         }
 
         await app.Out.WriteLineAsync("Create service.");
-        await _client.Delete<V1Service>(_settings.Name, @namespace);
-        await _client.Create(
+        await client.Delete<V1Service>(_settings.Name, @namespace);
+        await client.Create(
             new V1Service(
                 V1Service.KubeApiVersion,
                 V1Service.KubeKind,
@@ -121,7 +121,7 @@ internal class Install
             validatorConfig.Metadata.OwnerReferences = new List<V1OwnerReference> { deployment.MakeOwnerReference(), };
         }
 
-        await _client.Save(validatorConfig);
+        await client.Save(validatorConfig);
 
         await app.Out.WriteLineAsync("Create mutator definition.");
         var mutatorConfig = _mutatingWebhookConfigurationBuilder.BuildWebhookConfiguration(webhookConfig);
@@ -130,7 +130,7 @@ internal class Install
             mutatorConfig.Metadata.OwnerReferences = new List<V1OwnerReference> { deployment.MakeOwnerReference(), };
         }
 
-        await _client.Save(mutatorConfig);
+        await client.Save(mutatorConfig);
 
         await app.Out.WriteLineAsync("Installed webhook service and admission configurations.");
 

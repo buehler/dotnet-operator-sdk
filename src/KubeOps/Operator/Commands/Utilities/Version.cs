@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace KubeOps.Operator.Commands.Utilities;
 
@@ -10,16 +11,10 @@ namespace KubeOps.Operator.Commands.Utilities;
     Description = "Prints the actual server version of the connected kubernetes cluster.")]
 internal class Version
 {
-    private readonly IKubernetesClient _client;
-
-    public Version(IKubernetesClient client)
-    {
-        _client = client;
-    }
-
     public async Task<int> OnExecuteAsync(CommandLineApplication app)
     {
-        var version = await _client.GetServerVersion();
+        var client = app.GetRequiredService<IKubernetesClient>();
+        var version = await client.GetServerVersion();
         await app.Out.WriteLineAsync(
             $@"The kubernetes api reported the following version:
 Git-Version: {version.GitVersion}

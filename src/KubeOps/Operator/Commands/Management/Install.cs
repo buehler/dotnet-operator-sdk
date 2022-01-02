@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using KubeOps.Operator.Entities;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Rest;
 
 namespace KubeOps.Operator.Commands.Management;
@@ -15,22 +16,21 @@ namespace KubeOps.Operator.Commands.Management;
         "Install the current custom resources (crd's) into the cluster of the actually selected context.")]
 internal class Install
 {
-    private readonly IKubernetesClient _client;
-
     private readonly ICrdBuilder _crdBuilder;
 
-    public Install(IKubernetesClient client, ICrdBuilder crdBuilder)
+    public Install(ICrdBuilder crdBuilder)
     {
-        _client = client;
         _crdBuilder = crdBuilder;
     }
 
     public async Task<int> OnExecuteAsync(CommandLineApplication app)
     {
+        var client = app.GetRequiredService<IKubernetesClient>();
+
         var error = false;
         var crds = _crdBuilder.BuildCrds().ToList();
         await app.Out.WriteLineAsync($"Found {crds.Count} CRD's.");
-        await app.Out.WriteLineAsync($@"Starting install into cluster with url ""{_client.ApiClient.BaseUri}"".");
+        await app.Out.WriteLineAsync($@"Starting install into cluster with url ""{client.ApiClient.BaseUri}"".");
 
         foreach (var crd in crds)
         {
@@ -39,7 +39,7 @@ internal class Install
 
             try
             {
-                await _client.Save(crd);
+                await client.Save(crd);
             }
             catch (HttpOperationException e)
             {
