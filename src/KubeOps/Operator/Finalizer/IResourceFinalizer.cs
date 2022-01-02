@@ -24,7 +24,9 @@ namespace KubeOps.Operator.Finalizer
             get
             {
                 var crd = CustomEntityDefinitionExtensions.CreateResourceDefinition<TEntity>();
-                var name = $"{crd.Group}/{GetType().Name.ToLowerInvariant()}finalizer";
+                var finalizerName = GetType().Name.ToLowerInvariant();
+                var name =
+                    $"{crd.Group}/{GetType().Name.ToLowerInvariant()}{(finalizerName.EndsWith("finalizer") ? string.Empty : "finalizer")}";
                 return name.Length > MaxNameLength
                     ? name[..MaxNameLength]
                     : name;

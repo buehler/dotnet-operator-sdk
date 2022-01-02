@@ -1,9 +1,8 @@
 ﻿using Xunit;
 
-namespace KubeOps.Templates.Test.Templates
+namespace KubeOps.Templates.Test.Templates;
+
+[CollectionDefinition("Template Tests")]
+public class TemplateTestCollection : ICollectionFixture<TemplateInstaller>
 {
-    [CollectionDefinition("Template Tests")]
-    public class TemplateTestCollection : ICollectionFixture<TemplateInstaller>
-    {
-    }
 }

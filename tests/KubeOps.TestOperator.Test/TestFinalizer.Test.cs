@@ -10,35 +10,37 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
-namespace KubeOps.TestOperator.Test
+namespace KubeOps.TestOperator.Test;
+
+public class TestFinalizerTest : IClassFixture<KubernetesOperatorFactory<TestStartup>>
 {
-    public class TestFinalizerTest : IClassFixture<KubernetesOperatorFactory<TestStartup>>
+    private readonly KubernetesOperatorFactory<TestStartup> _factory;
+
+    public TestFinalizerTest(KubernetesOperatorFactory<TestStartup> factory)
     {
-        private readonly KubernetesOperatorFactory<TestStartup> _factory;
+        _factory = factory.WithSolutionRelativeContentRoot("tests/KubeOps.TestOperator");
+    }
 
-        public TestFinalizerTest(KubernetesOperatorFactory<TestStartup> factory)
-        {
-            _factory = factory.WithSolutionRelativeContentRoot("tests/KubeOps.TestOperator");
-        }
-
-        [Fact]
-        public async Task Test_If_Manager_Finalizer_Is_Called()
-        {
-            _factory.Run();
-            var mock = _factory.Services.GetRequiredService<Mock<IManager>>();
-            mock.Reset();
-            mock.Setup(o => o.Finalized(It.IsAny<V1TestEntity>()));
-            mock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Never);
-            await _factory.EnqueueFinalization(
-                new V1TestEntity
+    [Fact]
+    public async Task Test_If_Manager_Finalizer_Is_Called()
+    {
+        _factory.Run();
+        var mock = _factory.Services.GetRequiredService<Mock<IManager>>();
+        mock.Reset();
+        mock.Setup(o => o.Finalized(It.IsAny<V1TestEntity>()));
+        mock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Never);
+        await _factory.EnqueueFinalization(
+            new V1TestEntity
+            {
+                Metadata = new V1ObjectMeta
                 {
-                    Metadata = new V1ObjectMeta
+                    Finalizers = new List<string>
                     {
-                        Finalizers = new List<string>
-                            { (new TestEntityFinalizer(mock.Object) as IResourceFinalizer<V1TestEntity>).Identifier },
+                        (new TestEntityFinalizer(mock.Object) as IResourceFinalizer<V1TestEntity>)
+                        .Identifier
                     },
-                });
-            mock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Once);
-        }
+                },
+            });
+        mock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Once);
     }
 }

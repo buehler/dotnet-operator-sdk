@@ -7,30 +7,30 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace KubeOps.TestOperator.Test
+namespace KubeOps.TestOperator.Test;
+
+public class TestStartup
 {
-    public class TestStartup
+    public void ConfigureServices(IServiceCollection services)
     {
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services
-                .AddKubernetesOperator(s =>
+        services
+            .AddKubernetesOperator(
+                s =>
                 {
                     s.Name = "test-operator";
                     s.EnableAssemblyScanning = false;
                 })
-                .AddController<TestController>()
-                .AddFinalizer<TestEntityFinalizer>()
-                .AddValidationWebhook<TestValidator>()
-                .AddMutationWebhook<TestMutator>();
+            .AddController<TestController>()
+            .AddFinalizer<TestEntityFinalizer>()
+            .AddValidationWebhook<TestValidator>()
+            .AddMutationWebhook<TestMutator>();
 
-            services.AddSingleton(new Mock<IManager>());
-            services.AddSingleton(typeof(IManager), provider => provider.GetRequiredService<Mock<IManager>>().Object);
-        }
+        services.AddSingleton(new Mock<IManager>());
+        services.AddSingleton(typeof(IManager), provider => provider.GetRequiredService<Mock<IManager>>().Object);
+    }
 
-        public void Configure(IApplicationBuilder app)
-        {
-            app.UseKubernetesOperator();
-        }
+    public void Configure(IApplicationBuilder app)
+    {
+        app.UseKubernetesOperator();
     }
 }
