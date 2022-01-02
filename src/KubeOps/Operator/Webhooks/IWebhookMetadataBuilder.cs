@@ -1,10 +1,9 @@
 using System;
 
-namespace KubeOps.Operator.Webhooks
+namespace KubeOps.Operator.Webhooks;
+
+internal interface IWebhookMetadataBuilder
 {
-    internal interface IWebhookMetadataBuilder
-    {
-        (string Name, string Endpoint) GetMetadata<TResult>(object hook, Type resourceType)
-            where TResult : AdmissionResult;
-    }
+    (string Name, string Endpoint) GetMetadata<TResult>(object hook, Type resourceType)
+        where TResult : AdmissionResult;
 }

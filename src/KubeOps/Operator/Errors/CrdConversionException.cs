@@ -1,21 +1,20 @@
 ﻿using System;
 
-namespace KubeOps.Operator.Errors
+namespace KubeOps.Operator.Errors;
+
+internal class CrdConversionException : Exception
 {
-    internal class CrdConversionException : Exception
+    public CrdConversionException()
     {
-        public CrdConversionException()
-        {
-        }
+    }
 
-        public CrdConversionException(string message)
-            : base(message)
-        {
-        }
+    public CrdConversionException(string message)
+        : base(message)
+    {
+    }
 
-        public CrdConversionException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
+    public CrdConversionException(string message, Exception innerException)
+        : base(message, innerException)
+    {
     }
 }

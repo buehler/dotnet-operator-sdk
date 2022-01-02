@@ -1,110 +1,111 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="GenerateAfterBuild">
-    <Target Name="BaseConfig">
-        <PropertyGroup>
-            <!-- Configuration for the base -->
-            <KubeOpsBasePath Condition="'$(KubeOpsBasePath)' == ''">$(MSBuildProjectDirectory)</KubeOpsBasePath>
-        </PropertyGroup>
+  <Target Name="BaseConfig">
+    <PropertyGroup>
+      <!-- Configuration for the base -->
+      <KubeOpsBasePath Condition="'$(KubeOpsBasePath)' == ''">$(MSBuildProjectDirectory)</KubeOpsBasePath>
+    </PropertyGroup>
 
-        <PropertyGroup>
-            <!-- Configuration for the pathes where to store the generated yamls and elements -->
-            <KubeOpsConfigRoot Condition="'$(KubeOpsConfigRoot)' == ''">$(KubeOpsBasePath)\config</KubeOpsConfigRoot>
-        </PropertyGroup>
+    <PropertyGroup>
+      <!-- Configuration for the pathes where to store the generated yamls and elements -->
+      <KubeOpsConfigRoot Condition="'$(KubeOpsConfigRoot)' == ''">$(KubeOpsBasePath)\config</KubeOpsConfigRoot>
+    </PropertyGroup>
 
-        <PropertyGroup>
-            <!-- Configuration for Docker related commands -->
-            <KubeOpsDockerfilePath Condition="'$(KubeOpsDockerfilePath)' == ''">$(KubeOpsBasePath)\Dockerfile</KubeOpsDockerfilePath>
-            <KubeOpsDockerTag Condition="'$(KubeOpsDockerTag)' == ''">latest</KubeOpsDockerTag>
-        </PropertyGroup>
+    <PropertyGroup>
+      <!-- Configuration for Docker related commands -->
+      <KubeOpsDockerfilePath Condition="'$(KubeOpsDockerfilePath)' == ''">$(KubeOpsBasePath)\Dockerfile</KubeOpsDockerfilePath>
+      <KubeOpsDockerTag Condition="'$(KubeOpsDockerTag)' == ''">latest</KubeOpsDockerTag>
+    </PropertyGroup>
 
-        <PropertyGroup>
-            <!-- Configuration for the crd generation -->
-            <KubeOpsCrdDir Condition="'$(KubeOpsCrdDir)' == ''">$(KubeOpsConfigRoot)\crds</KubeOpsCrdDir>
-            <KubeOpsCrdFormat Condition="'$(KubeOpsCrdFormat)' == ''">Yaml</KubeOpsCrdFormat>
-            <KubeOpsCrdUseOldCrds Condition="'$(KubeOpsCrdUseOldCrds)' == ''">false</KubeOpsCrdUseOldCrds>
-        </PropertyGroup>
+    <PropertyGroup>
+      <!-- Configuration for the crd generation -->
+      <KubeOpsCrdDir Condition="'$(KubeOpsCrdDir)' == ''">$(KubeOpsConfigRoot)\crds</KubeOpsCrdDir>
+      <KubeOpsCrdFormat Condition="'$(KubeOpsCrdFormat)' == ''">Yaml</KubeOpsCrdFormat>
+      <KubeOpsCrdUseOldCrds Condition="'$(KubeOpsCrdUseOldCrds)' == ''">false</KubeOpsCrdUseOldCrds>
+    </PropertyGroup>
 
-        <PropertyGroup>
-            <!-- Configuration for the rbac generation -->
-            <KubeOpsRbacDir Condition="'$(KubeOpsRbacDir)' == ''">$(KubeOpsConfigRoot)\rbac</KubeOpsRbacDir>
-            <KubeOpsRbacFormat Condition="'$(KubeOpsRbacFormat)' == ''">Yaml</KubeOpsRbacFormat>
-        </PropertyGroup>
+    <PropertyGroup>
+      <!-- Configuration for the rbac generation -->
+      <KubeOpsRbacDir Condition="'$(KubeOpsRbacDir)' == ''">$(KubeOpsConfigRoot)\rbac</KubeOpsRbacDir>
+      <KubeOpsRbacFormat Condition="'$(KubeOpsRbacFormat)' == ''">Yaml</KubeOpsRbacFormat>
+    </PropertyGroup>
 
-        <PropertyGroup>
-            <!-- Configuration for the operator manifest generation -->
-            <KubeOpsOperatorDir Condition="'$(KubeOpsOperatorDir)' == ''">$(KubeOpsConfigRoot)\operator</KubeOpsOperatorDir>
-            <KubeOpsOperatorFormat Condition="'$(KubeOpsOperatorFormat)' == ''">Yaml</KubeOpsOperatorFormat>
-        </PropertyGroup>
+    <PropertyGroup>
+      <!-- Configuration for the operator manifest generation -->
+      <KubeOpsOperatorDir Condition="'$(KubeOpsOperatorDir)' == ''">$(KubeOpsConfigRoot)\operator</KubeOpsOperatorDir>
+      <KubeOpsOperatorFormat Condition="'$(KubeOpsOperatorFormat)' == ''">Yaml</KubeOpsOperatorFormat>
+    </PropertyGroup>
 
-        <PropertyGroup>
-            <!-- Configuration for the installer manifest generation -->
-            <KubeOpsInstallerDir Condition="'$(KubeOpsInstallerDir)' == ''">$(KubeOpsConfigRoot)\install</KubeOpsInstallerDir>
-            <KubeOpsInstallerFormat Condition="'$(KubeOpsInstallerFormat)' == ''">Yaml</KubeOpsInstallerFormat>
-        </PropertyGroup>
-    </Target>
+    <PropertyGroup>
+      <!-- Configuration for the installer manifest generation -->
+      <KubeOpsInstallerDir Condition="'$(KubeOpsInstallerDir)' == ''">$(KubeOpsConfigRoot)\install</KubeOpsInstallerDir>
+      <KubeOpsInstallerFormat Condition="'$(KubeOpsInstallerFormat)' == ''">Yaml</KubeOpsInstallerFormat>
+    </PropertyGroup>
+  </Target>
 
-    <Target Name="GetAssemblyBeforeTimestamp" AfterTargets="BeforeCompile">
-        <PropertyGroup>
-            <KubeOpsAssemblyTimestampBeforeCompile>%(IntermediateAssembly.ModifiedTime)</KubeOpsAssemblyTimestampBeforeCompile>
-        </PropertyGroup>
-    </Target>
+  <Target Name="GetAssemblyBeforeTimestamp" AfterTargets="BeforeCompile">
+    <PropertyGroup>
+      <KubeOpsAssemblyTimestampBeforeCompile>%(IntermediateAssembly.ModifiedTime)</KubeOpsAssemblyTimestampBeforeCompile>
+    </PropertyGroup>
+  </Target>
 
-    <Target Name="GetAssemblyAfterTimestamp" AfterTargets="CoreCompile">
-        <PropertyGroup>
-            <KubeOpsAssemblyTimestampAfterCompile>%(IntermediateAssembly.ModifiedTime)</KubeOpsAssemblyTimestampAfterCompile>
-        </PropertyGroup>
-    </Target>
+  <Target Name="GetAssemblyAfterTimestamp" AfterTargets="CoreCompile">
+    <PropertyGroup>
+      <KubeOpsAssemblyTimestampAfterCompile>%(IntermediateAssembly.ModifiedTime)</KubeOpsAssemblyTimestampAfterCompile>
+    </PropertyGroup>
+  </Target>
 
-    <Target Name="GenerateDockerfile" DependsOnTargets="BaseConfig">
-        <Message Text="Generating Dockerfile" Importance="high" />
-        <Message Text="Dockerfile path: $(KubeOpsDockerfilePath)" Importance="normal" />
+  <Target Name="GenerateDockerfile" DependsOnTargets="BaseConfig">
+    <Message Text="Generating Dockerfile" Importance="high" />
+    <Message Text="Dockerfile path: $(KubeOpsDockerfilePath)" Importance="normal" />
 
-        <Message Condition="Exists('$(KubeOpsDockerfilePath)')" Text="Dockerfile already exists. Don't overwrite."
-                 Importance="high" />
-        <Exec Condition="!Exists('$(KubeOpsDockerfilePath)')"
-              Command="dotnet $(OutputPath)$(TargetFileName) generator docker --out $(KubeOpsDockerfilePath) --dotnet-tag $(KubeOpsDockerTag) --solution-dir $(SolutionDir) --target-file $(TargetFileName) --project-path $(ProjectPath)" />
-    </Target>
+    <Message Condition="Exists('$(KubeOpsDockerfilePath)')" Text="Dockerfile already exists. Don't overwrite."
+             Importance="high" />
+    <Exec Condition="!Exists('$(KubeOpsDockerfilePath)')"
+          Command="dotnet $(OutputPath)$(TargetFileName) generator docker --out $(KubeOpsDockerfilePath) --dotnet-tag $(KubeOpsDockerTag) --solution-dir $(SolutionDir) --target-file $(TargetFileName) --project-path $(ProjectPath)" />
+  </Target>
 
-    <Target Name="GenerateCrds" DependsOnTargets="BaseConfig">
-        <Message Text="Generating CRDs" Importance="high" />
-        <Message Text="Configuration path: $(KubeOpsCrdDir)" Importance="normal" />
+  <Target Name="GenerateCrds" DependsOnTargets="BaseConfig">
+    <Message Text="Generating CRDs" Importance="high" />
+    <Message Text="Configuration path: $(KubeOpsCrdDir)" Importance="normal" />
 
-        <Exec Condition="'$(KubeOpsCrdUseOldCrds)' == 'false'"
-              Command="dotnet $(OutputPath)$(TargetFileName) generator crds --out $(KubeOpsCrdDir) --format $(KubeOpsCrdFormat)" />
-        <Exec Condition="'$(KubeOpsCrdUseOldCrds)' == 'true'"
-              Command="dotnet $(OutputPath)$(TargetFileName) generator crds --out $(KubeOpsCrdDir) --format $(KubeOpsCrdFormat) --use-old-crds" />
-    </Target>
+    <Exec Condition="'$(KubeOpsCrdUseOldCrds)' == 'false'"
+          Command="dotnet $(OutputPath)$(TargetFileName) generator crds --out $(KubeOpsCrdDir) --format $(KubeOpsCrdFormat)" />
+    <Exec Condition="'$(KubeOpsCrdUseOldCrds)' == 'true'"
+          Command="dotnet $(OutputPath)$(TargetFileName) generator crds --out $(KubeOpsCrdDir) --format $(KubeOpsCrdFormat) --use-old-crds" />
+  </Target>
 
-    <Target Name="GenerateRbac" DependsOnTargets="BaseConfig">
-        <Message Text="Generating Rbac roles" Importance="high" />
-        <Message Text="Configuration path: $(KubeOpsRbacDir)" Importance="normal" />
+  <Target Name="GenerateRbac" DependsOnTargets="BaseConfig">
+    <Message Text="Generating Rbac roles" Importance="high" />
+    <Message Text="Configuration path: $(KubeOpsRbacDir)" Importance="normal" />
 
-        <Exec
-            Command="dotnet $(OutputPath)$(TargetFileName) generator rbac --out $(KubeOpsRbacDir) --format $(KubeOpsRbacFormat)" />
-    </Target>
+    <Exec
+      Command="dotnet $(OutputPath)$(TargetFileName) generator rbac --out $(KubeOpsRbacDir) --format $(KubeOpsRbacFormat)" />
+  </Target>
 
-    <Target Name="GenerateOperator" DependsOnTargets="BaseConfig">
-        <Message Text="Generating Operator yamls" Importance="high" />
-        <Message Text="Configuration path: $(KubeOpsOperatorDir)" Importance="normal" />
+  <Target Name="GenerateOperator" DependsOnTargets="BaseConfig">
+    <Message Text="Generating Operator yamls" Importance="high" />
+    <Message Text="Configuration path: $(KubeOpsOperatorDir)" Importance="normal" />
 
-        <Exec
-            Command="dotnet $(OutputPath)$(TargetFileName) generator operator --out $(KubeOpsOperatorDir) --format $(KubeOpsOperatorFormat)" />
-    </Target>
+    <Exec
+      Command="dotnet $(OutputPath)$(TargetFileName) generator operator --out $(KubeOpsOperatorDir) --format $(KubeOpsOperatorFormat)" />
+  </Target>
 
-    <Target Name="GenerateInstaller" DependsOnTargets="BaseConfig">
-        <Message Text="Generating Installer yamls" Importance="high" />
-        <Message Text="Configuration path: $(KubeOpsInstallerDir)" Importance="normal" />
+  <Target Name="GenerateInstaller" DependsOnTargets="BaseConfig">
+    <Message Text="Generating Installer yamls" Importance="high" />
+    <Message Text="Configuration path: $(KubeOpsInstallerDir)" Importance="normal" />
 
-        <Message Condition="Exists('$(KubeOpsInstallerDir)')" Text="Installer dir exists, don't overwrite contents."
-                 Importance="high" />
-        <Exec Condition="!Exists('$(KubeOpsInstallerDir)')"
-              Command="dotnet $(OutputPath)$(TargetFileName) generator installer --out $(KubeOpsInstallerDir) --format $(KubeOpsInstallerFormat) --crds-dir $(KubeOpsCrdDir) --rbac-dir $(KubeOpsRbacDir) --operator-dir $(KubeOpsOperatorDir)" />
-    </Target>
+    <Message Condition="Exists('$(KubeOpsInstallerDir)')" Text="Installer dir exists, don't overwrite contents."
+             Importance="high" />
+    <Exec Condition="!Exists('$(KubeOpsInstallerDir)')"
+          Command="dotnet $(OutputPath)$(TargetFileName) generator installer --out $(KubeOpsInstallerDir) --format $(KubeOpsInstallerFormat) --crds-dir $(KubeOpsCrdDir) --rbac-dir $(KubeOpsRbacDir) --operator-dir $(KubeOpsOperatorDir)" />
+  </Target>
 
-    <Target Name="GenerateAfterBuild" AfterTargets="Build" DependsOnTargets="BaseConfig" Condition="'$(KubeOpsAssemblyTimestampBeforeCompile)' != '$(KubeOpsAssemblyTimestampAfterCompile)'">
-        <CallTarget Condition="'$(KubeOpsSkipDockerfile)' == ''" Targets="GenerateDockerfile" />
-        <CallTarget Condition="'$(KubeOpsSkipCrds)' == ''" Targets="GenerateCrds" />
-        <CallTarget Condition="'$(KubeOpsSkipRbac)' == ''" Targets="GenerateRbac" />
-        <CallTarget Condition="'$(KubeOpsSkipOperator)' == ''" Targets="GenerateOperator" />
-        <CallTarget Condition="'$(KubeOpsSkipInstaller)' == ''" Targets="GenerateInstaller" />
-    </Target>
+  <Target Name="GenerateAfterBuild" AfterTargets="Build" DependsOnTargets="BaseConfig"
+          Condition="'$(KubeOpsAssemblyTimestampBeforeCompile)' != '$(KubeOpsAssemblyTimestampAfterCompile)'">
+    <CallTarget Condition="'$(KubeOpsSkipDockerfile)' == ''" Targets="GenerateDockerfile" />
+    <CallTarget Condition="'$(KubeOpsSkipCrds)' == ''" Targets="GenerateCrds" />
+    <CallTarget Condition="'$(KubeOpsSkipRbac)' == ''" Targets="GenerateRbac" />
+    <CallTarget Condition="'$(KubeOpsSkipOperator)' == ''" Targets="GenerateOperator" />
+    <CallTarget Condition="'$(KubeOpsSkipInstaller)' == ''" Targets="GenerateInstaller" />
+  </Target>
 </Project>

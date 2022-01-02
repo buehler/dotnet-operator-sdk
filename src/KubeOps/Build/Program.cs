@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace KubeOps.Build
+namespace KubeOps.Build;
+
+internal static class Program
 {
-    internal static class Program
-    {
-        public static Task Main() => Task.CompletedTask;
-    }
+    public static Task Main() => Task.CompletedTask;
 }

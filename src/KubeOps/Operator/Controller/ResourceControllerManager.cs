@@ -5,63 +5,62 @@ using System.Threading.Tasks;
 using KubeOps.Operator.Leadership;
 using Microsoft.Extensions.Hosting;
 
-namespace KubeOps.Operator.Controller
+namespace KubeOps.Operator.Controller;
+
+internal class ResourceControllerManager : IHostedService
 {
-    internal class ResourceControllerManager : IHostedService
+    private readonly IControllerInstanceBuilder _controllerInstanceBuilder;
+    private readonly ILeaderElection _leaderElection;
+    private readonly List<IManagedResourceController> _controllerList;
+
+    private IDisposable? _leadershipSubscription;
+
+    public ResourceControllerManager(
+        IControllerInstanceBuilder controllerInstanceBuilder,
+        ILeaderElection leaderElection)
     {
-        private readonly IControllerInstanceBuilder _controllerInstanceBuilder;
-        private readonly ILeaderElection _leaderElection;
-        private readonly List<IManagedResourceController> _controllerList;
+        _controllerInstanceBuilder = controllerInstanceBuilder;
+        _leaderElection = leaderElection;
+        _controllerList = new List<IManagedResourceController>();
+    }
 
-        private IDisposable? _leadershipSubscription;
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        _controllerList.AddRange(_controllerInstanceBuilder.BuildControllers());
 
-        public ResourceControllerManager(
-            IControllerInstanceBuilder controllerInstanceBuilder,
-            ILeaderElection leaderElection)
+        _leadershipSubscription = _leaderElection.LeadershipChange.Subscribe(LeadershipChanged);
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        _leadershipSubscription?.Dispose();
+        foreach (var controller in _controllerList)
         {
-            _controllerInstanceBuilder = controllerInstanceBuilder;
-            _leaderElection = leaderElection;
-            _controllerList = new List<IManagedResourceController>();
+            controller.StopAsync();
+            controller.Dispose();
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            _controllerList.AddRange(_controllerInstanceBuilder.BuildControllers());
+        _controllerList.Clear();
+        return Task.CompletedTask;
+    }
 
-            _leadershipSubscription = _leaderElection.LeadershipChange.Subscribe(LeadershipChanged);
-            return Task.CompletedTask;
+    private void LeadershipChanged(LeaderState state)
+    {
+        if (state == LeaderState.None)
+        {
+            return;
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        foreach (var controller in _controllerList)
         {
-            _leadershipSubscription?.Dispose();
-            foreach (var controller in _controllerList)
+            if (state == LeaderState.Leader)
+            {
+                controller.StartAsync();
+            }
+            else
             {
                 controller.StopAsync();
-                controller.Dispose();
-            }
-
-            _controllerList.Clear();
-            return Task.CompletedTask;
-        }
-
-        private void LeadershipChanged(LeaderState state)
-        {
-            if (state == LeaderState.None)
-            {
-                return;
-            }
-
-            foreach (var controller in _controllerList)
-            {
-                if (state == LeaderState.Leader)
-                {
-                    controller.StartAsync();
-                }
-                else
-                {
-                    controller.StopAsync();
-                }
             }
         }
     }

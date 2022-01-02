@@ -1,12 +1,11 @@
 ﻿using System;
 
-namespace KubeOps.Operator.Entities.Annotations
+namespace KubeOps.Operator.Entities.Annotations;
+
+/// <summary>
+/// Defines a property of a specification as required.
+/// </summary>
+[AttributeUsage(AttributeTargets.Property)]
+public class RequiredAttribute : Attribute
 {
-    /// <summary>
-    /// Defines a property of a specification as required.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
-    public class RequiredAttribute : Attribute
-    {
-    }
 }

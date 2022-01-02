@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 
-namespace KubeOps.Operator.Comparing
-{
-    internal class ReferenceEqualityComparer : EqualityComparer<object>
-    {
-        public override bool Equals(object? x, object? y) => ReferenceEquals(x, y);
+namespace KubeOps.Operator.Comparing;
 
-        public override int GetHashCode(object? obj) => obj == null ? 0 : obj.GetHashCode();
-    }
+internal class ReferenceEqualityComparer : EqualityComparer<object>
+{
+    public override bool Equals(object? x, object? y) => ReferenceEquals(x, y);
+
+    public override int GetHashCode(object? obj) => obj == null ? 0 : obj.GetHashCode();
 }

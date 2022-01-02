@@ -4,49 +4,49 @@ using KubeOps.Operator.Commands.Generators;
 using KubeOps.Operator.Commands.Management;
 using KubeOps.Operator.Commands.Utilities;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace KubeOps.Operator.Commands
+namespace KubeOps.Operator.Commands;
+
+[Command(Description = "Runs the operator.")]
+[Subcommand(typeof(Generator))]
+[Subcommand(typeof(Install))]
+[Subcommand(typeof(Uninstall))]
+[Subcommand(typeof(Management.Webhooks.Webhooks))]
+[Subcommand(typeof(Version))]
+internal class RunOperator
 {
-    [Command(Description = "Runs the operator.")]
-    [Subcommand(typeof(Generator))]
-    [Subcommand(typeof(Install))]
-    [Subcommand(typeof(Uninstall))]
-    [Subcommand(typeof(Management.Webhooks.Webhooks))]
-    [Subcommand(typeof(Version))]
-    internal class RunOperator
+    private readonly IHost _host;
+    private readonly OperatorSettings _settings;
+
+    public RunOperator(IHost host, OperatorSettings settings)
     {
-        private readonly IHost _host;
-        private readonly IKubernetesClient _client;
-        private readonly OperatorSettings _settings;
+        _host = host;
+        _settings = settings;
+    }
 
-        public RunOperator(IHost host, IKubernetesClient client, OperatorSettings settings)
+    [Option(
+        CommandOptionType.SingleOrNoValue,
+        Description =
+            "The namespace - if any - that the operator should limit watching to. If empty, the current namespace is deduced.")]
+    public (bool HasValue, string Value) Namespaced { get; set; }
+
+    public async Task OnExecuteAsync()
+    {
+        if (Namespaced.HasValue && !string.IsNullOrWhiteSpace(Namespaced.Value))
         {
-            _host = host;
-            _client = client;
-            _settings = settings;
+            // The namespace is predefined.
+            _settings.Namespace = Namespaced.Value;
+        }
+        else if (Namespaced.HasValue)
+        {
+            var client = _host.Services.GetRequiredService<IKubernetesClient>();
+
+            // Namespacing is requested and the namespace should be deduced by IKubernetesClient.
+            _settings.Namespace = await client.GetCurrentNamespace();
         }
 
-        [Option(
-            CommandOptionType.SingleOrNoValue,
-            Description =
-                "The namespace - if any - that the operator should limit watching to. If empty, the current namespace is deduced.")]
-        public (bool HasValue, string Value) Namespaced { get; set; }
-
-        public async Task OnExecuteAsync()
-        {
-            if (Namespaced.HasValue && !string.IsNullOrWhiteSpace(Namespaced.Value))
-            {
-                // The namespace is predefined.
-                _settings.Namespace = Namespaced.Value;
-            }
-            else if (Namespaced.HasValue)
-            {
-                // Namespacing is requested and the namespace should be deduced by IKubernetesClient.
-                _settings.Namespace = await _client.GetCurrentNamespace();
-            }
-
-            await _host.RunAsync();
-        }
+        await _host.RunAsync();
     }
 }

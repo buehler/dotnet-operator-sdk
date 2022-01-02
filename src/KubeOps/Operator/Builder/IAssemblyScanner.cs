@@ -1,9 +1,8 @@
 using System.Reflection;
 
-namespace KubeOps.Operator.Builder
+namespace KubeOps.Operator.Builder;
+
+internal interface IAssemblyScanner
 {
-    internal interface IAssemblyScanner
-    {
-        public IAssemblyScanner AddAssembly(Assembly assembly);
-    }
+    public IAssemblyScanner AddAssembly(Assembly assembly);
 }

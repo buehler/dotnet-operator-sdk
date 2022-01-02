@@ -1,17 +1,16 @@
 ﻿using System;
 
-namespace KubeOps.Operator.Leadership
+namespace KubeOps.Operator.Leadership;
+
+/// <summary>
+/// Leader elector for the operator.
+/// </summary>
+public interface ILeaderElection
 {
     /// <summary>
-    /// Leader elector for the operator.
+    /// Event that is fired when the leadership state changes.
     /// </summary>
-    public interface ILeaderElection
-    {
-        /// <summary>
-        /// Event that is fired when the leadership state changes.
-        /// </summary>
-        IObservable<LeaderState> LeadershipChange { get; }
+    IObservable<LeaderState> LeadershipChange { get; }
 
-        internal void LeadershipChanged(LeaderState state);
-    }
+    internal void LeadershipChanged(LeaderState state);
 }

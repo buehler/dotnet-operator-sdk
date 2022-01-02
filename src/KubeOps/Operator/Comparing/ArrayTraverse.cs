@@ -1,41 +1,40 @@
 ﻿using System;
 
-namespace KubeOps.Operator.Comparing
+namespace KubeOps.Operator.Comparing;
+
+internal class ArrayTraverse
 {
-    internal class ArrayTraverse
+    private readonly int[] _maxLengths;
+
+    public ArrayTraverse(Array array)
     {
-        private readonly int[] _maxLengths;
-
-        public ArrayTraverse(Array array)
+        _maxLengths = new int[array.Rank];
+        for (var i = 0; i < array.Rank; ++i)
         {
-            _maxLengths = new int[array.Rank];
-            for (var i = 0; i < array.Rank; ++i)
-            {
-                _maxLengths[i] = array.GetLength(i) - 1;
-            }
-
-            Position = new int[array.Rank];
+            _maxLengths[i] = array.GetLength(i) - 1;
         }
 
-        public int[] Position { get; }
+        Position = new int[array.Rank];
+    }
 
-        public bool Step()
+    public int[] Position { get; }
+
+    public bool Step()
+    {
+        for (var i = 0; i < Position.Length; ++i)
         {
-            for (var i = 0; i < Position.Length; ++i)
+            if (Position[i] < _maxLengths[i])
             {
-                if (Position[i] < _maxLengths[i])
+                Position[i]++;
+                for (int j = 0; j < i; j++)
                 {
-                    Position[i]++;
-                    for (int j = 0; j < i; j++)
-                    {
-                        Position[j] = 0;
-                    }
-
-                    return true;
+                    Position[j] = 0;
                 }
-            }
 
-            return false;
+                return true;
+            }
         }
+
+        return false;
     }
 }

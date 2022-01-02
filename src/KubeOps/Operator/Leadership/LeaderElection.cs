@@ -3,29 +3,28 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Microsoft.Extensions.Logging;
 
-namespace KubeOps.Operator.Leadership
+namespace KubeOps.Operator.Leadership;
+
+internal class LeaderElection : ILeaderElection, IDisposable
 {
-    internal class LeaderElection : ILeaderElection, IDisposable
+    private readonly ILogger<LeaderElection> _logger;
+    private readonly BehaviorSubject<LeaderState> _leadershipChange = new(LeaderState.None);
+
+    public LeaderElection(ILogger<LeaderElection> logger)
     {
-        private readonly ILogger<LeaderElection> _logger;
-        private readonly BehaviorSubject<LeaderState> _leadershipChange = new(LeaderState.None);
+        _logger = logger;
+    }
 
-        public LeaderElection(ILogger<LeaderElection> logger)
-        {
-            _logger = logger;
-        }
+    public IObservable<LeaderState> LeadershipChange => _leadershipChange.DistinctUntilChanged();
 
-        public IObservable<LeaderState> LeadershipChange => _leadershipChange.DistinctUntilChanged();
+    public void Dispose()
+    {
+        _leadershipChange.Dispose();
+    }
 
-        public void Dispose()
-        {
-            _leadershipChange.Dispose();
-        }
-
-        void ILeaderElection.LeadershipChanged(LeaderState state)
-        {
-            _logger.LogDebug("Leadership state changed to: {state}.", state);
-            _leadershipChange.OnNext(state);
-        }
+    void ILeaderElection.LeadershipChanged(LeaderState state)
+    {
+        _logger.LogDebug("Leadership state changed to: {state}.", state);
+        _leadershipChange.OnNext(state);
     }
 }

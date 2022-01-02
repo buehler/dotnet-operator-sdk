@@ -5,56 +5,56 @@ using System.Threading.Tasks;
 using KubeOps.Operator.Builder;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace KubeOps.Operator.Commands.Generators
+namespace KubeOps.Operator.Commands.Generators;
+
+[Command("docker", Description = "Generates the docker file for building.")]
+internal class DockerGenerator : GeneratorBase
 {
-    [Command("docker", Description = "Generates the docker file for building.")]
-    internal class DockerGenerator : GeneratorBase
+    private readonly OperatorSettings _settings;
+    private readonly bool _hasWebhooks;
+
+    public DockerGenerator(IComponentRegistrar componentRegistrar, OperatorSettings settings)
     {
-        private readonly OperatorSettings _settings;
-        private readonly bool _hasWebhooks;
+        _settings = settings;
+        _hasWebhooks =
+            componentRegistrar.ValidatorRegistrations.Any() ||
+            componentRegistrar.MutatorRegistrations.Any();
+    }
 
-        public DockerGenerator(IComponentRegistrar componentRegistrar, OperatorSettings settings)
+    [Option(
+        "--dotnet-tag",
+        Description = @"Defines the used dotnet docker image tag for the dockerfile (default: ""latest"").")]
+    public string DotnetImageTag { get; set; } = "latest";
+
+    [Option("--solution-dir", Description = "The folder path where the solution resides.")]
+    public string SolutionDir { get; set; } = string.Empty;
+
+    [Option("--target-file", Description = "The executable file at the end.")]
+    public string TargetFile { get; set; } = "<<TARGETFILE>>";
+
+    [Option("--project-path", Description = "The path to the project file.")]
+    public string ProjectPath { get; set; } = string.Empty;
+
+    private string ProjectToBuild => Path.GetRelativePath(SolutionDir, ProjectPath).Replace('\\', '/');
+
+    public async Task<int> OnExecuteAsync(CommandLineApplication app)
+    {
+        var dockerfile = GenerateDockerfile();
+        if (!string.IsNullOrWhiteSpace(OutputPath))
         {
-            _settings = settings;
-            _hasWebhooks =
-                componentRegistrar.ValidatorRegistrations.Any() ||
-                componentRegistrar.MutatorRegistrations.Any();
+            await using var file = File.Open(OutputPath, FileMode.Create);
+            await file.WriteAsync(Encoding.UTF8.GetBytes(dockerfile));
+        }
+        else
+        {
+            await app.Out.WriteLineAsync(dockerfile);
         }
 
-        [Option(
-            "--dotnet-tag",
-            Description = @"Defines the used dotnet docker image tag for the dockerfile (default: ""latest"").")]
-        public string DotnetImageTag { get; set; } = "latest";
+        return ExitCodes.Success;
+    }
 
-        [Option("--solution-dir", Description = "The folder path where the solution resides.")]
-        public string SolutionDir { get; set; } = string.Empty;
-
-        [Option("--target-file", Description = "The executable file at the end.")]
-        public string TargetFile { get; set; } = "<<TARGETFILE>>";
-
-        [Option("--project-path", Description = "The path to the project file.")]
-        public string ProjectPath { get; set; } = string.Empty;
-
-        private string ProjectToBuild => Path.GetRelativePath(SolutionDir, ProjectPath).Replace('\\', '/');
-
-        public async Task<int> OnExecuteAsync(CommandLineApplication app)
-        {
-            var dockerfile = GenerateDockerfile();
-            if (!string.IsNullOrWhiteSpace(OutputPath))
-            {
-                await using var file = File.Open(OutputPath, FileMode.Create);
-                await file.WriteAsync(Encoding.UTF8.GetBytes(dockerfile));
-            }
-            else
-            {
-                await app.Out.WriteLineAsync(dockerfile);
-            }
-
-            return ExitCodes.Success;
-        }
-
-        public string GenerateDockerfile() =>
-            $@"# Build the operator
+    public string GenerateDockerfile() =>
+        $@"# Build the operator
 FROM mcr.microsoft.com/dotnet/sdk:{DotnetImageTag} as build
 WORKDIR /operator
 
@@ -74,5 +74,4 @@ USER operator-user
 
 ENTRYPOINT [ ""dotnet"", ""{TargetFile}"" ]
 ";
-    }
 }
