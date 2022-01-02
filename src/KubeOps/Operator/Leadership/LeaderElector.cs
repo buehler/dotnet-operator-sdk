@@ -66,10 +66,10 @@ internal class LeaderElector : IHostedService
 #if DEBUG
         _election.LeadershipChanged(LeaderState.Leader);
 #else
-            _leaseCheck.Start();
-            _leaseCheck.Elapsed += async (_, __) => await CheckLeaderLease();
+        _leaseCheck.Start();
+        _leaseCheck.Elapsed += async (_, __) => await CheckLeaderLease();
 
-            await CheckLeaderLease();
+        await CheckLeaderLease();
 #endif
     }
 

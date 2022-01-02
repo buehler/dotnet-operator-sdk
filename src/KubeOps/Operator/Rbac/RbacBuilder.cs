@@ -53,7 +53,7 @@ internal class RbacBuilder : IRbacBuilder
                 {
                     new EntityRbacAttribute(typeof(Corev1Event))
                     {
-                        Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Create | RbacVerb.Update
+                        Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Create | RbacVerb.Update,
                     },
                 });
 
