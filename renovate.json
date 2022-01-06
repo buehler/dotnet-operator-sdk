@@ -1,11 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>buehler/renovate-config"],
+  "extends": [
+    "github>buehler/renovate-config"
+  ],
   "dotnet": {
-    "packageRules": [
-      {
-        "excludePackageNames": "StyleCop.Analyzers"
-      }
+    "ignoreDeps": [
+      "StyleCop.Analyzers"
     ]
   }
 }
