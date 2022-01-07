@@ -57,6 +57,8 @@ public class CrdGenerationTest
     [InlineData("Bool", "boolean", null)]
     [InlineData("DateTime", "string", "date-time")]
     [InlineData("Enum", "string", null)]
+    [InlineData(nameof(TestSpecEntitySpec.GenericDictionary), "map[string]string", null)]
+    [InlineData(nameof(TestSpecEntitySpec.KeyValueEnumerable), "map[string]string", null)]
     public void Should_Set_The_Correct_Type_And_Format_For_Types(string fieldName, string typeName, string? format)
     {
         var crd = _testSpecEntity.CreateCrd();
@@ -272,21 +274,21 @@ public class CrdGenerationTest
     }
 
     [Fact]
-    public void Should_Set_Preserve_Unknown_Fields_On_Generic_Dictionaries()
+    public void Should_Not_Set_Preserve_Unknown_Fields_On_Generic_Dictionaries()
     {
         var crd = _testSpecEntity.CreateCrd();
-
+        
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
-        specProperties.Properties["genericDictionary"].XKubernetesPreserveUnknownFields.Should().BeTrue();
+        specProperties.Properties["genericDictionary"].XKubernetesPreserveUnknownFields.Should().BeNull();
     }
 
     [Fact]
-    public void Should_Set_Preserve_Unknown_Fields_On_KeyValuePair_Enumerable()
+    public void Should_Not_Set_Preserve_Unknown_Fields_On_KeyValuePair_Enumerable()
     {
         var crd = _testSpecEntity.CreateCrd();
 
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
-        specProperties.Properties["keyValueEnumerable"].XKubernetesPreserveUnknownFields.Should().BeTrue();
+        specProperties.Properties["keyValueEnumerable"].XKubernetesPreserveUnknownFields.Should().BeNull();
     }
 
     [Fact]

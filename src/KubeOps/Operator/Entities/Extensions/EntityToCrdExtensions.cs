@@ -29,6 +29,7 @@ internal static class EntityToCrdExtensions
     private const string Float = "float";
     private const string Double = "double";
     private const string DateTime = "date-time";
+    private const string Map = "map[{0}]{1}";
 
     private static readonly string[] IgnoredToplevelProperties = { "metadata", "apiversion", "kind" };
 
@@ -238,9 +239,26 @@ internal static class EntityToCrdExtensions
                 additionalColumns,
                 jsonPath);
         }
+        else if (!isSimpleType
+                 && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+        {
+            var genericTypes = type.GenericTypeArguments;
+            var keyType = MapType(genericTypes[0], additionalColumns, jsonPath).Type;
+            var valueType = MapType(genericTypes[1], additionalColumns, jsonPath).Type;
+            props.Type = string.Format(Map, keyType, valueType);
+        }
+        else if (!isSimpleType
+                 && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+                 && type.GenericTypeArguments.Length == 1 && type.GenericTypeArguments.Single().IsGenericType
+                 && type.GenericTypeArguments.Single().GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+        {
+            var genericTypes = type.GenericTypeArguments.Single().GenericTypeArguments;
+            var keyType = MapType(genericTypes[0], additionalColumns, jsonPath).Type;
+            var valueType = MapType(genericTypes[1], additionalColumns, jsonPath).Type;
+            props.Type = string.Format(Map, keyType, valueType);
+        }
         else if (!isSimpleType &&
                  (typeof(IDictionary).IsAssignableFrom(type) ||
-                  (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>)) ||
                   (type.IsGenericType &&
                    type.GetGenericArguments().FirstOrDefault()?.IsGenericType == true &&
                    type.GetGenericArguments().FirstOrDefault()?.GetGenericTypeDefinition() ==
