@@ -114,14 +114,8 @@ public class TestSpecEntitySpec
     public IDictionary Dictionary { get; set; } = new Dictionary<string, string>();
 
     public IDictionary<string, string> GenericDictionary { get; set; } = new Dictionary<string, string>();
-    public IDictionary<string, string> NormalGenericDictionary { get; set; } = new Dictionary<string, string>();
-    public IDictionary<string, string>? NullableGenericDictionary { get; set; } = new Dictionary<string, string>();
 
     public IEnumerable<KeyValuePair<string, string>> KeyValueEnumerable { get; set; } =
-        new Dictionary<string, string>();
-    public IEnumerable<KeyValuePair<string, string>> NormalKeyValueEnumerable { get; set; } =
-        new Dictionary<string, string>();
-    public IEnumerable<KeyValuePair<string, string>>? NullableKeyValueEnumerable { get; set; } =
         new Dictionary<string, string>();
 
     [PreserveUnknownFields]
