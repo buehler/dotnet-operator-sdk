@@ -21,6 +21,7 @@
             It enables a developer to create a custom controller for CRDs
             (CustomResourceDefinitions) that runs on kubernetes.
         </PackageDescription>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>
