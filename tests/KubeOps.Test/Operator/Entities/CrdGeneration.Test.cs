@@ -57,8 +57,8 @@ public class CrdGenerationTest
     [InlineData("Bool", "boolean", null)]
     [InlineData("DateTime", "string", "date-time")]
     [InlineData("Enum", "string", null)]
-    [InlineData(nameof(TestSpecEntitySpec.GenericDictionary), "map[string]string", null)]
-    [InlineData(nameof(TestSpecEntitySpec.KeyValueEnumerable), "map[string]string", null)]
+    [InlineData(nameof(TestSpecEntitySpec.GenericDictionary), "object", null)]
+    [InlineData(nameof(TestSpecEntitySpec.KeyValueEnumerable), "object", null)]
     public void Should_Set_The_Correct_Type_And_Format_For_Types(string fieldName, string typeName, string? format)
     {
         var crd = _testSpecEntity.CreateCrd();
@@ -316,6 +316,43 @@ public class CrdGenerationTest
 
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
         specProperties.Properties["keyValueEnumerable"].Properties.Should().BeNull();
+    }
+
+    [Fact]
+    public void Should_Set_AdditionalProperties_On_Dictionaries_For_Value_type()
+    {
+        const string propertyName = nameof(TestSpecEntity.Spec.GenericDictionary);
+        var valueType = _testSpecEntity
+            .GetProperty(nameof(TestSpecEntity.Spec))!
+            .PropertyType.GetProperty(propertyName)!
+            .PropertyType.GetGenericArguments()[1]
+            .Name;
+
+        var crd = _testSpecEntity.CreateCrd();
+
+        var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
+        var valueItems = specProperties.Properties[propertyName.ToCamelCase()].AdditionalProperties as V1JSONSchemaProps;
+        valueItems.Should().NotBeNull();
+        valueItems!.Type.Should().Be(valueType.ToCamelCase());
+    }
+
+    [Fact]
+    public void Should_Set_AdditionalProperties_On_KeyValuePair_For_Value_type()
+    {
+        const string propertyName = nameof(TestSpecEntity.Spec.KeyValueEnumerable);
+        var valueType = _testSpecEntity
+            .GetProperty(nameof(TestSpecEntity.Spec))!
+            .PropertyType.GetProperty(propertyName)!
+            .PropertyType.GetGenericArguments()[0]
+            .GetGenericArguments()[1]
+            .Name;
+
+        var crd = _testSpecEntity.CreateCrd();
+
+        var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
+        var valueItems = specProperties.Properties[propertyName.ToCamelCase()].AdditionalProperties as V1JSONSchemaProps;
+        valueItems.Should().NotBeNull();
+        valueItems!.Type.Should().Be(valueType.ToCamelCase());
     }
 
     [Fact]

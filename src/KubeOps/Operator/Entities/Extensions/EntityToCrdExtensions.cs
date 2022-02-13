@@ -29,7 +29,6 @@ internal static class EntityToCrdExtensions
     private const string Float = "float";
     private const string Double = "double";
     private const string DateTime = "date-time";
-    private const string Map = "map[{0}]{1}";
 
     private static readonly string[] IgnoredToplevelProperties = { "metadata", "apiversion", "kind" };
 
@@ -243,9 +242,8 @@ internal static class EntityToCrdExtensions
                  && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
         {
             var genericTypes = type.GenericTypeArguments;
-            var keyType = MapType(genericTypes[0], additionalColumns, jsonPath).Type;
-            var valueType = MapType(genericTypes[1], additionalColumns, jsonPath).Type;
-            props.Type = string.Format(Map, keyType, valueType);
+            props.Type = Object;
+            props.AdditionalProperties = MapType(genericTypes[1], additionalColumns, jsonPath);
         }
         else if (!isSimpleType
                  && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>)
@@ -253,9 +251,8 @@ internal static class EntityToCrdExtensions
                  && type.GenericTypeArguments.Single().GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
         {
             var genericTypes = type.GenericTypeArguments.Single().GenericTypeArguments;
-            var keyType = MapType(genericTypes[0], additionalColumns, jsonPath).Type;
-            var valueType = MapType(genericTypes[1], additionalColumns, jsonPath).Type;
-            props.Type = string.Format(Map, keyType, valueType);
+            props.Type = Object;
+            props.AdditionalProperties = MapType(genericTypes[1], additionalColumns, jsonPath);
         }
         else if (!isSimpleType &&
                  (typeof(IDictionary).IsAssignableFrom(type) ||
