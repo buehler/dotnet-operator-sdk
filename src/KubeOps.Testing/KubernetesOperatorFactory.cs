@@ -55,12 +55,12 @@ namespace KubeOps.Testing
             var server = Server;
         }
 
-        public Task EnqueueEvent<TEntity>(ResourceEventType type, TEntity resource)
+        public Task EnqueueEvent<TEntity>(ResourceEventType type, TEntity resource, int attempt = 0, TimeSpan? delay = null)
             where TEntity : class, IKubernetesObject<V1ObjectMeta>
         {
             var controller = GetMockController<TEntity>();
 
-            return controller?.EnqueueEvent(type, resource) ?? Task.CompletedTask;
+            return controller?.EnqueueEvent(type, resource, attempt, delay) ?? Task.CompletedTask;
         }
 
         public Task EnqueueFinalization<TEntity>(TEntity resource)

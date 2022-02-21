@@ -33,10 +33,10 @@ namespace KubeOps.Testing
 
         public override Task StopAsync() => Task.CompletedTask;
 
-        public Task EnqueueEvent(ResourceEventType type, TEntity resource) =>
-            HandleResourceEvent(new QueuedEvent(type, resource));
+        public Task EnqueueEvent(ResourceEventType type, TEntity resource, int attempt = 0, TimeSpan? delay = null) =>
+            HandleResourceEvent(new ResourceEvent(type, resource, attempt, delay));
 
         public Task EnqueueFinalization(TEntity resource) =>
-            HandleResourceFinalization(new QueuedEvent(ResourceEventType.Finalizing, resource));
+            HandleResourceFinalization(new ResourceEvent(ResourceEventType.Finalizing, resource));
     }
 }

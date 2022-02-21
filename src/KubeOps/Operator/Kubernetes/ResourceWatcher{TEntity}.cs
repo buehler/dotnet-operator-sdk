@@ -15,7 +15,7 @@ namespace KubeOps.Operator.Kubernetes;
 internal class ResourceWatcher<TEntity> : IDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
-    private readonly Subject<(WatchEventType Event, TEntity Resource)> _watchEvents = new();
+    private readonly Subject<WatchEvent> _watchEvents = new();
     private readonly IKubernetesClient _client;
     private readonly ILogger<ResourceWatcher<TEntity>> _logger;
     private readonly ResourceWatcherMetrics<TEntity> _metrics;
@@ -45,7 +45,7 @@ internal class ResourceWatcher<TEntity> : IDisposable
                 .Subscribe(async _ => await WatchResource());
     }
 
-    public IObservable<(WatchEventType Event, TEntity Resource)> WatchEvents => _watchEvents;
+    public IObservable<WatchEvent> WatchEvents => _watchEvents;
 
     public Task Start()
     {
@@ -128,7 +128,7 @@ internal class ResourceWatcher<TEntity> : IDisposable
             case WatchEventType.Added:
             case WatchEventType.Modified:
             case WatchEventType.Deleted:
-                _watchEvents.OnNext((type, resource));
+                _watchEvents.OnNext(new WatchEvent(type, resource));
                 break;
             case WatchEventType.Error:
             case WatchEventType.Bookmark:
@@ -193,4 +193,6 @@ internal class ResourceWatcher<TEntity> : IDisposable
             RestartWatcher();
         }
     }
+
+    internal record WatchEvent(WatchEventType Type, TEntity Resource);
 }

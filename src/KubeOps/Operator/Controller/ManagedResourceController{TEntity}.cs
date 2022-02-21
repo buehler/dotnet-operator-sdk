@@ -30,11 +30,7 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
     private readonly OperatorSettings _settings;
     private readonly ControllerRegistration _controllerRegistration;
 
-    private readonly Subject<RequeuedEvent>
-        _requeuedEvents = new();
-
-    private readonly Subject<QueuedEvent>
-        _erroredEvents = new();
+    private readonly Subject<ResourceEvent> _localEvents = new();
 
     private IDisposable? _eventSubscription;
 
@@ -58,93 +54,64 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
         _controllerRegistration = controllerRegistration;
     }
 
-    private IObservable<Unit> WatcherEvents => _watcher
+    private IObservable<Unit> Events => _localEvents
+        .Where(EventRetryCountIsLessThanMax)
+        .Merge(WatcherEvents)
+        .GroupBy(e => e.Resource.Uid())
+        .Select(
+            group => group
+                .Select(EventDelay)
+                .Switch())
+        .Merge()
+        .Select(UpdateResourceData)
+        .Merge()
+        .Where(EventTypeIsNotFinalizerModified)
+        .Select(HandleEvent)
+        .Concat();
+
+    private IObservable<ResourceEvent> WatcherEvents => _watcher
         .WatchEvents
-        .Select(MapWatchEvent)
-        .Do(
-            data => _logger.LogTrace(
-                @"Mapped watch event to ""{resourceEventType}"" for ""{kind}/{name}""",
-                data.ResourceEvent,
-                data.Resource.Kind,
-                data.Resource.Name()))
-        .Where(data => data.ResourceEvent != ResourceEventType.FinalizerModified)
-        .Do(_ => _metrics.EventsFromWatcher.Inc())
-        .Select(
-            data => Observable.FromAsync(
-                () => data.ResourceEvent == ResourceEventType.Finalizing
-                    ? HandleResourceFinalization(data)
-                    : HandleResourceEvent(data),
-                ThreadPoolScheduler.Instance))
-        .Merge();
+        .Select(MapToResourceEvent)
+        .Do(_ => _metrics.EventsFromWatcher.Inc());
 
-    private IObservable<Unit> RequeuedEvents => _requeuedEvents
-        .Do(_ => _metrics.RequeuedEvents.Inc())
-        .Select(
-            data => Observable.Return(data).Delay(data.Delay))
-        .Switch()
-        .Select(
-            data =>
-                Observable.FromAsync(
-                    async () =>
-                    {
-                        var queuedEvent = await UpdateResourceData(data.Resource);
+    private static IObservable<ResourceEvent> EventDelay(ResourceEvent resourceEvent)
+    {
+        var delay = resourceEvent.Delay ?? TimeSpan.Zero;
+        return Observable.Return(resourceEvent).DelaySubscription(delay);
+    }
 
-                        return data.ResourceEvent.HasValue && queuedEvent != null
-                            ? queuedEvent with { ResourceEvent = data.ResourceEvent.Value }
-                            : queuedEvent;
-                    }))
-        .Switch()
-        .Where(data => data != null)
-        .Do(
-            data => _logger.LogTrace(
-                @"Mapped requeued resource event to ""{resourceEventType}"" for ""{kind}/{name}""",
-                data?.ResourceEvent,
-                data?.Resource.Kind,
-                data?.Resource.Name()))
-        .Where(
-            data =>
-                data?.ResourceEvent != ResourceEventType.Finalizing &&
-                data?.ResourceEvent != ResourceEventType.FinalizerModified)
-        .Select(
-            data => Observable.FromAsync(
-                () => HandleResourceEvent(data), // this default is never gonna happen.
-                ThreadPoolScheduler.Instance))
-        .Merge();
+    private static bool EventTypeIsNotFinalizerModified(ResourceEvent resourceEvent) =>
+        resourceEvent.Type != ResourceEventType.FinalizerModified;
 
-    private IObservable<Unit> ErroredEvents => _erroredEvents
-        .Do(_ => _metrics.ErroredEvents.Inc())
-        .Select(
-            data =>
-            {
-                var (resourceEventType, resource, retryCount) = data;
-                if (retryCount <= _settings.MaxErrorRetries)
-                {
-                    var backoff = _settings.ErrorBackoffStrategy(retryCount);
-                    _logger.LogDebug(
-                        @"Retry attempt {retryCount} for event ""{eventType}"" on resource ""{kind}/{name}"" with exponential backoff ""{backoff}"".",
-                        retryCount,
-                        resourceEventType,
-                        resource.Kind,
-                        resource.Name(),
-                        backoff);
-                    return Observable.Return(data).Delay(backoff);
-                }
+    private bool EventRetryCountIsLessThanMax(ResourceEvent resourceEvent)
+    {
+        (ResourceEventType type, TEntity resource, var attempt, TimeSpan? delay) = resourceEvent;
 
-                _logger.LogError(
-                    @"Event ""{eventType}"" on resource ""{kind}/{name}"" threw too many errors. Skipping Event.",
-                    resourceEventType,
-                    resource.Kind,
-                    resource.Name());
-                return Observable.Return<QueuedEvent?>(null);
-            })
-        .Switch()
-        .Select(
-            data => Observable.FromAsync(
-                () => data?.ResourceEvent == ResourceEventType.Finalizing
-                    ? HandleResourceFinalization(data)
-                    : HandleResourceEvent(data),
-                ThreadPoolScheduler.Instance))
-        .Merge();
+        if (attempt == 0)
+        {
+            return true;
+        }
+
+        if (attempt <= _settings.MaxErrorRetries)
+        {
+            _logger.LogDebug(
+                @"Retry attempt {retryCount} for event ""{eventType}"" on resource ""{kind}/{name}"" with exponential backoff ""{backoff}"".",
+                attempt,
+                type,
+                resource.Kind,
+                resource.Name(),
+                delay);
+            return true;
+        }
+
+        _logger.LogError(
+            @"Event ""{eventType}"" on resource ""{kind}/{name}"" threw too many errors. Skipping Event.",
+            resourceEvent,
+            resource.Kind,
+            resource.Name());
+
+        return false;
+    }
 
     public virtual async Task StartAsync()
     {
@@ -156,10 +123,7 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
         }
 
         _logger.LogDebug(@"Managed resource controller startup for type ""{type}"".", typeof(TEntity));
-        _eventSubscription = WatcherEvents
-            .Merge(RequeuedEvents)
-            .Merge(ErroredEvents)
-            .Subscribe();
+        _eventSubscription = Events.Subscribe();
 
         await _watcher.Start();
         _metrics.Running.Set(1);
@@ -184,17 +148,13 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
         _metrics.Running.Set(0);
     }
 
-    protected async Task HandleResourceEvent(QueuedEvent? data)
+    protected async Task HandleResourceEvent(ResourceEvent resourceEvent)
     {
-        if (data == null)
-        {
-            return;
-        }
+        (ResourceEventType eventType, TEntity resource, _, _) = resourceEvent;
 
-        var (@event, resource, _) = data;
         _logger.LogDebug(
             @"Execute/Reconcile event ""{eventType}"" on resource ""{kind}/{name}"".",
-            @event,
+            eventType,
             resource.Kind,
             resource.Name());
 
@@ -204,8 +164,8 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
         _logger.LogTrace(@"Instantiating new DI scope for controller ""{name}"".", controllerType.Name);
         using (var scope = _services.CreateScope())
         {
-            if (!(scope.ServiceProvider.GetRequiredService(controllerType) is IResourceController<TEntity>
-                    controller))
+            if (scope.ServiceProvider.GetRequiredService(controllerType) is not IResourceController<TEntity>
+                controller)
             {
                 var ex = new InvalidCastException(
                     $@"The type ""{controllerType.Namespace}.{controllerType.Name}"" is not a valid IResourceController<TEntity> type.");
@@ -218,7 +178,7 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
 
             try
             {
-                switch (@event)
+                switch (eventType)
                 {
                     case ResourceEventType.Reconcile:
                         result = await controller.ReconcileAsync(resource);
@@ -229,7 +189,7 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
                         _metrics.DeletedEvents.Inc();
                         _logger.LogInformation(
                             @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue not possible.",
-                            @event,
+                            eventType,
                             resource.Kind,
                             resource.Name());
                         return;
@@ -238,7 +198,7 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
                         _metrics.StatusUpdatedEvents.Inc();
                         _logger.LogInformation(
                             @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue not possible.",
-                            @event,
+                            eventType,
                             resource.Kind,
                             resource.Name());
                         return;
@@ -246,14 +206,7 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
             }
             catch (Exception e)
             {
-                _logger.LogError(
-                    e,
-                    @"Event type ""{eventType}"" on resource ""{kind}/{name}"" threw an error. Retry attempt {retryAttempt}.",
-                    @event,
-                    resource.Kind,
-                    resource.Name(),
-                    data.RetryCount + 1);
-                _erroredEvents.OnNext(data with { RetryCount = data.RetryCount + 1 });
+                RequeueError(resourceEvent, e);
                 return;
             }
         }
@@ -263,51 +216,51 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
             case null:
                 _logger.LogInformation(
                     @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue not requested.",
-                    @event,
+                    eventType,
                     resource.Kind,
                     resource.Name());
                 return;
             case RequeueEventResult requeue:
-                if (_settings.DefaultRequeueAsSameType)
-                {
-                    requeue = new RequeueEventResult(requeue.RequeueIn, @event);
-                }
+                var specificQueueTypeRequested = requeue.EventType.HasValue;
+                var requestedQueueType = requeue.EventType ?? (_settings.DefaultRequeueAsSameType
+                    ? eventType
+                    : ResourceEventType.Reconcile);
 
-                if (requeue.EventType.HasValue)
+                if (specificQueueTypeRequested)
                 {
                     _logger.LogInformation(
                         @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue requested as type ""{requeueType}"" with delay ""{requeue}"".",
-                        @event,
+                        eventType,
                         resource.Kind,
                         resource.Name(),
-                        requeue.EventType,
+                        requestedQueueType,
                         requeue.RequeueIn);
                 }
                 else
                 {
                     _logger.LogInformation(
                         @"Event type ""{eventType}"" on resource ""{kind}/{name}"" successfully reconciled. Requeue requested with delay ""{requeue}"".",
-                        @event,
+                        eventType,
                         resource.Kind,
                         resource.Name(),
                         requeue.RequeueIn);
                 }
 
-                _requeuedEvents.OnNext(new RequeuedEvent(requeue.EventType, resource, requeue.RequeueIn));
+                RequeueDelayed(resourceEvent with { Type = requestedQueueType }, requeue.RequeueIn);
                 break;
         }
     }
 
-    protected async Task HandleResourceFinalization(QueuedEvent? data)
+    protected async Task HandleResourceFinalization(ResourceEvent? resourceEvent)
     {
         using var scope = _services.CreateScope();
 
-        if (data == null)
+        if (resourceEvent == null)
         {
             return;
         }
 
-        var (_, resource, retryCount) = data;
+        (_, TEntity resource, _, _) = resourceEvent;
 
         _logger.LogDebug(
             @"Finalize resource ""{kind}/{name}"".",
@@ -317,21 +270,40 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
         try
         {
             await scope.ServiceProvider.GetRequiredService<IFinalizerManager<TEntity>>()
-                .FinalizeAsync(data.Resource);
+                .FinalizeAsync(resourceEvent.Resource);
         }
         catch (Exception e)
         {
-            _logger.LogError(
-                e,
-                @"Finalize resource ""{kind}/{name}"" threw an error. Retry attempt {retryAttempt}.",
-                resource.Kind,
-                resource.Name(),
-                retryCount + 1);
-            _erroredEvents.OnNext(data with { RetryCount = retryCount + 1 });
+            RequeueError(resourceEvent, e);
         }
     }
 
-    private (ResourceEventType ResourceEvent, TEntity Resource) MapCacheResult(
+    protected void RequeueError(ResourceEvent resourceEvent, Exception ex)
+    {
+        _metrics.ErroredEvents.Inc();
+
+        var attempt = resourceEvent.Attempt + 1;
+        var delay = _settings.ErrorBackoffStrategy(attempt);
+
+        _logger.LogError(
+            ex,
+            @"Event type ""{eventType}"" on resource ""{kind}/{name}"" threw an error. Retry attempt {retryAttempt}.",
+            resourceEvent.Type,
+            resourceEvent.Resource.Kind,
+            resourceEvent.Resource.Name(),
+            attempt);
+
+        _localEvents.OnNext(resourceEvent with { Attempt = attempt, Delay = delay });
+    }
+
+    protected void RequeueDelayed(ResourceEvent resourceEvent, TimeSpan delay)
+    {
+        _metrics.RequeuedEvents.Inc();
+
+        _localEvents.OnNext(resourceEvent with { Delay = delay });
+    }
+
+    private ResourceEvent MapCacheResult(
         CacheComparisonResult state,
         TEntity resource)
     {
@@ -341,16 +313,22 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
             resource.Kind,
             resource.Name());
 
+        ResourceEventType eventType;
+
         switch (state)
         {
             case CacheComparisonResult.Other when resource.Metadata.DeletionTimestamp != null:
-                return (ResourceEventType.Finalizing, resource);
+                eventType = ResourceEventType.Finalizing;
+                break;
             case CacheComparisonResult.Other:
-                return (ResourceEventType.Reconcile, resource);
+                eventType = ResourceEventType.Reconcile;
+                break;
             case CacheComparisonResult.StatusModified:
-                return (ResourceEventType.StatusUpdated, resource);
+                eventType = ResourceEventType.StatusUpdated;
+                break;
             case CacheComparisonResult.FinalizersModified:
-                return (ResourceEventType.FinalizerModified, resource);
+                eventType = ResourceEventType.FinalizerModified;
+                break;
             default:
                 var ex = new ArgumentException("The caching state is out of the processable range", nameof(state));
                 _logger.LogCritical(
@@ -361,12 +339,70 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
                     resource.Name());
                 throw ex;
         }
+
+        return new ResourceEvent(eventType, resource);
     }
 
-    private QueuedEvent MapWatchEvent(
-        (WatchEventType Event, TEntity Resource) data)
+    #nullable disable
+    private IObservable<ResourceEvent> UpdateResourceData(
+        ResourceEvent resourceEvent)
     {
-        var (watchEventType, resource) = data;
+        if (resourceEvent.Delay is null)
+        {
+            return Observable.Return(resourceEvent);
+        }
+
+        return Observable.FromAsync(
+                async () =>
+                {
+                    ResourceEvent ret;
+                    var resource = resourceEvent.Resource;
+
+                    _logger.LogTrace(
+                        @"Update resource from k8s / cache for delayed requeue for ""{kind}/{name}"".",
+                        resource.Kind,
+                        resource.Name());
+
+                    var newResource = await _client.Get<TEntity>(
+                        resource.Name(),
+                        resource.Namespace());
+
+                    if (newResource == null)
+                    {
+                        _cache.Remove(resource);
+                        _logger.LogDebug(
+                            @"Resource ""{kind}/{name}"" for enqueued event was not present anymore.",
+                            resource.Kind,
+                            resource.Name());
+                        ret = null;
+                    }
+                    else
+                    {
+                        newResource = _cache.Upsert(newResource, out var state);
+                        ret = MapCacheResult(state, newResource);
+                    }
+
+                    var updatedEvent = ret;
+
+                    return updatedEvent;
+                })
+            .Where(e => e is not null);
+    }
+    #nullable enable
+
+    private IObservable<Unit> HandleEvent(ResourceEvent resourceEvent)
+    {
+        return Observable.FromAsync(
+            async () => await (resourceEvent.Type == ResourceEventType.Finalizing
+                ? HandleResourceFinalization(resourceEvent)
+                : HandleResourceEvent(resourceEvent)),
+            ThreadPoolScheduler.Instance);
+    }
+
+    private ResourceEvent MapToResourceEvent(ResourceWatcher<TEntity>.WatchEvent watchEvent)
+    {
+        (WatchEventType watchEventType, TEntity resource) = watchEvent;
+        ResourceEvent output;
 
         _logger.LogTrace(
             @"Mapping watcher event ""{watchEvent}"" for ""{kind}/{name}"".",
@@ -379,54 +415,36 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
             case WatchEventType.Added:
             case WatchEventType.Modified:
                 resource = _cache.Upsert(resource, out var state);
-                var (@event, cachedResource) = MapCacheResult(state, resource);
-                return new QueuedEvent(@event, cachedResource);
+                output = MapCacheResult(state, resource);
+                break;
             case WatchEventType.Deleted:
                 _cache.Remove(resource);
-                return new QueuedEvent(ResourceEventType.Deleted, resource);
+                output = new ResourceEvent(ResourceEventType.Deleted, resource);
+                break;
+            case WatchEventType.Error:
+            case WatchEventType.Bookmark:
+            default:
+                var ex = new ArgumentException(
+                    "The watcher event is not processable (only added / modified / deleted allowed).",
+                    nameof(watchEvent));
+                _logger.LogCritical(
+                    ex,
+                    @"The watcher event ""{watchEvent}"" is not further processable for the resource ""{kind}/{name}"".",
+                    watchEventType,
+                    resource.Kind,
+                    resource.Name());
+
+                throw ex;
         }
 
-        var ex = new ArgumentException(
-            "The watcher event is not processable (only added / modified / deleted allowed).",
-            nameof(data));
-        _logger.LogCritical(
-            ex,
-            @"The watcher event ""{watchEvent}"" is not further processable for the resource ""{kind}/{name}"".",
-            watchEventType,
-            resource.Kind,
-            resource.Name());
-
-        throw ex;
-    }
-
-    private async Task<QueuedEvent?> UpdateResourceData(
-        TEntity resource)
-    {
         _logger.LogTrace(
-            @"Update resource from k8s / cache for delayed requeue for ""{kind}/{name}"".",
-            resource.Kind,
-            resource.Name());
+            @"Mapped watch event to ""{resourceEventType}"" for ""{kind}/{name}""",
+            output.Type,
+            output.Resource.Kind,
+            output.Resource.Name());
 
-        var newResource = await _client.Get<TEntity>(
-            resource.Name(),
-            resource.Namespace());
-
-        if (newResource == null)
-        {
-            _cache.Remove(resource);
-            _logger.LogDebug(
-                @"Resource ""{kind}/{name}"" for enqueued event was not present anymore.",
-                resource.Kind,
-                resource.Name());
-            return null;
-        }
-
-        newResource = _cache.Upsert(newResource, out var state);
-        var (@event, cachedResource) = MapCacheResult(state, newResource);
-        return new QueuedEvent(@event, cachedResource);
+        return output;
     }
 
-    internal record QueuedEvent(ResourceEventType ResourceEvent, TEntity Resource, int RetryCount = 0);
-
-    private record RequeuedEvent(ResourceEventType? ResourceEvent, TEntity Resource, TimeSpan Delay);
+    protected record ResourceEvent(ResourceEventType Type, TEntity Resource, int Attempt = 0, TimeSpan? Delay = null);
 }
