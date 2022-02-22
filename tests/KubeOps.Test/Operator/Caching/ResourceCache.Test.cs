@@ -10,7 +10,7 @@ namespace KubeOps.Test.Operator.Caching;
 
 public class ResourceCacheTest
 {
-    private readonly ResourceCache<TestStatusEntity> _cache = new(new(new()));
+    private readonly ResourceCache<TestStatusEntity> _cache = new(new(new()), new());
 
     [Fact]
     public void Throws_When_Not_Found()

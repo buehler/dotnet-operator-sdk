@@ -3,6 +3,7 @@ using System.Reflection;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
+using KellermanSoftware.CompareNetObjects;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
