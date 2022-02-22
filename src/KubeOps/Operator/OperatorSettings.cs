@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using DotnetKubernetesClient;
+using KellermanSoftware.CompareNetObjects;
 using KubeOps.Operator.Errors;
 using KubeOps.Operator.Serialization;
 using Microsoft.Rest.Serialization;
@@ -157,6 +158,17 @@ public sealed class OperatorSettings
     /// the environment variable "KESTREL__ENDPOINTS__HTTPS__URL" in the yaml file.
     /// </summary>
     public short HttpsPort { get; set; } = 5001;
+
+    /// <summary>
+    /// The configuration used when comparing resources against each-other for caching
+    /// or other similar processing.
+    /// </summary>
+    public ComparisonConfig CacheComparisonConfig { get; set; } = new()
+    {
+        Caching = true,
+        AutoClearCache = false,
+        MembersToIgnore = new List<string> { "ResourceVersion", "ManagedFields" },
+    };
 
     internal JsonSerializerSettings SerializerSettings { get; } = new()
     {

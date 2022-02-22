@@ -13,21 +13,20 @@ namespace KubeOps.Operator.Caching;
 internal class ResourceCache<TEntity>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
-    private const string ResourceVersion = "ResourceVersion";
-    private const string ManagedFields = "ManagedFields";
     private const string Finalizers = "Metadata.Finalizers";
     private const string Status = "Status";
 
-    private readonly CompareLogic _compare = new(
-        new() { Caching = true, AutoClearCache = false, MembersToIgnore = new() { ResourceVersion, ManagedFields }, });
+    private readonly CompareLogic _compare;
 
     private readonly ConcurrentDictionary<string, TEntity> _cache = new();
 
     private readonly ResourceCacheMetrics<TEntity> _metrics;
 
-    public ResourceCache(ResourceCacheMetrics<TEntity> metrics)
+    public ResourceCache(ResourceCacheMetrics<TEntity> metrics, OperatorSettings settings)
     {
         _metrics = metrics;
+
+        _compare = new CompareLogic(settings.CacheComparisonConfig);
     }
 
     public TEntity Get(string id) => _cache[id];
