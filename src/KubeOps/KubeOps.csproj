@@ -24,7 +24,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="CompareNETObjects" Version="4.75.0" />
+        <PackageReference Include="CompareNETObjects" Version="4.76.0" />
         <PackageReference Include="DotnetKubernetesClient" Version="2.1.11" />
         <PackageReference Include="JsonDiffPatch" Version="2.0.55" />
         <PackageReference Include="Localtunnel" Version="1.0.4" />
