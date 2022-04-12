@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -22,6 +22,7 @@ internal class CrdBuilder : ICrdBuilder
     public IEnumerable<V1CustomResourceDefinition> BuildCrds() =>
         _componentRegistrar.EntityRegistrations
             .Select(type => type.EntityType)
+            .Where(type => type.Assembly != typeof(KubernetesEntityAttribute).Assembly)
             .Where(type => type.GetCustomAttributes<KubernetesEntityAttribute>().Any())
             .Where(type => !type.GetCustomAttributes<IgnoreEntityAttribute>().Any())
             .Select(type => (type.CreateCrd(), type.GetCustomAttributes<StorageVersionAttribute>().Any()))

@@ -31,6 +31,9 @@ public class CrdGeneratorTest
         componentRegistrar.RegisterEntity<V2Beta2VersionedEntity>();
         componentRegistrar.RegisterEntity<V2VersionedEntity>();
 
+        // Should be ignored since V1Pod is from the k8s assembly.
+        componentRegistrar.RegisterEntity<V1Pod>();
+
         _crds = new CrdBuilder(componentRegistrar).BuildCrds();
     }
 
@@ -45,6 +48,13 @@ public class CrdGeneratorTest
     {
         _crds.Should()
             .NotContain(crd => crd.Name().Contains("ignored", StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    [Fact]
+    public void Should_Not_Contain_K8s_Entities()
+    {
+        _crds.Should()
+             .NotContain(crd => crd.Spec.Names.Kind == "Pod");
     }
 
     [Fact]
