@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using DotnetKubernetesClient.Entities;
 using Newtonsoft.Json;
 
 namespace KubeOps.Operator.Webhooks;
@@ -39,11 +38,7 @@ public interface IValidationWebhook<TEntity> : IAdmissionWebhook<TEntity, Valida
     /// <inheritdoc />
     string IAdmissionWebhook<TEntity, ValidationResult>.Endpoint
     {
-        get
-        {
-            var crd = typeof(TEntity).CreateResourceDefinition();
-            return $"/{crd.Group}/{crd.Version}/{crd.Plural}/{GetType().Name}/validate".ToLowerInvariant();
-        }
+        get => WebhookEndpointFactory.Create<TEntity>(GetType(), "/validate");
     }
 
     /// <inheritdoc />

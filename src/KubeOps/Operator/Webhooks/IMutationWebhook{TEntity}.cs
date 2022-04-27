@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
-using DotnetKubernetesClient.Entities;
 using JsonDiffPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -43,11 +42,7 @@ public interface IMutationWebhook<TEntity> : IAdmissionWebhook<TEntity, Mutation
     /// <inheritdoc />
     string IAdmissionWebhook<TEntity, MutationResult>.Endpoint
     {
-        get
-        {
-            var crd = typeof(TEntity).CreateResourceDefinition();
-            return $"/{crd.Group}/{crd.Version}/{crd.Plural}/{GetType().Name}/mutate".ToLowerInvariant();
-        }
+        get => WebhookEndpointFactory.Create<TEntity>(GetType(), "/mutate");
     }
 
     /// <inheritdoc />
