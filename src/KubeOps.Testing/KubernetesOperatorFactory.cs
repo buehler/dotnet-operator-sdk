@@ -114,6 +114,8 @@ namespace KubeOps.Testing
                                 r)));
                 });
             builder.ConfigureLogging(logging => logging.ClearProviders());
+
+
         }
 
         private MockManagedResourceController<TEntity>? GetMockController<TEntity>()

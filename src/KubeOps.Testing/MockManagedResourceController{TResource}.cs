@@ -17,7 +17,7 @@ namespace KubeOps.Testing
         where TEntity : class, IKubernetesObject<V1ObjectMeta>
     {
         public MockManagedResourceController(
-            ILogger<ManagedResourceController<TEntity>> logger,
+            ILogger<MockManagedResourceController<TEntity>> logger,
             IKubernetesClient client,
             ResourceWatcher<TEntity> watcher,
             ResourceCache<TEntity> cache,
@@ -34,9 +34,9 @@ namespace KubeOps.Testing
         public override Task StopAsync() => Task.CompletedTask;
 
         public Task EnqueueEvent(ResourceEventType type, TEntity resource, int attempt = 0, TimeSpan? delay = null) =>
-            HandleResourceEvent(new ResourceEvent(type, resource, attempt, delay));
+            HandleResourceEvent(new ResourceEvent<TEntity>(type, resource, attempt, delay));
 
         public Task EnqueueFinalization(TEntity resource) =>
-            HandleResourceFinalization(new ResourceEvent(ResourceEventType.Finalizing, resource));
+            HandleResourceFinalization(new ResourceEvent<TEntity>(ResourceEventType.Finalizing, resource));
     }
 }

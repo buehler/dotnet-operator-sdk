@@ -47,13 +47,13 @@ internal class ResourceWatcher<TEntity> : IDisposable
 
     public IObservable<WatchEvent> WatchEvents => _watchEvents;
 
-    public Task Start()
+    public Task StartAsync()
     {
         _logger.LogDebug(@"Resource Watcher startup for type ""{type}"".", typeof(TEntity));
         return WatchResource();
     }
 
-    public Task Stop()
+    public Task StopAsync()
     {
         _logger.LogTrace(@"Resource Watcher shutdown for type ""{type}"".", typeof(TEntity));
         Disposing(true);

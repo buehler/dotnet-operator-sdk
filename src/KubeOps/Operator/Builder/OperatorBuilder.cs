@@ -204,6 +204,7 @@ internal class OperatorBuilder : IOperatorBuilder
 
         Services.AddTransient(typeof(ResourceCache<>));
         Services.AddTransient(typeof(ResourceWatcher<>));
+        Services.AddTransient(typeof(IEventQueue<>), typeof(EventQueue<>));
 
         // Support all the metrics
         Services.AddSingleton(typeof(ResourceWatcherMetrics<>));
