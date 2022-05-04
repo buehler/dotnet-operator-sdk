@@ -199,12 +199,12 @@ internal class OperatorBuilder : IOperatorBuilder
 
         Services.AddTransient<EntitySerializer>();
 
-        Services.AddTransient<IKubernetesClient, KubernetesClient>();
-        Services.AddTransient<IEventManager, EventManager>();
+        Services.AddScoped<IKubernetesClient, KubernetesClient>();
+        Services.AddScoped<IEventManager, EventManager>();
 
-        Services.AddTransient(typeof(ResourceCache<>));
-        Services.AddTransient(typeof(ResourceWatcher<>));
-        Services.AddTransient(typeof(IEventQueue<>), typeof(EventQueue<>));
+        Services.AddScoped(typeof(ResourceCache<>));
+        Services.AddScoped(typeof(ResourceWatcher<>));
+        Services.AddScoped(typeof(IEventQueue<>), typeof(EventQueue<>));
 
         // Support all the metrics
         Services.AddSingleton(typeof(ResourceWatcherMetrics<>));
