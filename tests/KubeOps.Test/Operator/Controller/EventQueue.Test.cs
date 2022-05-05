@@ -115,11 +115,8 @@ public class EventQueueTest
 
         await _eventQueue.StartAsync(_ => { });
 
-        // This relies on the events being close enough that the first won't have
-        // processed by the time the third enters the queue... if that fails, we
-        // may have to add a delay onto the first couple.
         _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, EntityWithUid(1)));
-        _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, EntityWithUid(2)));
+        _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, EntityWithUid(2), Delay: TimeSpan.FromMilliseconds(50)));
         _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Deleted, EntityWithUid(2)));
         await Task.Delay(100);
 
