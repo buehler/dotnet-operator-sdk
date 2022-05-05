@@ -10,7 +10,7 @@ using KubeOps.Operator.Entities.Extensions;
 
 namespace KubeOps.Operator.Caching;
 
-internal class ResourceCache<TEntity>
+internal class ResourceCache<TEntity> : IResourceCache<TEntity>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private const string Finalizers = "Metadata.Finalizers";

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using DotnetKubernetesClient;
-using k8s;
-using k8s.Models;
 using KubeOps.Operator.Controller;
-using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;

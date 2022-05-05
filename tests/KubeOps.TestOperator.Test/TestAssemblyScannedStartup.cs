@@ -14,8 +14,8 @@ public class TestAssemblyScannedStartup
             .AddKubernetesOperator(s => { s.Name = "test-operator"; })
             .AddResourceAssembly(typeof(Startup).Assembly);
 
-        services.AddSingleton(new Mock<IManager>());
-        services.AddSingleton(typeof(IManager), provider => provider.GetRequiredService<Mock<IManager>>().Object);
+        services.AddSingleton<Mock<IManager>>();
+        services.AddSingleton(provider => provider.GetRequiredService<Mock<IManager>>().Object);
     }
 
     public void Configure(IApplicationBuilder app)

@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Kubernetes;
 
-internal class ResourceWatcher<TEntity> : IDisposable
+internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private readonly Subject<WatchEvent> _watchEvents = new();

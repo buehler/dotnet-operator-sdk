@@ -17,13 +17,13 @@ internal class EventQueue<TEntity> : IEventQueue<TEntity>
     private readonly IKubernetesClient _kubernetesClient;
     private readonly ILogger<EventQueue<TEntity>> _logger;
     private readonly OperatorSettings _operatorSettings;
-    private readonly ResourceCache<TEntity> _resourceCache;
-    private readonly ResourceWatcher<TEntity> _watcher;
+    private readonly IResourceCache<TEntity> _resourceCache;
+    private readonly IResourceWatcher<TEntity> _watcher;
 
     private readonly Subject<ResourceEvent<TEntity>> _localEvents;
     private Action<ResourceEvent<TEntity>> _onWatcherEvent;
 
-    public EventQueue(IKubernetesClient kubernetesClient, ILogger<EventQueue<TEntity>> logger, OperatorSettings operatorSettings, ResourceCache<TEntity> resourceCache, ResourceWatcher<TEntity> watcher, IObservable<ResourceEvent<TEntity>> events)
+    public EventQueue(IKubernetesClient kubernetesClient, ILogger<EventQueue<TEntity>> logger, OperatorSettings operatorSettings, IResourceCache<TEntity> resourceCache, IResourceWatcher<TEntity> watcher)
     {
         _kubernetesClient = kubernetesClient;
         _logger = logger;

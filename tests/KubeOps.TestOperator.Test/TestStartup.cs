@@ -25,8 +25,8 @@ public class TestStartup
             .AddValidationWebhook<TestValidator>()
             .AddMutationWebhook<TestMutator>();
 
-        services.AddSingleton(new Mock<IManager>());
-        services.AddSingleton(typeof(IManager), provider => provider.GetRequiredService<Mock<IManager>>().Object);
+        services.AddSingleton<Mock<IManager>>();
+        services.AddSingleton(provider => provider.GetRequiredService<Mock<IManager>>().Object);
     }
 
     public void Configure(IApplicationBuilder app)
