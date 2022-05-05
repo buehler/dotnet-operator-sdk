@@ -160,10 +160,10 @@ public class EventQueueTest
 
         _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, entity, Delay: TimeSpan.FromMilliseconds(500)));
 
-        await Task.Delay(100);
+        await Task.Delay(10);
         numberEventsProcessed.Should().Be(0);
 
-        await Task.Delay(500);
+        await Task.Delay(600);
         numberEventsProcessed.Should().Be(1);
     }
 
