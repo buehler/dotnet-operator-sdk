@@ -18,29 +18,20 @@ public class TestControllerTest : IClassFixture<KubernetesOperatorFactory<TestSt
 {
     private readonly KubernetesOperatorFactory<TestStartup> _factory;
 
+    private readonly IManagedResourceController _controller;
+    private readonly Mock<IManager> _managerMock;
+
     public TestControllerTest(KubernetesOperatorFactory<TestStartup> factory)
     {
         _factory = factory.WithSolutionRelativeContentRoot("tests/KubeOps.TestOperator");
-    }
 
-    private IAsyncDisposable RunScoped<TEntity>(
-        out IManagedResourceController controller,
-        out IEventQueue<TEntity> eventQueue,
-        out Mock<IManager> mockManager)
-        where TEntity : class, IKubernetesObject<V1ObjectMeta>
-    {
-        var scope = _factory.Services.CreateAsyncScope();
-
-        controller = scope.ServiceProvider
+        _controller = _factory.Services
             .GetRequiredService<IControllerInstanceBuilder>()
-            .BuildControllers<TEntity>()
+            .BuildControllers<V1TestEntity>()
             .First();
-        eventQueue = scope.ServiceProvider
-            .GetRequiredService<IEventQueue<TEntity>>();
 
-        mockManager = _factory.Services.GetRequiredService<Mock<IManager>>();
-
-        return scope;
+        _managerMock = _factory.Services.GetRequiredService<Mock<IManager>>();
+        _managerMock.Reset();
     }
 
     [Fact]
@@ -48,18 +39,14 @@ public class TestControllerTest : IClassFixture<KubernetesOperatorFactory<TestSt
     {
         _factory.Run();
 
-        await using var scope = RunScoped<V1TestEntity>(out var controller, out var eventQueue, out var mockManager);
+        _managerMock.Setup(o => o.Reconciled(It.IsAny<V1TestEntity>()));
+        _managerMock.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Never);
 
-        mockManager.Reset();
-        mockManager.Setup(o => o.Reconciled(It.IsAny<V1TestEntity>()));
-        mockManager.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Never);
+        await _controller.StartAsync();
+        await _factory.EnqueueEvent(ResourceEventType.Reconcile, new V1TestEntity());
+        await _controller.StopAsync();
 
-        var testEvent = new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, new V1TestEntity());
-
-        await controller.StartAsync();
-        eventQueue.EnqueueLocal(testEvent);
-
-        mockManager.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Once);
+        _managerMock.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Once);
     }
 
     [Fact]
@@ -67,18 +54,14 @@ public class TestControllerTest : IClassFixture<KubernetesOperatorFactory<TestSt
     {
         _factory.Run();
 
-        await using var scope = RunScoped<V1TestEntity>(out var controller, out var eventQueue, out var mockManager);
+        _managerMock.Setup(o => o.Reconciled(It.IsAny<V1TestEntity>()));
+        _managerMock.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Never);
 
-        mockManager.Reset();
-        mockManager.Setup(o => o.Reconciled(It.IsAny<V1TestEntity>()));
-        mockManager.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Never);
+        await _controller.StartAsync();
+        await _factory.EnqueueEvent(ResourceEventType.Reconcile, new V1TestEntity());
+        await _controller.StopAsync();
 
-        var testEvent = new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, new V1TestEntity());
-
-        await controller.StartAsync();
-        eventQueue.EnqueueLocal(testEvent);
-
-        mockManager.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Once);
+        _managerMock.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Once);
     }
 
     [Fact]
@@ -86,18 +69,14 @@ public class TestControllerTest : IClassFixture<KubernetesOperatorFactory<TestSt
     {
         _factory.Run();
 
-        await using var scope = RunScoped<V1TestEntity>(out var controller, out var eventQueue, out var mockManager);
+        _managerMock.Setup(o => o.Reconciled(It.IsAny<V1TestEntity>()));
+        _managerMock.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Never);
 
-        mockManager.Reset();
-        mockManager.Setup(o => o.Reconciled(It.IsAny<V1TestEntity>()));
-        mockManager.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Never);
+        await _controller.StartAsync();
+        await _factory.EnqueueEvent(ResourceEventType.Reconcile, new V1TestEntity());
+        await _controller.StopAsync();
 
-        var testEvent = new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, new V1TestEntity());
-
-        await controller.StartAsync();
-        eventQueue.EnqueueLocal(testEvent);
-
-        mockManager.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Once);
+        _managerMock.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Once);
     }
 
     [Fact]
@@ -105,18 +84,14 @@ public class TestControllerTest : IClassFixture<KubernetesOperatorFactory<TestSt
     {
         _factory.Run();
 
-        await using var scope = RunScoped<V1TestEntity>(out var controller, out var eventQueue, out var mockManager);
+        _managerMock.Setup(o => o.StatusModified(It.IsAny<V1TestEntity>()));
+        _managerMock.Verify(o => o.StatusModified(It.IsAny<V1TestEntity>()), Times.Never);
 
-        mockManager.Reset();
-        mockManager.Setup(o => o.StatusModified(It.IsAny<V1TestEntity>()));
-        mockManager.Verify(o => o.StatusModified(It.IsAny<V1TestEntity>()), Times.Never);
+        await _controller.StartAsync();
+        await _factory.EnqueueEvent(ResourceEventType.StatusUpdated, new V1TestEntity());
+        await _controller.StopAsync();
 
-        var testEvent = new ResourceEvent<V1TestEntity>(ResourceEventType.StatusUpdated, new V1TestEntity());
-
-        await controller.StartAsync();
-        eventQueue.EnqueueLocal(testEvent);
-
-        mockManager.Verify(o => o.StatusModified(It.IsAny<V1TestEntity>()), Times.Once);
+        _managerMock.Verify(o => o.StatusModified(It.IsAny<V1TestEntity>()), Times.Once);
     }
 
     [Fact]
@@ -124,17 +99,13 @@ public class TestControllerTest : IClassFixture<KubernetesOperatorFactory<TestSt
     {
         _factory.Run();
 
-        await using var scope = RunScoped<V1TestEntity>(out var controller, out var eventQueue, out var mockManager);
+        _managerMock.Setup(o => o.Deleted(It.IsAny<V1TestEntity>()));
+        _managerMock.Verify(o => o.Deleted(It.IsAny<V1TestEntity>()), Times.Never);
 
-        mockManager.Reset();
-        mockManager.Setup(o => o.Deleted(It.IsAny<V1TestEntity>()));
-        mockManager.Verify(o => o.Deleted(It.IsAny<V1TestEntity>()), Times.Never);
+        await _controller.StartAsync();
+        await _factory.EnqueueEvent(ResourceEventType.Deleted, new V1TestEntity());
+        await _controller.StopAsync();
 
-        var testEvent = new ResourceEvent<V1TestEntity>(ResourceEventType.Deleted, new V1TestEntity());
-
-        await controller.StartAsync();
-        eventQueue.EnqueueLocal(testEvent);
-
-        mockManager.Verify(o => o.Deleted(It.IsAny<V1TestEntity>()), Times.Once);
+        _managerMock.Verify(o => o.Deleted(It.IsAny<V1TestEntity>()), Times.Once);
     }
 }

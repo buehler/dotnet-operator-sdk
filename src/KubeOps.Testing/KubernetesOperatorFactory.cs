@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using DotnetKubernetesClient;
+using k8s;
+using k8s.Models;
 using KubeOps.Operator.Controller;
+using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -50,6 +54,26 @@ namespace KubeOps.Testing
             var server = Server;
         }
 
+        public Task EnqueueEvent<TEntity>(ResourceEventType type, TEntity resource, int attempt = 0, TimeSpan? delay = null)
+            where TEntity : class, IKubernetesObject<V1ObjectMeta>
+        {
+            var queue = Services.GetService<IEventQueue<TEntity>>();
+
+            queue?.EnqueueLocal(new ResourceEvent<TEntity>(type, resource, attempt, delay));
+
+            return Task.CompletedTask;
+        }
+
+        public Task EnqueueFinalization<TEntity>(TEntity resource)
+            where TEntity : class, IKubernetesObject<V1ObjectMeta>
+        {
+            var queue = Services.GetService<IEventQueue<TEntity>>();
+
+            queue?.EnqueueLocal(new ResourceEvent<TEntity>(ResourceEventType.Finalizing, resource));
+
+            return Task.CompletedTask;
+        }
+
         /// <summary>
         /// Create the host builder. Needed for the factory.
         /// </summary>
@@ -80,7 +104,7 @@ namespace KubeOps.Testing
                     services.AddSingleton<IKubernetesClient, MockKubernetesClient>();
 
                     services.RemoveAll(typeof(IEventQueue<>));
-                    services.AddScoped(typeof(IEventQueue<>), typeof(MockEventQueue<>));
+                    services.AddSingleton(typeof(IEventQueue<>), typeof(MockEventQueue<>));
                 });
             if (_solutionRelativeContentRoot != null)
             {

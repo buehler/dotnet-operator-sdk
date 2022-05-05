@@ -21,29 +21,20 @@ public class TestFinalizerTest : IClassFixture<KubernetesOperatorFactory<TestSta
 {
     private readonly KubernetesOperatorFactory<TestStartup> _factory;
 
+    private readonly IManagedResourceController _controller;
+    private readonly Mock<IManager> _managerMock;
+
     public TestFinalizerTest(KubernetesOperatorFactory<TestStartup> factory)
     {
         _factory = factory.WithSolutionRelativeContentRoot("tests/KubeOps.TestOperator");
-    }
 
-    private IAsyncDisposable RunScoped<TEntity>(
-        out IManagedResourceController controller,
-        out IEventQueue<TEntity> eventQueue,
-        out Mock<IManager> mockManager)
-        where TEntity : class, IKubernetesObject<V1ObjectMeta>
-    {
-        var scope = _factory.Services.CreateAsyncScope();
-
-        controller = scope.ServiceProvider
+        _controller = _factory.Services
             .GetRequiredService<IControllerInstanceBuilder>()
-            .BuildControllers<TEntity>()
+            .BuildControllers<V1TestEntity>()
             .First();
-        eventQueue = scope.ServiceProvider
-            .GetRequiredService<IEventQueue<TEntity>>();
 
-        mockManager = _factory.Services.GetRequiredService<Mock<IManager>>();
-
-        return scope;
+        _managerMock = _factory.Services.GetRequiredService<Mock<IManager>>();
+        _managerMock.Reset();
     }
 
     [Fact]
@@ -51,11 +42,8 @@ public class TestFinalizerTest : IClassFixture<KubernetesOperatorFactory<TestSta
     {
         _factory.Run();
 
-        await using var scope = RunScoped<V1TestEntity>(out var controller, out var eventQueue, out var mockManager);
-
-        mockManager.Reset();
-        mockManager.Setup(o => o.Finalized(It.IsAny<V1TestEntity>()));
-        mockManager.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Never);
+        _managerMock.Setup(o => o.Finalized(It.IsAny<V1TestEntity>()));
+        _managerMock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Never);
 
         var testResource = new V1TestEntity
         {
@@ -63,16 +51,16 @@ public class TestFinalizerTest : IClassFixture<KubernetesOperatorFactory<TestSta
             {
                 Finalizers = new List<string>
                 {
-                    (new TestEntityFinalizer(mockManager.Object) as IResourceFinalizer<V1TestEntity>)
+                    (new TestEntityFinalizer(_managerMock.Object) as IResourceFinalizer<V1TestEntity>)
                     .Identifier,
                 },
             },
         };
-        var testEvent = new ResourceEvent<V1TestEntity>(ResourceEventType.Finalizing, testResource);
 
-        await controller.StartAsync();
-        eventQueue.EnqueueLocal(testEvent);
+        await _controller.StartAsync();
+        await _factory.EnqueueFinalization(testResource);
+        await _controller.StopAsync();
 
-        mockManager.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Once);
+        _managerMock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Once);
     }
 }
