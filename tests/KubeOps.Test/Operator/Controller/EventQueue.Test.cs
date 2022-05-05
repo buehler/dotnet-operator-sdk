@@ -144,7 +144,7 @@ public class EventQueueTest
     }
 
     [Fact]
-    public async Task Delayed_Events_Are_Handled()
+    public async Task Delayed_Events_Are_Handled_After_Delay()
     {
         var entity = EntityWithUid(1);
         _kubernetesClient.GetResult = entity;
@@ -158,12 +158,12 @@ public class EventQueueTest
 
         await _eventQueue.StartAsync(_ => { });
 
-        _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, entity, Delay: TimeSpan.FromMilliseconds(500)));
+        _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, entity, Delay: TimeSpan.FromSeconds(4)));
 
-        await Task.Delay(10);
+        await Task.Delay(3500);
         numberEventsProcessed.Should().Be(0);
 
-        await Task.Delay(600);
+        await Task.Delay(4500);
         numberEventsProcessed.Should().Be(1);
     }
 
