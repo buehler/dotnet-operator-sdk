@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using k8s;
 using KubeOps.Operator.Entities.Extensions;
@@ -113,7 +114,12 @@ public interface IAdmissionWebhook<TEntity, TResult>
                     return;
                 }
 
-                var review = KubernetesJson.Deserialize<AdmissionReview<TEntity>>(context.Request.Body);
+                // This must be async in modern ASP.NET Core.
+                await using var buffer = new MemoryStream();
+                await context.Request.Body.CopyToAsync(buffer);
+                buffer.Position = 0;
+
+                var review = KubernetesJson.Deserialize<AdmissionReview<TEntity>>(buffer);
                 if (review.Request == null)
                 {
                     logger.LogError("The admission request contained no request object.");
