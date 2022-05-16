@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using DotnetKubernetesClient.Entities;
 using k8s;
 using k8s.Models;
@@ -11,7 +12,6 @@ using KubeOps.Operator.Entities.Annotations;
 using KubeOps.Operator.Errors;
 using KubeOps.Operator.Util;
 using Namotion.Reflection;
-using Newtonsoft.Json;
 
 namespace KubeOps.Operator.Entities.Extensions;
 
@@ -362,7 +362,7 @@ internal static class EntityToCrdExtensions
                         MapProperty(prop, additionalColumns, $"{jsonPath}.{GetPropertyName(prop)}"))));
         props.Required = type.GetProperties()
             .Where(prop => prop.GetCustomAttribute<RequiredAttribute>() != null)
-            .Select(prop => GetPropertyName(prop))
+            .Select(GetPropertyName)
             .ToList();
         if (props.Required.Count == 0)
         {
@@ -389,8 +389,8 @@ internal static class EntityToCrdExtensions
 
     private static string GetPropertyName(PropertyInfo property)
     {
-        var attribute = property.GetCustomAttribute<JsonPropertyAttribute>();
-        var propertyName = attribute?.PropertyName ?? property.Name;
+        var attribute = property.GetCustomAttribute<JsonPropertyNameAttribute>();
+        var propertyName = attribute?.Name ?? property.Name;
         return propertyName.ToCamelCase();
     }
 

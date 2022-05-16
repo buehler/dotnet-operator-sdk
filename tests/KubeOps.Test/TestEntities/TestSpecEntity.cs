@@ -3,11 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.Json.Serialization;
 using DotnetKubernetesClient.Entities;
 using k8s.Models;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
-using Newtonsoft.Json;
 
 namespace KubeOps.Test.TestEntities;
 
@@ -136,7 +136,7 @@ public class TestSpecEntitySpec
 
     public IList<V1Pod> Pods { get; set; } = Array.Empty<V1Pod>();
 
-    [JsonProperty(PropertyName = "NameFromAttribute")]
+    [JsonPropertyName("NameFromAttribute")]
     public string PropertyWithJsonAttribute { get; set; } = string.Empty;
 
     public enum TestSpecEnum

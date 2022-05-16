@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using Newtonsoft.Json;
 
 namespace KubeOps.Operator.Webhooks;
 
@@ -58,8 +57,7 @@ public interface IValidationWebhook<TEntity> : IAdmissionWebhook<TEntity, Valida
 
     AdmissionResponse IAdmissionWebhook<TEntity, ValidationResult>.TransformResult(
         ValidationResult result,
-        AdmissionRequest<TEntity> request,
-        JsonSerializerSettings jsonSettings)
+        AdmissionRequest<TEntity> request)
         => new()
         {
             Allowed = result.Valid,

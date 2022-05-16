@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using DotnetKubernetesClient.Entities;
 using FluentAssertions;
 using k8s.Models;
@@ -8,7 +9,6 @@ using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Errors;
 using KubeOps.Operator.Util;
 using KubeOps.Test.TestEntities;
-using Newtonsoft.Json;
 using Xunit;
 
 namespace KubeOps.Test.Operator.Entities;
@@ -412,8 +412,8 @@ public class CrdGenerationTest
         var propertyNameFromType = nameof(TestSpecEntitySpec.PropertyWithJsonAttribute);
         var propertyNameFromAttribute = typeof(TestSpecEntitySpec)
             .GetProperty(propertyNameFromType)
-            ?.GetCustomAttribute<JsonPropertyAttribute>()
-            ?.PropertyName;
+            ?.GetCustomAttribute<JsonPropertyNameAttribute>()
+            ?.Name;
         specProperties.Properties.Should().ContainKey(propertyNameFromAttribute?.ToCamelCase());
         specProperties.Properties.Should().NotContainKey(propertyNameFromType.ToCamelCase());
     }

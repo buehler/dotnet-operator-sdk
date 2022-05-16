@@ -3,11 +3,11 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
+using k8s.Autorest;
 using k8s.Models;
 using KubeOps.Operator;
 using KubeOps.Operator.Leadership;
 using Microsoft.Extensions.Logging;
-using Microsoft.Rest;
 using Moq;
 using Xunit;
 

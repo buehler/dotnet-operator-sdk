@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
-using JsonDiffPatch;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace KubeOps.Operator.Webhooks;
 
@@ -60,10 +57,7 @@ public interface IMutationWebhook<TEntity> : IAdmissionWebhook<TEntity, Mutation
     MutationResult IAdmissionWebhook<TEntity, MutationResult>.Delete(TEntity oldEntity, bool dryRun)
         => AdmissionResult.NotImplemented<MutationResult>();
 
-    AdmissionResponse IAdmissionWebhook<TEntity, MutationResult>.TransformResult(
-        MutationResult result,
-        AdmissionRequest<TEntity> request,
-        JsonSerializerSettings jsonSettings)
+    AdmissionResponse IAdmissionWebhook<TEntity, MutationResult>.TransformResult(MutationResult result, AdmissionRequest<TEntity> request)
     {
         var response = new AdmissionResponse
         {
@@ -76,14 +70,12 @@ public interface IMutationWebhook<TEntity> : IAdmissionWebhook<TEntity, Mutation
 
         if (result.ModifiedObject != null)
         {
-            var serializer = JsonSerializer.Create(jsonSettings);
-            response.PatchType = AdmissionResponse.JsonPatch;
-            var @object = JToken.FromObject(
-                request.Operation == "DELETE"
-                    ? request.OldObject
-                    : request.Object,
-                serializer);
-            var patch = new JsonDiffer().Diff(@object, JToken.FromObject(result.ModifiedObject, serializer), false);
+            var from = request.Operation == "DELETE"
+                ? request.OldObject
+                : request.Object;
+            var to = result.ModifiedObject;
+
+            var patch = KubernetesJsonDiffer.DiffObjects(from, to);
             response.Patch = Convert.ToBase64String(Encoding.UTF8.GetBytes(patch.ToString()));
         }
 
