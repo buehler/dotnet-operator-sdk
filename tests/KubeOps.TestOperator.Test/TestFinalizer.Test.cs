@@ -1,7 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using k8s;
 using k8s.Models;
+using KubeOps.Operator.Controller;
 using KubeOps.Operator.Finalizer;
+using KubeOps.Operator.Kubernetes;
 using KubeOps.Testing;
 using KubeOps.TestOperator.Entities;
 using KubeOps.TestOperator.Finalizer;
@@ -16,31 +21,46 @@ public class TestFinalizerTest : IClassFixture<KubernetesOperatorFactory<TestSta
 {
     private readonly KubernetesOperatorFactory<TestStartup> _factory;
 
+    private readonly IManagedResourceController _controller;
+    private readonly Mock<IManager> _managerMock;
+
     public TestFinalizerTest(KubernetesOperatorFactory<TestStartup> factory)
     {
         _factory = factory.WithSolutionRelativeContentRoot("tests/KubeOps.TestOperator");
+
+        _controller = _factory.Services
+            .GetRequiredService<IControllerInstanceBuilder>()
+            .BuildControllers<V1TestEntity>()
+            .First();
+
+        _managerMock = _factory.Services.GetRequiredService<Mock<IManager>>();
+        _managerMock.Reset();
     }
 
     [Fact]
     public async Task Test_If_Manager_Finalizer_Is_Called()
     {
         _factory.Run();
-        var mock = _factory.Services.GetRequiredService<Mock<IManager>>();
-        mock.Reset();
-        mock.Setup(o => o.Finalized(It.IsAny<V1TestEntity>()));
-        mock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Never);
-        await _factory.EnqueueFinalization(
-            new V1TestEntity
+
+        _managerMock.Setup(o => o.Finalized(It.IsAny<V1TestEntity>()));
+        _managerMock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Never);
+
+        var testResource = new V1TestEntity
+        {
+            Metadata = new V1ObjectMeta
             {
-                Metadata = new V1ObjectMeta
+                Finalizers = new List<string>
                 {
-                    Finalizers = new List<string>
-                    {
-                        (new TestEntityFinalizer(mock.Object) as IResourceFinalizer<V1TestEntity>)
-                        .Identifier
-                    },
+                    (new TestEntityFinalizer(_managerMock.Object) as IResourceFinalizer<V1TestEntity>)
+                    .Identifier,
                 },
-            });
-        mock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Once);
+            },
+        };
+
+        await _controller.StartAsync();
+        await _factory.EnqueueFinalization(testResource);
+        await _controller.StopAsync();
+
+        _managerMock.Verify(o => o.Finalized(It.IsAny<V1TestEntity>()), Times.Once);
     }
 }

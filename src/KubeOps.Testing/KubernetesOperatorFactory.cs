@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
-using KubeOps.Operator.Builder;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
@@ -55,20 +54,24 @@ namespace KubeOps.Testing
             var server = Server;
         }
 
-        public Task EnqueueEvent<TEntity>(ResourceEventType type, TEntity resource)
+        public Task EnqueueEvent<TEntity>(ResourceEventType type, TEntity resource, int attempt = 0, TimeSpan? delay = null)
             where TEntity : class, IKubernetesObject<V1ObjectMeta>
         {
-            var controller = GetMockController<TEntity>();
+            var queue = Services.GetService<IEventQueue<TEntity>>();
 
-            return controller?.EnqueueEvent(type, resource) ?? Task.CompletedTask;
+            queue?.EnqueueLocal(new ResourceEvent<TEntity>(type, resource, attempt, delay));
+
+            return Task.CompletedTask;
         }
 
         public Task EnqueueFinalization<TEntity>(TEntity resource)
             where TEntity : class, IKubernetesObject<V1ObjectMeta>
         {
-            var controller = GetMockController<TEntity>();
+            var queue = Services.GetService<IEventQueue<TEntity>>();
 
-            return controller?.EnqueueFinalization(resource) ?? Task.CompletedTask;
+            queue?.EnqueueLocal(new ResourceEvent<TEntity>(ResourceEventType.Finalizing, resource));
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -90,11 +93,6 @@ namespace KubeOps.Testing
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             base.ConfigureWebHost(builder);
-            if (_solutionRelativeContentRoot != null)
-            {
-                builder.UseSolutionRelativeContentRoot(_solutionRelativeContentRoot);
-            }
-
             builder.ConfigureTestServices(
                 services =>
                 {
@@ -102,25 +100,18 @@ namespace KubeOps.Testing
                         d => d.ServiceType == typeof(IHostedService) && d.ImplementationType == typeof(LeaderElector));
                     services.Remove(elector);
 
-                    services.RemoveAll(typeof(IKubernetesClient));
+                    services.RemoveAll<IKubernetesClient>();
                     services.AddSingleton<IKubernetesClient, MockKubernetesClient>();
 
-                    services.RemoveAll<Func<IComponentRegistrar.ControllerRegistration, IManagedResourceController>>();
-                    services.AddSingleton(
-                        s => (Func<IComponentRegistrar.ControllerRegistration, IManagedResourceController>)(r =>
-                            (IManagedResourceController)ActivatorUtilities.CreateInstance(
-                                s,
-                                typeof(MockManagedResourceController<>).MakeGenericType(r.EntityType),
-                                r)));
+                    services.RemoveAll(typeof(IEventQueue<>));
+                    services.AddSingleton(typeof(IEventQueue<>), typeof(MockEventQueue<>));
                 });
+            if (_solutionRelativeContentRoot != null)
+            {
+                builder.UseSolutionRelativeContentRoot(_solutionRelativeContentRoot);
+            }
+
             builder.ConfigureLogging(logging => logging.ClearProviders());
         }
-
-        private MockManagedResourceController<TEntity>? GetMockController<TEntity>()
-            where TEntity : class, IKubernetesObject<V1ObjectMeta> =>
-            Services.GetRequiredService<IControllerInstanceBuilder>()
-                .BuildControllers<TEntity>()
-                .OfType<MockManagedResourceController<TEntity>>()
-                .FirstOrDefault();
     }
 }
