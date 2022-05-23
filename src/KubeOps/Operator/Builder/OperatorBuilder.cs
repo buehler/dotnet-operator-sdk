@@ -202,8 +202,8 @@ internal class OperatorBuilder : IOperatorBuilder
         Services.AddScoped<IKubernetesClient, KubernetesClient>();
         Services.AddScoped<IEventManager, EventManager>();
 
-        Services.AddScoped(typeof(ResourceCache<>));
-        Services.AddScoped(typeof(ResourceWatcher<>));
+        Services.AddScoped(typeof(IResourceCache<>), typeof(ResourceCache<>));
+        Services.AddScoped(typeof(IResourceWatcher<>), typeof(ResourceWatcher<>));
         Services.AddScoped(typeof(IEventQueue<>), typeof(EventQueue<>));
 
         // Support all the metrics
