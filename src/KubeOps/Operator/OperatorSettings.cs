@@ -95,6 +95,22 @@ public sealed class OperatorSettings
     public bool EnableLeaderElection { get; set; } = true;
 
     /// <summary>
+    /// <para>
+    /// If set to true, controllers will only watch for new events when in a leader state,
+    /// or if leadership is disabled. When false, this check is disabled,
+    /// controllers will always watch for resource changes regardless of leadership state.
+    /// </para>
+    /// <para>
+    /// If this is disabled, you should consider checking leadership state manually,
+    /// to prevent a "split brain" problem.
+    /// </para>
+    /// <para>
+    /// Defaults to true.
+    /// </para>
+    /// </summary>
+    public bool OnlyWatchEventsWhenLeader { get; set; } = true;
+
+    /// <summary>
     /// The interval in seconds in which this particular instance of the operator
     /// will check for leader election.
     /// </summary>
