@@ -199,7 +199,7 @@ internal class OperatorBuilder : IOperatorBuilder
 
         Services.AddTransient<EntitySerializer>();
 
-        Services.AddScoped<IKubernetesClient, KubernetesClient>();
+        Services.AddSingleton<IKubernetesClient, KubernetesClient>();
         Services.AddScoped<IEventManager, EventManager>();
 
         Services.AddScoped(typeof(IResourceCache<>), typeof(ResourceCache<>));
