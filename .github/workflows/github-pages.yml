@@ -16,7 +16,7 @@ jobs:
       - name: Setup MS Build
         uses: microsoft/setup-msbuild@v1.0.3
       - name: Install DocFX
-        uses: crazy-max/ghaction-chocolatey@v1
+        uses: crazy-max/ghaction-chocolatey@v2
         with:
           args: install docfx -y
       - name: Build Solution
