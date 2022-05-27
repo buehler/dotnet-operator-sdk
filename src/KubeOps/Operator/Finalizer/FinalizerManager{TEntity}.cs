@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
@@ -102,7 +103,7 @@ internal class FinalizerManager<TEntity> : IFinalizerManager<TEntity>
             @"Finalization on entity ""{kind}/{name}"" done. Remaining finalizers: ""{remainingFinalizer}"".",
             entity.Kind,
             entity.Name(),
-            string.Join(',', entity.Finalizers()));
+            string.Join(',', entity.Finalizers() ?? Array.Empty<string>()));
     }
 
     private async Task RegisterFinalizerInternalAsync<TFinalizer>(TEntity entity, TFinalizer finalizer)
