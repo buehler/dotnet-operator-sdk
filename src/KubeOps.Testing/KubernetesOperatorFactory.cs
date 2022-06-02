@@ -100,9 +100,6 @@ namespace KubeOps.Testing
                         d => d.ServiceType == typeof(IHostedService) && d.ImplementationType == typeof(LeaderElector));
                     services.Remove(elector);
 
-                    services.RemoveAll<IKubernetesClient>();
-                    services.AddSingleton<IKubernetesClient, MockKubernetesClient>();
-
                     services.RemoveAll(typeof(IEventQueue<>));
                     services.AddSingleton(typeof(IEventQueue<>), typeof(MockEventQueue<>));
                 });
