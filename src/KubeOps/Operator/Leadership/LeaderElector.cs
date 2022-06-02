@@ -6,11 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using DotnetKubernetesClient.LabelSelectors;
+using k8s.Autorest;
 using k8s.Models;
 using KubeOps.Operator.Entities.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Rest;
 using Timer = System.Timers.Timer;
 
 namespace KubeOps.Operator.Leadership;

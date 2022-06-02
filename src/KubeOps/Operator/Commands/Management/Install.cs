@@ -2,10 +2,10 @@
 using System.Linq;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
+using k8s.Autorest;
 using KubeOps.Operator.Entities;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Rest;
 
 namespace KubeOps.Operator.Commands.Management;
 

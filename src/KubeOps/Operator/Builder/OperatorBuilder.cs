@@ -3,7 +3,6 @@ using System.Reflection;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
-using KellermanSoftware.CompareNetObjects;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
@@ -20,7 +19,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Prometheus;
-using YamlDotNet.Serialization;
 
 namespace KubeOps.Operator.Builder;
 
@@ -188,14 +186,6 @@ internal class OperatorBuilder : IOperatorBuilder
         Services.AddTransient<ValidatingWebhookBuilder>();
         Services.AddTransient<ValidatingWebhookConfigurationBuilder>();
         Services.AddTransient<IWebhookMetadataBuilder, WebhookMetadataBuilder>();
-
-        Services.AddTransient(
-            _ => new SerializerBuilder()
-                .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
-                .WithNamingConvention(new NamingConvention())
-                .WithTypeConverter(new Yaml.ByteArrayStringYamlConverter())
-                .WithTypeConverter(new IntOrStringYamlConverter())
-                .Build());
 
         Services.AddTransient<EntitySerializer>();
 

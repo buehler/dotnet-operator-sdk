@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using k8s;
 using KubeOps.Operator.Entities.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace KubeOps.Operator.Webhooks;
 
@@ -98,10 +98,7 @@ public interface IAdmissionWebhook<TEntity, TResult>
     Task<TResult> DeleteAsync(TEntity oldEntity, bool dryRun)
         => Task.FromResult(Delete(oldEntity, dryRun));
 
-    internal AdmissionResponse TransformResult(
-        TResult result,
-        AdmissionRequest<TEntity> request,
-        JsonSerializerSettings jsonSettings);
+    internal AdmissionResponse TransformResult(TResult result, AdmissionRequest<TEntity> request);
 
     internal void Register(IEndpointRouteBuilder endpoints) =>
         endpoints.MapPost(
@@ -117,16 +114,12 @@ public interface IAdmissionWebhook<TEntity, TResult>
                     return;
                 }
 
-                var jsonSerializerSettings = context
-                    .RequestServices
-                    .GetRequiredService<OperatorSettings>()
-                    .SerializerSettings;
+                // This must be async in modern ASP.NET Core.
+                await using var buffer = new MemoryStream();
+                await context.Request.Body.CopyToAsync(buffer);
+                buffer.Position = 0;
 
-                using var reader = new StreamReader(context.Request.Body);
-                var review = JsonConvert.DeserializeObject<AdmissionReview<TEntity>>(
-                    await reader.ReadToEndAsync(),
-                    jsonSerializerSettings);
-
+                var review = KubernetesJson.Deserialize<AdmissionReview<TEntity>>(buffer);
                 if (review.Request == null)
                 {
                     logger.LogError("The admission request contained no request object.");
@@ -140,8 +133,7 @@ public interface IAdmissionWebhook<TEntity, TResult>
                 {
                     using var scope = context.RequestServices.CreateScope();
                     if (scope.ServiceProvider.GetRequiredService(GetType()) is not
-                        IAdmissionWebhook<TEntity, TResult>
-                        webhook)
+                        IAdmissionWebhook<TEntity, TResult> webhook)
                     {
                         throw new Exception("Object is not a valid IAdmissionWebhook<TEntity, TResult>");
                     }
@@ -168,7 +160,7 @@ public interface IAdmissionWebhook<TEntity, TResult>
                             $@"Operation ""{review.Request.Operation}"" not implemented."),
                     };
 
-                    response = TransformResult(result, review.Request, jsonSerializerSettings);
+                    response = TransformResult(result, review.Request);
                 }
                 catch (Exception ex)
                 {
