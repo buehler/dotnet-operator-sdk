@@ -6,7 +6,22 @@
       "prerelease": "prerelease"
     }
   ],
-  "plugins": ["@semantic-release/commit-analyzer", "@semantic-release/release-notes-generator", "@semantic-release/github"],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/github",
+      {
+        "successComment": false,
+        "failComment": false,
+        "assets": [
+          {
+            "path": "artifacts/*.nupkg"
+          }
+        ]
+      }
+    ]
+  ],
   "prepare": [
     [
       "@semantic-release/exec",
@@ -16,16 +31,6 @@
     ]
   ],
   "publish": [
-    [
-      "@semantic-release/github",
-      {
-        "assets": [
-          {
-            "path": "artifacts/*.nupkg"
-          }
-        ]
-      }
-    ],
     [
       "@semantic-release/exec",
       {
