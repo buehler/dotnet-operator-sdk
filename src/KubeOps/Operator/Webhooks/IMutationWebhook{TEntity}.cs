@@ -85,6 +85,7 @@ public interface IMutationWebhook<TEntity> : IAdmissionWebhook<TEntity, Mutation
                 serializer);
             var patch = new JsonDiffer().Diff(@object, JToken.FromObject(result.ModifiedObject, serializer), false);
             response.Patch = Convert.ToBase64String(Encoding.UTF8.GetBytes(patch.ToString()));
+            response.PatchType = AdmissionResponse.JsonPatch;
         }
 
         return response;
