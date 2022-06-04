@@ -11,16 +11,19 @@ internal class ResourceControllerManager : IHostedService
 {
     private readonly IControllerInstanceBuilder _controllerInstanceBuilder;
     private readonly ILeaderElection _leaderElection;
+    private readonly OperatorSettings _operatorSettings;
     private readonly List<IManagedResourceController> _controllerList;
 
     private IDisposable? _leadershipSubscription;
 
     public ResourceControllerManager(
         IControllerInstanceBuilder controllerInstanceBuilder,
-        ILeaderElection leaderElection)
+        ILeaderElection leaderElection,
+        OperatorSettings operatorSettings)
     {
         _controllerInstanceBuilder = controllerInstanceBuilder;
         _leaderElection = leaderElection;
+        _operatorSettings = operatorSettings;
         _controllerList = new List<IManagedResourceController>();
     }
 
@@ -54,7 +57,8 @@ internal class ResourceControllerManager : IHostedService
 
         foreach (var controller in _controllerList)
         {
-            if (state == LeaderState.Leader)
+            if (state == LeaderState.Leader
+                || !_operatorSettings.OnlyWatchEventsWhenLeader)
             {
                 controller.StartAsync();
             }
