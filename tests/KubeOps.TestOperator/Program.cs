@@ -1,20 +1,10 @@
-﻿using System.Threading.Tasks;
-using KubeOps.Operator;
+﻿using KubeOps.Operator;
+using KubeOps.TestOperator;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
-namespace KubeOps.TestOperator;
+static IHostBuilder CreateHostBuilder(string[] args) =>
+    Host.CreateDefaultBuilder(args)
+        .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
 
-public class Program
-{
-    static IHostBuilder CreateHostBuilder(string[] args)
-    {
-        return Host.CreateDefaultBuilder(args)
-            .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
-    }
-
-    public static async Task Main(string[] args)
-    {
-        await CreateHostBuilder(args).Build().RunOperatorAsync(args);
-    }
-}
+await CreateHostBuilder(args).Build().RunOperatorAsync(args);
