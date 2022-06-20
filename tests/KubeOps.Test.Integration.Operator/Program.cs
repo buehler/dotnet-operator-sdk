@@ -1,9 +1,6 @@
-﻿using System.Threading.Tasks;
-using KubeOps.Operator;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+﻿using KubeOps.Operator;
 
-namespace KubeOps.TestOperator;
+namespace KubeOps.Test.Integration.Operator;
 
 public class Program
 {

@@ -5,6 +5,7 @@ using k8s.Models;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Webhooks;
+using KubeOps.Operator.Webhooks.ConversionWebhook;
 using static KubeOps.Operator.Builder.IComponentRegistrar;
 
 namespace KubeOps.Operator.Builder;
@@ -16,6 +17,7 @@ internal class ComponentRegistrar : IComponentRegistrar
     private readonly HashSet<FinalizerRegistration> _finalizerRegistrations = new();
     private readonly HashSet<ValidatorRegistration> _validatorRegistrations = new();
     private readonly HashSet<MutatorRegistration> _mutatorRegistrations = new();
+    private readonly HashSet<ConversionRegistration> _conversionRegistrations = new();
 
     public ImmutableHashSet<EntityRegistration> EntityRegistrations => _entityRegistrations.ToImmutableHashSet();
 
@@ -29,6 +31,9 @@ internal class ComponentRegistrar : IComponentRegistrar
         _validatorRegistrations.ToImmutableHashSet();
 
     public ImmutableHashSet<MutatorRegistration> MutatorRegistrations => _mutatorRegistrations.ToImmutableHashSet();
+
+    public ImmutableHashSet<ConversionRegistration> ConversionRegistrations =>
+        _conversionRegistrations.ToImmutableHashSet();
 
     public IComponentRegistrar RegisterEntity<TEntity>()
         where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -72,5 +77,15 @@ internal class ComponentRegistrar : IComponentRegistrar
         _mutatorRegistrations.Add(new MutatorRegistration(typeof(TMutator), typeof(TEntity)));
 
         return RegisterEntity<TEntity>();
+    }
+
+    public IComponentRegistrar RegisterConversion<TImplementation, TIn, TOut>()
+        where TImplementation : class, IConversionWebhook<TIn, TOut>
+        where TIn : IKubernetesObject<V1ObjectMeta>
+        where TOut : IKubernetesObject<V1ObjectMeta>
+    {
+        _conversionRegistrations.Add(new ConversionRegistration(typeof(TImplementation), typeof(TIn), typeof(TOut)));
+
+        return RegisterEntity<TIn>().RegisterEntity<TOut>();
     }
 }

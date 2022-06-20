@@ -4,6 +4,7 @@ using DotnetKubernetesClient;
 using k8s.Models;
 using KubeOps.Operator.Builder;
 using KubeOps.Operator.Webhooks;
+using KubeOps.Operator.Webhooks.ConversionWebhook;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,17 +21,20 @@ internal class Register
     private readonly IComponentRegistrar _componentRegistrar;
     private readonly ValidatingWebhookConfigurationBuilder _validatingWebhookConfigurationBuilder;
     private readonly MutatingWebhookConfigurationBuilder _mutatingWebhookConfigurationBuilder;
+    private readonly IConversionWebhookInstaller _conversionWebhookInstaller;
 
     public Register(
         OperatorSettings settings,
         IComponentRegistrar componentRegistrar,
         MutatingWebhookConfigurationBuilder mutatingWebhookConfigurationBuilder,
-        ValidatingWebhookConfigurationBuilder validatingWebhookConfigurationBuilder)
+        ValidatingWebhookConfigurationBuilder validatingWebhookConfigurationBuilder,
+        IConversionWebhookInstaller conversionWebhookInstaller)
     {
         _settings = settings;
         _componentRegistrar = componentRegistrar;
         _mutatingWebhookConfigurationBuilder = mutatingWebhookConfigurationBuilder;
         _validatingWebhookConfigurationBuilder = validatingWebhookConfigurationBuilder;
+        _conversionWebhookInstaller = conversionWebhookInstaller;
     }
 
     [Option(
@@ -101,6 +105,8 @@ internal class Register
         await app.Out.WriteLineAsync($@"Install ""{mutatorConfig.Metadata.Name}"" mutator on cluster.");
         await client.Save(validatorConfig);
         await client.Save(mutatorConfig);
+        await _conversionWebhookInstaller.InstallConversionWebhooks(webhookConfig);
+
 
         return ExitCodes.Success;
     }

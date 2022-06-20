@@ -1,9 +1,11 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Webhooks;
+using KubeOps.Operator.Webhooks.ConversionWebhook;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -167,9 +169,15 @@ public interface IOperatorBuilder
     /// If the target uses HTTPS, should self signed / untrusted certificates be allowed or not.
     /// </param>
     /// <returns>The builder for chaining.</returns>
+    [Obsolete("AddWebhookLocalTunnel is deprecated use OperatorSettings.UseLocalTunnel", true)]
     IOperatorBuilder AddWebhookLocaltunnel(
         string hostname = "localhost",
         short port = 5000,
         bool isHttps = false,
         bool allowUntrustedCertificates = true);
+
+    IOperatorBuilder AddConversionWebhook<TImplementation, TIn, TOut>()
+        where TImplementation : class, IConversionWebhook<TIn, TOut>
+        where TIn : IKubernetesObject<V1ObjectMeta>
+        where TOut : IKubernetesObject<V1ObjectMeta>;
 }

@@ -1,0 +1,8 @@
+﻿apiVersion: integration.testing.dev/v1
+kind: TestEntity
+metadata:
+  name: my-test-entity
+  namespace: default
+spec:
+  spec: stringgg
+  placeHolder: test

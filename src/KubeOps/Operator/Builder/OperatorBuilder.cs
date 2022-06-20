@@ -15,6 +15,7 @@ using KubeOps.Operator.Leadership;
 using KubeOps.Operator.Rbac;
 using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Webhooks;
+using KubeOps.Operator.Webhooks.ConversionWebhook;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -132,6 +133,7 @@ internal class OperatorBuilder : IOperatorBuilder
         return this;
     }
 
+    [Obsolete("AddWebhookLocalTunnel is deprecated use OperatorSettings.UseLocalTunnel", true)]
     public IOperatorBuilder AddWebhookLocaltunnel(
         string hostname = "localhost",
         short port = 5000,
@@ -144,13 +146,25 @@ internal class OperatorBuilder : IOperatorBuilder
                 services.GetRequiredService<OperatorSettings>(),
                 services.GetRequiredService<IKubernetesClient>(),
                 services.GetRequiredService<MutatingWebhookConfigurationBuilder>(),
-                services.GetRequiredService<ValidatingWebhookConfigurationBuilder>())
+                services.GetRequiredService<ValidatingWebhookConfigurationBuilder>(),
+                services.GetRequiredService<ConversionWebhookInstaller>())
             {
                 Host = hostname,
                 Port = port,
                 IsHttps = isHttps,
                 AllowUntrustedCertificates = allowUntrustedCertificates,
             });
+
+        return this;
+    }
+
+    public IOperatorBuilder AddConversionWebhook<TImplementation, TIn, TOut>()
+        where TImplementation : class, IConversionWebhook<TIn, TOut>
+        where TIn : IKubernetesObject<V1ObjectMeta>
+        where TOut : IKubernetesObject<V1ObjectMeta>
+    {
+        Services.TryAddScoped<TImplementation>();
+        _componentRegistrar.RegisterConversion<TImplementation, TIn, TOut>();
 
         return this;
     }
@@ -183,6 +197,8 @@ internal class OperatorBuilder : IOperatorBuilder
 
         Services.AddTransient<IFinalizerInstanceBuilder, FinalizerInstanceBuilder>();
 
+        Services.AddSingleton<IConversionWebhookBuilder, ConversionWebhookBuilder>();
+        Services.AddSingleton<IConversionWebhookInstaller, ConversionWebhookInstaller>();
         Services.AddTransient<MutatingWebhookBuilder>();
         Services.AddTransient<MutatingWebhookConfigurationBuilder>();
         Services.AddTransient<ValidatingWebhookBuilder>();
@@ -202,9 +218,9 @@ internal class OperatorBuilder : IOperatorBuilder
         Services.AddSingleton<IKubernetesClient, KubernetesClient>();
         Services.AddScoped<IEventManager, EventManager>();
 
-        Services.AddScoped(typeof(IResourceCache<>), typeof(ResourceCache<>));
-        Services.AddScoped(typeof(IResourceWatcher<>), typeof(ResourceWatcher<>));
-        Services.AddScoped(typeof(IEventQueue<>), typeof(EventQueue<>));
+        Services.AddTransient(typeof(IResourceCache<>), typeof(ResourceCache<>));
+        Services.AddTransient(typeof(IResourceWatcher<>), typeof(ResourceWatcher<>));
+        Services.AddTransient(typeof(IEventQueue<>), typeof(EventQueue<>));
 
         // Support all the metrics
         Services.AddSingleton(typeof(ResourceWatcherMetrics<>));
@@ -230,15 +246,34 @@ internal class OperatorBuilder : IOperatorBuilder
         // Register event handler
         Services.AddTransient<IEventManager, EventManager>();
 
-        // Register controller manager
-        Services.AddHostedService<ResourceControllerManager>();
-
         // Register finalizer manager
         Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
 
         // Register builders for RBAC rules and CRDs
         Services.TryAddSingleton<ICrdBuilder, CrdBuilder>();
         Services.TryAddSingleton<IRbacBuilder, RbacBuilder>();
+
+        // Register Local Webhook shizle
+        if (settings.LocalTunnelSettings.UseLocalTunnel)
+        {
+            Services.AddHostedService(
+                services => new WebhookLocalTunnel(
+                    services.GetRequiredService<ILogger<WebhookLocalTunnel>>(),
+                    services.GetRequiredService<OperatorSettings>(),
+                    services.GetRequiredService<IKubernetesClient>(),
+                    services.GetRequiredService<MutatingWebhookConfigurationBuilder>(),
+                    services.GetRequiredService<ValidatingWebhookConfigurationBuilder>(),
+                    services.GetRequiredService<IConversionWebhookInstaller>())
+                {
+                    Host = settings.LocalTunnelSettings.Host,
+                    Port = settings.LocalTunnelSettings.Port,
+                    IsHttps = settings.LocalTunnelSettings.IsHttps,
+                    AllowUntrustedCertificates = settings.LocalTunnelSettings.AllowUntrustedCertificates,
+                });
+        }
+
+        // Register controller manager
+        Services.AddHostedService<ResourceControllerManager>();
 
         return this;
     }

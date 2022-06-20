@@ -8,6 +8,7 @@ using k8s.Models;
 using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Webhooks;
+using KubeOps.Operator.Webhooks.ConversionWebhook;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,15 +24,18 @@ internal class Install
     private readonly OperatorSettings _settings;
     private readonly ValidatingWebhookConfigurationBuilder _validatingWebhookConfigurationBuilder;
     private readonly MutatingWebhookConfigurationBuilder _mutatingWebhookConfigurationBuilder;
+    private readonly IConversionWebhookInstaller _conversionWebhookInstaller;
 
     public Install(
         OperatorSettings settings,
         ValidatingWebhookConfigurationBuilder validatingWebhookConfigurationBuilder,
-        MutatingWebhookConfigurationBuilder mutatingWebhookConfigurationBuilder)
+        MutatingWebhookConfigurationBuilder mutatingWebhookConfigurationBuilder,
+        IConversionWebhookInstaller conversionWebhookInstaller)
     {
         _settings = settings;
         _validatingWebhookConfigurationBuilder = validatingWebhookConfigurationBuilder;
         _mutatingWebhookConfigurationBuilder = mutatingWebhookConfigurationBuilder;
+        _conversionWebhookInstaller = conversionWebhookInstaller;
     }
 
     [Option(
@@ -131,6 +135,9 @@ internal class Install
         }
 
         await client.Save(mutatorConfig);
+
+        await app.Out.WriteLineAsync("Creating conversion definitions..");
+        await _conversionWebhookInstaller.InstallConversionWebhooks(webhookConfig);
 
         await app.Out.WriteLineAsync("Installed webhook service and admission configurations.");
 

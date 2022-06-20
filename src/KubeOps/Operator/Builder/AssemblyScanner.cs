@@ -7,6 +7,7 @@ using k8s.Models;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Webhooks;
+using KubeOps.Operator.Webhooks.ConversionWebhook;
 
 namespace KubeOps.Operator.Builder;
 
@@ -49,6 +50,11 @@ internal class AssemblyScanner : IAssemblyScanner
                     {
                         Type = typeof(IMutationWebhook<>),
                         MethodName = nameof(OperatorBuilderExtensions.AddMutationWebhook),
+                    },
+                    new()
+                    {
+                        Type = typeof(IConversionWebhook<,>),
+                        MethodName = nameof(OperatorBuilderExtensions.AddConversionWebhook),
                     },
                 }
                 .Select<(Type Type, string MethodName), (Type Type, MethodInfo RegistrationMethod)>(

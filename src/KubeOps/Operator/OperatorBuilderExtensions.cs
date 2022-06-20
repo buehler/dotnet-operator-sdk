@@ -6,6 +6,7 @@ using KubeOps.Operator.Builder;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Webhooks;
+using KubeOps.Operator.Webhooks.ConversionWebhook;
 
 namespace KubeOps.Operator;
 
@@ -165,4 +166,29 @@ public static class OperatorBuilderExtensions
     internal static IOperatorBuilder AddEntity<TEntity>(this IOperatorBuilder builder)
         where TEntity : IKubernetesObject<V1ObjectMeta>
         => builder.AddEntity<TEntity>();
+
+    public static IOperatorBuilder AddConversionWebhook<TImplementation>(this IOperatorBuilder builder)
+        where TImplementation : class
+    {
+        var entityTypes = typeof(TImplementation).GetInterfaces()
+            .Where(
+                t =>
+                    t.IsConstructedGenericType &&
+                    t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IConversionWebhook<,>)))
+            .Select(i => (i.GenericTypeArguments[0], i.GenericTypeArguments[1]));
+
+        var genericRegistrationMethod = builder
+            .GetType()
+            .GetMethods()
+            .Single(m => m.Name == nameof(AddConversionWebhook) && m.GetGenericArguments().Length == 3);
+
+        foreach (var entityType in entityTypes)
+        {
+            var registrationMethod =
+                genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType.Item1, entityType.Item2);
+            registrationMethod.Invoke(builder, Array.Empty<object>());
+        }
+
+        return builder;
+    }
 }

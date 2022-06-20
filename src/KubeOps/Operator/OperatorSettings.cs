@@ -175,6 +175,8 @@ public sealed class OperatorSettings
     /// </summary>
     public short HttpsPort { get; set; } = 5001;
 
+    public LocalTunnelSettings LocalTunnelSettings { get; private set; } = new();
+
     /// <summary>
     /// The configuration used when comparing resources against each-other for caching
     /// or other similar processing.
@@ -196,4 +198,29 @@ public sealed class OperatorSettings
         Converters = new List<JsonConverter> { new StringEnumConverter(), new Iso8601TimeSpanConverter(), },
         DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
     };
+
+    public void UseLocalTunnel(bool allowUntrustedCertificates = true, bool isHttps = false, string host = "localhost", short port = 5000)
+    {
+        LocalTunnelSettings = new LocalTunnelSettings()
+        {
+            AllowUntrustedCertificates = allowUntrustedCertificates,
+            Host = host,
+            Port = port,
+            IsHttps = isHttps,
+            UseLocalTunnel = true,
+        };
+    }
+}
+
+public class LocalTunnelSettings
+{
+    public bool UseLocalTunnel { get; set; } = false;
+
+    public string Host { get; set; } = "localhost";
+
+    public short Port { get; set; }
+
+    public bool IsHttps { get; set; }
+
+    public bool AllowUntrustedCertificates { get; set; }
 }

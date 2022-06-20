@@ -9,7 +9,7 @@ public class Startup
 {
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddKubernetesOperator(s => s.EnableLeaderElection = false); //.AddWebhookLocaltunnel();
+        services.AddKubernetesOperator(); //.AddWebhookLocaltunnel();
         services.AddTransient<IManager, TestManager.TestManager>();
     }
 

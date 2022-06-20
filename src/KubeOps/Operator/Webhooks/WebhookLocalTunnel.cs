@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using DotnetKubernetesClient;
+using KubeOps.Operator.Webhooks.ConversionWebhook;
 using Localtunnel;
 using Localtunnel.Connections;
 using Localtunnel.Tunnels;
@@ -17,6 +18,7 @@ internal class WebhookLocalTunnel : IHostedService, IDisposable
     private readonly IKubernetesClient _kubernetesClient;
     private readonly MutatingWebhookConfigurationBuilder _mutatorBuilder;
     private readonly ValidatingWebhookConfigurationBuilder _validatorBuilder;
+    private readonly IConversionWebhookInstaller _conversionWebhookInstaller;
     private readonly LocaltunnelClient _localtunnelClient = new();
     private Tunnel? _tunnel;
 
@@ -25,13 +27,15 @@ internal class WebhookLocalTunnel : IHostedService, IDisposable
         OperatorSettings settings,
         IKubernetesClient kubernetesClient,
         MutatingWebhookConfigurationBuilder mutatorBuilder,
-        ValidatingWebhookConfigurationBuilder validatorBuilder)
+        ValidatingWebhookConfigurationBuilder validatorBuilder,
+        IConversionWebhookInstaller conversionWebhookInstaller)
     {
         _logger = logger;
         _settings = settings;
         _kubernetesClient = kubernetesClient;
         _mutatorBuilder = mutatorBuilder;
         _validatorBuilder = validatorBuilder;
+        _conversionWebhookInstaller = conversionWebhookInstaller;
     }
 
     public string Host { get; init; } = string.Empty;
@@ -42,12 +46,12 @@ internal class WebhookLocalTunnel : IHostedService, IDisposable
 
     public bool AllowUntrustedCertificates { get; init; }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogTrace("Try to open localtunnel.");
         try
         {
-            _tunnel ??= await _localtunnelClient.OpenAsync(
+            _tunnel ??= _localtunnelClient.OpenAsync(
                 handle => IsHttps
                     ? new ProxiedSslTunnelConnection(
                         handle,
@@ -61,17 +65,17 @@ internal class WebhookLocalTunnel : IHostedService, IDisposable
                     : new ProxiedHttpTunnelConnection(
                         handle,
                         new() { Host = Host, Port = Port, RequestProcessor = null, }),
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken).GetAwaiter().GetResult();
         }
         catch (Exception e)
         {
             _logger.LogError(e, "The localtunnel could not be started! Proceeding without.");
             _tunnel = null;
-            return;
+            return Task.CompletedTask;
         }
 
         _logger.LogDebug(@"Created localtunnel with id ""{id}""", _tunnel.Information.Id);
-        await _tunnel.StartAsync();
+        _tunnel.StartAsync().GetAwaiter().GetResult();
 
         _logger.LogDebug(
             @"Started localtunnel with id ""{id}"" on ""{url}""",
@@ -88,14 +92,18 @@ internal class WebhookLocalTunnel : IHostedService, IDisposable
         var validatorConfig = _validatorBuilder.BuildWebhookConfiguration(webhookConfig);
         var mutatorConfig = _mutatorBuilder.BuildWebhookConfiguration(webhookConfig);
 
-        await _kubernetesClient.Save(validatorConfig);
-        await _kubernetesClient.Save(mutatorConfig);
+        _kubernetesClient.Save(validatorConfig).GetAwaiter().GetResult();
+        _kubernetesClient.Save(mutatorConfig).GetAwaiter().GetResult();
+
+        // Blocking code used because this needs to finish before application can run
+        _conversionWebhookInstaller.InstallConversionWebhooks(webhookConfig, true).GetAwaiter().GetResult();
 
         _logger.LogInformation(
             @"Started localtunnel with id ""{id}"" on ""{url}"" and created kubernetes webhook configs for ""{name}""",
             _tunnel.Information.Id,
             _tunnel.Information.Url,
             _settings.Name);
+        return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
