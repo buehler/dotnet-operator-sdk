@@ -65,7 +65,8 @@ internal class RbacBuilder : IRbacBuilder
                     new EntityRbacAttribute(
                         typeof(V1Service),
                         typeof(V1ValidatingWebhookConfiguration),
-                        typeof(V1MutatingWebhookConfiguration))
+                        typeof(V1MutatingWebhookConfiguration),
+                        typeof(V1CustomResourceDefinition))
                     {
                         Verbs = RbacVerb.Get | RbacVerb.Create | RbacVerb.Update | RbacVerb.Patch | RbacVerb.Delete,
                     },
