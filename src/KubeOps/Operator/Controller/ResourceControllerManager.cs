@@ -12,7 +12,7 @@ internal class ResourceControllerManager : IHostedService
     private readonly IControllerInstanceBuilder _controllerInstanceBuilder;
     private readonly ILeaderElection _leaderElection;
     private readonly OperatorSettings _operatorSettings;
-    private readonly List<IManagedResourceController> _controllerList;
+    private readonly List<ScopedResourceController> _controllerList;
 
     private IDisposable? _leadershipSubscription;
 
@@ -24,7 +24,7 @@ internal class ResourceControllerManager : IHostedService
         _controllerInstanceBuilder = controllerInstanceBuilder;
         _leaderElection = leaderElection;
         _operatorSettings = operatorSettings;
-        _controllerList = new List<IManagedResourceController>();
+        _controllerList = new List<ScopedResourceController>();
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -38,10 +38,10 @@ internal class ResourceControllerManager : IHostedService
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _leadershipSubscription?.Dispose();
-        foreach (var controller in _controllerList)
+        foreach (var scopedController in _controllerList)
         {
-            controller.StopAsync();
-            controller.Dispose();
+            scopedController.StopAsync();
+            scopedController.Dispose();
         }
 
         _controllerList.Clear();
@@ -55,16 +55,16 @@ internal class ResourceControllerManager : IHostedService
             return;
         }
 
-        foreach (var controller in _controllerList)
+        foreach (var scopedController in _controllerList)
         {
             if (state == LeaderState.Leader
                 || !_operatorSettings.OnlyWatchEventsWhenLeader)
             {
-                controller.StartAsync();
+                scopedController.StartAsync();
             }
             else
             {
-                controller.StopAsync();
+                scopedController.StopAsync();
             }
         }
     }

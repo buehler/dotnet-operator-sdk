@@ -4,30 +4,32 @@ using System.Linq;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Builder;
-using static KubeOps.Operator.Builder.IComponentRegistrar;
 
 namespace KubeOps.Operator.Controller;
 
 internal class ControllerInstanceBuilder : IControllerInstanceBuilder
 {
     private readonly IComponentRegistrar _componentRegistrar;
-    private readonly Func<ControllerRegistration, IManagedResourceController> _controllerFactory;
+    private readonly IControllerInstanceBuilder.ControllerFactory _controllerFactory;
+    private readonly IServiceProvider _serviceProvider;
 
     public ControllerInstanceBuilder(
         IComponentRegistrar componentRegistrar,
-        Func<ControllerRegistration, IManagedResourceController> controllerFactory)
+        IControllerInstanceBuilder.ControllerFactory controllerFactory,
+        IServiceProvider serviceProvider)
     {
         _componentRegistrar = componentRegistrar;
         _controllerFactory = controllerFactory;
+        _serviceProvider = serviceProvider;
     }
 
-    public IEnumerable<IManagedResourceController> BuildControllers()
+    public IEnumerable<ScopedResourceController> BuildControllers()
         => _componentRegistrar.ControllerRegistrations
-            .Select(_controllerFactory);
+            .Select(r => _controllerFactory.Invoke(_serviceProvider, r));
 
-    public IEnumerable<IManagedResourceController> BuildControllers<TEntity>()
+    public IEnumerable<ScopedResourceController> BuildControllers<TEntity>()
         where TEntity : IKubernetesObject<V1ObjectMeta>
         => _componentRegistrar.ControllerRegistrations
             .For<TEntity>()
-            .Select(_controllerFactory);
+            .Select(r => _controllerFactory.Invoke(_serviceProvider, r));
 }
