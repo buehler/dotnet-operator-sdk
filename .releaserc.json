@@ -10,27 +10,11 @@
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
-      "@semantic-release/github",
-      {
-        "successComment": false,
-        "failComment": false,
-        "assets": [
-          {
-            "path": "artifacts/*.nupkg"
-          }
-        ]
-      }
-    ]
-  ],
-  "prepare": [
-    [
       "@semantic-release/exec",
       {
         "prepareCmd": "./build.sh --no-logo --version ${nextRelease.version} --release-notes '${nextRelease.notes}' --target Pack"
       }
-    ]
-  ],
-  "publish": [
+    ],
     [
       "@semantic-release/exec",
       {
@@ -41,6 +25,18 @@
       "@semantic-release/exec",
       {
         "publishCmd": "./build.sh --no-logo --target Publish --source-env NUGET_SOURCE --api-key-env NUGET_API_KEY"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "successComment": false,
+        "failComment": false,
+        "assets": [
+          {
+            "path": "artifacts/*.nupkg"
+          }
+        ]
       }
     ]
   ]
