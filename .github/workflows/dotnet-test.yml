@@ -3,11 +3,11 @@ name: .NET Testing
 on:
   push:
     branches:
-      - '!master'
-      - '!release'
+      - "!master"
+      - "!release"
   pull_request:
     branches:
-      - '**'
+      - "**"
 
 jobs:
   test:
@@ -17,6 +17,6 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v2
         with:
-          dotnet-version: 6.0.101
+          dotnet-version: 6.0.302
       - name: Test
         run: ./build.sh --target test --no-logo
