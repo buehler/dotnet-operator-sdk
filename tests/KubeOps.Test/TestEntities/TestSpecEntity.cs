@@ -95,6 +95,9 @@ public class TestSpecEntitySpec
     [Required]
     public int Required { get; set; }
 
+    [IgnoreProperty]
+    public string IgnoredProperty { get; set; } = string.Empty;
+
     public IEnumerable<TestItem> ComplexItemsEnumerable { get; set; } = Enumerable.Empty<TestItem>();
 
     public List<TestItem> ComplexItemsList { get; set; } = new();

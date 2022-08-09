@@ -462,4 +462,14 @@ public class CrdGenerationTest
         scopedCrd.Spec.Scope.Should().Be("Namespaced");
         clusterCrd.Spec.Scope.Should().Be("Cluster");
     }
+
+    [Fact]
+    public void Should_Not_Contain_Ignored_Property()
+    {
+        const string propertyName = nameof(TestSpecEntity.Spec.IgnoredProperty);
+        var crd = _testSpecEntity.CreateCrd();
+
+        var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
+        specProperties.Properties.Should().NotContainKey(propertyName.ToCamelCase());
+    }
 }

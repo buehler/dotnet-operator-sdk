@@ -354,13 +354,16 @@ internal static class EntityToCrdExtensions
                 .Where(
                     info => jsonPath != string.Empty ||
                             !IgnoredToplevelProperties.Contains(info.Name.ToLowerInvariant()))
+                .Where(info => info.GetCustomAttribute<IgnorePropertyAttribute>() == null)
                 .Select(
                     prop => KeyValuePair.Create(
                         GetPropertyName(prop),
                         MapProperty(prop, additionalColumns, $"{jsonPath}.{GetPropertyName(prop)}"))));
         props.Required = type.GetProperties()
-            .Where(prop => prop.GetCustomAttribute<RequiredAttribute>() != null)
-            .Select(prop => GetPropertyName(prop))
+            .Where(
+                prop => prop.GetCustomAttribute<RequiredAttribute>() != null &&
+                        prop.GetCustomAttribute<IgnorePropertyAttribute>() == null)
+            .Select(GetPropertyName)
             .ToList();
         if (props.Required.Count == 0)
         {
