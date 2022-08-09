@@ -12,7 +12,7 @@ public class TestAssemblyScannedStartup
     {
         services
             .AddKubernetesOperator(s => { s.Name = "test-operator"; })
-            .AddResourceAssembly(typeof(Startup).Assembly);
+            .AddResourceAssembly(typeof(Program).Assembly);
 
         services.AddSingleton<Mock<IManager>>();
         services.AddSingleton(provider => provider.GetRequiredService<Mock<IManager>>().Object);

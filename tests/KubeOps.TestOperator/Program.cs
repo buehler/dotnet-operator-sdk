@@ -1,10 +1,13 @@
 ﻿using KubeOps.Operator;
-using KubeOps.TestOperator;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using KubeOps.TestOperator.TestManager;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 
-static IHostBuilder CreateHostBuilder(string[] args) =>
-    Host.CreateDefaultBuilder(args)
-        .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddKubernetesOperator(s => s.EnableLeaderElection = false);
+//.AddWebhookLocaltunnel();
+builder.Services.AddTransient<IManager, TestManager>();
 
-await CreateHostBuilder(args).Build().RunOperatorAsync(args);
+var app = builder.Build();
+app.UseKubernetesOperator();
+await app.RunOperatorAsync(args);

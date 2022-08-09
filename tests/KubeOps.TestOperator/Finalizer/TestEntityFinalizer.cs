@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using KubeOps.Operator.Finalizer;
+﻿using KubeOps.Operator.Finalizer;
 using KubeOps.TestOperator.Entities;
 using KubeOps.TestOperator.TestManager;
 
