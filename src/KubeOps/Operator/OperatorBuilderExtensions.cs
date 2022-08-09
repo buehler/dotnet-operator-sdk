@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Builder;

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using k8s.Models;
+﻿using k8s.Models;
 using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Kustomize;
 using KubeOps.Operator.Rbac;

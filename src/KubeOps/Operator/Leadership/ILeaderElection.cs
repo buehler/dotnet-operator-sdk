@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KubeOps.Operator.Leadership;
+﻿namespace KubeOps.Operator.Leadership;
 
 /// <summary>
 /// Leader elector for the operator.

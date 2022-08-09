@@ -54,7 +54,7 @@ public class CrdGeneratorTest
     public void Should_Not_Contain_K8s_Entities()
     {
         _crds.Should()
-             .NotContain(crd => crd.Spec.Names.Kind == "Pod");
+            .NotContain(crd => crd.Spec.Names.Kind == "Pod");
     }
 
     [Fact]

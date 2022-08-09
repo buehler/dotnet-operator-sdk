@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using DotnetKubernetesClient.Entities;
+﻿using DotnetKubernetesClient.Entities;
 using k8s;
 using k8s.Models;
 

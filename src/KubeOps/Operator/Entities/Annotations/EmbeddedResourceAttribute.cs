@@ -1,5 +1,4 @@
-﻿using System;
-using k8s.Models;
+﻿using k8s.Models;
 
 namespace KubeOps.Operator.Entities.Annotations;
 

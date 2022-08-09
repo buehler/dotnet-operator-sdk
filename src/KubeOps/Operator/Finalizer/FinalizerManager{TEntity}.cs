@@ -1,11 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using DotnetKubernetesClient;
+﻿using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
-using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Finalizer;
 

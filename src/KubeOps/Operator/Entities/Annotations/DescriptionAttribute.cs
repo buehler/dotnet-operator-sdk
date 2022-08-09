@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KubeOps.Operator.Entities.Annotations;
+﻿namespace KubeOps.Operator.Entities.Annotations;
 
 /// <summary>
 /// Defines a description for a property. This precedes the description found in a

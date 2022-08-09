@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KubeOps.Operator.Entities.Annotations;
+﻿namespace KubeOps.Operator.Entities.Annotations;
 
 /// <summary>
 /// Defines a property of a specification as required.

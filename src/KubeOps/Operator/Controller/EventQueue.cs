@@ -1,13 +1,10 @@
-﻿using System;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Kubernetes;
-using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Controller;
 
@@ -23,7 +20,12 @@ internal class EventQueue<TEntity> : IEventQueue<TEntity>
     private readonly Subject<ResourceEvent<TEntity>> _localEvents;
     private Action<ResourceEvent<TEntity>> _onWatcherEvent;
 
-    public EventQueue(IKubernetesClient kubernetesClient, ILogger<EventQueue<TEntity>> logger, OperatorSettings operatorSettings, IResourceCache<TEntity> resourceCache, IResourceWatcher<TEntity> watcher)
+    public EventQueue(
+        IKubernetesClient kubernetesClient,
+        ILogger<EventQueue<TEntity>> logger,
+        OperatorSettings operatorSettings,
+        IResourceCache<TEntity> resourceCache,
+        IResourceWatcher<TEntity> watcher)
     {
         _kubernetesClient = kubernetesClient;
         _logger = logger;

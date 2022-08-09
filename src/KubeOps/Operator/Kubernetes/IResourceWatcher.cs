@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using k8s;
+﻿using k8s;
 using k8s.Models;
 
 namespace KubeOps.Operator.Kubernetes;

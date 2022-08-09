@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KubeOps.Operator.Entities.Annotations;
+﻿namespace KubeOps.Operator.Entities.Annotations;
 
 /// <summary>
 /// Defines a range maximum for a numeric property.

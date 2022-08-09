@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace KubeOps.Operator.Comparing;
+﻿namespace KubeOps.Operator.Comparing;
 
 internal class ReferenceEqualityComparer : EqualityComparer<object>
 {

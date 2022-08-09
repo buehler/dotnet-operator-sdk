@@ -1,15 +1,10 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using DotnetKubernetesClient;
+﻿using DotnetKubernetesClient;
 using DotnetKubernetesClient.LabelSelectors;
 using k8s.Models;
 using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Webhooks;
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace KubeOps.Operator.Commands.Management.Webhooks;
 

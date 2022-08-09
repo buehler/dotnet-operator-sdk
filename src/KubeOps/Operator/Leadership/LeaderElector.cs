@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Net;
 using DotnetKubernetesClient;
 using DotnetKubernetesClient.LabelSelectors;
 using k8s.Models;
 using KubeOps.Operator.Entities.Extensions;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Rest;
 using Timer = System.Timers.Timer;
 

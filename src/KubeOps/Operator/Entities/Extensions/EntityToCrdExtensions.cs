@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 using DotnetKubernetesClient.Entities;
 using k8s;
@@ -238,17 +235,18 @@ internal static class EntityToCrdExtensions
                 additionalColumns,
                 jsonPath);
         }
-        else if (!isSimpleType
-                 && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+        else if (!isSimpleType && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
         {
             var genericTypes = type.GenericTypeArguments;
             props.Type = Object;
             props.AdditionalProperties = MapType(genericTypes[1], additionalColumns, jsonPath);
         }
-        else if (!isSimpleType
-                 && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>)
-                 && type.GenericTypeArguments.Length == 1 && type.GenericTypeArguments.Single().IsGenericType
-                 && type.GenericTypeArguments.Single().GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+        else if (!isSimpleType &&
+                 type.IsGenericType &&
+                 type.GetGenericTypeDefinition() == typeof(IEnumerable<>) &&
+                 type.GenericTypeArguments.Length == 1 &&
+                 type.GenericTypeArguments.Single().IsGenericType &&
+                 type.GenericTypeArguments.Single().GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
         {
             var genericTypes = type.GenericTypeArguments.Single().GenericTypeArguments;
             props.Type = Object;

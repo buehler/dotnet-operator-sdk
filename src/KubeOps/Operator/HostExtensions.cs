@@ -1,7 +1,5 @@
-﻿using System.Threading.Tasks;
-using KubeOps.Operator.Commands;
+﻿using KubeOps.Operator.Commands;
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.Hosting;
 
 namespace KubeOps.Operator;
 

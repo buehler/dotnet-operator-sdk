@@ -1,16 +1,12 @@
-﻿using System;
-using System.Reactive;
+﻿using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Kubernetes;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using static KubeOps.Operator.Builder.IComponentRegistrar;
 
 namespace KubeOps.Operator.Controller;
@@ -150,9 +146,10 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
                 return;
             case RequeueEventResult requeue:
                 var specificQueueTypeRequested = requeue.EventType.HasValue;
-                var requestedQueueType = requeue.EventType ?? (_settings.DefaultRequeueAsSameType
-                    ? eventType
-                    : ResourceEventType.Reconcile);
+                var requestedQueueType = requeue.EventType ??
+                                         (_settings.DefaultRequeueAsSameType
+                                             ? eventType
+                                             : ResourceEventType.Reconcile);
 
                 if (specificQueueTypeRequested)
                 {

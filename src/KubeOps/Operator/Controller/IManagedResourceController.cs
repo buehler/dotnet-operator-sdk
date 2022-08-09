@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace KubeOps.Operator.Controller;
+﻿namespace KubeOps.Operator.Controller;
 
 internal interface IManagedResourceController : IDisposable
 {

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using k8s;
-using k8s.Models;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Kubernetes;
 using KubeOps.Testing;

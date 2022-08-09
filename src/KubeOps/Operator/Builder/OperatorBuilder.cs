@@ -1,9 +1,7 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
-using KellermanSoftware.CompareNetObjects;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
@@ -15,10 +13,8 @@ using KubeOps.Operator.Leadership;
 using KubeOps.Operator.Rbac;
 using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Webhooks;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Logging;
 using Prometheus;
 using YamlDotNet.Serialization;
 

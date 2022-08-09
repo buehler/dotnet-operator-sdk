@@ -1,5 +1,3 @@
-using System;
-
 namespace KubeOps.Operator.Webhooks;
 
 internal interface IWebhookMetadataBuilder

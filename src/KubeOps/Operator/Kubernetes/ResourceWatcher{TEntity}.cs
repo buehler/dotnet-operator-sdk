@@ -1,14 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Threading;
-using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.DevOps;
-using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Kubernetes;
 

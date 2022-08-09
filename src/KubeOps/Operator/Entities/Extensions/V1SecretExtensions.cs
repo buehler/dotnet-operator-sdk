@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using k8s.Models;
 
 namespace KubeOps.Operator.Entities.Extensions;

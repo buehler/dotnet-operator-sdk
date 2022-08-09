@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KubeOps.Operator.Errors;
+﻿namespace KubeOps.Operator.Errors;
 
 /// <summary>
 /// Delegate that describes a backoff strategy on errors for the operator.

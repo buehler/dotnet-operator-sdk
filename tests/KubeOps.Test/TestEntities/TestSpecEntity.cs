@@ -119,8 +119,10 @@ public class TestSpecEntitySpec
 
     public IEnumerable<KeyValuePair<string, string>> KeyValueEnumerable { get; set; } =
         new Dictionary<string, string>();
+
     public IEnumerable<KeyValuePair<string, string>> NormalKeyValueEnumerable { get; set; } =
         new Dictionary<string, string>();
+
     public IEnumerable<KeyValuePair<string, string>>? NullableKeyValueEnumerable { get; set; } =
         new Dictionary<string, string>();
 

@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Entities.Extensions;
-using Microsoft.Extensions.Logging;
 using SimpleBase;
 
 namespace KubeOps.Operator.Events;

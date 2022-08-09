@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KubeOps.Operator.Entities.Annotations;
+﻿namespace KubeOps.Operator.Entities.Annotations;
 
 /// <summary>
 /// Defines that a property should keep unknown fields

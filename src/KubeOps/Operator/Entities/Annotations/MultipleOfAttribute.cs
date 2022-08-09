@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KubeOps.Operator.Entities.Annotations;
+﻿namespace KubeOps.Operator.Entities.Annotations;
 
 /// <summary>
 /// Defines the factor that a numeric value must adhere to.

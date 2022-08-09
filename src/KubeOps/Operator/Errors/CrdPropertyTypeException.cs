@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KubeOps.Operator.Errors;
+﻿namespace KubeOps.Operator.Errors;
 
 internal class CrdPropertyTypeException : Exception
 {

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace KubeOps.Operator.Entities.Kustomize;
+﻿namespace KubeOps.Operator.Entities.Kustomize;
 
 /// <summary>
 /// Entitiy for config map generators in a kustomization.yaml file.

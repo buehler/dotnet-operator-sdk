@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using KubeOps.Operator.Commands.CommandHelpers;
+﻿using KubeOps.Operator.Commands.CommandHelpers;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Kustomize;
 using KubeOps.Operator.Serialization;

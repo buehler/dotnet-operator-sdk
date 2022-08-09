@@ -1,7 +1,5 @@
-﻿using System;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Leadership;
 

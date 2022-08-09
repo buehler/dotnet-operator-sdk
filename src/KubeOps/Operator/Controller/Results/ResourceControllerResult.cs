@@ -1,5 +1,4 @@
-﻿using System;
-using KubeOps.Operator.Kubernetes;
+﻿using KubeOps.Operator.Kubernetes;
 
 namespace KubeOps.Operator.Controller.Results;
 

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Reflection;
 using KubeOps.Operator.Comparing;
 using ReferenceEqualityComparer = KubeOps.Operator.Comparing.ReferenceEqualityComparer;
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace KubeOps.Operator.Rbac;
+﻿namespace KubeOps.Operator.Rbac;
 
 /// <summary>
 /// Generate rbac information for a type.

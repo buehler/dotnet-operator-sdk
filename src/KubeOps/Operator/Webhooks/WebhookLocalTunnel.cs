@@ -1,12 +1,7 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using DotnetKubernetesClient;
+﻿using DotnetKubernetesClient;
 using Localtunnel;
 using Localtunnel.Connections;
 using Localtunnel.Tunnels;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Webhooks;
 

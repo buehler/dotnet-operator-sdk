@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace KubeOps.Build;
+﻿namespace KubeOps.Build;
 
 internal static class Program
 {

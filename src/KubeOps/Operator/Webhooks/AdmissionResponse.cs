@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KubeOps.Operator.Webhooks;
+﻿namespace KubeOps.Operator.Webhooks;
 
 internal sealed class AdmissionResponse
 {

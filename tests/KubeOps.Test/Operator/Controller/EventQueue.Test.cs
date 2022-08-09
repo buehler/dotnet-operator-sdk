@@ -33,10 +33,7 @@ public class EventQueueTest
 
         _kubernetesClient = new MockKubernetesClient();
         var logger = LoggerFactory.Create(_ => { }).CreateLogger<EventQueue<V1TestEntity>>();
-        var operatorSettings = new OperatorSettings
-        {
-            MaxErrorRetries = 3,
-        };
+        var operatorSettings = new OperatorSettings { MaxErrorRetries = 3, };
 
         var cacheComparisonResult = CacheComparisonResult.Other;
 
@@ -58,20 +55,14 @@ public class EventQueueTest
             _resourceWatcherMock.Object);
     }
 
-    private V1TestEntity EntityWithUid(int id) => new()
-    {
-        Metadata = new V1ObjectMeta { Uid = id.ToString() },
-    };
+    private V1TestEntity EntityWithUid(int id) => new() { Metadata = new V1ObjectMeta { Uid = id.ToString() }, };
 
     [Fact]
     public async Task Local_Events_Should_Be_Processed()
     {
         var numberEventsProcessed = 0;
 
-        var _ = _eventQueue.Events.Do(_ =>
-        {
-            numberEventsProcessed++;
-        }).Subscribe();
+        var _ = _eventQueue.Events.Do(_ => { numberEventsProcessed++; }).Subscribe();
 
         await _eventQueue.StartAsync(_ => { });
 
@@ -88,16 +79,16 @@ public class EventQueueTest
     {
         var numberEventsProcessed = 0;
 
-        var _ = _eventQueue.Events.Do(_ =>
-        {
-            numberEventsProcessed++;
-        }).Subscribe();
+        var _ = _eventQueue.Events.Do(_ => { numberEventsProcessed++; }).Subscribe();
 
         await _eventQueue.StartAsync(_ => { });
 
-        _watcherEventSource.OnNext(new ResourceWatcher<V1TestEntity>.WatchEvent(WatchEventType.Deleted, EntityWithUid(1)));
-        _watcherEventSource.OnNext(new ResourceWatcher<V1TestEntity>.WatchEvent(WatchEventType.Deleted, EntityWithUid(2)));
-        _watcherEventSource.OnNext(new ResourceWatcher<V1TestEntity>.WatchEvent(WatchEventType.Deleted, EntityWithUid(3)));
+        _watcherEventSource.OnNext(
+            new ResourceWatcher<V1TestEntity>.WatchEvent(WatchEventType.Deleted, EntityWithUid(1)));
+        _watcherEventSource.OnNext(
+            new ResourceWatcher<V1TestEntity>.WatchEvent(WatchEventType.Deleted, EntityWithUid(2)));
+        _watcherEventSource.OnNext(
+            new ResourceWatcher<V1TestEntity>.WatchEvent(WatchEventType.Deleted, EntityWithUid(3)));
         await Task.Delay(100);
 
         numberEventsProcessed.Should().Be(3);
@@ -108,15 +99,16 @@ public class EventQueueTest
     {
         var numberEventsProcessed = 0;
 
-        var _ = _eventQueue.Events.Do(_ =>
-        {
-            numberEventsProcessed++;
-        }).Subscribe();
+        var _ = _eventQueue.Events.Do(_ => { numberEventsProcessed++; }).Subscribe();
 
         await _eventQueue.StartAsync(_ => { });
 
         _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, EntityWithUid(1)));
-        _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, EntityWithUid(2), Delay: TimeSpan.FromMilliseconds(50)));
+        _eventQueue.EnqueueLocal(
+            new ResourceEvent<V1TestEntity>(
+                ResourceEventType.Reconcile,
+                EntityWithUid(2),
+                Delay: TimeSpan.FromMilliseconds(50)));
         _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Deleted, EntityWithUid(2)));
         await Task.Delay(100);
 
@@ -128,16 +120,15 @@ public class EventQueueTest
     {
         var numberEventsProcessed = 0;
 
-        var _ = _eventQueue.Events.Do(_ =>
-        {
-            numberEventsProcessed++;
-        }).Subscribe();
+        var _ = _eventQueue.Events.Do(_ => { numberEventsProcessed++; }).Subscribe();
 
         await _eventQueue.StartAsync(_ => { });
 
         _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, EntityWithUid(1)));
-        _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, EntityWithUid(2), Attempt: 2));
-        _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, EntityWithUid(3), Attempt: 4));
+        _eventQueue.EnqueueLocal(
+            new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, EntityWithUid(2), Attempt: 2));
+        _eventQueue.EnqueueLocal(
+            new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, EntityWithUid(3), Attempt: 4));
         await Task.Delay(100);
 
         numberEventsProcessed.Should().Be(2);
@@ -151,14 +142,12 @@ public class EventQueueTest
 
         var numberEventsProcessed = 0;
 
-        var _ = _eventQueue.Events.Do(_ =>
-        {
-            numberEventsProcessed++;
-        }).Subscribe();
+        var _ = _eventQueue.Events.Do(_ => { numberEventsProcessed++; }).Subscribe();
 
         await _eventQueue.StartAsync(_ => { });
 
-        _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, entity, Delay: TimeSpan.FromSeconds(4)));
+        _eventQueue.EnqueueLocal(
+            new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, entity, Delay: TimeSpan.FromSeconds(4)));
 
         await Task.Delay(3500);
         numberEventsProcessed.Should().Be(0);
@@ -173,14 +162,15 @@ public class EventQueueTest
         var numberEventsProcessed = 0;
         _kubernetesClient.GetResult = null;
 
-        var _ = _eventQueue.Events.Do(_ =>
-        {
-            numberEventsProcessed++;
-        }).Subscribe();
+        var _ = _eventQueue.Events.Do(_ => { numberEventsProcessed++; }).Subscribe();
 
         await _eventQueue.StartAsync(_ => { });
 
-        _eventQueue.EnqueueLocal(new ResourceEvent<V1TestEntity>(ResourceEventType.Reconcile, EntityWithUid(1), Delay: TimeSpan.FromMilliseconds(1)));
+        _eventQueue.EnqueueLocal(
+            new ResourceEvent<V1TestEntity>(
+                ResourceEventType.Reconcile,
+                EntityWithUid(1),
+                Delay: TimeSpan.FromMilliseconds(1)));
 
         await Task.Delay(100);
 

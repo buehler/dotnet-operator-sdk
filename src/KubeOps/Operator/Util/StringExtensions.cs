@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KubeOps.Operator.Util;
+﻿namespace KubeOps.Operator.Util;
 
 internal static class StringExtensions
 {

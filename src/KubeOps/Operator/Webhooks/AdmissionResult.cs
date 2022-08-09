@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Http;
-
-namespace KubeOps.Operator.Webhooks;
+﻿namespace KubeOps.Operator.Webhooks;
 
 /// <summary>
 /// Definition of an admission result for <see cref="IAdmissionWebhook{TEntity,TResult}"/>.

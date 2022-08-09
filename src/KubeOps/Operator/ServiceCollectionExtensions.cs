@@ -1,6 +1,4 @@
-﻿using System;
-using KubeOps.Operator.Builder;
-using Microsoft.Extensions.DependencyInjection;
+﻿using KubeOps.Operator.Builder;
 
 namespace KubeOps.Operator;
 

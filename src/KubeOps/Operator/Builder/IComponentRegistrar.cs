@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Immutable;
 using k8s;
 using k8s.Models;

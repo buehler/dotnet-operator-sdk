@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading.Tasks;
+﻿using System.Reactive.Subjects;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Controller;

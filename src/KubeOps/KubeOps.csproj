@@ -1,54 +1,54 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-    <Import Project="..\..\config\Common.targets" />
-    <Import Project="..\..\config\CodeAnalysis.targets" />
+  <Import Project="..\..\config\Common.targets" />
+  <Import Project="..\..\config\CodeAnalysis.targets" />
 
-    <PropertyGroup>
-        <OutputType>exe</OutputType>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>exe</OutputType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <IsPackable>true</IsPackable>
-        <PackageId>KubeOps</PackageId>
-        <PackageTags>Kubernetes Operator SDK CustomResourceDefinition</PackageTags>
-        <PackageProjectUrl>https://buehler.github.io/dotnet-operator-sdk/</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-        <PackageLicense>Apache-2.0</PackageLicense>
-        <PackageDescription>
-            This is an operator sdk written in c#.
-            It enables a developer to create a custom controller for CRDs
-            (CustomResourceDefinitions) that runs on kubernetes.
-        </PackageDescription>
-    </PropertyGroup>
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>KubeOps</PackageId>
+    <PackageTags>Kubernetes Operator SDK CustomResourceDefinition</PackageTags>
+    <PackageProjectUrl>https://buehler.github.io/dotnet-operator-sdk/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicense>Apache-2.0</PackageLicense>
+    <PackageDescription>
+      This is an operator sdk written in c#.
+      It enables a developer to create a custom controller for CRDs
+      (CustomResourceDefinitions) that runs on kubernetes.
+    </PackageDescription>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="CompareNETObjects" Version="4.77.0" />
-        <PackageReference Include="DotnetKubernetesClient" Version="2.1.11" />
-        <PackageReference Include="JsonDiffPatch" Version="2.0.55" />
-        <PackageReference Include="Localtunnel" Version="1.0.4" />
-        <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.0.1" />
-        <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="4.0.1" />
-        <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.5" />
-        <PackageReference Include="Namotion.Reflection" Version="2.0.10" />
-        <PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
-        <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="6.0.0" />
-        <PackageReference Include="SimpleBase" Version="3.1.0" />
-        <PackageReference Include="System.Reactive" Version="5.0.0" />
-        <PackageReference Include="YamlDotNet" Version="12.0.0" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CompareNETObjects" Version="4.77.0" />
+    <PackageReference Include="DotnetKubernetesClient" Version="2.1.11" />
+    <PackageReference Include="JsonDiffPatch" Version="2.0.55" />
+    <PackageReference Include="Localtunnel" Version="1.0.4" />
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.0.1" />
+    <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="4.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.5" />
+    <PackageReference Include="Namotion.Reflection" Version="2.0.10" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
+    <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="6.0.0" />
+    <PackageReference Include="SimpleBase" Version="3.1.0" />
+    <PackageReference Include="System.Reactive" Version="5.0.0" />
+    <PackageReference Include="YamlDotNet" Version="12.0.0" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <Content Include="Build\KubeOps.targets">
-            <PackagePath>build\</PackagePath>
-        </Content>
-    </ItemGroup>
+  <ItemGroup>
+    <Content Include="Build\KubeOps.targets">
+      <PackagePath>build\</PackagePath>
+    </Content>
+  </ItemGroup>
 
-    <ItemGroup>
-        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>KubeOps.Testing</_Parameter1>
-        </AssemblyAttribute>
-    </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>KubeOps.Testing</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 
 </Project>

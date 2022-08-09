@@ -1,7 +1,4 @@
-﻿using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using KubeOps.Operator.Builder;
 using McMaster.Extensions.CommandLineUtils;
 

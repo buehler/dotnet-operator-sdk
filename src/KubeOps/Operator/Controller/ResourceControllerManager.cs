@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using KubeOps.Operator.Leadership;
-using Microsoft.Extensions.Hosting;
+﻿using KubeOps.Operator.Leadership;
 
 namespace KubeOps.Operator.Controller;
 
@@ -57,8 +52,7 @@ internal class ResourceControllerManager : IHostedService
 
         foreach (var controller in _controllerList)
         {
-            if (state == LeaderState.Leader
-                || !_operatorSettings.OnlyWatchEventsWhenLeader)
+            if (state == LeaderState.Leader || !_operatorSettings.OnlyWatchEventsWhenLeader)
             {
                 controller.StartAsync();
             }

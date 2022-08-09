@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KubeOps.Operator.Rbac;
+﻿namespace KubeOps.Operator.Rbac;
 
 /// <summary>
 /// Generic attribute to define rbac needs for the operator.

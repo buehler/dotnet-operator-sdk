@@ -1,31 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\config\Common.targets" />
-    <Import Project="..\..\config\CodeAnalysis.targets" />
+  <Import Project="..\..\config\Common.targets" />
+  <Import Project="..\..\config\CodeAnalysis.targets" />
 
-    <PropertyGroup>
-        <IsPackable>true</IsPackable>
-        <PackageType>Template</PackageType>
-        <PackageId>KubeOps.Templates</PackageId>
-        <Title>KubeOps Templates</Title>
-        <PackageTags>dotnet-new templates Kubernetes Operator Sdk KubeOps</PackageTags>
-        <PackageProjectUrl>https://buehler.github.io/dotnet-operator-sdk/</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-        <PackageLicense>Apache-2.0</PackageLicense>
-        <PackageDescription>dotnet new templates for KubeOps operator sdk.</PackageDescription>
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageType>Template</PackageType>
+    <PackageId>KubeOps.Templates</PackageId>
+    <Title>KubeOps Templates</Title>
+    <PackageTags>dotnet-new templates Kubernetes Operator Sdk KubeOps</PackageTags>
+    <PackageProjectUrl>https://buehler.github.io/dotnet-operator-sdk/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicense>Apache-2.0</PackageLicense>
+    <PackageDescription>dotnet new templates for KubeOps operator sdk.</PackageDescription>
 
-        <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
 
-        <IncludeContentInPack>true</IncludeContentInPack>
-        <IncludeBuildOutput>false</IncludeBuildOutput>
-        <ContentTargetFolders>content</ContentTargetFolders>
-        <NoWarn>$(NoWarn);NU5128</NoWarn>
-    </PropertyGroup>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <Content Include="Templates\**\*" Exclude="Templates\**\bin\**;Templates\**\obj\**" />
-        <Compile Remove="**\*" />
-    </ItemGroup>
+  <ItemGroup>
+    <Content Include="Templates\**\*" Exclude="Templates\**\bin\**;Templates\**\obj\**" />
+    <Compile Remove="**\*" />
+  </ItemGroup>
 
 </Project>

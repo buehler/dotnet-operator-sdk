@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using DotnetKubernetesClient;
+﻿using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.Controller;
@@ -54,7 +51,11 @@ namespace KubeOps.Testing
             var server = Server;
         }
 
-        public Task EnqueueEvent<TEntity>(ResourceEventType type, TEntity resource, int attempt = 0, TimeSpan? delay = null)
+        public Task EnqueueEvent<TEntity>(
+            ResourceEventType type,
+            TEntity resource,
+            int attempt = 0,
+            TimeSpan? delay = null)
             where TEntity : class, IKubernetesObject<V1ObjectMeta>
         {
             var queue = Services.GetService<IEventQueue<TEntity>>();

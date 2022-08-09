@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KubeOps.Operator.Webhooks;
+﻿namespace KubeOps.Operator.Webhooks;
 
 /// <summary>
 /// Possible admission webhook operations.

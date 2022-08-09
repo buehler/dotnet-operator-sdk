@@ -277,7 +277,7 @@ public class CrdGenerationTest
     public void Should_Not_Set_Preserve_Unknown_Fields_On_Generic_Dictionaries()
     {
         var crd = _testSpecEntity.CreateCrd();
-        
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
         specProperties.Properties["genericDictionary"].XKubernetesPreserveUnknownFields.Should().BeNull();
     }
@@ -331,7 +331,8 @@ public class CrdGenerationTest
         var crd = _testSpecEntity.CreateCrd();
 
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
-        var valueItems = specProperties.Properties[propertyName.ToCamelCase()].AdditionalProperties as V1JSONSchemaProps;
+        var valueItems =
+            specProperties.Properties[propertyName.ToCamelCase()].AdditionalProperties as V1JSONSchemaProps;
         valueItems.Should().NotBeNull();
         valueItems!.Type.Should().Be(valueType.ToCamelCase());
     }
@@ -350,7 +351,8 @@ public class CrdGenerationTest
         var crd = _testSpecEntity.CreateCrd();
 
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
-        var valueItems = specProperties.Properties[propertyName.ToCamelCase()].AdditionalProperties as V1JSONSchemaProps;
+        var valueItems =
+            specProperties.Properties[propertyName.ToCamelCase()].AdditionalProperties as V1JSONSchemaProps;
         valueItems.Should().NotBeNull();
         valueItems!.Type.Should().Be(valueType.ToCamelCase());
     }

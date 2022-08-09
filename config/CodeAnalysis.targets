@@ -1,14 +1,14 @@
 <Project>
 
-    <ItemGroup>
-        <PackageReference Include="Roslynator.Analyzers" Version="4.1.1" PrivateAssets="All" />
-        <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.376" PrivateAssets="All" />
-        <AdditionalFiles Include="$(MSBuildThisFileDirectory)/stylecop.json" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Roslynator.Analyzers" Version="4.1.1" PrivateAssets="All" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435" PrivateAssets="All" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)/stylecop.json" />
+  </ItemGroup>
 
-    <PropertyGroup>
-        <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)/project.ruleset</CodeAnalysisRuleSet>
-        <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
-    </PropertyGroup>
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)/project.ruleset</CodeAnalysisRuleSet>
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+  </PropertyGroup>
 
 </Project>

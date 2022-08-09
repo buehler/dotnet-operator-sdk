@@ -1,11 +1,7 @@
-﻿using System.Threading.Tasks;
-using DotnetKubernetesClient;
+﻿using DotnetKubernetesClient;
 using KubeOps.Operator.Commands.Generators;
 using KubeOps.Operator.Commands.Management;
-using KubeOps.Operator.Commands.Utilities;
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace KubeOps.Operator.Commands;
 
