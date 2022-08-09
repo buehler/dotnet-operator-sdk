@@ -14,32 +14,18 @@ open Microsoft.Extensions.Logging
 [<EntityRbac(typeof<V1DemoEntity>, Verbs = RbacVerb.All)>]
 type DemoController(logger: ILogger<DemoController>, finalizerManager: IFinalizerManager<V1DemoEntity>) =
     interface IResourceController<V1DemoEntity> with
-        member this.CreatedAsync entity =
+        member this.ReconcileAsync entity =
             async {
-                logger.LogInformation $"entity {entity.Name()} called created"
+                logger.LogInformation $"entity {entity.Name()} called reconcile"
 
                 do! finalizerManager.RegisterFinalizerAsync<DemoFinalizer> entity
                     |> Async.AwaitTask
 
                 return
                     ResourceControllerResult.RequeueEvent
-                    <| TimeSpan.FromSeconds 5.0
+                    <| TimeSpan.FromSeconds 15.0
             }
             |> Async.StartAsTask
-
-        member this.UpdatedAsync entity =
-            logger.LogInformation $"entity {entity.Name()} called update"
-
-            Task.FromResult
-                (ResourceControllerResult.RequeueEvent
-                 <| TimeSpan.FromSeconds 5.0)
-
-        member this.NotModifiedAsync entity =
-            logger.LogInformation $"entity {entity.Name()} called not modified"
-
-            Task.FromResult
-                (ResourceControllerResult.RequeueEvent
-                 <| TimeSpan.FromSeconds 5.0)
 
         member this.StatusModifiedAsync entity =
             logger.LogInformation $"entity {entity.Name()} called not modified"

@@ -1,64 +1,44 @@
-﻿using System;
-using System.Threading.Tasks;
-using GeneratedOperatorProject.Entities;
-using GeneratedOperatorProject.Finalizer;
-using k8s.Models;
+﻿using k8s.Models;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
-using Microsoft.Extensions.Logging;
+using GeneratedOperatorProject.Entities;
+using GeneratedOperatorProject.Finalizer;
 
-namespace GeneratedOperatorProject.Controller
+namespace GeneratedOperatorProject.Controller;
+
+[EntityRbac(typeof(V1DemoEntity), Verbs = RbacVerb.All)]
+public class DemoController : IResourceController<V1DemoEntity>
 {
-    [EntityRbac(typeof(V1DemoEntity), Verbs = RbacVerb.All)]
-    public class DemoController : IResourceController<V1DemoEntity>
+    private readonly ILogger<DemoController> _logger;
+    private readonly IFinalizerManager<V1DemoEntity> _finalizerManager;
+
+    public DemoController(ILogger<DemoController> logger, IFinalizerManager<V1DemoEntity> finalizerManager)
     {
-        private readonly ILogger<DemoController> _logger;
-        private readonly IFinalizerManager<V1DemoEntity> _finalizerManager;
+        _logger = logger;
+        _finalizerManager = finalizerManager;
+    }
 
-        public DemoController(ILogger<DemoController> logger, IFinalizerManager<V1DemoEntity> finalizerManager)
-        {
-            _logger = logger;
-            _finalizerManager = finalizerManager;
-        }
+    public async Task<ResourceControllerResult?> ReconcileAsync(V1DemoEntity entity)
+    {
+        _logger.LogInformation($"entity {entity.Name()} called {nameof(ReconcileAsync)}.");
+        await _finalizerManager.RegisterFinalizerAsync<DemoFinalizer>(entity);
 
-        public async Task<ResourceControllerResult?> CreatedAsync(V1DemoEntity entity)
-        {
-            _logger.LogInformation($"entity {entity.Name()} called {nameof(CreatedAsync)}.");
-            await _finalizerManager.RegisterFinalizerAsync<DemoFinalizer>(entity);
+        return ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(15));
+    }
 
-            return ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(5));
-        }
+    public Task StatusModifiedAsync(V1DemoEntity entity)
+    {
+        _logger.LogInformation($"entity {entity.Name()} called {nameof(StatusModifiedAsync)}.");
 
-        public Task<ResourceControllerResult?> UpdatedAsync(V1DemoEntity entity)
-        {
-            _logger.LogInformation($"entity {entity.Name()} called {nameof(UpdatedAsync)}.");
+        return Task.CompletedTask;
+    }
 
-            return Task.FromResult<ResourceControllerResult?>(
-                ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(5)));
-        }
+    public Task DeletedAsync(V1DemoEntity entity)
+    {
+        _logger.LogInformation($"entity {entity.Name()} called {nameof(DeletedAsync)}.");
 
-        public Task<ResourceControllerResult?> NotModifiedAsync(V1DemoEntity entity)
-        {
-            _logger.LogInformation($"entity {entity.Name()} called {nameof(NotModifiedAsync)}.");
-
-            return Task.FromResult<ResourceControllerResult?>(
-                ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(5)));
-        }
-
-        public Task StatusModifiedAsync(V1DemoEntity entity)
-        {
-            _logger.LogInformation($"entity {entity.Name()} called {nameof(StatusModifiedAsync)}.");
-
-            return Task.CompletedTask;
-        }
-
-        public Task DeletedAsync(V1DemoEntity entity)
-        {
-            _logger.LogInformation($"entity {entity.Name()} called {nameof(DeletedAsync)}.");
-
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
     }
 }

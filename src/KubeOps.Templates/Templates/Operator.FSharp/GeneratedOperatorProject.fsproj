@@ -1,13 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
         <Compile Include="Entities\V1DemoEntity.fs" />
         <Compile Include="Finalizer\DemoFinalizer.fs" />
         <Compile Include="Controller\DemoController.fs" />
+        <Compile Include="Webhooks\DemoMutator.fs" />
         <Compile Include="Webhooks\DemoValidator.fs" />
         <Compile Include="Startup.fs" />
         <Compile Include="Program.fs" />
