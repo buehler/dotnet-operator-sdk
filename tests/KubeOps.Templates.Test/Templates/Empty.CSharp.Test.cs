@@ -18,7 +18,6 @@ public class EmptyCSharpTest : IDisposable
     {
         _executor.ExecuteCSharpTemplate("operator-empty");
         _executor.FileExists("Template.csproj").Should().BeTrue();
-        _executor.FileExists("Startup.cs").Should().BeTrue();
         _executor.FileExists("Program.cs").Should().BeTrue();
         _executor.FileExists("appsettings.Development.json").Should().BeTrue();
         _executor.FileExists("appsettings.json").Should().BeTrue();
@@ -32,20 +31,12 @@ public class EmptyCSharpTest : IDisposable
     }
 
     [Fact]
-    public void Should_Add_KubeOps_Reference_Into_Startup_Files()
+    public void Should_Add_KubeOps_Reference_Into_Program_Code()
     {
         _executor.ExecuteCSharpTemplate("operator-empty");
-        _executor.FileContains("services.AddKubernetesOperator();", "Startup.cs").Should().BeTrue();
-        _executor.FileContains("app.UseKubernetesOperator();", "Startup.cs").Should().BeTrue();
-    }
-
-    [Fact]
-    public void Should_Create_Correct_Program_Code()
-    {
-        _executor.ExecuteCSharpTemplate("operator-empty");
-        _executor.FileContains("await CreateHostBuilder(args).Build().RunOperatorAsync(args);", "Program.cs")
-            .Should()
-            .BeTrue();
+        _executor.FileContains("builder.Services.AddKubernetesOperator();", "Program.cs").Should().BeTrue();
+        _executor.FileContains("app.UseKubernetesOperator();", "Program.cs").Should().BeTrue();
+        _executor.FileContains("await app.RunOperatorAsync(args);", "Program.cs").Should().BeTrue();
     }
 
     public void Dispose()
