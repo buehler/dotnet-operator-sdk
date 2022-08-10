@@ -1,9 +1,11 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text.Json;
 using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
 using KubeOps.Operator.DevOps;
+using Microsoft.Rest;
 
 namespace KubeOps.Operator.Kubernetes;
 
@@ -151,13 +153,21 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
         _metrics.Running.Set(0);
         _metrics.WatcherExceptions.Inc();
 
-        if (e is TaskCanceledException && e.InnerException is IOException)
+        switch (e)
         {
-            _logger.LogTrace(
-                @"Either the server or the client did close the connection on watcher for resource ""{resource}"". Restart.",
-                typeof(TEntity));
-            WatchResource().ConfigureAwait(false);
-            return;
+            case TaskCanceledException when e.InnerException is IOException:
+                _logger.LogTrace(
+                    @"Either the server or the client did close the connection on watcher for resource ""{resource}"". Restart.",
+                    typeof(TEntity));
+                WatchResource().ConfigureAwait(false);
+                return;
+            case SerializationException when
+                e.InnerException is JsonException &&
+                e.InnerException.Message.Contains("The input does not contain any JSON tokens"):
+                _logger.LogDebug(
+                    @"The watcher received an empty response for resource ""{resource}"".",
+                    typeof(TEntity));
+                return;
         }
 
         _logger.LogError(e, @"There was an error while watching the resource ""{resource}"".", typeof(TEntity));
