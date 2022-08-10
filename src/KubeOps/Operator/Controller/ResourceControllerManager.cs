@@ -7,7 +7,7 @@ internal class ResourceControllerManager : IHostedService
     private readonly IControllerInstanceBuilder _controllerInstanceBuilder;
     private readonly ILeaderElection _leaderElection;
     private readonly OperatorSettings _operatorSettings;
-    private readonly List<IManagedResourceController> _controllerList;
+    private readonly List<ScopedResourceController> _controllerList;
 
     private IDisposable? _leadershipSubscription;
 
@@ -19,7 +19,7 @@ internal class ResourceControllerManager : IHostedService
         _controllerInstanceBuilder = controllerInstanceBuilder;
         _leaderElection = leaderElection;
         _operatorSettings = operatorSettings;
-        _controllerList = new List<IManagedResourceController>();
+        _controllerList = new List<ScopedResourceController>();
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -30,20 +30,19 @@ internal class ResourceControllerManager : IHostedService
         return Task.CompletedTask;
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
         _leadershipSubscription?.Dispose();
         foreach (var controller in _controllerList)
         {
-            controller.StopAsync();
+            await controller.StopAsync();
             controller.Dispose();
         }
 
         _controllerList.Clear();
-        return Task.CompletedTask;
     }
 
-    private void LeadershipChanged(LeaderState state)
+    private async void LeadershipChanged(LeaderState state)
     {
         if (state == LeaderState.None)
         {
@@ -54,11 +53,11 @@ internal class ResourceControllerManager : IHostedService
         {
             if (state == LeaderState.Leader || !_operatorSettings.OnlyWatchEventsWhenLeader)
             {
-                controller.StartAsync();
+                await controller.StartAsync();
             }
             else
             {
-                controller.StopAsync();
+                await controller.StopAsync();
             }
         }
     }

@@ -169,13 +169,18 @@ internal class OperatorBuilder : IOperatorBuilder
 
         Services.AddSingleton(_ => _componentRegistrar);
 
-        Services.AddTransient<IControllerInstanceBuilder, ControllerInstanceBuilder>();
-        Services.AddTransient(
-            s => (Func<IComponentRegistrar.ControllerRegistration, IManagedResourceController>)(r =>
-                (IManagedResourceController)ActivatorUtilities.CreateInstance(
-                    s,
-                    typeof(ManagedResourceController<>).MakeGenericType(r.EntityType),
-                    r)));
+        Services.AddSingleton<IControllerInstanceBuilder, ControllerInstanceBuilder>();
+        Services.AddSingleton<IControllerInstanceBuilder.ControllerFactory>(
+            (parent, registration) =>
+            {
+                var childScope = parent.CreateScope();
+                var controller = (IManagedResourceController)ActivatorUtilities.CreateInstance(
+                    childScope.ServiceProvider,
+                    typeof(ManagedResourceController<>).MakeGenericType(registration.EntityType),
+                    registration);
+
+                return new ScopedResourceController(childScope, controller);
+            });
 
         Services.AddTransient<IFinalizerInstanceBuilder, FinalizerInstanceBuilder>();
 
