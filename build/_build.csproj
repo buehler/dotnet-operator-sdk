@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Nuke.Common" Version="6.1.2" />
+    <PackageReference Include="Nuke.Common" Version="6.2.1" />
     <None Include="../.releaserc.json" LinkBase="config" />
   </ItemGroup>
 
