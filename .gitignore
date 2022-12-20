@@ -36,3 +36,4 @@ coverage.info
 !/.gitlab
 bin
 obj
+.idea
