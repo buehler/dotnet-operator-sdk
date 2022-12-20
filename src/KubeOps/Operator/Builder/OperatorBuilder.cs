@@ -200,7 +200,8 @@ internal class OperatorBuilder : IOperatorBuilder
 
         Services.AddTransient<EntitySerializer>();
 
-        Services.AddSingleton<IKubernetesClient, KubernetesClient>();
+        // Commenting out this line allows us to run "kubectl proxy -p <port name>" and interact with k8s through localhost
+        // Services.AddSingleton<IKubernetesClient, KubernetesClient>();
         Services.AddScoped<IEventManager, EventManager>();
 
         Services.AddScoped(typeof(IResourceCache<>), typeof(ResourceCache<>));
