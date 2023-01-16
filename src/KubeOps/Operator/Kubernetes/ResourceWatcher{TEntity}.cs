@@ -12,6 +12,8 @@ namespace KubeOps.Operator.Kubernetes;
 internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
+    private const int MaxRetriesAttempts = 39;
+
     private readonly Subject<WatchEvent> _watchEvents = new();
     private readonly IKubernetesClient _client;
     private readonly ILogger<ResourceWatcher<TEntity>> _logger;
@@ -24,8 +26,6 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
     private int _reconnectAttempts;
     private CancellationTokenSource? _cancellation;
     private Watcher<TEntity>? _watcher;
-
-    private const int MaxRetriesAttempts = 39;
 
     public ResourceWatcher(
         IKubernetesClient client,
@@ -46,6 +46,8 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
     }
 
     public IObservable<WatchEvent> WatchEvents => _watchEvents;
+
+    private TimeSpan DefaultBackoff => _settings.ErrorBackoffStrategy(1);
 
     public Task StartAsync()
     {
@@ -146,8 +148,6 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
         _watcher = null;
         await WatchResource();
     }
-
-    private TimeSpan DefaultBackoff => _settings.ErrorBackoffStrategy(1);
 
     private void OnException(Exception e)
     {
