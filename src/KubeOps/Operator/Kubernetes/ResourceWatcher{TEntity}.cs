@@ -25,6 +25,8 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
     private CancellationTokenSource? _cancellation;
     private Watcher<TEntity>? _watcher;
 
+    private const int MaxRetriesAttempts = 39;
+
     public ResourceWatcher(
         IKubernetesClient client,
         ILogger<ResourceWatcher<TEntity>> logger,
@@ -39,7 +41,8 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
             _reconnectHandler
                 .Select(Observable.Timer)
                 .Switch()
-                .Subscribe(async _ => await WatchResource());
+                .Retry()
+                .Subscribe(async _ => await WatchResource(), error => _logger.LogError(error, $"There was an error while restarting the resource watcher {typeof(TEntity)}"));
     }
 
     public IObservable<WatchEvent> WatchEvents => _watchEvents;
@@ -144,47 +147,65 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
         await WatchResource();
     }
 
+    private TimeSpan DefaultBackoff => _settings.ErrorBackoffStrategy(1);
+
     private void OnException(Exception e)
     {
-        _cancellation?.Cancel();
-        _watcher?.Dispose();
-        _watcher = null;
+        var backoff = DefaultBackoff;
 
-        _metrics.Running.Set(0);
-        _metrics.WatcherExceptions.Inc();
-
-        switch (e)
+        try
         {
-            case TaskCanceledException when e.InnerException is IOException:
-                _logger.LogTrace(
-                    @"Either the server or the client did close the connection on watcher for resource ""{resource}"". Restart.",
-                    typeof(TEntity));
-                WatchResource().ConfigureAwait(false);
-                return;
-            case SerializationException when
-                e.InnerException is JsonException &&
-                e.InnerException.Message.Contains("The input does not contain any JSON tokens"):
-                _logger.LogDebug(
-                    @"The watcher received an empty response for resource ""{resource}"".",
-                    typeof(TEntity));
-                return;
-        }
+            _cancellation?.Cancel();
+            _watcher?.Dispose();
+            _watcher = null;
 
-        _logger.LogError(e, @"There was an error while watching the resource ""{resource}"".", typeof(TEntity));
-        var backoff = _settings.ErrorBackoffStrategy(++_reconnectAttempts);
-        if (backoff.TotalSeconds > _settings.WatcherMaxRetrySeconds)
+            _metrics.Running.Set(0);
+            _metrics.WatcherExceptions.Inc();
+
+            switch (e)
+            {
+                case TaskCanceledException when e.InnerException is IOException:
+                    _logger.LogTrace(
+                        @"Either the server or the client did close the connection on watcher for resource ""{resource}"". Restart.",
+                        typeof(TEntity));
+                    WatchResource().ConfigureAwait(false);
+                    return;
+                case SerializationException when
+                    e.InnerException is JsonException &&
+                    e.InnerException.Message.Contains("The input does not contain any JSON tokens"):
+                    _logger.LogDebug(
+                        @"The watcher received an empty response for resource ""{resource}"".",
+                        typeof(TEntity));
+                    return;
+            }
+
+            ++_reconnectAttempts;
+
+            _logger.LogError(e, @"There was an error while watching the resource ""{resource}"".", typeof(TEntity));
+            backoff = _settings.ErrorBackoffStrategy(
+                _reconnectAttempts > MaxRetriesAttempts ? MaxRetriesAttempts : _reconnectAttempts);
+            if (backoff.TotalSeconds > _settings.WatcherMaxRetrySeconds)
+            {
+                backoff = TimeSpan.FromSeconds(_settings.WatcherMaxRetrySeconds);
+            }
+
+            _logger.LogInformation("Trying to reconnect with exponential backoff {backoff}.", backoff);
+            _resetReconnectCounter?.Dispose();
+            _resetReconnectCounter = Observable
+                .Timer(TimeSpan.FromMinutes(1))
+                .FirstAsync()
+                .Subscribe(_ => _reconnectAttempts = 0);
+
+            _reconnectHandler.OnNext(backoff);
+        }
+        catch (Exception exception)
         {
-            backoff = TimeSpan.FromSeconds(_settings.WatcherMaxRetrySeconds);
+            _logger.LogError(exception, @"There was an error in OnException handler ""{resource}"".", typeof(TEntity));
         }
-
-        _logger.LogInformation("Trying to reconnect with exponential backoff {backoff}.", backoff);
-        _resetReconnectCounter?.Dispose();
-        _resetReconnectCounter = Observable
-            .Timer(TimeSpan.FromMinutes(1))
-            .FirstAsync()
-            .Subscribe(_ => _reconnectAttempts = 0);
-
-        _reconnectHandler.OnNext(backoff);
+        finally
+        {
+            _reconnectHandler.OnNext(backoff);
+        }
     }
 
     private void OnClose()
