@@ -29,13 +29,14 @@ jobs:
         with:
           dotnet-version: 6.0.302
       - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v2
+        uses: cycjimmy/semantic-release-action@v3
         with:
+          semantic_version: 19
           extra_plugins: |
             @semantic-release/exec
         env:
-          NUGET_SOURCE: "https://api.nuget.org/v3/index.json"
+          NUGET_SOURCE: 'https://api.nuget.org/v3/index.json'
           NUGET_API_KEY: ${{ secrets.NUGET_KEY }}
-          GH_NUGET_SOURCE: "https://nuget.pkg.github.com/buehler/index.json"
+          GH_NUGET_SOURCE: 'https://nuget.pkg.github.com/buehler/index.json'
           GH_NUGET_API_KEY: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
