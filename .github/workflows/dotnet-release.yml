@@ -7,16 +7,7 @@ on:
       - next
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 6.0.302
-      - name: Test
-        run: ./build.sh --target test --no-logo
+  # TODO: update semantic release here to use dotnet instead of nuke
   semantic-release:
     runs-on: ubuntu-latest
     needs: test
@@ -27,7 +18,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.302
+          dotnet-version: 7.0.102
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v3
         with:
@@ -35,8 +26,8 @@ jobs:
           extra_plugins: |
             @semantic-release/exec
         env:
-          NUGET_SOURCE: 'https://api.nuget.org/v3/index.json'
+          NUGET_SOURCE: "https://api.nuget.org/v3/index.json"
           NUGET_API_KEY: ${{ secrets.NUGET_KEY }}
-          GH_NUGET_SOURCE: 'https://nuget.pkg.github.com/buehler/index.json'
+          GH_NUGET_SOURCE: "https://nuget.pkg.github.com/buehler/index.json"
           GH_NUGET_API_KEY: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

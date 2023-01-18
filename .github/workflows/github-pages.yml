@@ -12,7 +12,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.302
+          dotnet-version: 7.0.102
       - name: Setup MS Build
         uses: microsoft/setup-msbuild@v1.1.3
       - name: Install DocFX
