@@ -28,7 +28,9 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.x
+          dotnet-version: |
+            6.x
+            7.x
 
       - name: Build
         run: dotnet build --configuration Release
