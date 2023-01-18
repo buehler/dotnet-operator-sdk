@@ -17,9 +17,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: |
-            6.x
-            7.x
+          dotnet-version: 7.x
 
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v3
