@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using KubeOps.Operator.Controller;
+﻿using KubeOps.Operator.Controller;
 using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Rbac;
 using KubeOps.TestOperator.Entities;
@@ -17,10 +16,10 @@ public class TestController : IResourceController<V1TestEntity>
         _manager = manager;
     }
 
-    public Task<ResourceControllerResult> ReconcileAsync(V1TestEntity entity)
+    public Task<ResourceControllerResult?> ReconcileAsync(V1TestEntity entity)
     {
         _manager.Reconciled(entity);
-        return Task.FromResult<ResourceControllerResult>(null);
+        return Task.FromResult<ResourceControllerResult?>(null);
     }
 
     public Task StatusModifiedAsync(V1TestEntity entity)

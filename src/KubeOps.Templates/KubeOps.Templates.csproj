@@ -15,7 +15,7 @@
     <PackageLicense>Apache-2.0</PackageLicense>
     <PackageDescription>dotnet new templates for KubeOps operator sdk.</PackageDescription>
 
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
 
     <IncludeContentInPack>true</IncludeContentInPack>
     <IncludeBuildOutput>false</IncludeBuildOutput>

@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using k8s.Models;
 using KubeOps.Operator;
 using KubeOps.Operator.Builder;

@@ -1,8 +1,8 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
-using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
+using KubeOps.KubernetesClient;
 using KubeOps.Operator.Entities.Extensions;
 using SimpleBase;
 

@@ -1,4 +1,4 @@
-﻿using DotnetKubernetesClient;
+﻿using KubeOps.KubernetesClient;
 using Localtunnel;
 using Localtunnel.Connections;
 using Localtunnel.Tunnels;

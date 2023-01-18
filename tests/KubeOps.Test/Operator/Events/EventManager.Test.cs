@@ -1,11 +1,9 @@
-﻿using System;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using DotnetKubernetesClient;
 using FluentAssertions;
 using k8s;
 using k8s.Models;
+using KubeOps.KubernetesClient;
 using KubeOps.Operator;
 using KubeOps.Operator.Events;
 using Microsoft.Extensions.Logging;

@@ -1,6 +1,6 @@
-﻿using DotnetKubernetesClient.Entities;
-using k8s;
+﻿using k8s;
 using k8s.Models;
+using KubeOps.KubernetesClient.Entities;
 using Prometheus;
 
 namespace KubeOps.Operator.DevOps;
@@ -12,7 +12,7 @@ internal class ResourceCacheMetrics<TEntity>
 
     public ResourceCacheMetrics(OperatorSettings settings)
     {
-        var crd = CustomEntityDefinitionExtensions.CreateResourceDefinition<TEntity>();
+        var crd = EntityDefinition.FromType<TEntity>();
         var labelValues = new[] { settings.Name, crd.Kind, crd.Group, crd.Version, crd.Scope.ToString(), };
 
         CachedItemsSummary = Metrics

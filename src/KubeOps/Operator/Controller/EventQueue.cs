@@ -1,8 +1,8 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
+using KubeOps.KubernetesClient;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Kubernetes;
 

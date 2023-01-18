@@ -1,6 +1,6 @@
 ﻿using System.Text;
-using DotnetKubernetesClient;
 using k8s.Models;
+using KubeOps.KubernetesClient;
 using KubeOps.Operator.Builder;
 using KubeOps.Operator.Webhooks;
 using McMaster.Extensions.CommandLineUtils;

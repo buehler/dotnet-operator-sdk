@@ -1,7 +1,7 @@
-﻿using DotnetKubernetesClient;
+﻿using k8s.Autorest;
+using KubeOps.KubernetesClient;
 using KubeOps.Operator.Entities;
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Rest;
 
 namespace KubeOps.Operator.Commands.Management;
 
@@ -36,7 +36,7 @@ internal class Uninstall
         }
 
         await app.Out.WriteLineAsync(
-            $@"Starting uninstall from the cluster with url ""{client.ApiClient.BaseUri}"".");
+            $@"Starting uninstall from the cluster with url ""{client.BaseUri}"".");
 
         foreach (var crd in crds)
         {

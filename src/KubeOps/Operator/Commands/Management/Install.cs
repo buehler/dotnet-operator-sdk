@@ -1,7 +1,7 @@
-﻿using DotnetKubernetesClient;
+﻿using k8s.Autorest;
+using KubeOps.KubernetesClient;
 using KubeOps.Operator.Entities;
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Rest;
 
 namespace KubeOps.Operator.Commands.Management;
 
@@ -26,7 +26,7 @@ internal class Install
         var error = false;
         var crds = _crdBuilder.BuildCrds().ToList();
         await app.Out.WriteLineAsync($"Found {crds.Count} CRD's.");
-        await app.Out.WriteLineAsync($@"Starting install into cluster with url ""{client.ApiClient.BaseUri}"".");
+        await app.Out.WriteLineAsync($@"Starting install into cluster with url ""{client.BaseUri}"".");
 
         foreach (var crd in crds)
         {

@@ -1,7 +1,7 @@
-﻿using DotnetKubernetesClient;
-using DotnetKubernetesClient.LabelSelectors;
-using k8s;
+﻿using k8s;
 using k8s.Models;
+using KubeOps.KubernetesClient;
+using KubeOps.KubernetesClient.LabelSelectors;
 
 namespace KubeOps.Testing
 {
@@ -11,11 +11,6 @@ namespace KubeOps.Testing
     /// </summary>
     public class MockKubernetesClient : IKubernetesClient
     {
-        /// <summary>
-        /// Instance of the default client.
-        /// </summary>
-        public IKubernetes ApiClient { get; } = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
-
         /// <summary>
         /// Mocked result for the <see cref="Get{TEntity}"/> call.
         /// If null, then null is returned.
@@ -50,6 +45,8 @@ namespace KubeOps.Testing
         /// This field must be manually reset.
         /// </summary>
         public object? UpdateResult { get; set; }
+
+        public Uri BaseUri => new("https://localhost:8080");
 
         /// <summary>
         /// Returns "default".

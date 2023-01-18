@@ -1,6 +1,6 @@
-﻿using DotnetKubernetesClient;
-using k8s;
+﻿using k8s;
 using k8s.Models;
+using KubeOps.KubernetesClient;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;

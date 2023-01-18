@@ -12,19 +12,8 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "./build.sh --no-logo --version ${nextRelease.version} --release-notes '${nextRelease.notes}' --target Pack"
-      }
-    ],
-    [
-      "@semantic-release/exec",
-      {
-        "publishCmd": "./build.sh --no-logo --target Publish --source-env GH_NUGET_SOURCE --api-key-env GH_NUGET_API_KEY"
-      }
-    ],
-    [
-      "@semantic-release/exec",
-      {
-        "publishCmd": "./build.sh --no-logo --target Publish --source-env NUGET_SOURCE --api-key-env NUGET_API_KEY"
+        "prepareCmd": "dotnet pack --configuration Release -o artifacts /property:Version=<%= nextRelease.version %> /property:PackageReleaseNotes='<%= _.truncate(_.replace(_.replace(nextRelease.notes, /[,]/g, '%2c'), /[;]/g, '%3b'), {length: 30000, omission: ''}) %>'",
+        "publishCmd": "(for p in $(ls artifacts); do dotnet nuget push artifacts/$p --source GH_NUGET_SOURCE --api-key GH_NUGET_API_KEY; done) && (for p in $(ls artifacts); do dotnet nuget push artifacts/$p --source NUGET_SOURCE --api-key NUGET_API_KEY; done)"
       }
     ],
     [

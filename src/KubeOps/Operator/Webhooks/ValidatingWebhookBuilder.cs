@@ -1,6 +1,6 @@
 using System.Reflection;
-using DotnetKubernetesClient.Entities;
 using k8s.Models;
+using KubeOps.KubernetesClient.Entities;
 using KubeOps.Operator.Builder;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Util;
@@ -58,7 +58,7 @@ internal class ValidatingWebhookBuilder
                         .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
                         .First(m => m.Name == "SupportedOperations");
 
-                    var crd = entityType.CreateResourceDefinition();
+                    var crd = entityType.ToEntityDefinition();
 
                     return new V1ValidatingWebhook
                     {

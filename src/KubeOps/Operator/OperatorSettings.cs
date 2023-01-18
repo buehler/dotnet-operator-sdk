@@ -1,12 +1,8 @@
 ﻿using System.Reflection;
 using System.Text.RegularExpressions;
-using DotnetKubernetesClient;
 using KellermanSoftware.CompareNetObjects;
+using KubeOps.KubernetesClient;
 using KubeOps.Operator.Errors;
-using KubeOps.Operator.Serialization;
-using Microsoft.Rest.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace KubeOps.Operator;
 
@@ -183,16 +179,5 @@ public sealed class OperatorSettings
         Caching = true,
         AutoClearCache = false,
         MembersToIgnore = new List<string> { "ResourceVersion", "ManagedFields" },
-    };
-
-    internal JsonSerializerSettings SerializerSettings { get; } = new()
-    {
-        DateFormatHandling = DateFormatHandling.IsoDateFormat,
-        DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-        NullValueHandling = NullValueHandling.Ignore,
-        ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-        ContractResolver = new NamingConvention(),
-        Converters = new List<JsonConverter> { new StringEnumConverter(), new Iso8601TimeSpanConverter(), },
-        DateFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffK",
     };
 }

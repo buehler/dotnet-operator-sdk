@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <Import Project="..\..\config\Common.targets" />
-  <Import Project="..\..\config\CodeAnalysis.targets" />
+  <Import Project="..\..\config\Common.targets"/>
+  <Import Project="..\..\config\CodeAnalysis.targets"/>
 
   <PropertyGroup>
     <OutputType>exe</OutputType>
@@ -24,19 +24,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CompareNETObjects" Version="4.77.0" />
-    <PackageReference Include="DotnetKubernetesClient" Version="2.1.11" />
-    <PackageReference Include="JsonDiffPatch" Version="2.0.55" />
-    <PackageReference Include="Localtunnel" Version="1.0.4" />
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.0.1" />
-    <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="4.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.5" />
-    <PackageReference Include="Namotion.Reflection" Version="2.0.10" />
-    <PackageReference Include="prometheus-net.AspNetCore" Version="7.0.0" />
-    <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="7.0.0" />
-    <PackageReference Include="SimpleBase" Version="3.1.0" />
-    <PackageReference Include="System.Reactive" Version="5.0.0" />
-    <PackageReference Include="YamlDotNet" Version="12.0.0" />
+    <PackageReference Include="CompareNETObjects" Version="4.78.0"/>
+    <PackageReference Include="JsonDiffPatch" Version="2.0.61"/>
+    <PackageReference Include="Localtunnel" Version="1.0.5"/>
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.0.2"/>
+    <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="4.0.2"/>
+    <PackageReference Include="Namotion.Reflection" Version="2.1.1"/>
+    <PackageReference Include="prometheus-net.AspNetCore" Version="7.0.0"/>
+    <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="7.0.0"/>
+    <PackageReference Include="SimpleBase" Version="4.0.0"/>
+    <PackageReference Include="System.Reactive" Version="5.0.0"/>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.13"/>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="7.0.2"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -49,6 +54,10 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>KubeOps.Testing</_Parameter1>
     </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KubeOps.KubernetesClient\KubeOps.KubernetesClient.csproj"/>
   </ItemGroup>
 
 </Project>

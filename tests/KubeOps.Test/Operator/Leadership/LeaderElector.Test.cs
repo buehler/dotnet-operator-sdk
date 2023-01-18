@@ -1,13 +1,10 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using DotnetKubernetesClient;
+﻿using System.Net;
+using k8s.Autorest;
 using k8s.Models;
+using KubeOps.KubernetesClient;
 using KubeOps.Operator;
 using KubeOps.Operator.Leadership;
 using Microsoft.Extensions.Logging;
-using Microsoft.Rest;
 using Moq;
 using Xunit;
 

@@ -9,14 +9,9 @@ namespace KubeOps.Operator.Commands.Generators;
 [Command("installer", Description = "Generates kustomization yaml for the whole installation of the operator.")]
 internal class InstallerGenerator : GeneratorBase
 {
-    private readonly EntitySerializer _serializer;
     private readonly OperatorSettings _settings;
 
-    public InstallerGenerator(EntitySerializer serializer, OperatorSettings settings)
-    {
-        _serializer = serializer;
-        _settings = settings;
-    }
+    public InstallerGenerator(OperatorSettings settings) => _settings = settings;
 
     [Option("--crds-dir", Description = "The path where the crds are located.")]
     public string? CrdsPath { get; set; }
@@ -32,7 +27,7 @@ internal class InstallerGenerator : GeneratorBase
         var fileWriter = new FileWriter(app.Out);
         fileWriter.Add(
             $"namespace.{Format.ToString().ToLower()}",
-            _serializer.Serialize(
+            EntitySerializer.Serialize(
                 new V1Namespace(
                     V1Namespace.KubeApiVersion,
                     V1Namespace.KubeKind,
@@ -40,7 +35,7 @@ internal class InstallerGenerator : GeneratorBase
                 Format));
         fileWriter.Add(
             $"kustomization.{Format.ToString().ToLower()}",
-            _serializer.Serialize(
+            EntitySerializer.Serialize(
                 new KustomizationConfig
                 {
                     NamePrefix = $"{_settings.Name}-",

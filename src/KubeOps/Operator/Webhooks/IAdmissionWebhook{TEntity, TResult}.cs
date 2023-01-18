@@ -1,5 +1,5 @@
-﻿using KubeOps.Operator.Entities.Extensions;
-using Newtonsoft.Json;
+﻿using k8s;
+using KubeOps.Operator.Entities.Extensions;
 
 namespace KubeOps.Operator.Webhooks;
 
@@ -91,8 +91,7 @@ public interface IAdmissionWebhook<TEntity, TResult>
 
     internal AdmissionResponse TransformResult(
         TResult result,
-        AdmissionRequest<TEntity> request,
-        JsonSerializerSettings jsonSettings);
+        AdmissionRequest<TEntity> request);
 
     internal void Register(IEndpointRouteBuilder endpoints) =>
         endpoints.MapPost(
@@ -108,15 +107,7 @@ public interface IAdmissionWebhook<TEntity, TResult>
                     return;
                 }
 
-                var jsonSerializerSettings = context
-                    .RequestServices
-                    .GetRequiredService<OperatorSettings>()
-                    .SerializerSettings;
-
-                using var reader = new StreamReader(context.Request.Body);
-                var review = JsonConvert.DeserializeObject<AdmissionReview<TEntity>>(
-                    await reader.ReadToEndAsync(),
-                    jsonSerializerSettings);
+                var review = KubernetesJson.Deserialize<AdmissionReview<TEntity>>(context.Request.Body.ToString());
 
                 if (review.Request == null)
                 {
@@ -159,7 +150,7 @@ public interface IAdmissionWebhook<TEntity, TResult>
                             $@"Operation ""{review.Request.Operation}"" not implemented."),
                     };
 
-                    response = TransformResult(result, review.Request, jsonSerializerSettings);
+                    response = TransformResult(result, review.Request);
                 }
                 catch (Exception ex)
                 {
