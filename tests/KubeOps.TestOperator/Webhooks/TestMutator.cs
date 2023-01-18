@@ -5,7 +5,7 @@ namespace KubeOps.TestOperator.Webhooks;
 
 public class TestMutator : IMutationWebhook<V2TestEntity>
 {
-    public AdmissionOperations Operations { get; } = AdmissionOperations.Create;
+    public AdmissionOperations Operations => AdmissionOperations.Create;
 
     public MutationResult Create(V2TestEntity newEntity, bool dryRun)
     {

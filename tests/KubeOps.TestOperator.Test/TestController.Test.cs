@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using KubeOps.Operator.Controller;
+﻿using KubeOps.Operator.Controller;
 using KubeOps.Operator.Kubernetes;
 using KubeOps.Testing;
 using KubeOps.TestOperator.Entities;

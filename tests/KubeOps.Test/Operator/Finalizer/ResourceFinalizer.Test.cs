@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Test.TestEntities;
 using Xunit;

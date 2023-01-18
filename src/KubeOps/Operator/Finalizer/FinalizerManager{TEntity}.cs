@@ -1,6 +1,6 @@
-﻿using DotnetKubernetesClient;
-using k8s;
+﻿using k8s;
 using k8s.Models;
+using KubeOps.KubernetesClient;
 
 namespace KubeOps.Operator.Finalizer;
 

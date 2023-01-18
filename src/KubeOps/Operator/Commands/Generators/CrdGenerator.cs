@@ -9,14 +9,9 @@ namespace KubeOps.Operator.Commands.Generators;
 [Command("crd", "crds", Description = "Generates the needed CRD for kubernetes.")]
 internal class CrdGenerator : GeneratorBase
 {
-    private readonly EntitySerializer _serializer;
     private readonly ICrdBuilder _crdBuilder;
 
-    public CrdGenerator(EntitySerializer serializer, ICrdBuilder crdBuilder)
-    {
-        _serializer = serializer;
-        _crdBuilder = crdBuilder;
-    }
+    public CrdGenerator(ICrdBuilder crdBuilder) => _crdBuilder = crdBuilder;
 
     public async Task<int> OnExecuteAsync(CommandLineApplication app)
     {
@@ -27,12 +22,12 @@ internal class CrdGenerator : GeneratorBase
         {
             fileWriter.Add(
                 $"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLower()}",
-                _serializer.Serialize(crd, Format));
+                EntitySerializer.Serialize(crd, Format));
         }
 
         fileWriter.Add(
             $"kustomization.{Format.ToString().ToLower()}",
-            _serializer.Serialize(
+            EntitySerializer.Serialize(
                 new KustomizationConfig
                 {
                     Resources = crds

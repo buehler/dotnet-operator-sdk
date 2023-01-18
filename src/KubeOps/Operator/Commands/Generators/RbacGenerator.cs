@@ -10,26 +10,21 @@ namespace KubeOps.Operator.Commands.Generators;
 [Command("rbac", Description = "Generates the needed rbac roles for the operator.")]
 internal class RbacGenerator : GeneratorBase
 {
-    private readonly EntitySerializer _serializer;
     private readonly IRbacBuilder _rbacBuilder;
 
     public RbacGenerator(
-        EntitySerializer serializer,
-        IRbacBuilder rbacBuilder)
-    {
-        _serializer = serializer;
+        IRbacBuilder rbacBuilder) =>
         _rbacBuilder = rbacBuilder;
-    }
 
     public async Task<int> OnExecuteAsync(CommandLineApplication app)
     {
         var fileWriter = new FileWriter(app.Out);
         fileWriter.Add(
             $"operator-role.{Format.ToString().ToLower()}",
-            _serializer.Serialize(_rbacBuilder.BuildManagerRbac(), Format));
+            EntitySerializer.Serialize(_rbacBuilder.BuildManagerRbac(), Format));
         fileWriter.Add(
             $"operator-role-binding.{Format.ToString().ToLower()}",
-            _serializer.Serialize(
+            EntitySerializer.Serialize(
                 new V1ClusterRoleBinding
                 {
                     ApiVersion = $"{V1ClusterRoleBinding.KubeGroup}/{V1ClusterRoleBinding.KubeApiVersion}",
@@ -44,7 +39,7 @@ internal class RbacGenerator : GeneratorBase
                 Format));
         fileWriter.Add(
             $"kustomization.{Format.ToString().ToLower()}",
-            _serializer.Serialize(
+            EntitySerializer.Serialize(
                 new KustomizationConfig
                 {
                     Resources = new List<string>

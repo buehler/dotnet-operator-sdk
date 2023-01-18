@@ -1,6 +1,6 @@
-﻿using DotnetKubernetesClient.Entities;
-using k8s;
+﻿using k8s;
 using k8s.Models;
+using KubeOps.KubernetesClient.Entities;
 
 namespace KubeOps.Operator.Finalizer;
 
@@ -22,7 +22,7 @@ public interface IResourceFinalizer<in TEntity>
     {
         get
         {
-            var crd = CustomEntityDefinitionExtensions.CreateResourceDefinition<TEntity>();
+            var crd = EntityDefinition.FromType<TEntity>();
             var finalizerName = GetType().Name.ToLowerInvariant();
             var name =
                 $"{crd.Group}/{GetType().Name.ToLowerInvariant()}{(finalizerName.EndsWith("finalizer") ? string.Empty : "finalizer")}";

@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace KubeOps.Templates.Test;
+﻿namespace KubeOps.Templates.Test;
 
 public class TemplateExecutor : DotnetExecutor, IDisposable
 {

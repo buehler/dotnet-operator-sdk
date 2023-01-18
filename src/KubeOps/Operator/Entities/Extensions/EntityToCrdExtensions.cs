@@ -1,14 +1,14 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using DotnetKubernetesClient.Entities;
+using System.Text.Json.Serialization;
 using k8s;
 using k8s.Models;
+using KubeOps.KubernetesClient.Entities;
 using KubeOps.Operator.Entities.Annotations;
 using KubeOps.Operator.Errors;
 using KubeOps.Operator.Util;
 using Namotion.Reflection;
-using Newtonsoft.Json;
 
 namespace KubeOps.Operator.Entities.Extensions;
 
@@ -37,7 +37,7 @@ internal static class EntityToCrdExtensions
 
     internal static V1CustomResourceDefinition CreateCrd(this Type entityType)
     {
-        var entityDefinition = entityType.CreateResourceDefinition();
+        var entityDefinition = entityType.ToEntityDefinition();
 
         var crd = new V1CustomResourceDefinition(
             new V1CustomResourceDefinitionSpec(),
@@ -390,8 +390,8 @@ internal static class EntityToCrdExtensions
 
     private static string GetPropertyName(PropertyInfo property)
     {
-        var attribute = property.GetCustomAttribute<JsonPropertyAttribute>();
-        var propertyName = attribute?.PropertyName ?? property.Name;
+        var attribute = property.GetCustomAttribute<JsonPropertyNameAttribute>();
+        var propertyName = attribute?.Name ?? property.Name;
         return propertyName.ToCamelCase();
     }
 

@@ -1,5 +1,5 @@
-﻿using DotnetKubernetesClient.Entities;
-using k8s.Models;
+﻿using k8s.Models;
+using KubeOps.KubernetesClient.Entities;
 
 namespace KubeOps.Operator.Rbac;
 
@@ -26,7 +26,7 @@ internal static class RbacAttributeExtensions
             .GroupBy(e => e.EntityType)
             .Select(
                 group => (
-                    Crd: group.Key.CreateResourceDefinition(),
+                    Crd: group.Key.ToEntityDefinition(),
                     Verbs: group.Aggregate(RbacVerb.None, (accumulator, element) => accumulator | element.Verbs)))
             .GroupBy(group => group.Verbs)
             .Select(
@@ -47,7 +47,7 @@ internal static class RbacAttributeExtensions
             .SelectMany(attribute => attribute.Entities.Select(type => (EntityType: type, attribute.Verbs)))
             .Where(e => e.EntityType.GetProperty("Status") != null)
             .GroupBy(e => e.EntityType)
-            .Select(group => group.Key.CreateResourceDefinition())
+            .Select(group => group.Key.ToEntityDefinition())
             .Select(
                 crd => new V1PolicyRule()
                 {

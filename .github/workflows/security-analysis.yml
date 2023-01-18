@@ -18,13 +18,7 @@ jobs:
         language: ["csharp"]
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-
-      - run: git checkout HEAD^2
-        if: ${{ github.event_name == 'pull_request' }}
+      - uses: actions/checkout@v3
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
@@ -34,10 +28,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.302
+          dotnet-version: 7.x
 
       - name: Build
-        run: ./build.sh --target compile --no-logo
+        run: dotnet build --configuration Release
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2

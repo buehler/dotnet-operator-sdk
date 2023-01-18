@@ -1,22 +1,51 @@
 name: .NET Testing
 
 on:
-  push:
-    branches:
-      - "!master"
-      - "!release"
   pull_request:
     branches:
       - "**"
 
 jobs:
   test:
+    name: Execute Test ${{ matrix.project }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - project: KubeOps.KubernetesClient.Test
+            kubernetes: true
+          - project: KubeOps.Test
+            kubernetes: false
+          - project: KubeOps.Templates.Test
+            kubernetes: false
+          - project: KubeOps.TestOperator.Test
+            kubernetes: false
     steps:
       - uses: actions/checkout@v3
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.302
-      - name: Test
-        run: ./build.sh --target test --no-logo
+          dotnet-version: 7.x
+
+      - name: Create Kubernetes Cluster
+        uses: helm/kind-action@v1.5.0
+        if: ${{ matrix.kubernetes == true }}
+
+      - name: Execute Tests
+        run: dotnet test --configuration Release tests/${{ matrix.project }}
+
+  result:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    name: Final Results
+    needs: [test]
+    steps:
+      - run: |
+          result="${{ needs.test.result }}"
+          if [[ $result == "success" || $result == "skipped" ]]; then
+            exit 0
+          else
+            exit 1
+          fi

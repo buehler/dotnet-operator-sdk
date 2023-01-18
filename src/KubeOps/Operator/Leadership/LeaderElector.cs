@@ -1,9 +1,9 @@
 ﻿using System.Net;
-using DotnetKubernetesClient;
-using DotnetKubernetesClient.LabelSelectors;
+using k8s.Autorest;
 using k8s.Models;
+using KubeOps.KubernetesClient;
+using KubeOps.KubernetesClient.LabelSelectors;
 using KubeOps.Operator.Entities.Extensions;
-using Microsoft.Rest;
 using Timer = System.Timers.Timer;
 
 namespace KubeOps.Operator.Leadership;

@@ -10,16 +10,13 @@ namespace KubeOps.Operator.Commands.Generators;
 [Command("operator", "op", Description = "Generates the needed yamls to run the operator.")]
 internal class OperatorGenerator : GeneratorBase
 {
-    private readonly EntitySerializer _serializer;
     private readonly OperatorSettings _settings;
     private readonly bool _hasWebhooks;
 
     public OperatorGenerator(
-        EntitySerializer serializer,
         OperatorSettings settings,
         IComponentRegistrar componentRegistrar)
     {
-        _serializer = serializer;
         _settings = settings;
 
         _hasWebhooks = componentRegistrar.ValidatorRegistrations.Any() ||
@@ -40,7 +37,7 @@ internal class OperatorGenerator : GeneratorBase
 
         fileWriter.Add(
             $"kustomization.{Format.ToString().ToLower()}",
-            _serializer.Serialize(
+            EntitySerializer.Serialize(
                 new KustomizationConfig
                 {
                     Resources = new List<string> { $"deployment.{Format.ToString().ToLower()}", },
@@ -77,7 +74,7 @@ internal class OperatorGenerator : GeneratorBase
 
         fileWriter.Add(
             $"deployment.{Format.ToString().ToLower()}",
-            _serializer.Serialize(
+            EntitySerializer.Serialize(
                 new V1Deployment(
                     $"{V1Deployment.KubeGroup}/{V1Deployment.KubeApiVersion}",
                     V1Deployment.KubeKind,

@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
-using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
+using KubeOps.KubernetesClient;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.DevOps;
@@ -11,12 +11,10 @@ using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
 using KubeOps.Operator.Rbac;
-using KubeOps.Operator.Serialization;
 using KubeOps.Operator.Webhooks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Prometheus;
-using YamlDotNet.Serialization;
 
 namespace KubeOps.Operator.Builder;
 
@@ -190,17 +188,7 @@ internal class OperatorBuilder : IOperatorBuilder
         Services.AddTransient<ValidatingWebhookConfigurationBuilder>();
         Services.AddTransient<IWebhookMetadataBuilder, WebhookMetadataBuilder>();
 
-        Services.AddTransient(
-            _ => new SerializerBuilder()
-                .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
-                .WithNamingConvention(new NamingConvention())
-                .WithTypeConverter(new Yaml.ByteArrayStringYamlConverter())
-                .WithTypeConverter(new IntOrStringYamlConverter())
-                .Build());
-
-        Services.AddTransient<EntitySerializer>();
-
-        Services.AddSingleton<IKubernetesClient, KubernetesClient>();
+        Services.AddSingleton<IKubernetesClient, KubernetesClient.KubernetesClient>();
         Services.AddScoped<IEventManager, EventManager>();
 
         Services.AddScoped(typeof(IResourceCache<>), typeof(ResourceCache<>));

@@ -1,5 +1,5 @@
-﻿using DotnetKubernetesClient.Entities;
-using k8s.Models;
+﻿using k8s.Models;
+using KubeOps.KubernetesClient.Entities;
 using KubeOps.Operator.Entities;
 
 namespace KubeOps.TestOperator.Entities;

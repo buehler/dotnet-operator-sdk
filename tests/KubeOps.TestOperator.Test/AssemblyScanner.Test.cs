@@ -1,4 +1,3 @@
-using System.Linq;
 using FluentAssertions;
 using KubeOps.Operator.Builder;
 using KubeOps.Testing;

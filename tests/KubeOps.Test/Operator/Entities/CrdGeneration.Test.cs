@@ -1,14 +1,12 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using DotnetKubernetesClient.Entities;
+﻿using System.Reflection;
+using System.Text.Json.Serialization;
 using FluentAssertions;
 using k8s.Models;
+using KubeOps.KubernetesClient.Entities;
 using KubeOps.Operator.Entities.Extensions;
 using KubeOps.Operator.Errors;
 using KubeOps.Operator.Util;
 using KubeOps.Test.TestEntities;
-using Newtonsoft.Json;
 using Xunit;
 
 namespace KubeOps.Test.Operator.Entities;
@@ -23,7 +21,7 @@ public class CrdGenerationTest
     public void Should_Use_Correct_CRD()
     {
         var crd = _testSpecEntity.CreateCrd();
-        var ced = _testSpecEntity.CreateResourceDefinition();
+        var ced = _testSpecEntity.ToEntityDefinition();
 
         crd.Kind.Should().Be(V1CustomResourceDefinition.KubeKind);
         crd.Metadata.Name.Should().Be($"{ced.Plural}.{ced.Group}");
@@ -411,11 +409,11 @@ public class CrdGenerationTest
         var crd = _testSpecEntity.CreateCrd();
 
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
-        var propertyNameFromType = nameof(TestSpecEntitySpec.PropertyWithJsonAttribute);
+        const string propertyNameFromType = nameof(TestSpecEntitySpec.PropertyWithJsonAttribute);
         var propertyNameFromAttribute = typeof(TestSpecEntitySpec)
             .GetProperty(propertyNameFromType)
-            ?.GetCustomAttribute<JsonPropertyAttribute>()
-            ?.PropertyName;
+            ?.GetCustomAttribute<JsonPropertyNameAttribute>()
+            ?.Name;
         specProperties.Properties.Should().ContainKey(propertyNameFromAttribute?.ToCamelCase());
         specProperties.Properties.Should().NotContainKey(propertyNameFromType.ToCamelCase());
     }

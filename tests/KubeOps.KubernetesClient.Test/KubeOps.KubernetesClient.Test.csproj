@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\config\CommonTests.targets" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\KubeOps.KubernetesClient\KubeOps.KubernetesClient.csproj" />
+  </ItemGroup>
+
+</Project>
