@@ -1,9 +1,10 @@
-# Dotnet New Templates
+# KubeOps Dotnet New Templates
 
-To use the operator SDK as easy as possible, there exists a
+To use the operator SDK as easy as possible, this
 [Nuget Package](https://www.nuget.org/packages/KubeOps.Templates)
-that contains `dotnet new` templates.
-These templates enable developers to create Kubernetes operators.
+contains `dotnet new` templates.
+These templates enable developers to create Kubernetes operators
+with the simple dotnet new command in C# or F#.
 
 ## Installation
 

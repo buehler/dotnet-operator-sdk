@@ -7,7 +7,28 @@
     <LangVersion>11</LangVersion>
     <Authors>Christoph Bühler</Authors>
     <Owner>cbuehler</Owner>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageProjectUrl>https://github.com/buehler/dotnet-operator-sdk.git</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicense>Apache-2.0</PackageLicense>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\"/>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\"/>
+    <None Include="..\..\res\icon.png">
+      <Pack>true</Pack>
+      <PackagePath>\</PackagePath>
+      <Visible>false</Visible>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

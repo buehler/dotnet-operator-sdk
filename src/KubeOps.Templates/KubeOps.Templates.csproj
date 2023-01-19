@@ -9,10 +9,6 @@
     <PackageId>KubeOps.Templates</PackageId>
     <Title>KubeOps Templates</Title>
     <PackageTags>dotnet-new templates Kubernetes Operator Sdk KubeOps</PackageTags>
-    <PackageProjectUrl>https://buehler.github.io/dotnet-operator-sdk/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicense>Apache-2.0</PackageLicense>
     <PackageDescription>dotnet new templates for KubeOps operator sdk.</PackageDescription>
 
     <TargetFrameworks>netstandard2.0</TargetFrameworks>

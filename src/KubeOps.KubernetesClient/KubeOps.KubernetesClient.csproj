@@ -7,20 +7,12 @@
     <IsPackable>true</IsPackable>
     <PackageId>KubeOps.KubernetesClient</PackageId>
     <PackageTags>Kubernetes Dotnet Client API</PackageTags>
-    <PackageProjectUrl>https://buehler.github.io/dotnet-operator-sdk/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicense>Apache-2.0</PackageLicense>
     <PackageDescription>
       Kubernetes Client written in DotNet. Based on the implementation of
       Google (https://github.com/kubernetes-client/csharp) but with dotnet native language
       features like generics. Internally uses the "GenericClient" of the Google KubernetesClient.
       However, wraps the methods around with true generics.
     </PackageDescription>
-  </PropertyGroup>
-  
-  <PropertyGroup>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

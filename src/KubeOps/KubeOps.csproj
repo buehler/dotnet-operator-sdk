@@ -1,21 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <Import Project="..\..\config\Common.targets"/>
-  <Import Project="..\..\config\CodeAnalysis.targets"/>
+  <Import Project="..\..\config\Common.targets" />
+  <Import Project="..\..\config\CodeAnalysis.targets" />
 
   <PropertyGroup>
     <OutputType>exe</OutputType>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>KubeOps</PackageId>
     <PackageTags>Kubernetes Operator SDK CustomResourceDefinition</PackageTags>
-    <PackageProjectUrl>https://buehler.github.io/dotnet-operator-sdk/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicense>Apache-2.0</PackageLicense>
     <PackageDescription>
       This is an operator sdk written in c#.
       It enables a developer to create a custom controller for CRDs
@@ -24,24 +19,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CompareNETObjects" Version="4.78.0"/>
-    <PackageReference Include="JsonDiffPatch" Version="2.0.61"/>
-    <PackageReference Include="Localtunnel" Version="1.0.5"/>
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.0.2"/>
-    <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="4.0.2"/>
-    <PackageReference Include="Namotion.Reflection" Version="2.1.1"/>
-    <PackageReference Include="prometheus-net.AspNetCore" Version="7.0.0"/>
-    <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="7.0.0"/>
-    <PackageReference Include="SimpleBase" Version="4.0.0"/>
-    <PackageReference Include="System.Reactive" Version="5.0.0"/>
+    <PackageReference Include="CompareNETObjects" Version="4.78.0" />
+    <PackageReference Include="JsonDiffPatch" Version="2.0.61" />
+    <PackageReference Include="Localtunnel" Version="1.0.5" />
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.0.2" />
+    <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="4.0.2" />
+    <PackageReference Include="Namotion.Reflection" Version="2.1.1" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="7.0.0" />
+    <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="7.0.0" />
+    <PackageReference Include="SimpleBase" Version="4.0.0" />
+    <PackageReference Include="System.Reactive" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.13"/>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.13" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="7.0.2"/>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="7.0.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -57,7 +52,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KubeOps.KubernetesClient\KubeOps.KubernetesClient.csproj"/>
+    <ProjectReference Include="..\KubeOps.KubernetesClient\KubeOps.KubernetesClient.csproj" />
   </ItemGroup>
 
 </Project>

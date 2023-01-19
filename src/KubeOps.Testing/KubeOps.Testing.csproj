@@ -7,10 +7,6 @@
     <IsPackable>true</IsPackable>
     <PackageId>KubeOps.Testing</PackageId>
     <PackageTags>Kubernetes Operator SDK CustomResourceDefinition Testing Test</PackageTags>
-    <PackageProjectUrl>https://buehler.github.io/dotnet-operator-sdk/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicense>Apache-2.0</PackageLicense>
     <PackageDescription>
       Additional Resources that helps / supports integration
       testing on a kubernetes operator written with the KubeOps
