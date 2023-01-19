@@ -46,7 +46,7 @@
 
   <ItemGroup>
     <Content Include="Build\KubeOps.targets">
-      <PackagePath>build\$(TargetFramework)\</PackagePath>
+      <PackagePath>build\</PackagePath>
     </Content>
   </ItemGroup>
 
