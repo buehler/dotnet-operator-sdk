@@ -9,13 +9,7 @@
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
-    [
-      "@semantic-release/exec",
-      {
-        "prepareCmd": "dotnet pack --configuration Release -o artifacts /property:Version=<%= nextRelease.version %> /property:PackageReleaseNotes='<%= _.truncate(_.replace(_.replace(nextRelease.notes, /[,]/g, '%2c'), /[;]/g, '%3b'), {length: 30000, omission: ''}) %>'",
-        "publishCmd": "(for p in $(ls artifacts); do dotnet nuget push artifacts/$p --source $GH_NUGET_SOURCE --api-key $GH_NUGET_API_KEY; done) && (for p in $(ls artifacts); do dotnet nuget push artifacts/$p --source $NUGET_SOURCE --api-key $NUGET_API_KEY; done)"
-      }
-    ],
+    "semantic-release-net",
     [
       "@semantic-release/github",
       {
