@@ -30,37 +30,7 @@ public class TestControllerTest : IClassFixture<KubernetesOperatorFactory<TestSt
     }
 
     [Fact]
-    public async Task Test_If_Manager_Created_Is_Called()
-    {
-        _factory.Run();
-
-        _managerMock.Setup(o => o.Reconciled(It.IsAny<V1TestEntity>()));
-        _managerMock.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Never);
-
-        await _controller.StartAsync();
-        await _factory.EnqueueEvent(ResourceEventType.Reconcile, new V1TestEntity());
-        await _controller.StopAsync();
-
-        _managerMock.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task Test_If_Manager_Updated_Is_Called()
-    {
-        _factory.Run();
-
-        _managerMock.Setup(o => o.Reconciled(It.IsAny<V1TestEntity>()));
-        _managerMock.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Never);
-
-        await _controller.StartAsync();
-        await _factory.EnqueueEvent(ResourceEventType.Reconcile, new V1TestEntity());
-        await _controller.StopAsync();
-
-        _managerMock.Verify(o => o.Reconciled(It.IsAny<V1TestEntity>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task Test_If_Manager_NotModified_Is_Called()
+    public async Task Test_If_Manager_Reconciled_Is_Called()
     {
         _factory.Run();
 
