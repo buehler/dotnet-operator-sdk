@@ -1,4 +1,5 @@
 {
+  "debug": true,
   "branches": [
     "master",
     {
@@ -10,10 +11,18 @@
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
-      "@semantic-release/exec",
+      "semantic-release-net",
       {
-        "prepareCmd": "dotnet pack --configuration Release -o artifacts /property:Version=<%= nextRelease.version %> /property:PackageReleaseNotes='<%= _.truncate(_.replace(_.replace(nextRelease.notes, /[,]/g, '%2c'), /[;]/g, '%3b'), {length: 30000, omission: ''}) %>'",
-        "publishCmd": "(for p in $(ls artifacts); do dotnet nuget push artifacts/$p --source $GH_NUGET_SOURCE --api-key $GH_NUGET_API_KEY; done) && (for p in $(ls artifacts); do dotnet nuget push artifacts/$p --source $NUGET_SOURCE --api-key $NUGET_API_KEY; done)"
+        "sources": [
+          {
+            "url": "https://api.nuget.org/v3/index.json",
+            "apiKeyEnvVar": "NUGET_API_KEY"
+          },
+          {
+            "url": "https://nuget.pkg.github.com/buehler/index.json",
+            "apiKeyEnvVar": "GH_NUGET_API_KEY"
+          }
+        ]
       }
     ],
     [
