@@ -26,6 +26,7 @@ jobs:
           extra_plugins: |
             semantic-release-net
         env:
+          DEBUG: semantic-release:*
           NUGET_API_KEY: ${{ secrets.NUGET_KEY }}
           GH_NUGET_API_KEY: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
