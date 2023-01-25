@@ -1,0 +1,68 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - run: mkdir public
+
+      - name: Build Index
+        uses: jaywcjlove/markdown-to-html-cli@main
+        with:
+          source: res/docs_index.md
+          output: public/index.html
+          github-corners: https://github.com/buehler/dotnet-operator-sdk
+
+      - name: Build KubeOps
+        uses: jaywcjlove/markdown-to-html-cli@main
+        with:
+          source: src/KubeOps/README.md
+          output: public/kubeops.html
+          github-corners: https://github.com/buehler/dotnet-operator-sdk/tree/master/src/KubeOps
+
+      - name: Build KubeOps.KubernetesClient
+        uses: jaywcjlove/markdown-to-html-cli@main
+        with:
+          source: src/KubeOps.KubernetesClient/README.md
+          output: public/kubeops-kubernetesclient.html
+          github-corners: https://github.com/buehler/dotnet-operator-sdk/tree/master/src/KubeOps.KubernetesClient
+
+      - name: Build KubeOps.Templates
+        uses: jaywcjlove/markdown-to-html-cli@main
+        with:
+          source: src/KubeOps.Templates/README.md
+          output: public/kubeops-templates.html
+          github-corners: https://github.com/buehler/dotnet-operator-sdk/tree/master/src/KubeOps.Templates
+
+      - name: Build KubeOps.Testing
+        uses: jaywcjlove/markdown-to-html-cli@main
+        with:
+          source: src/KubeOps.Testing/README.md
+          output: public/kubeops-testing.html
+          github-corners: https://github.com/buehler/dotnet-operator-sdk/tree/master/src/KubeOps.Testing
+
+      - uses: actions/upload-pages-artifact@v1
+        with:
+          path: public
+
+      - uses: actions/deploy-pages@v1
