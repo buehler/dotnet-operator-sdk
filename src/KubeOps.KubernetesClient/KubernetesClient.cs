@@ -72,7 +72,7 @@ public class KubernetesClient : IKubernetesClient
 
             return await (string.IsNullOrWhiteSpace(@namespace)
                 ? client.ReadAsync<TResource>(name)
-                : client.ReadNamespacedAsync<TResource>(name, @namespace));
+                : client.ReadNamespacedAsync<TResource>(@namespace, name));
         }
         catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
         {
