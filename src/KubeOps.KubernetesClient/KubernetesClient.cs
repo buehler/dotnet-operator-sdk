@@ -248,6 +248,9 @@ public class KubernetesClient : IKubernetesClient
                 onClose));
     }
 
+    /// <inheritdoc />
+    public IKubernetes ApiClient => _client;
+
     private GenericClient CreateClient<TResource>()
         where TResource : IKubernetesObject<V1ObjectMeta>
     {
