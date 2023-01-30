@@ -365,6 +365,11 @@ internal static class EntityToCrdExtensions
                         prop.GetCustomAttribute<IgnorePropertyAttribute>() == null)
             .Select(GetPropertyName)
             .ToList();
+        if (jsonPath == string.Empty && type.GetCustomAttribute<RequiredSpecAttribute>() != null)
+        {
+            props.Required.Add(typeof(CustomKubernetesEntity<>).GetProperties()[0].Name.ToLowerInvariant());
+        }
+
         if (props.Required.Count == 0)
         {
             props.Required = null;
