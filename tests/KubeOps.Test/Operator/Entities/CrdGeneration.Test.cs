@@ -462,6 +462,14 @@ public class CrdGenerationTest
     }
 
     [Fact]
+    public void Should_Correctly_Use_Required_Spec_Attribute()
+    {
+        var clusterCrd = _testClusterSpecEntity.CreateCrd();
+
+        clusterCrd.Spec.Versions.First().Schema.OpenAPIV3Schema.Required.Should().Contain("spec");
+    }
+
+    [Fact]
     public void Should_Not_Contain_Ignored_Property()
     {
         const string propertyName = nameof(TestSpecEntity.Spec.IgnoredProperty);
