@@ -34,17 +34,7 @@ public class KubernetesClient : IKubernetesClient
     /// <inheritdoc />
     public IKubernetes ApiClient => _client;
 
-    private GenericClient CreateClient<TResource>()
-        where TResource : IKubernetesObject<V1ObjectMeta>
-    {
-        var definition = EntityDefinition.FromType<TResource>();
-        return definition.Group switch
-        {
-            "" => new GenericClient(_client, definition.Version, definition.Plural),
-            _ => new GenericClient(_client, definition.Group, definition.Version, definition.Plural),
-        };
-    }
-
+    /// <inheritdoc />
     public Uri BaseUri => _client.BaseUri;
 
     /// <inheritdoc />
@@ -260,5 +250,16 @@ public class KubernetesClient : IKubernetesClient
                 onEvent,
                 onError,
                 onClose));
+    }
+
+    private GenericClient CreateClient<TResource>()
+        where TResource : IKubernetesObject<V1ObjectMeta>
+    {
+        var definition = EntityDefinition.FromType<TResource>();
+        return definition.Group switch
+        {
+            "" => new GenericClient(_client, definition.Version, definition.Plural),
+            _ => new GenericClient(_client, definition.Group, definition.Version, definition.Plural),
+        };
     }
 }
