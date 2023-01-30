@@ -17,6 +17,11 @@ namespace KubeOps.Testing;
 public class MockKubernetesClient : IKubernetesClient
 {
     /// <summary>
+    /// Instance of the default client.
+    /// </summary>
+    public IKubernetes ApiClient { get; } = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+
+    /// <summary>
     /// Mocked result for the <see cref="Get{TEntity}"/> call.
     /// If null, then null is returned.
     /// This field must be manually reset.

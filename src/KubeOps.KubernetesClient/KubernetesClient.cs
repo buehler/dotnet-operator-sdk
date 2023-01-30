@@ -31,6 +31,10 @@ public class KubernetesClient : IKubernetesClient
         _client = client;
     }
 
+    /// <inheritdoc />
+    public IKubernetes ApiClient => _client;
+
+    /// <inheritdoc />
     public Uri BaseUri => _client.BaseUri;
 
     /// <inheritdoc />
