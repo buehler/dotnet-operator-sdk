@@ -1,0 +1,12 @@
+name: Documentation
+description: "Suggest a topic that is not correctly documented (or not documented at all)"
+title: "[docs]: "
+labels: ["documentation"]
+body:
+- type: textarea
+  id: description
+  attributes:
+    label: Describe the missing piece of documentation
+    description: Describe what you miss in the docs (or what is wrong).
+  validations:
+    required: true
