@@ -33,6 +33,13 @@ jobs:
           output: public/index.html
           github-corners: https://github.com/buehler/dotnet-operator-sdk
 
+      - name: Build Contribution
+        uses: jaywcjlove/markdown-to-html-cli@main
+        with:
+          source: CONTRIBUTING.md
+          output: public/contribution.html
+          github-corners: https://github.com/buehler/dotnet-operator-sdk
+
       - name: Build KubeOps
         uses: jaywcjlove/markdown-to-html-cli@main
         with:

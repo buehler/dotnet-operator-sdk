@@ -22,6 +22,16 @@ below.
 ## Contribution
 
 If you want to contribute, feel free to open a pull request or write issues :-)
+Read more about contribution (especially for setting up your local environment)
+in the [CONTRIBUTING file](./contribution.html).
+
+Short wrapup:
+- Check out the code
+- Develop on KubeOps
+- Use some Kubernetes to run the test operator against
+- Create tests
+- Build the whole solution (lint warnings will result in an error)
+- Open PR
 
 ## Motivation
 
