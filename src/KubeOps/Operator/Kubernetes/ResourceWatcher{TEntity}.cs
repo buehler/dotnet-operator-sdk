@@ -194,8 +194,6 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
                 .Timer(TimeSpan.FromMinutes(1))
                 .FirstAsync()
                 .Subscribe(_ => _reconnectAttempts = 0);
-
-            _reconnectHandler.OnNext(backoff);
         }
         catch (Exception exception)
         {
