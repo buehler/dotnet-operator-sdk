@@ -73,9 +73,9 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
         {
             _watchEvents.Dispose();
             _reconnectHandler.Dispose();
+            _reconnectSubscription.Dispose();
         }
 
-        _reconnectSubscription.Dispose();
         if (_cancellation?.IsCancellationRequested == false)
         {
             _cancellation.Cancel();
