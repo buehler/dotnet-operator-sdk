@@ -1,9 +1,11 @@
-﻿using k8s;
+﻿using FluentAssertions;
+using k8s;
 using k8s.Models;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator;
 using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Kubernetes;
+using KubeOps.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Prometheus;
@@ -21,7 +23,7 @@ public class ResourceWatcherTest
         public V1ObjectMeta Metadata { get; set; } = null!;
     }
 
-    private readonly Mock<IKubernetesClient> _client = new();
+    private readonly IKubernetesClient _client = new MockKubernetesClient();
     private readonly Mock<IResourceWatcherMetrics<TestResource>> _metrics = new();
 
     [Fact]
@@ -31,12 +33,14 @@ public class ResourceWatcherTest
 
         _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
 
-        using var resourceWatcher = new ResourceWatcher<TestResource>(_client.Object, new NullLogger<ResourceWatcher<TestResource>>(), _metrics.Object, settings);
+        using var resourceWatcher = new ResourceWatcher<TestResource>(_client, new NullLogger<ResourceWatcher<TestResource>>(), _metrics.Object, settings);
 
         await resourceWatcher.StartAsync();
 
         await resourceWatcher.StopAsync();
 
         await resourceWatcher.StartAsync();
+
+        resourceWatcher.WatchEvents.Should().NotBeNull();
     }
 }
