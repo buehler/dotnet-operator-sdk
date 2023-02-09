@@ -17,7 +17,7 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
     private readonly Subject<WatchEvent> _watchEvents = new();
     private readonly IKubernetesClient _client;
     private readonly ILogger<ResourceWatcher<TEntity>> _logger;
-    private readonly ResourceWatcherMetrics<TEntity> _metrics;
+    private readonly IResourceWatcherMetrics<TEntity> _metrics;
     private readonly OperatorSettings _settings;
     private readonly Subject<TimeSpan> _reconnectHandler = new();
     private readonly IDisposable _reconnectSubscription;
@@ -30,7 +30,7 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
     public ResourceWatcher(
         IKubernetesClient client,
         ILogger<ResourceWatcher<TEntity>> logger,
-        ResourceWatcherMetrics<TEntity> metrics,
+        IResourceWatcherMetrics<TEntity> metrics,
         OperatorSettings settings)
     {
         _client = client;
