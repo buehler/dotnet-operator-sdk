@@ -4,12 +4,12 @@ using Prometheus;
 
 namespace KubeOps.Operator.DevOps;
 
-public interface IResourceWatcherMetrics<TEntity> : IResourceWatcherMetrics
+internal interface IResourceWatcherMetrics<TEntity> : IResourceWatcherMetrics
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
 }
 
-public interface IResourceWatcherMetrics
+internal interface IResourceWatcherMetrics
 {
     IGauge Running { get; }
 
