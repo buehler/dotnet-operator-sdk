@@ -5,7 +5,7 @@ using Prometheus;
 
 namespace KubeOps.Operator.DevOps;
 
-internal class ResourceWatcherMetrics<TEntity>
+internal class ResourceWatcherMetrics<TEntity> : IResourceWatcherMetrics<TEntity>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private static readonly string[] Labels = { "operator", "kind", "group", "version", "scope", };
@@ -44,11 +44,11 @@ internal class ResourceWatcherMetrics<TEntity>
             .WithLabels(labelValues);
     }
 
-    public Gauge.Child Running { get; }
+    public IGauge Running { get; }
 
-    public Counter.Child WatchedEvents { get; }
+    public ICounter WatchedEvents { get; }
 
-    public Counter.Child WatcherExceptions { get; }
+    public ICounter WatcherExceptions { get; }
 
-    public Counter.Child WatcherClosed { get; }
+    public ICounter WatcherClosed { get; }
 }

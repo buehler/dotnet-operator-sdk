@@ -196,7 +196,7 @@ internal class OperatorBuilder : IOperatorBuilder
         Services.AddScoped(typeof(IEventQueue<>), typeof(EventQueue<>));
 
         // Support all the metrics
-        Services.AddSingleton(typeof(ResourceWatcherMetrics<>));
+        Services.AddSingleton(typeof(IResourceWatcherMetrics<>), typeof(ResourceWatcherMetrics<>));
         Services.AddSingleton(typeof(ResourceCacheMetrics<>));
         Services.AddSingleton(typeof(ResourceControllerMetrics<>));
 
