@@ -5,7 +5,6 @@ using KubeOps.KubernetesClient;
 using KubeOps.Operator;
 using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Kubernetes;
-using KubeOps.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Prometheus;
@@ -23,7 +22,7 @@ public class ResourceWatcherTest
         public V1ObjectMeta Metadata { get; set; } = null!;
     }
 
-    private readonly IKubernetesClient _client = new MockKubernetesClient();
+    private readonly Mock<IKubernetesClient> _client = new();
     private readonly Mock<IResourceWatcherMetrics<TestResource>> _metrics = new();
 
     [Fact]
@@ -31,9 +30,21 @@ public class ResourceWatcherTest
     {
         var settings = new OperatorSettings();
 
-        _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
+        Action<Exception>? onError = null;
 
-        using var resourceWatcher = new ResourceWatcher<TestResource>(_client, new NullLogger<ResourceWatcher<TestResource>>(), _metrics.Object, settings);
+        _client.Setup(c => c.Watch(It.IsAny<TimeSpan>(), It.IsAny<Action<WatchEventType, TestResource>>(), It.IsAny<Action<Exception>?>(), It.IsAny<Action>(), null, It.IsAny<CancellationToken>(), It.IsAny<string?>()))
+            .Callback<TimeSpan, Action<WatchEventType, TestResource>, Action<Exception>?, Action?, string?, CancellationToken, string?>(
+                (_, _, onErrorArg, _, _, _, _) =>
+                {
+                    onError = onErrorArg;
+                })
+            .Returns(Task.FromResult(CreateFakeWatcher()))
+            .Verifiable();
+
+        _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
+        _metrics.Setup(c => c.WatcherExceptions).Returns(Mock.Of<ICounter>());
+
+        using var resourceWatcher = new ResourceWatcher<TestResource>(_client.Object, new NullLogger<ResourceWatcher<TestResource>>(), _metrics.Object, settings);
 
         await resourceWatcher.StartAsync();
 
@@ -41,6 +52,28 @@ public class ResourceWatcherTest
 
         await resourceWatcher.StartAsync();
 
+        var kubernetesException = new KubernetesException(new V1Status());
+
+        onError?.Invoke(kubernetesException);
+
         resourceWatcher.WatchEvents.Should().NotBeNull();
+
+        _client.Verify(
+            c => c.Watch(
+                It.IsAny<TimeSpan>(),
+                It.IsAny<Action<WatchEventType, TestResource>>(),
+                It.IsAny<Action<Exception>?>(),
+                It.IsAny<Action>(),
+                null,
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string?>()), Times.Exactly(2));
+    }
+
+    private Watcher<TestResource> CreateFakeWatcher()
+    {
+        return new Watcher<TestResource>(
+            () => Task.FromResult(new StreamReader(new MemoryStream())),
+            (_, __) => { },
+            _ => { });
     }
 }
