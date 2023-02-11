@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Reactive.Linq;
+using FluentAssertions;
 using k8s;
 using k8s.Models;
 using KubeOps.KubernetesClient;
@@ -49,6 +50,7 @@ public class ResourceWatcherTest
             .Verifiable();
 
         _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
+        _metrics.Setup(c => c.WatcherExceptions).Returns(Mock.Of<ICounter>());
 
         using var resourceWatcher = new ResourceWatcher<TestResource>(
             _client.Object,
@@ -63,7 +65,9 @@ public class ResourceWatcherTest
 
         onError?.Invoke(new Exception());
 
-        testScheduler.AdvanceBy(TimeSpan.FromSeconds(3).Ticks);
+        var backoff = settings.ErrorBackoffStrategy(1);
+
+        testScheduler.AdvanceBy(backoff.Add(TimeSpan.FromSeconds(1)).Ticks);
 
         _client.Verify(
             c => c.Watch(
@@ -120,7 +124,56 @@ public class ResourceWatcherTest
                 It.IsAny<string?>()), Times.Exactly(2));
     }
 
-    private Watcher<TestResource> CreateFakeWatcher()
+    [Fact]
+    public async Task Should_Publish_On_Watcher_Event()
+    {
+        var settings = new OperatorSettings();
+
+        Action<WatchEventType, TestResource> onWatcherEvent = null!;
+
+        _client.Setup(
+                c => c.Watch(
+                    It.IsAny<TimeSpan>(),
+                    It.IsAny<Action<WatchEventType, TestResource>>(),
+                    It.IsAny<Action<Exception>?>(),
+                    It.IsAny<Action>(),
+                    null,
+                    It.IsAny<CancellationToken>(),
+                    It.IsAny<string?>()))
+            .Callback<TimeSpan, Action<WatchEventType, TestResource>, Action<Exception>?, Action?, string?,
+                CancellationToken, string?>(
+                (_, onWatcherEventArg, _, _, _, _, _) => { onWatcherEvent = onWatcherEventArg; })
+            .Returns(Task.FromResult(CreateFakeWatcher()))
+            .Verifiable();
+
+        _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
+        _metrics.Setup(c => c.WatchedEvents).Returns(Mock.Of<ICounter>());
+
+        using var resourceWatcher = new ResourceWatcher<TestResource>(
+            _client.Object,
+            new NullLogger<ResourceWatcher<TestResource>>(),
+            _metrics.Object,
+            settings);
+
+        var watchEvents = resourceWatcher.WatchEvents.Replay(1);
+        watchEvents.Connect();
+
+        await resourceWatcher.StartAsync();
+
+        var resource = new TestResource()
+        {
+            Metadata = new()
+        };
+
+        onWatcherEvent(WatchEventType.Added, resource);
+
+        var watchEvent = await watchEvents.FirstAsync();
+
+        watchEvent.Type.Should().Be(WatchEventType.Added);
+        watchEvent.Resource.Should().BeEquivalentTo(resource);
+    }
+
+    private static Watcher<TestResource> CreateFakeWatcher()
     {
         return new Watcher<TestResource>(
             () => Task.FromResult(new StreamReader(new MemoryStream())),
