@@ -173,13 +173,12 @@ public class ResourceWatcherTest
         watchEvent.Resource.Should().BeEquivalentTo(resource);
     }
 
-
     [Fact]
     public async Task Should_Restart_Watcher_On_Close()
     {
         var settings = new OperatorSettings();
 
-        Action onClose = null!;
+        Action? onClose = null;
 
         _client.Setup(c => c.Watch(It.IsAny<TimeSpan>(), It.IsAny<Action<WatchEventType, TestResource>>(), It.IsAny<Action<Exception>?>(), It.IsAny<Action>(), null, It.IsAny<CancellationToken>(), It.IsAny<string?>()))
             .Callback<TimeSpan, Action<WatchEventType, TestResource>, Action<Exception>?, Action?, string?, CancellationToken, string?>(
@@ -197,7 +196,7 @@ public class ResourceWatcherTest
 
         await resourceWatcher.StartAsync();
 
-        onClose();
+        onClose?.Invoke();
 
         resourceWatcher.WatchEvents.Should().NotBeNull();
 

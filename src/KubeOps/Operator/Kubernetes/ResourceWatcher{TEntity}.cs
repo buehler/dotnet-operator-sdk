@@ -40,7 +40,7 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
         _settings = settings;
         _reconnectSubscription =
             _reconnectHandler
-                .Select(c => Observable.Timer(c, TimeBasedScheduler))
+                .Select(backoff => Observable.Timer(backoff, TimeBasedScheduler))
                 .Switch()
                 .Retry()
                 .Subscribe(async _ => await WatchResource(), error => _logger.LogError(error, $"There was an error while restarting the resource watcher {typeof(TEntity)}"));
