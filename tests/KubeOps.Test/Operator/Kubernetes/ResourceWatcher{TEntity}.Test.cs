@@ -173,6 +173,45 @@ public class ResourceWatcherTest
         watchEvent.Resource.Should().BeEquivalentTo(resource);
     }
 
+
+    [Fact]
+    public async Task Should_Restart_Watcher_On_Close()
+    {
+        var settings = new OperatorSettings();
+
+        Action onClose = null!;
+
+        _client.Setup(c => c.Watch(It.IsAny<TimeSpan>(), It.IsAny<Action<WatchEventType, TestResource>>(), It.IsAny<Action<Exception>?>(), It.IsAny<Action>(), null, It.IsAny<CancellationToken>(), It.IsAny<string?>()))
+            .Callback<TimeSpan, Action<WatchEventType, TestResource>, Action<Exception>?, Action?, string?, CancellationToken, string?>(
+                (_, _, _, onCloseArg, _, _, _) =>
+                {
+                    onClose = onCloseArg;
+                })
+            .Returns(Task.FromResult(CreateFakeWatcher()))
+            .Verifiable();
+
+        _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
+        _metrics.Setup(c => c.WatcherClosed).Returns(Mock.Of<ICounter>());
+
+        using var resourceWatcher = new ResourceWatcher<TestResource>(_client.Object, new NullLogger<ResourceWatcher<TestResource>>(), _metrics.Object, settings);
+
+        await resourceWatcher.StartAsync();
+
+        onClose();
+
+        resourceWatcher.WatchEvents.Should().NotBeNull();
+
+        _client.Verify(
+            c => c.Watch(
+                It.IsAny<TimeSpan>(),
+                It.IsAny<Action<WatchEventType, TestResource>>(),
+                It.IsAny<Action<Exception>?>(),
+                It.IsAny<Action>(),
+                null,
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string?>()), Times.Exactly(2));
+    }
+
     private static Watcher<TestResource> CreateFakeWatcher()
     {
         return new Watcher<TestResource>(
