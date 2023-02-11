@@ -69,15 +69,7 @@ public class ResourceWatcherTest
 
         testScheduler.AdvanceBy(backoff.Add(TimeSpan.FromSeconds(1)).Ticks);
 
-        _client.Verify(
-            c => c.Watch(
-                It.IsAny<TimeSpan>(),
-                It.IsAny<Action<WatchEventType, TestResource>>(),
-                It.IsAny<Action<Exception>?>(),
-                It.IsAny<Action>(),
-                null,
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string?>()), Times.Exactly(2));
+        VerifyWatch(2);
     }
 
     [Fact]
@@ -113,15 +105,7 @@ public class ResourceWatcherTest
 
         resourceWatcher.WatchEvents.Should().NotBeNull();
 
-        _client.Verify(
-            c => c.Watch(
-                It.IsAny<TimeSpan>(),
-                It.IsAny<Action<WatchEventType, TestResource>>(),
-                It.IsAny<Action<Exception>?>(),
-                It.IsAny<Action>(),
-                null,
-                It.IsAny<CancellationToken>(),
-                It.IsAny<string?>()), Times.Exactly(2));
+        VerifyWatch(2);
     }
 
     [Fact]
@@ -160,7 +144,7 @@ public class ResourceWatcherTest
 
         await resourceWatcher.StartAsync();
 
-        var resource = new TestResource()
+        var resource = new TestResource
         {
             Metadata = new()
         };
@@ -198,8 +182,11 @@ public class ResourceWatcherTest
 
         onClose?.Invoke();
 
-        resourceWatcher.WatchEvents.Should().NotBeNull();
+        VerifyWatch(2);
+    }
 
+    private void VerifyWatch(int callTime)
+    {
         _client.Verify(
             c => c.Watch(
                 It.IsAny<TimeSpan>(),
@@ -208,7 +195,7 @@ public class ResourceWatcherTest
                 It.IsAny<Action>(),
                 null,
                 It.IsAny<CancellationToken>(),
-                It.IsAny<string?>()), Times.Exactly(2));
+                It.IsAny<string?>()), Times.Exactly(callTime));
     }
 
     private static Watcher<TestResource> CreateFakeWatcher()
