@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.Serialization;
 using System.Text.Json;
@@ -39,13 +40,15 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
         _settings = settings;
         _reconnectSubscription =
             _reconnectHandler
-                .Select(Observable.Timer)
+                .Select(c => Observable.Timer(c, TimeBasedScheduler))
                 .Switch()
                 .Retry()
                 .Subscribe(async _ => await WatchResource(), error => _logger.LogError(error, $"There was an error while restarting the resource watcher {typeof(TEntity)}"));
     }
 
     public IObservable<WatchEvent> WatchEvents => _watchEvents;
+
+    internal IScheduler TimeBasedScheduler { get; set; } = DefaultScheduler.Instance;
 
     private TimeSpan DefaultBackoff => _settings.ErrorBackoffStrategy(1);
 

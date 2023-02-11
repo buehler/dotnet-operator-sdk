@@ -6,6 +6,7 @@ using KubeOps.Operator;
 using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Kubernetes;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Reactive.Testing;
 using Moq;
 using Prometheus;
 using Xunit;
@@ -24,6 +25,56 @@ public class ResourceWatcherTest
 
     private readonly Mock<IKubernetesClient> _client = new();
     private readonly Mock<IResourceWatcherMetrics<TestResource>> _metrics = new();
+
+    [Fact]
+    public async Task Should_Restart_Watcher_On_Exception()
+    {
+        var settings = new OperatorSettings();
+
+        Action<Exception>? onError = null;
+
+        _client.Setup(
+                c => c.Watch(
+                    It.IsAny<TimeSpan>(),
+                    It.IsAny<Action<WatchEventType, TestResource>>(),
+                    It.IsAny<Action<Exception>?>(),
+                    It.IsAny<Action>(),
+                    null,
+                    It.IsAny<CancellationToken>(),
+                    It.IsAny<string?>()))
+            .Callback<TimeSpan, Action<WatchEventType, TestResource>, Action<Exception>?, Action?, string?,
+                CancellationToken, string?>(
+                (_, _, onErrorArg, _, _, _, _) => { onError = onErrorArg; })
+            .Returns(Task.FromResult(CreateFakeWatcher()))
+            .Verifiable();
+
+        _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
+
+        using var resourceWatcher = new ResourceWatcher<TestResource>(
+            _client.Object,
+            new NullLogger<ResourceWatcher<TestResource>>(),
+            _metrics.Object,
+            settings);
+
+        var testScheduler = new TestScheduler();
+        resourceWatcher.TimeBasedScheduler = testScheduler;
+
+        await resourceWatcher.StartAsync();
+
+        onError?.Invoke(new Exception());
+
+        testScheduler.AdvanceBy(TimeSpan.FromSeconds(3).Ticks);
+
+        _client.Verify(
+            c => c.Watch(
+                It.IsAny<TimeSpan>(),
+                It.IsAny<Action<WatchEventType, TestResource>>(),
+                It.IsAny<Action<Exception>?>(),
+                It.IsAny<Action>(),
+                null,
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string?>()), Times.Exactly(2));
+    }
 
     [Fact]
     public async Task Should_Not_Dispose_Reconnect_Subject_Or_Throw_Exception_After_Restarts()
