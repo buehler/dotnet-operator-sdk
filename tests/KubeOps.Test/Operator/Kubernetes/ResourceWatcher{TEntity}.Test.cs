@@ -73,6 +73,59 @@ public class ResourceWatcherTest
     }
 
     [Fact]
+    public async Task Should_Not_Throw_Overflow_Exception()
+    {
+        var settings = new OperatorSettings();
+
+        Action<Exception>? onError = null;
+
+        _client.Setup(
+                c => c.Watch(
+                    It.IsAny<TimeSpan>(),
+                    It.IsAny<Action<WatchEventType, TestResource>>(),
+                    It.IsAny<Action<Exception>?>(),
+                    It.IsAny<Action>(),
+                    null,
+                    It.IsAny<CancellationToken>(),
+                    It.IsAny<string?>()))
+            .Callback<TimeSpan, Action<WatchEventType, TestResource>, Action<Exception>?, Action?, string?,
+                CancellationToken, string?>(
+                (_, _, onErrorArg, _, _, _, _) => { onError = onErrorArg; })
+            .Returns(Task.FromResult(CreateFakeWatcher()))
+            .Verifiable();
+
+        _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
+        _metrics.Setup(c => c.WatcherExceptions).Returns(Mock.Of<ICounter>());
+
+        using var resourceWatcher = new ResourceWatcher<TestResource>(
+            _client.Object,
+            new NullLogger<ResourceWatcher<TestResource>>(),
+            _metrics.Object,
+            settings);
+
+        var testScheduler = new TestScheduler();
+        resourceWatcher.TimeBasedScheduler = testScheduler;
+
+        await resourceWatcher.StartAsync();
+
+        const int numberOfRetries = 40;
+        for (int reconnectAttempts = 1; reconnectAttempts <= numberOfRetries; reconnectAttempts++)
+        {
+            onError?.Invoke(new Exception());
+
+            var backoff = settings.ErrorBackoffStrategy(reconnectAttempts > 39 ? 39 : reconnectAttempts);
+            if (backoff.TotalSeconds > settings.WatcherMaxRetrySeconds)
+            {
+                backoff = TimeSpan.FromSeconds(settings.WatcherMaxRetrySeconds);
+            }
+
+            testScheduler.AdvanceBy(backoff.Add(TimeSpan.FromSeconds(1)).Ticks);
+        }
+
+        VerifyWatch(numberOfRetries+1);
+    }
+
+    [Fact]
     public async Task Should_Not_Dispose_Reconnect_Subject_Or_Throw_Exception_After_Restarts()
     {
         var settings = new OperatorSettings();
