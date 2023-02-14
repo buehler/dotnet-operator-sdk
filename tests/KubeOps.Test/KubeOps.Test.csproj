@@ -3,6 +3,10 @@
   <Import Project="..\..\config\CommonTests.targets" />
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Reactive.Testing" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\KubeOps.Testing\KubeOps.Testing.csproj" />
     <ProjectReference Include="..\..\src\KubeOps\KubeOps.csproj" />
     <ProjectReference Include="..\KubeOps.TestOperator\KubeOps.TestOperator.csproj" />
