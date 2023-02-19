@@ -1,4 +1,6 @@
 ﻿using System.Reactive.Linq;
+using System.Runtime.Serialization;
+using System.Text.Json;
 using FluentAssertions;
 using k8s;
 using k8s.Models;
@@ -32,22 +34,7 @@ public class ResourceWatcherTest
     {
         var settings = new OperatorSettings();
 
-        Action<Exception>? onError = null;
-
-        _client.Setup(
-                c => c.Watch(
-                    It.IsAny<TimeSpan>(),
-                    It.IsAny<Action<WatchEventType, TestResource>>(),
-                    It.IsAny<Action<Exception>?>(),
-                    It.IsAny<Action>(),
-                    null,
-                    It.IsAny<CancellationToken>(),
-                    It.IsAny<string?>()))
-            .Callback<TimeSpan, Action<WatchEventType, TestResource>, Action<Exception>?, Action?, string?,
-                CancellationToken, string?>(
-                (_, _, onErrorArg, _, _, _, _) => { onError = onErrorArg; })
-            .Returns(Task.FromResult(CreateFakeWatcher()))
-            .Verifiable();
+        Func<Action<Exception>?> getOnError = SetupKubernetesClientWatch();
 
         _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
         _metrics.Setup(c => c.WatcherExceptions).Returns(Mock.Of<ICounter>());
@@ -63,7 +50,7 @@ public class ResourceWatcherTest
 
         await resourceWatcher.StartAsync();
 
-        onError?.Invoke(new Exception());
+        getOnError()?.Invoke(new Exception());
 
         var backoff = settings.ErrorBackoffStrategy(1);
 
@@ -72,11 +59,8 @@ public class ResourceWatcherTest
         VerifyWatch(2);
     }
 
-    [Fact]
-    public async Task Should_Not_Throw_Overflow_Exception()
+    private Func<Action<Exception>?> SetupKubernetesClientWatch()
     {
-        var settings = new OperatorSettings();
-
         Action<Exception>? onError = null;
 
         _client.Setup(
@@ -88,11 +72,24 @@ public class ResourceWatcherTest
                     null,
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string?>()))
-            .Callback<TimeSpan, Action<WatchEventType, TestResource>, Action<Exception>?, Action?, string?,
-                CancellationToken, string?>(
-                (_, _, onErrorArg, _, _, _, _) => { onError = onErrorArg; })
+            .Callback<TimeSpan, Action<WatchEventType, TestResource>, Action<Exception>?, Action?, string?, CancellationToken, string?>(
+                (_, _, onErrorArg, _, _, _, _) =>
+                {
+                    onError = onErrorArg;
+                })
             .Returns(Task.FromResult(CreateFakeWatcher()))
             .Verifiable();
+
+
+        return () => onError;
+    }
+
+    [Fact]
+    public async Task Should_Not_Throw_Overflow_Exception()
+    {
+        var settings = new OperatorSettings();
+
+        Func<Action<Exception>?> getOnError = SetupKubernetesClientWatch();
 
         _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
         _metrics.Setup(c => c.WatcherExceptions).Returns(Mock.Of<ICounter>());
@@ -111,7 +108,7 @@ public class ResourceWatcherTest
         const int numberOfRetries = 40;
         for (int reconnectAttempts = 1; reconnectAttempts <= numberOfRetries; reconnectAttempts++)
         {
-            onError?.Invoke(new Exception());
+            getOnError()?.Invoke(new Exception());
 
             var backoff = settings.ErrorBackoffStrategy(reconnectAttempts > 39 ? 39 : reconnectAttempts);
             if (backoff.TotalSeconds > settings.WatcherMaxRetrySeconds)
@@ -122,7 +119,7 @@ public class ResourceWatcherTest
             testScheduler.AdvanceBy(backoff.Add(TimeSpan.FromSeconds(1)).Ticks);
         }
 
-        VerifyWatch(numberOfRetries+1);
+        VerifyWatch(numberOfRetries + 1);
     }
 
     [Fact]
@@ -130,16 +127,7 @@ public class ResourceWatcherTest
     {
         var settings = new OperatorSettings();
 
-        Action<Exception>? onError = null;
-
-        _client.Setup(c => c.Watch(It.IsAny<TimeSpan>(), It.IsAny<Action<WatchEventType, TestResource>>(), It.IsAny<Action<Exception>?>(), It.IsAny<Action>(), null, It.IsAny<CancellationToken>(), It.IsAny<string?>()))
-            .Callback<TimeSpan, Action<WatchEventType, TestResource>, Action<Exception>?, Action?, string?, CancellationToken, string?>(
-                (_, _, onErrorArg, _, _, _, _) =>
-                {
-                    onError = onErrorArg;
-                })
-            .Returns(Task.FromResult(CreateFakeWatcher()))
-            .Verifiable();
+        Func<Action<Exception>?> getOnError = SetupKubernetesClientWatch();
 
         _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
         _metrics.Setup(c => c.WatcherExceptions).Returns(Mock.Of<ICounter>());
@@ -154,11 +142,34 @@ public class ResourceWatcherTest
 
         var kubernetesException = new KubernetesException(new V1Status());
 
-        onError?.Invoke(kubernetesException);
+        getOnError()?.Invoke(kubernetesException);
 
         resourceWatcher.WatchEvents.Should().NotBeNull();
 
         VerifyWatch(2);
+    }
+
+    [Fact]
+    public async Task Should_Not_Restart_On_Serialization_Exception()
+    {
+        var settings = new OperatorSettings();
+
+        Func<Action<Exception>?> getOnError = SetupKubernetesClientWatch();
+
+        _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
+        _metrics.Setup(c => c.WatcherExceptions).Returns(Mock.Of<ICounter>());
+
+        using var resourceWatcher = new ResourceWatcher<TestResource>(_client.Object, new NullLogger<ResourceWatcher<TestResource>>(), _metrics.Object, settings);
+
+        await resourceWatcher.StartAsync();
+
+        var serializationException = new SerializationException(string.Empty, new JsonException("The input does not contain any JSON tokens"));
+
+        getOnError()?.Invoke(serializationException);
+
+        resourceWatcher.WatchEvents.Should().NotBeNull();
+
+        VerifyWatch(1);
     }
 
     [Fact]
