@@ -173,6 +173,32 @@ public class ResourceWatcherTest
     }
 
     [Fact]
+    public async Task Should_Be_Restarted_After_TaskCanceledException_IOException()
+    {
+        var settings = new OperatorSettings();
+
+        Func<Action<Exception>?> getOnError = SetupKubernetesClientWatch();
+
+        SetupResourceWatcherMetrics();
+
+        using var resourceWatcher = new ResourceWatcher<TestResource>(_client.Object, new NullLogger<ResourceWatcher<TestResource>>(), _metrics.Object, settings);
+
+        await resourceWatcher.StartAsync();
+
+        var serializationException = new TaskCanceledException(string.Empty, new IOException($@"Either the server or the client did close the connection on watcher for resource ""{typeof(TestResource)}"". Restart."));
+
+        getOnError()?.Invoke(serializationException);
+
+        VerifyWatch(2);
+    }
+
+    private void SetupResourceWatcherMetrics()
+    {
+        _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
+        _metrics.Setup(c => c.WatcherExceptions).Returns(Mock.Of<ICounter>());
+    }
+
+    [Fact]
     public async Task Should_Publish_On_Watcher_Event()
     {
         var settings = new OperatorSettings();
