@@ -107,7 +107,10 @@ public interface IAdmissionWebhook<TEntity, TResult>
                     return;
                 }
 
-                var review = KubernetesJson.Deserialize<AdmissionReview<TEntity>>(context.Request.Body.ToString());
+                using var reader = new StreamReader(context.Request.Body);
+                var requestBody = await reader.ReadToEndAsync();
+
+                var review = KubernetesJson.Deserialize<AdmissionReview<TEntity>>(requestBody);
 
                 if (review.Request == null)
                 {
