@@ -155,6 +155,17 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
 
     private void OnException(Exception e)
     {
+        switch (e)
+        {
+            case SerializationException when
+                e.InnerException is JsonException &&
+                e.InnerException.Message.Contains("The input does not contain any JSON tokens"):
+                _logger.LogDebug(
+                    @"The watcher received an empty response for resource ""{resource}"".",
+                    typeof(TEntity));
+                return;
+        }
+
         var backoff = DefaultBackoff;
 
         try
@@ -173,13 +184,6 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
                         @"Either the server or the client did close the connection on watcher for resource ""{resource}"". Restart.",
                         typeof(TEntity));
                     WatchResource().ConfigureAwait(false);
-                    return;
-                case SerializationException when
-                    e.InnerException is JsonException &&
-                    e.InnerException.Message.Contains("The input does not contain any JSON tokens"):
-                    _logger.LogDebug(
-                        @"The watcher received an empty response for resource ""{resource}"".",
-                        typeof(TEntity));
                     return;
             }
 
