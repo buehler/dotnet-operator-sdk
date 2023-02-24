@@ -43,6 +43,13 @@ internal class Install
         LongName = "ca-certs")]
     public string CaCertificatesPath { get; set; } = "/ca";
 
+    [Option(
+        Description =
+            "If specified and set to true it will replace already existing webhooks",
+        ShortName = "r",
+        LongName = "replace-existing")]
+    public bool ReplaceExistingWebhooks { get; set; }
+
     public async Task<int> OnExecuteAsync(CommandLineApplication app)
     {
         var client = app.GetRequiredService<IKubernetesClient>();
@@ -116,7 +123,25 @@ internal class Install
             validatorConfig.Metadata.OwnerReferences = new List<V1OwnerReference> { deployment.MakeOwnerReference(), };
         }
 
-        await client.Save(validatorConfig);
+        if (ReplaceExistingWebhooks)
+        {
+            // Attempt a save, if it fails, delete the old one and re-create it.
+            try
+            {
+                await client.Save(validatorConfig);
+            }
+            catch (k8s.Autorest.HttpOperationException exception) when (exception.Response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                await app.Out.WriteLineAsync("Validator existed, deleting and recreating.");
+                await client.Delete(validatorConfig);
+                await Task.Delay(500);
+                await client.Save(validatorConfig);
+            }
+        }
+        else
+        {
+            await client.Save(validatorConfig);
+        }
 
         await app.Out.WriteLineAsync("Create mutator definition.");
         var mutatorConfig = _mutatingWebhookConfigurationBuilder.BuildWebhookConfiguration(webhookConfig);
@@ -125,7 +150,25 @@ internal class Install
             mutatorConfig.Metadata.OwnerReferences = new List<V1OwnerReference> { deployment.MakeOwnerReference(), };
         }
 
-        await client.Save(mutatorConfig);
+        if (ReplaceExistingWebhooks)
+        {
+            // Attempt a save, if it fails, delete the old one and re-create it.
+            try
+            {
+                await client.Save(mutatorConfig);
+            }
+            catch (k8s.Autorest.HttpOperationException exception) when (exception.Response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                await app.Out.WriteLineAsync("Mutator existed, deleting and recreating.");
+                await client.Delete(mutatorConfig);
+                await Task.Delay(500);
+                await client.Save(mutatorConfig);
+            }
+        }
+        else
+        {
+            await client.Save(mutatorConfig);
+        }
 
         await app.Out.WriteLineAsync("Installed webhook service and admission configurations.");
 
