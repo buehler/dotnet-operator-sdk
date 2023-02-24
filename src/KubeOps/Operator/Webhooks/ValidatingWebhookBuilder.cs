@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using k8s.Models;
 using KubeOps.KubernetesClient.Entities;
 using KubeOps.Operator.Builder;
@@ -60,7 +60,7 @@ internal class ValidatingWebhookBuilder
 
                     var crd = entityType.ToEntityDefinition();
 
-                    return new V1ValidatingWebhook
+                    var webhook = new V1ValidatingWebhook
                     {
                         Name = name.TrimWebhookName(),
                         AdmissionReviewVersions = new[] { "v1" },
@@ -79,6 +79,13 @@ internal class ValidatingWebhookBuilder
                         },
                         ClientConfig = clientConfig,
                     };
+
+                    if (instance is IConfigurableValidationWebhook configurable)
+                    {
+                        configurable.Configure(webhook);
+                    }
+
+                    return webhook;
                 })
             .ToList();
     }
