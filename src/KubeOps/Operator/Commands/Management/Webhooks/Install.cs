@@ -125,21 +125,23 @@ internal class Install
 
         if (ReplaceExistingWebhooks)
         {
-            // Attempt a save, if it fails, delete the old one and re-create it.
-            try
+            // var existingItems = await client.List<V1ValidatingWebhookConfiguration>();
+            // var existingItem = existingItems.FirstOrDefault(item => item.Name() == validatorConfig.Name());
+            var existingItem = await client.Get<V1ValidatingWebhookConfiguration>(validatorConfig.Name());
+            if (existingItem != null)
             {
-                await client.Save(validatorConfig);
+                await app.Out.WriteLineAsync("Validator existed, updating.");
+                await client.Update(existingItem);
             }
-            catch (k8s.Autorest.HttpOperationException exception) when (exception.Response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            else
             {
-                await app.Out.WriteLineAsync("Validator existed, deleting and recreating.");
-                await client.Delete(validatorConfig);
-                await Task.Delay(500);
+                await app.Out.WriteLineAsync("Validator didn't exist, creating.");
                 await client.Save(validatorConfig);
             }
         }
         else
         {
+            await app.Out.WriteLineAsync("Not updating validator, attempting to save.");
             await client.Save(validatorConfig);
         }
 
@@ -152,21 +154,21 @@ internal class Install
 
         if (ReplaceExistingWebhooks)
         {
-            // Attempt a save, if it fails, delete the old one and re-create it.
-            try
+            var existingItem = await client.Get<V1MutatingWebhookConfiguration>(mutatorConfig.Name());
+            if (existingItem != null)
             {
-                await client.Save(mutatorConfig);
+                await app.Out.WriteLineAsync("Mutator existed, updating.");
+                await client.Update(existingItem);
             }
-            catch (k8s.Autorest.HttpOperationException exception) when (exception.Response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            else
             {
-                await app.Out.WriteLineAsync("Mutator existed, deleting and recreating.");
-                await client.Delete(mutatorConfig);
-                await Task.Delay(500);
+                await app.Out.WriteLineAsync("Mutator didn't exist, creating.");
                 await client.Save(mutatorConfig);
             }
         }
         else
         {
+            await app.Out.WriteLineAsync("Not updating mutator, attempting to save.");
             await client.Save(mutatorConfig);
         }
 
