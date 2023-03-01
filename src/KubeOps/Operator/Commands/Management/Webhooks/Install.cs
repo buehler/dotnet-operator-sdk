@@ -43,6 +43,13 @@ internal class Install
         LongName = "ca-certs")]
     public string CaCertificatesPath { get; set; } = "/ca";
 
+    [Option(
+        Description =
+            "If specified and set to true it will replace already existing webhooks",
+        ShortName = "r",
+        LongName = "replace-existing")]
+    public bool ReplaceExistingWebhooks { get; set; }
+
     public async Task<int> OnExecuteAsync(CommandLineApplication app)
     {
         var client = app.GetRequiredService<IKubernetesClient>();
@@ -116,7 +123,27 @@ internal class Install
             validatorConfig.Metadata.OwnerReferences = new List<V1OwnerReference> { deployment.MakeOwnerReference(), };
         }
 
-        await client.Save(validatorConfig);
+        if (ReplaceExistingWebhooks)
+        {
+            // var existingItems = await client.List<V1ValidatingWebhookConfiguration>();
+            // var existingItem = existingItems.FirstOrDefault(item => item.Name() == validatorConfig.Name());
+            var existingItem = await client.Get<V1ValidatingWebhookConfiguration>(validatorConfig.Name());
+            if (existingItem != null)
+            {
+                await app.Out.WriteLineAsync("Validator existed, updating.");
+                await client.Update(existingItem);
+            }
+            else
+            {
+                await app.Out.WriteLineAsync("Validator didn't exist, creating.");
+                await client.Save(validatorConfig);
+            }
+        }
+        else
+        {
+            await app.Out.WriteLineAsync("Not updating validator, attempting to save.");
+            await client.Save(validatorConfig);
+        }
 
         await app.Out.WriteLineAsync("Create mutator definition.");
         var mutatorConfig = _mutatingWebhookConfigurationBuilder.BuildWebhookConfiguration(webhookConfig);
@@ -125,7 +152,25 @@ internal class Install
             mutatorConfig.Metadata.OwnerReferences = new List<V1OwnerReference> { deployment.MakeOwnerReference(), };
         }
 
-        await client.Save(mutatorConfig);
+        if (ReplaceExistingWebhooks)
+        {
+            var existingItem = await client.Get<V1MutatingWebhookConfiguration>(mutatorConfig.Name());
+            if (existingItem != null)
+            {
+                await app.Out.WriteLineAsync("Mutator existed, updating.");
+                await client.Update(existingItem);
+            }
+            else
+            {
+                await app.Out.WriteLineAsync("Mutator didn't exist, creating.");
+                await client.Save(mutatorConfig);
+            }
+        }
+        else
+        {
+            await app.Out.WriteLineAsync("Not updating mutator, attempting to save.");
+            await client.Save(mutatorConfig);
+        }
 
         await app.Out.WriteLineAsync("Installed webhook service and admission configurations.");
 
