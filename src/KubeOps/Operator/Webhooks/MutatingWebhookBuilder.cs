@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using k8s.Models;
 using KubeOps.KubernetesClient.Entities;
 using KubeOps.Operator.Builder;
@@ -60,7 +60,7 @@ internal class MutatingWebhookBuilder
 
                     var crd = entityType.ToEntityDefinition();
 
-                    return new V1MutatingWebhook
+                    var webhook = new V1MutatingWebhook
                     {
                         Name = name.TrimWebhookName(),
                         AdmissionReviewVersions = new[] { "v1" },
@@ -79,6 +79,13 @@ internal class MutatingWebhookBuilder
                         },
                         ClientConfig = clientConfig,
                     };
+
+                    if (instance is IConfigurableMutationWebhook configurable)
+                    {
+                        configurable.Configure(webhook);
+                    }
+
+                    return webhook;
                 })
             .ToList();
     }
