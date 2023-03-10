@@ -73,7 +73,7 @@ public static class Program
 ```
 
 This adds the default commands (like run and the code generators) to your app.
-The commands are documentated under the [CLI Commands](#commands.md) section.
+The commands are documentated under the [CLI Commands](#commands) section.
 
 > Technically you don't need to replace the function,
 > but if you don't, the other commands like yaml generation
