@@ -1,7 +1,9 @@
-﻿using System.Reactive;
+﻿using System.Net;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.DevOps;
@@ -127,6 +129,13 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
                             resource.Name());
                         return;
                 }
+            }
+            catch (HttpOperationException hoe) when (hoe.Response.StatusCode == HttpStatusCode.UnprocessableEntity)
+            {
+                var status = KubernetesYaml.Deserialize<V1Status>(hoe.Response.Content);
+                _logger.LogWarning(status.Message);
+                RequeueError(resourceEvent, hoe);
+                return;
             }
             catch (Exception e)
             {
