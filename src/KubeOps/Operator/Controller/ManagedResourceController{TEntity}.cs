@@ -132,7 +132,7 @@ internal class ManagedResourceController<TEntity> : IManagedResourceController
             }
             catch (HttpOperationException hoe) when (hoe.Response.StatusCode == HttpStatusCode.UnprocessableEntity)
             {
-                var status = KubernetesYaml.Deserialize<V1Status>(hoe.Response.Content);
+                var status = KubernetesJson.Deserialize<V1Status>(hoe.Response.Content);
                 _logger.LogWarning(status.Message);
                 RequeueError(resourceEvent, hoe);
                 return;
