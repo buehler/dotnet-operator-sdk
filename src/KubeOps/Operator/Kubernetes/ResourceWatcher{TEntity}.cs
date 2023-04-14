@@ -136,9 +136,11 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
             case WatchEventType.Deleted:
                 _watchEvents.OnNext(new WatchEvent(type, resource));
                 break;
+
             case WatchEventType.Error:
             case WatchEventType.Bookmark:
                 break;
+
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, "Event did not match.");
         }
@@ -162,6 +164,15 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
                 e.InnerException.Message.Contains("The input does not contain any JSON tokens"):
                 _logger.LogDebug(
                     @"The watcher received an empty response for resource ""{resource}"".",
+                    typeof(TEntity));
+                return;
+
+            // this is a workaround for a bug in the kubernetes client. https://github.com/kubernetes-client/csharp/issues/893
+            case HttpRequestException hre when
+                e.InnerException is EndOfStreamException &&
+                e.InnerException.Message.Contains("Attempted to read past the end of the stream."):
+                _logger.LogDebug(
+                    @"The watcher received a known error from the watched resource ""{resource}"". This indicates that there are no instances of this resource.",
                     typeof(TEntity));
                 return;
         }
