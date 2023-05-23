@@ -229,6 +229,9 @@ internal class OperatorBuilder : IOperatorBuilder
         Services.TryAddSingleton<ICrdBuilder, CrdBuilder>();
         Services.TryAddSingleton<IRbacBuilder, RbacBuilder>();
 
+        // Register type overrides register.
+        Services.TryAddSingleton<ICrdBuilderTypeOverrides, CrdBuilderTypeOverrides>();
+
         return this;
     }
 }
