@@ -10,10 +10,12 @@ namespace KubeOps.Operator.Entities;
 internal class CrdBuilder : ICrdBuilder
 {
     private readonly IComponentRegistrar _componentRegistrar;
+    private readonly ICrdBuilderTypeOverrides? _crdBuilderOverrides;
 
-    public CrdBuilder(IComponentRegistrar componentRegistrar)
+    public CrdBuilder(IComponentRegistrar componentRegistrar, ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
     {
         _componentRegistrar = componentRegistrar;
+        _crdBuilderOverrides = crdBuilderOverrides;
     }
 
     public IEnumerable<V1CustomResourceDefinition> BuildCrds() =>
@@ -22,7 +24,7 @@ internal class CrdBuilder : ICrdBuilder
             .Where(type => type.Assembly != typeof(KubernetesEntityAttribute).Assembly)
             .Where(type => type.GetCustomAttributes<KubernetesEntityAttribute>().Any())
             .Where(type => !type.GetCustomAttributes<IgnoreEntityAttribute>().Any())
-            .Select(type => (type.CreateCrd(), type.GetCustomAttributes<StorageVersionAttribute>().Any()))
+            .Select(type => (type.CreateCrd(_crdBuilderOverrides), type.GetCustomAttributes<StorageVersionAttribute>().Any()))
             .GroupBy(grp => grp.Item1.Metadata.Name)
             .Select(
                 group =>

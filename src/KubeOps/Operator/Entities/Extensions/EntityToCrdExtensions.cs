@@ -30,12 +30,13 @@ internal static class EntityToCrdExtensions
     private static readonly string[] IgnoredToplevelProperties = { "metadata", "apiversion", "kind" };
 
     internal static V1CustomResourceDefinition CreateCrd(
-        this IKubernetesObject<V1ObjectMeta> kubernetesEntity) => CreateCrd(kubernetesEntity.GetType());
+        this IKubernetesObject<V1ObjectMeta> kubernetesEntity, ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
+        => CreateCrd(kubernetesEntity.GetType(), crdBuilderOverrides);
 
-    internal static V1CustomResourceDefinition CreateCrd<TEntity>()
-        where TEntity : IKubernetesObject<V1ObjectMeta> => CreateCrd(typeof(TEntity));
+    internal static V1CustomResourceDefinition CreateCrd<TEntity>(ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
+        where TEntity : IKubernetesObject<V1ObjectMeta> => CreateCrd(typeof(TEntity), crdBuilderOverrides);
 
-    internal static V1CustomResourceDefinition CreateCrd(this Type entityType)
+    internal static V1CustomResourceDefinition CreateCrd(this Type entityType, ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
     {
         var entityDefinition = entityType.ToEntityDefinition();
 
@@ -79,7 +80,7 @@ internal static class EntityToCrdExtensions
         }
 
         var columns = new List<V1CustomResourceColumnDefinition>();
-        version.Schema = new V1CustomResourceValidation(MapType(entityType, columns, string.Empty));
+        version.Schema = new V1CustomResourceValidation(MapType(entityType, columns, string.Empty, crdBuilderOverrides));
 
         version.AdditionalPrinterColumns = entityType
             .GetCustomAttributes<GenericAdditionalPrinterColumnAttribute>(true)
@@ -98,12 +99,13 @@ internal static class EntityToCrdExtensions
     private static V1JSONSchemaProps MapProperty(
         PropertyInfo info,
         IList<V1CustomResourceColumnDefinition> additionalColumns,
-        string jsonPath)
+        string jsonPath,
+        ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
     {
         V1JSONSchemaProps props;
         try
         {
-            props = MapType(info.PropertyType, additionalColumns, jsonPath);
+            props = MapType(info.PropertyType, additionalColumns, jsonPath, crdBuilderOverrides);
         }
         catch (Exception ex)
         {
@@ -214,7 +216,8 @@ internal static class EntityToCrdExtensions
     private static V1JSONSchemaProps MapType(
         Type type,
         IList<V1CustomResourceColumnDefinition> additionalColumns,
-        string jsonPath)
+        string jsonPath,
+        ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
     {
         var props = new V1JSONSchemaProps();
 
@@ -223,7 +226,12 @@ internal static class EntityToCrdExtensions
 
         var isSimpleType = IsSimpleType(type);
 
-        if (type == typeof(V1ObjectMeta))
+        var customPropertyOverride = crdBuilderOverrides?.GetMatchingTypeOverride(type, jsonPath);
+        if (customPropertyOverride != null)
+        {
+            customPropertyOverride.ConfigureCustomSchemaForProp(props);
+        }
+        else if (type == typeof(V1ObjectMeta))
         {
             props.Type = Object;
         }
@@ -233,13 +241,14 @@ internal static class EntityToCrdExtensions
             props.Items = MapType(
                 type.GetElementType() ?? throw new NullReferenceException("No Array Element Type found"),
                 additionalColumns,
-                jsonPath);
+                jsonPath,
+                crdBuilderOverrides);
         }
         else if (!isSimpleType && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
         {
             var genericTypes = type.GenericTypeArguments;
             props.Type = Object;
-            props.AdditionalProperties = MapType(genericTypes[1], additionalColumns, jsonPath);
+            props.AdditionalProperties = MapType(genericTypes[1], additionalColumns, jsonPath, crdBuilderOverrides);
         }
         else if (!isSimpleType &&
                  type.IsGenericType &&
@@ -250,7 +259,7 @@ internal static class EntityToCrdExtensions
         {
             var genericTypes = type.GenericTypeArguments.Single().GenericTypeArguments;
             props.Type = Object;
-            props.AdditionalProperties = MapType(genericTypes[1], additionalColumns, jsonPath);
+            props.AdditionalProperties = MapType(genericTypes[1], additionalColumns, jsonPath, crdBuilderOverrides);
         }
         else if (!isSimpleType &&
                  (typeof(IDictionary).IsAssignableFrom(type) ||
@@ -265,7 +274,7 @@ internal static class EntityToCrdExtensions
         else if (!isSimpleType && IsGenericEnumerableType(type, out Type? closingType))
         {
             props.Type = Array;
-            props.Items = MapType(closingType, additionalColumns, jsonPath);
+            props.Items = MapType(closingType, additionalColumns, jsonPath, crdBuilderOverrides);
         }
         else if (type == typeof(IntstrIntOrString))
         {
@@ -280,7 +289,7 @@ internal static class EntityToCrdExtensions
         }
         else if (!isSimpleType)
         {
-            ProcessType(type, props, additionalColumns, jsonPath);
+            ProcessType(type, props, additionalColumns, jsonPath, crdBuilderOverrides);
         }
         else if (type == typeof(int) || Nullable.GetUnderlyingType(type) == typeof(int))
         {
@@ -345,7 +354,8 @@ internal static class EntityToCrdExtensions
         Type type,
         V1JSONSchemaProps props,
         IList<V1CustomResourceColumnDefinition> additionalColumns,
-        string jsonPath)
+        string jsonPath,
+        ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
     {
         props.Type = Object;
 
@@ -358,7 +368,7 @@ internal static class EntityToCrdExtensions
                 .Select(
                     prop => KeyValuePair.Create(
                         GetPropertyName(prop),
-                        MapProperty(prop, additionalColumns, $"{jsonPath}.{GetPropertyName(prop)}"))));
+                        MapProperty(prop, additionalColumns, $"{jsonPath}.{GetPropertyName(prop)}", crdBuilderOverrides))));
         props.Required = type.GetProperties()
             .Where(
                 prop => prop.GetCustomAttribute<RequiredAttribute>() != null &&
