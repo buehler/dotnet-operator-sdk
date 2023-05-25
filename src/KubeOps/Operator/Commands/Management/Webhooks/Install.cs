@@ -131,6 +131,7 @@ internal class Install
             if (existingItem != null)
             {
                 await app.Out.WriteLineAsync("Validator existed, updating.");
+                existingItem.Webhooks = validatorConfig.Webhooks;
                 await client.Update(existingItem);
             }
             else
