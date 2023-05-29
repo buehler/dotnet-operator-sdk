@@ -30,9 +30,6 @@ internal class CertificateGenerator : IDisposable
     private const string CaCsr =
         @"{""CN"":""Operator Root CA"",""key"":{""algo"":""rsa"",""size"":2048},""names"":[{""C"":""DEV"",""L"":""Kubernetes"",""O"":""Kubernetes Operator""}]}";
 
-    private const string Cfssl = "/operator/cfssl";
-    private const string Cfssljson = "/operator/cfssljson"; // TODO: maybe read this from configuration? (seems like an overkill though)
-
     private readonly TextWriter _appOut;
     private readonly string _tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
 
@@ -40,6 +37,8 @@ internal class CertificateGenerator : IDisposable
     private string? _caconfig;
     private string? _cacsr;
     private string? _servercsr;
+    private string _cfssl = "cfssl";
+    private string _cfssljson = "cfssljson";
 
     public CertificateGenerator(TextWriter appOut)
     {
@@ -50,8 +49,8 @@ internal class CertificateGenerator : IDisposable
     {
         Delete(_caconfig);
         Delete(_cacsr);
-        Delete(Cfssl);
-        Delete(Cfssljson);
+        Delete(_cfssl);
+        Delete(_cfssljson);
         Delete(_servercsr);
     }
 
@@ -59,6 +58,9 @@ internal class CertificateGenerator : IDisposable
     {
         if (!_initialized)
         {
+            var cfsslFolder = Environment.GetEnvironmentVariable("CFSSL_EXECUTABLES_PATH") ?? "/operator";
+            _cfssl = $"{cfsslFolder}/{_cfssl}";
+            _cfssljson = $"{cfsslFolder}/{_cfssljson}";
             await PrepareExecutables();
             _initialized = true;
         }
@@ -106,7 +108,20 @@ internal class CertificateGenerator : IDisposable
     private static string ServerCsr(params string[] serverNames) =>
         $@"{{""CN"":""Operator Service"",""hosts"":[""{string.Join(@""",""", serverNames)}""],""key"":{{""algo"":""ecdsa"",""size"":256}},""names"":[{{""C"":""DEV"",""L"":""Kubernetes""}}]}}";
 
-    private static async Task GenCertAsync(
+    private static void Delete(string? file)
+    {
+        if (file == null)
+        {
+            return;
+        }
+
+        if (File.Exists(file))
+        {
+            File.Delete(file);
+        }
+    }
+
+    private async Task GenCertAsync(
         string arguments,
         string outputFolder,
         CancellationToken cancellationToken = default)
@@ -114,7 +129,7 @@ internal class CertificateGenerator : IDisposable
         var genCertPsi = new ProcessStartInfo
         {
             WorkingDirectory = outputFolder,
-            FileName = Cfssl,
+            FileName = _cfssl,
             Arguments = $"gencert {arguments}",
             RedirectStandardOutput = true,
             UseShellExecute = false,
@@ -122,7 +137,7 @@ internal class CertificateGenerator : IDisposable
         var writeJsonPsi = new ProcessStartInfo
         {
             WorkingDirectory = outputFolder,
-            FileName = Cfssljson,
+            FileName = _cfssljson,
             Arguments = "-bare ca -",
             RedirectStandardInput = true,
             UseShellExecute = false,
@@ -138,19 +153,6 @@ internal class CertificateGenerator : IDisposable
         await writeJson.StandardInput.FlushAsync();
         writeJson.StandardInput.Close();
         await writeJson.WaitForExitAsync(cancellationToken);
-    }
-
-    private static void Delete(string? file)
-    {
-        if (file == null)
-        {
-            return;
-        }
-
-        if (File.Exists(file))
-        {
-            File.Delete(file);
-        }
     }
 
     private async Task PrepareExecutables()
