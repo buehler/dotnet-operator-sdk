@@ -56,11 +56,13 @@ FROM mcr.microsoft.com/dotnet/sdk:{DotnetImageTag} as build
 WORKDIR /operator
 
 COPY ./ ./
+RUN curl -L -o cfssl https://github.com/cloudflare/cfssl/releases/download/v1.5.0/cfssl_1.5.0_linux_amd64
+RUN curl -L -o cfssljson https://github.com/cloudflare/cfssl/releases/download/v1.5.0/cfssljson_1.5.0_linux_amd64
+RUN chmod +x ./cfssl
+RUN chmod +x ./cfssljson
+RUN mkdir out
+RUN cp cfssl cfssljson out/
 RUN dotnet publish -c Release -o out {ProjectToBuild}
-RUN curl -L -o out/cfssl https://github.com/cloudflare/cfssl/releases/download/v1.5.0/cfssl_1.5.0_linux_amd64
-RUN curl -L -o out/cfssljson https://github.com/cloudflare/cfssl/releases/download/v1.5.0/cfssljson_1.5.0_linux_amd64
-RUN chmod +x out/cfssl
-RUN chmod +x out/cfssljson
 
 # The runner for the application
 FROM mcr.microsoft.com/dotnet/aspnet:{DotnetImageTag} as final
