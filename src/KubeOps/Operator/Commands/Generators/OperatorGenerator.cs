@@ -53,8 +53,8 @@ internal class OperatorGenerator : GeneratorBase
                                 {
                                     $"KESTREL__ENDPOINTS__HTTP__URL=http://0.0.0.0:{_settings.HttpPort}",
                                     $"KESTREL__ENDPOINTS__HTTPS__URL=https://0.0.0.0:{_settings.HttpsPort}",
-                                    "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__PATH=/certs/server.pem",
-                                    "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__KEYPATH=/certs/server-key.pem",
+                                    "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__PATH=/certs/ca.pem",
+                                    "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__KEYPATH=/certs/ca-key.pem",
                                 },
                             },
                         }
@@ -112,7 +112,7 @@ internal class OperatorGenerator : GeneratorBase
                                         {
                                             Image = "operator",
                                             Name = "webhook-installer",
-                                            Args = new[] { "webhooks", "install", },
+                                            Args = new[] { "webhooks", "install", "-r" },
                                             Env = new List<V1EnvVar>
                                             {
                                                 new()

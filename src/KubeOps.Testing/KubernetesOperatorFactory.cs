@@ -42,6 +42,13 @@ public class KubernetesOperatorFactory<TTestStartup> : WebApplicationFactory<TTe
         return this;
     }
 
+    public IManagedResourceController GetController<TEntity>()
+        where TEntity : IKubernetesObject<V1ObjectMeta> =>
+            Services
+            .GetRequiredService<IControllerInstanceBuilder>()
+            .BuildControllers<TEntity>()
+            .First();
+
     /// <summary>
     /// Start the server.
     /// </summary>
