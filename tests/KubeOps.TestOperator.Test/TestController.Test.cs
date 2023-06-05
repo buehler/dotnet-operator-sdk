@@ -20,11 +20,7 @@ public class TestControllerTest : IClassFixture<KubernetesOperatorFactory<TestSt
     {
         _factory = factory.WithSolutionRelativeContentRoot("tests/KubeOps.TestOperator");
 
-        _controller = _factory.Services
-            .GetRequiredService<IControllerInstanceBuilder>()
-            .BuildControllers<V1TestEntity>()
-            .First();
-
+        _controller = _factory.GetController<V1TestEntity>();
         _managerMock = _factory.Services.GetRequiredService<Mock<IManager>>();
         _managerMock.Reset();
     }
