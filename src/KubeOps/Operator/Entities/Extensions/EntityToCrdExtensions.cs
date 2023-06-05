@@ -30,13 +30,13 @@ internal static class EntityToCrdExtensions
     private static readonly string[] IgnoredToplevelProperties = { "metadata", "apiversion", "kind" };
 
     internal static V1CustomResourceDefinition CreateCrd(
-        this IKubernetesObject<V1ObjectMeta> kubernetesEntity, ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
+        this IKubernetesObject<V1ObjectMeta> kubernetesEntity, IList<ICrdBuilderTypeOverride>? crdBuilderOverrides = null)
         => CreateCrd(kubernetesEntity.GetType(), crdBuilderOverrides);
 
-    internal static V1CustomResourceDefinition CreateCrd<TEntity>(ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
+    internal static V1CustomResourceDefinition CreateCrd<TEntity>(IList<ICrdBuilderTypeOverride>? crdBuilderOverrides = null)
         where TEntity : IKubernetesObject<V1ObjectMeta> => CreateCrd(typeof(TEntity), crdBuilderOverrides);
 
-    internal static V1CustomResourceDefinition CreateCrd(this Type entityType, ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
+    internal static V1CustomResourceDefinition CreateCrd(this Type entityType, IList<ICrdBuilderTypeOverride>? crdBuilderOverrides = null)
     {
         var entityDefinition = entityType.ToEntityDefinition();
 
@@ -100,7 +100,7 @@ internal static class EntityToCrdExtensions
         PropertyInfo info,
         IList<V1CustomResourceColumnDefinition> additionalColumns,
         string jsonPath,
-        ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
+        IList<ICrdBuilderTypeOverride>? crdBuilderOverrides = null)
     {
         V1JSONSchemaProps props;
         try
@@ -217,7 +217,7 @@ internal static class EntityToCrdExtensions
         Type type,
         IList<V1CustomResourceColumnDefinition> additionalColumns,
         string jsonPath,
-        ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
+        IList<ICrdBuilderTypeOverride>? crdBuilderOverrides = null)
     {
         var props = new V1JSONSchemaProps();
 
@@ -226,10 +226,10 @@ internal static class EntityToCrdExtensions
 
         var isSimpleType = IsSimpleType(type);
 
-        var customPropertyOverride = crdBuilderOverrides?.GetMatchingTypeOverride(type, jsonPath);
-        if (customPropertyOverride != null)
+        var matchedOverride = crdBuilderOverrides?.FirstOrDefault(ovrd => ovrd.TypeMatchesOverrideCondition(type));
+        if (matchedOverride != null)
         {
-            customPropertyOverride.ConfigureCustomSchemaForProp(props);
+            matchedOverride.ConfigureCustomSchemaForProp(props);
         }
         else if (type == typeof(V1ObjectMeta))
         {
@@ -355,7 +355,7 @@ internal static class EntityToCrdExtensions
         V1JSONSchemaProps props,
         IList<V1CustomResourceColumnDefinition> additionalColumns,
         string jsonPath,
-        ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
+        IList<ICrdBuilderTypeOverride>? crdBuilderOverrides = null)
     {
         props.Type = Object;
 

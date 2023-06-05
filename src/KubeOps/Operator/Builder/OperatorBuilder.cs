@@ -230,7 +230,7 @@ internal class OperatorBuilder : IOperatorBuilder
         Services.TryAddSingleton<IRbacBuilder, RbacBuilder>();
 
         // Register type overrides register.
-        Services.TryAddSingleton<ICrdBuilderTypeOverrides, CrdBuilderTypeOverrides>();
+        Services.AddScoped<ICrdBuilderTypeOverride, CrdBuilderResourceQuantityOverride>();
 
         return this;
     }

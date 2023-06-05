@@ -116,13 +116,12 @@ public class CrdGeneratorTest
 
         serializedWithoutOverrides.Should().Contain(TestTypeOverridesValues.ExpectedDefaultYamlResources);
         serializedWithoutOverrides.Should().NotContain(TestTypeOverridesValues.ExpectedOverriddenResourcesYaml);
-        serializedWithoutOverrides.Should().NotContain(TestTypeOverridesValues.ExpectedOverriddenResourcesWithJsonPathYaml);
     }
 
     [Fact]
-    public void Should_Convert_Desired_Crd_Type_To_Desired_Crd_Format()
+    public void Should_Convert_Desired_Crd_Type_Everywhere_To_Desired_Crd_Format()
     {
-        var customOverrides = new CrdBuilderTypeOverrides(new List<ICrdBuilderTypeOverride> { new TestTypeOverride() });
+        var customOverrides = new List<ICrdBuilderTypeOverride> { new CrdBuilderResourceQuantityOverride() };
         var crdWithTypeOverrides = new CrdBuilder(_componentRegistrar, customOverrides)
             .BuildCrds()
             .First(
@@ -132,54 +131,5 @@ public class CrdGeneratorTest
         serializedWithOverrides.Should().Contain(TestTypeOverridesValues.ExpectedOverriddenResourcesYaml);
         serializedWithOverrides.Should().NotContain(TestTypeOverridesValues.ExpectedDefaultYamlResources);
 
-    }
-
-    [Fact]
-    public void Should_Convert_Desired_Crd_Type_To_Desired_Crd_Format_Matching_JsonPath()
-    {
-        var customOverridesWithJsonPath = new CrdBuilderTypeOverrides(new List<ICrdBuilderTypeOverride>
-        {
-            new TestTypeOverride(),
-            new TestTypeOverrideWithJsonpath(".spec.objectName.resources.limits")
-        });
-        var crdWithTypeOverridesAndJsonPath = new CrdBuilder(_componentRegistrar, customOverridesWithJsonPath)
-            .BuildCrds()
-            .First(
-                c => c.Spec.Names.Kind.Contains("testcustomtypeoverrides", StringComparison.InvariantCultureIgnoreCase));
-        var serializedWithOverridesAndJsonPath = KubernetesYaml.Serialize(crdWithTypeOverridesAndJsonPath);
-        serializedWithOverridesAndJsonPath.Should().Contain(TestTypeOverridesValues.ExpectedOverriddenResourcesWithJsonPathYaml);
-    }
-
-
-    [Fact]
-    public void Should_Convert_Desired_Crd_Type_To_Desired_Crd_Format_Matching_Multiple_JsonPaths()
-    {
-        var customOverridesWithJsonPath = new CrdBuilderTypeOverrides(new List<ICrdBuilderTypeOverride>
-        {
-            new TestTypeOverride(),
-            new TestTypeOverrideWithJsonpath(".spec.objectName.resources.limits"),
-            new TestTypeOverrideWithJsonpath(".spec.objectName.resources.claims"),
-        });
-        var crdWithTypeOverridesAndJsonPath = new CrdBuilder(_componentRegistrar, customOverridesWithJsonPath)
-            .BuildCrds()
-            .First(
-                c => c.Spec.Names.Kind.Contains("testcustomtypeoverrides", StringComparison.InvariantCultureIgnoreCase));
-        var serializedWithOverridesAndJsonPath = KubernetesYaml.Serialize(crdWithTypeOverridesAndJsonPath);
-        serializedWithOverridesAndJsonPath.Should().Contain(TestTypeOverridesValues.ExpectedOverriddenResourcesWithMultipleJsonPathsYaml);
-    }
-
-    [Fact]
-    public void Should_Control_Whole_Crd_Spec_Using_JsonPath_Overrides()
-    {
-        var customOverridesWithJsonPath = new CrdBuilderTypeOverrides(new List<ICrdBuilderTypeOverride>
-        {
-            new TestTypeOverrideWithJsonpath(""),
-        });
-        var crdWithTypeOverridesAndJsonPath = new CrdBuilder(_componentRegistrar, customOverridesWithJsonPath)
-            .BuildCrds()
-            .First(
-                c => c.Spec.Names.Kind.Contains("testcustomtypeoverrides", StringComparison.InvariantCultureIgnoreCase));
-        var serializedWithOverridesAndJsonPath = KubernetesYaml.Serialize(crdWithTypeOverridesAndJsonPath);
-        serializedWithOverridesAndJsonPath.Should().Contain(TestTypeOverridesValues.ExpectedWholeControlledSchemaWithJsonPath);
     }
 }

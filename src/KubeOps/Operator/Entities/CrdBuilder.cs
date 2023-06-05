@@ -10,9 +10,9 @@ namespace KubeOps.Operator.Entities;
 internal class CrdBuilder : ICrdBuilder
 {
     private readonly IComponentRegistrar _componentRegistrar;
-    private readonly ICrdBuilderTypeOverrides? _crdBuilderOverrides;
+    private readonly IList<ICrdBuilderTypeOverride>? _crdBuilderOverrides;
 
-    public CrdBuilder(IComponentRegistrar componentRegistrar, ICrdBuilderTypeOverrides? crdBuilderOverrides = null)
+    public CrdBuilder(IComponentRegistrar componentRegistrar, IList<ICrdBuilderTypeOverride>? crdBuilderOverrides = null)
     {
         _componentRegistrar = componentRegistrar;
         _crdBuilderOverrides = crdBuilderOverrides;
