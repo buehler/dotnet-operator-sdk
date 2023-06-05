@@ -12,10 +12,10 @@ internal class CrdBuilder : ICrdBuilder
     private readonly IComponentRegistrar _componentRegistrar;
     private readonly IList<ICrdBuilderTypeOverride>? _crdBuilderOverrides;
 
-    public CrdBuilder(IComponentRegistrar componentRegistrar, IList<ICrdBuilderTypeOverride>? crdBuilderOverrides = null)
+    public CrdBuilder(IComponentRegistrar componentRegistrar, IEnumerable<ICrdBuilderTypeOverride>? crdBuilderOverrides = null)
     {
         _componentRegistrar = componentRegistrar;
-        _crdBuilderOverrides = crdBuilderOverrides;
+        _crdBuilderOverrides = crdBuilderOverrides?.ToList();
     }
 
     public IEnumerable<V1CustomResourceDefinition> BuildCrds() =>

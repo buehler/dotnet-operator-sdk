@@ -226,7 +226,7 @@ internal static class EntityToCrdExtensions
 
         var isSimpleType = IsSimpleType(type);
 
-        var matchedOverride = crdBuilderOverrides?.FirstOrDefault(ovrd => ovrd.TypeMatchesOverrideCondition(type));
+        var matchedOverride = crdBuilderOverrides?.FirstOrDefault(ovrd => ovrd.HandlesType(type));
         if (matchedOverride != null)
         {
             matchedOverride.ConfigureCustomSchemaForProp(props);

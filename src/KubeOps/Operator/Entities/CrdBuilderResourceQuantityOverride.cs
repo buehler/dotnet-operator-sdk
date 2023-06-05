@@ -7,7 +7,7 @@ namespace KubeOps.Operator.Entities;
 /// </summary>
 public class CrdBuilderResourceQuantityOverride : ICrdBuilderTypeOverride
 {
-    public bool TypeMatchesOverrideCondition(Type type) => type.IsGenericType
+    public bool HandlesType(Type type) => type.IsGenericType
                                                            && type.GetGenericTypeDefinition() == typeof(IDictionary<,>)
                                                            && type.GenericTypeArguments.Contains(typeof(ResourceQuantity));
 

@@ -13,7 +13,7 @@ public interface ICrdBuilderTypeOverride
     /// </summary>
     /// <param name="type">Type being checked against.</param>
     /// <returns>Boolean determining whether the user defined type condition has been matched.</returns>
-    public bool TypeMatchesOverrideCondition(Type type);
+    public bool HandlesType(Type type);
 
     /// <summary>
     /// For the matching condition, configure the CRD property in a user defined way for the given type.
