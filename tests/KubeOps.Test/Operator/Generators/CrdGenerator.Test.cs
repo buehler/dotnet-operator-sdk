@@ -112,7 +112,9 @@ public class CrdGeneratorTest
             .First(
 
                 c => c.Spec.Names.Kind.Contains("testcustomtypeoverrides", StringComparison.InvariantCultureIgnoreCase));
-        var serializedWithoutOverrides = KubernetesYaml.Serialize(crdWithoutOverrides);
+
+
+        var serializedWithoutOverrides = TestTypeOverridesValues.SerializeWithoutDescriptions(crdWithoutOverrides);
 
         serializedWithoutOverrides.Should().Contain(TestTypeOverridesValues.ExpectedDefaultYamlResources);
         serializedWithoutOverrides.Should().NotContain(TestTypeOverridesValues.ExpectedOverriddenResourcesYaml);
@@ -126,7 +128,7 @@ public class CrdGeneratorTest
             .BuildCrds()
             .First(
                 c => c.Spec.Names.Kind.Contains("testcustomtypeoverrides", StringComparison.InvariantCultureIgnoreCase));
-        var serializedWithOverrides = KubernetesYaml.Serialize(crdWithTypeOverrides);
+        var serializedWithOverrides = TestTypeOverridesValues.SerializeWithoutDescriptions(crdWithTypeOverrides);
 
         serializedWithOverrides.Should().Contain(TestTypeOverridesValues.ExpectedOverriddenResourcesYaml);
         serializedWithOverrides.Should().NotContain(TestTypeOverridesValues.ExpectedDefaultYamlResources);

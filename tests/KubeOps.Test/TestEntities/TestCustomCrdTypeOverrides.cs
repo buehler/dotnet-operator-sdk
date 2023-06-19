@@ -1,5 +1,9 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using k8s;
 using k8s.Models;
 using KubeOps.Operator.Entities;
+using YamlDotNet.RepresentationModel;
 
 namespace KubeOps.Test.TestEntities;
 
@@ -27,23 +31,78 @@ public class TestSpec
     PluralName = "testcustomtypeoverrides")]
 public class TestCustomCrdTypeOverrides : CustomKubernetesEntity<TestSpec, TestStatus>
 {
+
+
 }
 
 public static class TestTypeOverridesValues
 {
+    public static string SerializeWithoutDescriptions(V1CustomResourceDefinition? resource)
+    {
+        var yamlText = KubernetesYaml.Serialize(resource);
+        var yaml = new YamlStream();
+        yaml.Load(new StringReader(yamlText));
+
+        var mapping = (YamlMappingNode)yaml.Documents[0].RootNode;
+        RemoveDescriptionFromYaml(mapping);
+
+        var stringWriter = new StringWriter();
+        yaml.Save(stringWriter, false);
+
+        var updatedYamlText = stringWriter.ToString();
+        return updatedYamlText;
+
+    }
+
+    /// <summary>
+    /// Recursively removes all yaml keys value pairs named "description".
+    /// </summary>
+    /// <param name="node"></param>
+    private static void RemoveDescriptionFromYaml(YamlNode node)
+    {
+        switch (node)
+        {
+            case YamlMappingNode mapping:
+                {
+                    var nodesToRemove = new List<YamlNode>();
+
+                    foreach (var entry in mapping.Children)
+                    {
+                        if (entry.Key.ToString() == "description")
+                        {
+                            nodesToRemove.Add(entry.Key);
+                        }
+                        else
+                        {
+                            RemoveDescriptionFromYaml(entry.Value);
+                        }
+                    }
+
+                    foreach (var key in nodesToRemove)
+                    {
+                        mapping.Children.Remove(key);
+                    }
+
+                    break;
+                }
+            case YamlSequenceNode sequence:
+                {
+                    foreach (var child in sequence.Children)
+                    {
+                        RemoveDescriptionFromYaml(child);
+                    }
+
+                    break;
+                }
+        }
+    }
+
+
     public const string ExpectedOverriddenResourcesYaml = @"
                       limits:
-                        description: |-
-                          Limits describes the maximum amount of compute resources allowed. More info:
-                          https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
                       requests:
-                        description: |-
-                          Requests describes the minimum amount of compute resources required. If Requests
-                          is omitted for a container, it defaults to Limits if that is explicitly
-                          specified, otherwise to an implementation-defined value. More info:
-                          https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                         type: object
                         x-kubernetes-preserve-unknown-fields: true";
 
@@ -51,20 +110,9 @@ public static class TestTypeOverridesValues
                   resources:
                     properties:
                       claims:
-                        description: |-
-                          Claims lists the names of resources, defined in spec.resourceClaims, that are
-                          used by this container.
-
-                          This is an alpha field and requires enabling the DynamicResourceAllocation
-                          feature gate.
-
-                          This field is immutable.
                         items:
                           properties:
                             name:
-                              description: |-
-                                Name must match the name of one entry in pod.spec.resourceClaims of the Pod
-                                where this field is used. It makes that resource available inside a container.
                               type: string
                           type: object
                         type: array
@@ -80,9 +128,6 @@ public static class TestTypeOverridesValues
                             value:
                               type: string
                           type: object
-                        description: |-
-                          Limits describes the maximum amount of compute resources allowed. More info:
-                          https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                         type: object
                       requests:
                         additionalProperties:
@@ -96,10 +141,5 @@ public static class TestTypeOverridesValues
                             value:
                               type: string
                           type: object
-                        description: |-
-                          Requests describes the minimum amount of compute resources required. If Requests
-                          is omitted for a container, it defaults to Limits if that is explicitly
-                          specified, otherwise to an implementation-defined value. More info:
-                          https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                         type: object";
 }
