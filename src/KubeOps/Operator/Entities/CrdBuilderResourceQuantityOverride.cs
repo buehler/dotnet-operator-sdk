@@ -3,7 +3,7 @@ using k8s.Models;
 namespace KubeOps.Operator.Entities;
 
 /// <summary>
-/// Custom CRD schema creation override to resolve https://github.com/buehler/dotnet-operator-sdk/issues/565
+/// Custom CRD schema creation override to resolve https://github.com/buehler/dotnet-operator-sdk/issues/565.
 /// </summary>
 public class CrdBuilderResourceQuantityOverride : ICrdBuilderTypeOverride
 {
