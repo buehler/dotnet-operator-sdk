@@ -157,6 +157,7 @@ public class TestSpecEntity : CustomKubernetesEntity<TestSpecEntitySpec>
 
 [KubernetesEntity(Group = "kubeops.test.dev", ApiVersion = "V1")]
 [EntityScope(EntityScope.Cluster)]
+[RequiredSpec]
 public class TestClusterSpecEntity : CustomKubernetesEntity<TestSpecEntitySpec>
 {
 }
