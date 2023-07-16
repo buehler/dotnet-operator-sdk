@@ -19,6 +19,7 @@ internal class RunOperator
     public RunOperator(IHost host, OperatorSettings settings)
     {
         _host = host;
+        settings.PreInitializeAction?.Invoke(settings);
         _settings = settings;
     }
 
