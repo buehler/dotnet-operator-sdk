@@ -162,6 +162,7 @@ internal class Install
             if (existingItem != null)
             {
                 await app.Out.WriteLineAsync("Mutator existed, updating.");
+                existingItem.Webhooks = mutatorConfig.Webhooks;
                 await client.Update(existingItem);
             }
             else
