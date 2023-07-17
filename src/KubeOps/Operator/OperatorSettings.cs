@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using KellermanSoftware.CompareNetObjects;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Errors;
+using static System.Net.WebRequestMethods;
 
 namespace KubeOps.Operator;
 
@@ -180,4 +181,12 @@ public sealed class OperatorSettings
         AutoClearCache = false,
         MembersToIgnore = new List<string> { "ResourceVersion", "ManagedFields" },
     };
+
+    /// <summary>
+    /// Use this to configure the operator to execute any custom code before any of the installers or execution begins.
+    /// </summary>
+    /// <example> The issue 567 removed the downloading of the cloudflare certificate tooling and moved it to the dockerfile. This is more secure, but may not be suitable for all users.  Use this action to reproduce the logic from before and download the appropriate tooling.</example>
+    /// <see href="https://github.com/buehler/dotnet-operator-sdk/issues/567"/>
+    /// <seealso href="https://github.com/buehler/dotnet-operator-sdk/blob/v7.2.0/src/KubeOps/Operator/Commands/CommandHelpers/CertificateGenerator.cs#L153-L213"/>
+    public Action<OperatorSettings>? PreInitializeAction { get; set; }
 }
