@@ -49,8 +49,6 @@ internal class CertificateGenerator : IDisposable
     {
         Delete(_caconfig);
         Delete(_cacsr);
-        Delete(_cfssl);
-        Delete(_cfssljson);
         Delete(_servercsr);
     }
 
