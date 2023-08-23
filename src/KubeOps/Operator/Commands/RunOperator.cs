@@ -5,7 +5,7 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands;
 
-[Command(Description = "Runs the operator.")]
+[Command(Description = "Runs the operator.", UsePagerForHelpText = true)]
 [Subcommand(typeof(Generator))]
 [Subcommand(typeof(Install))]
 [Subcommand(typeof(Uninstall))]
