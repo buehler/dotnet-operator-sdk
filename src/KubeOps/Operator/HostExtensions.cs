@@ -16,14 +16,23 @@ public static class HostExtensions
     /// <param name="host">The <see cref="IHost"/>.</param>
     /// <param name="args">Program arguments.</param>
     /// <returns>Async task with completion result.</returns>
-    public static Task<int> RunOperatorAsync(this IHost host, string[] args)
+    public static async Task<int> RunOperatorAsync(this IHost host, string[] args)
     {
         var app = new CommandLineApplication<RunOperator>();
         app
             .Conventions
             .UseDefaultConventions()
             .UseConstructorInjection(host.Services);
-
-        return app.ExecuteAsync(args);
+        try
+        {
+            return await app.ExecuteAsync(args);
+        }
+        catch (UnrecognizedCommandParsingException ex)
+        {
+            Console.WriteLine(ex.Message);
+            ex.Command.Description = null;
+            ex.Command.ShowHelp();
+            return 1;
+        }
     }
 }
