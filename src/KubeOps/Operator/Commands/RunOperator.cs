@@ -10,7 +10,7 @@ namespace KubeOps.Operator.Commands;
 [Subcommand(typeof(Install))]
 [Subcommand(typeof(Uninstall))]
 [Subcommand(typeof(Management.Webhooks.Webhooks))]
-[Subcommand(typeof(Version))]
+[Subcommand(typeof(Utilities.Version))]
 internal class RunOperator
 {
     private readonly IHost _host;
