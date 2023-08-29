@@ -6,26 +6,26 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Generators;
 
-[Command("installer", Description = "Generates kustomization yaml for the whole installation of the operator.")]
+[Command("installer", Description = "Generates kustomization YAML that uses the output from the other generator commands to create the entire operator.")]
 internal class InstallerGenerator : GeneratorBase
 {
     private readonly OperatorSettings _settings;
 
     public InstallerGenerator(OperatorSettings settings) => _settings = settings;
 
-    [Option("--crds-dir", Description = "The path where the crds are located.")]
-    public string? CrdsPath { get; set; }
+    [Option("--crds-dir", Description = "The path where the CRD YAML files are located.")]
+    public string CrdsPath { get; set; } = "../crds";
 
-    [Option("--rbac-dir", Description = "The path where the rbac yamls are located.")]
-    public string? RbacPath { get; set; }
+    [Option("--rbac-dir", Description = "The path where the RBAC YAML files are located.")]
+    public string RbacPath { get; set; } = "../rbac";
 
-    [Option("--operator-dir", Description = "The path where the operator yamls are located.")]
-    public string? OperatorPath { get; set; }
+    [Option("--operator-dir", Description = "The path where the operator YAML files are located.")]
+    public string OperatorPath { get; set; } = "../operator";
 
-    [Option("--image-name", Description = "The name of the operator Docker image.")]
+    [Option("--image-name", Description = "The name of the operator's Docker image.")]
     public string ImageName { get; set; } = "public-docker-image-path";
 
-    [Option("--image-tag", Description = "The tag to use for the Docker image.")]
+    [Option("--image-tag", Description = "The tag for the Docker image.")]
     public string ImageTag { get; set; } = "latest";
 
     public async Task<int> OnExecuteAsync(CommandLineApplication app)
@@ -50,14 +50,14 @@ internal class InstallerGenerator : GeneratorBase
                     Resources = new List<string>
                     {
                         $"./namespace.{Format.ToString().ToLower()}",
-                        CrdsPath == null || OutputPath == null
-                            ? "../crds"
+                        OutputPath == null
+                            ? CrdsPath
                             : Path.GetRelativePath(OutputPath, CrdsPath).Replace('\\', '/'),
-                        RbacPath == null || OutputPath == null
-                            ? "../rbac"
+                        OutputPath == null
+                            ? RbacPath
                             : Path.GetRelativePath(OutputPath, RbacPath).Replace('\\', '/'),
-                        OperatorPath == null || OutputPath == null
-                            ? "../operator"
+                        OutputPath == null
+                            ? OperatorPath
                             : Path.GetRelativePath(OutputPath, OperatorPath).Replace('\\', '/'),
                     },
                     Images = new List<KustomizationImage>
