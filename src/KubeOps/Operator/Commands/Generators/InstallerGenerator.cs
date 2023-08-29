@@ -22,6 +22,12 @@ internal class InstallerGenerator : GeneratorBase
     [Option("--operator-dir", Description = "The path where the operator yamls are located.")]
     public string? OperatorPath { get; set; }
 
+    [Option("--image-name", Description = "The name of the operator Docker image.")]
+    public string ImageName { get; set; } = "public-docker-image-path";
+
+    [Option("--image-tag", Description = "The tag to use for the Docker image.")]
+    public string ImageTag { get; set; } = "latest";
+
     public async Task<int> OnExecuteAsync(CommandLineApplication app)
     {
         var fileWriter = new FileWriter(app.Out);
@@ -56,7 +62,7 @@ internal class InstallerGenerator : GeneratorBase
                     },
                     Images = new List<KustomizationImage>
                     {
-                        new() { Name = "operator", NewName = "public-docker-image-path", NewTag = "latest", },
+                        new() { Name = "operator", NewName = ImageName, NewTag = ImageTag, },
                     },
                 },
                 Format));
