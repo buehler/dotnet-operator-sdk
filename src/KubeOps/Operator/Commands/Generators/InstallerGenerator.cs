@@ -6,8 +6,8 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Generators;
 
-[Command("installer", Description = "Generates kustomization YAML that uses the output from the other generator commands to create the entire operator.")]
-internal class InstallerGenerator : GeneratorBase
+[Command("installer", Description = "Generates kustomization YAML for installing the entire operator.")]
+internal class InstallerGenerator : OutputBase
 {
     private readonly OperatorSettings _settings;
 

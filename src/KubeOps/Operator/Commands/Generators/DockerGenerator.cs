@@ -5,7 +5,7 @@ using McMaster.Extensions.CommandLineUtils;
 namespace KubeOps.Operator.Commands.Generators;
 
 [Command("docker", Description = "Generates the docker file for building.")]
-internal class DockerGenerator : GeneratorBase
+internal class DockerGenerator : OutputBase
 {
     private readonly OperatorSettings _settings;
     private readonly bool _hasWebhooks;
