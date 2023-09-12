@@ -1,27 +1,27 @@
-﻿using JsonDiffPatch;
+﻿using System.Text.Json.JsonDiffPatch;
+using System.Text.Json.JsonDiffPatch.Diffs.Formatters;
+using System.Text.Json.Nodes;
 using k8s;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace KubeOps.Operator.Webhooks;
 
 internal static class KubernetesJsonDiffer
 {
-    private static readonly JsonDiffer JsonDiffer = new();
+    private static readonly JsonPatchDeltaFormatter Formatter = new();
 
-    public static PatchDocument DiffObjects(object? from, object? to)
+    public static JsonNode? DiffObjects(object? from, object? to)
     {
         var fromToken = GetJToken(from);
         var toToken = GetJToken(to);
 
-        return JsonDiffer.Diff(fromToken, toToken, false);
+        return fromToken.Diff(toToken, Formatter);
     }
 
-    private static JToken GetJToken(object? o)
+    private static JsonNode? GetJToken(object? o)
     {
         // Use the K8s Serializer to ensure we match their naming conventions
         // (and handle object conversions correctly).
         var json = KubernetesJson.Serialize(o);
-        return JToken.ReadFrom(new JsonTextReader(new StringReader(json)));
+        return JsonNode.Parse(json);
     }
 }

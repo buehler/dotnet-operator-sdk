@@ -1,7 +1,6 @@
 ﻿using FluentAssertions;
 using k8s.Models;
 using KubeOps.Operator.Webhooks;
-using Newtonsoft.Json;
 using Xunit;
 
 namespace KubeOps.Test.Operator.Webhook;
@@ -17,7 +16,7 @@ public class KubernetesJsonDifferTest
         var result = KubernetesJsonDiffer.DiffObjects(left, right);
 
         // Should be all lowercase.
-        result.ToString(Formatting.None)
+        result.ToJsonString()
             .Should()
             .Be("[{\"op\":\"replace\",\"path\":\"/status/reason\",\"value\":\"bar\"}]");
     }
