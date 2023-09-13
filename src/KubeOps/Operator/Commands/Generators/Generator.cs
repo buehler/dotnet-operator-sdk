@@ -8,7 +8,7 @@ namespace KubeOps.Operator.Commands.Generators;
 [Subcommand(typeof(InstallerGenerator))]
 [Subcommand(typeof(OperatorGenerator))]
 [Subcommand(typeof(RbacGenerator))]
-internal class Generator : GeneratorBase
+internal class Generator
 {
     public Task<int> OnExecuteAsync(CommandLineApplication app)
     {
