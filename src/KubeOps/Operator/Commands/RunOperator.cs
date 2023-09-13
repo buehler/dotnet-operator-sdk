@@ -5,12 +5,12 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands;
 
-[Command(Description = "Runs the operator.")]
+[Command(Description = "Runs the operator.", UsePagerForHelpText = true)]
 [Subcommand(typeof(Generator))]
 [Subcommand(typeof(Install))]
 [Subcommand(typeof(Uninstall))]
 [Subcommand(typeof(Management.Webhooks.Webhooks))]
-[Subcommand(typeof(Version))]
+[Subcommand(typeof(Utilities.Version))]
 internal class RunOperator
 {
     private readonly IHost _host;
