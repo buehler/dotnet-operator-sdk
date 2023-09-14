@@ -9,12 +9,12 @@ internal static class KubernetesJsonDiffer
 {
     private static readonly JsonPatchDeltaFormatter Formatter = new();
 
-    public static JsonNode? DiffObjects(object? from, object? to)
+    public static JsonNode DiffObjects(object? from, object? to)
     {
         var fromToken = GetJToken(from);
         var toToken = GetJToken(to);
 
-        return fromToken.Diff(toToken, Formatter);
+        return fromToken.Diff(toToken, Formatter)!;
     }
 
     private static JsonNode? GetJToken(object? o)
