@@ -8,7 +8,7 @@ using McMaster.Extensions.CommandLineUtils;
 namespace KubeOps.Operator.Commands.Generators;
 
 [Command("rbac", Description = "Generates the needed rbac roles for the operator.")]
-internal class RbacGenerator : GeneratorBase
+internal class RbacGenerator : OutputBase
 {
     private readonly IRbacBuilder _rbacBuilder;
 

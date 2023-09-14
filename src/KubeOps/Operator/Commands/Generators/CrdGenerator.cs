@@ -7,7 +7,7 @@ using McMaster.Extensions.CommandLineUtils;
 namespace KubeOps.Operator.Commands.Generators;
 
 [Command("crd", "crds", Description = "Generates the needed CRD for kubernetes.")]
-internal class CrdGenerator : GeneratorBase
+internal class CrdGenerator : OutputBase
 {
     private readonly ICrdBuilder _crdBuilder;
 

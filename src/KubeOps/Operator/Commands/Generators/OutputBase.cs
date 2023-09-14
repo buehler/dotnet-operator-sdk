@@ -3,13 +3,15 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Generators;
 
-internal abstract class GeneratorBase
+internal abstract class OutputBase
 {
-    [Option(CommandOptionType.SingleValue, Description = "Determines the output format for the generator.")]
+    [Option(
+        CommandOptionType.SingleValue,
+        Description = "Sets the output format for the generator.")]
     public SerializerOutputFormat Format { get; set; }
 
     [Option(
-        Description = @"The ""root"" path for the generator to put files in - if empty, prints to console.",
+        Description = @"The path the command will write the files to. If empty, prints output to console.",
         LongName = "out")]
     public string? OutputPath { get; set; }
 }

@@ -8,7 +8,7 @@ using McMaster.Extensions.CommandLineUtils;
 namespace KubeOps.Operator.Commands.Generators;
 
 [Command("operator", "op", Description = "Generates the needed yamls to run the operator.")]
-internal class OperatorGenerator : GeneratorBase
+internal class OperatorGenerator : OutputBase
 {
     private readonly OperatorSettings _settings;
     private readonly bool _hasWebhooks;
