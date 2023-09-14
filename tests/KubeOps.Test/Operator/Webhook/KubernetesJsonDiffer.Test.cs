@@ -20,4 +20,12 @@ public class KubernetesJsonDifferTest
             .Should()
             .Be("[{\"op\":\"replace\",\"path\":\"/status/reason\",\"value\":\"bar\"}]");
     }
+
+    [Fact]
+    public void When_diffing_null_objects_then_no_errors_should_be_thrown()
+    {
+        var result = KubernetesJsonDiffer.DiffObjects(null, null);
+
+        Assert.NotNull(result);
+    }
 }
