@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C587731F-8191-4A19-8662-B89A60FE79A1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4DB01062-6DC5-4028-BB72-C0619C2F5F2E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{DC760E69-D0EA-417F-AE38-B12D0B04DE39}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Operator", "examples\Operator\Operator.csproj", "{E9A0B04E-D90E-4B94-90E0-DD3666B098FF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{DCC36310-C31F-4BCE-B252-2827A060ED7B}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		.releaserc.json = .releaserc.json
+		Directory.Build.props = Directory.Build.props
+		renovate.json = renovate.json
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.Cli", "src\KubeOps.Cli\KubeOps.Cli.csproj", "{E1521548-7CAD-464D-BFD2-ECFBA3FFC7EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.Abstractions", "src\KubeOps.Abstractions\KubeOps.Abstractions.csproj", "{D29A46CF-E494-4365-9BFF-0FF19AD7AA8F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.Operator", "src\KubeOps.Operator\KubeOps.Operator.csproj", "{94B40118-80EF-4226-912B-CC9AC0B69E59}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E9A0B04E-D90E-4B94-90E0-DD3666B098FF} = {DC760E69-D0EA-417F-AE38-B12D0B04DE39}
+		{E1521548-7CAD-464D-BFD2-ECFBA3FFC7EF} = {4DB01062-6DC5-4028-BB72-C0619C2F5F2E}
+		{D29A46CF-E494-4365-9BFF-0FF19AD7AA8F} = {4DB01062-6DC5-4028-BB72-C0619C2F5F2E}
+		{94B40118-80EF-4226-912B-CC9AC0B69E59} = {4DB01062-6DC5-4028-BB72-C0619C2F5F2E}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E9A0B04E-D90E-4B94-90E0-DD3666B098FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9A0B04E-D90E-4B94-90E0-DD3666B098FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9A0B04E-D90E-4B94-90E0-DD3666B098FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9A0B04E-D90E-4B94-90E0-DD3666B098FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1521548-7CAD-464D-BFD2-ECFBA3FFC7EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1521548-7CAD-464D-BFD2-ECFBA3FFC7EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1521548-7CAD-464D-BFD2-ECFBA3FFC7EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1521548-7CAD-464D-BFD2-ECFBA3FFC7EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D29A46CF-E494-4365-9BFF-0FF19AD7AA8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D29A46CF-E494-4365-9BFF-0FF19AD7AA8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D29A46CF-E494-4365-9BFF-0FF19AD7AA8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D29A46CF-E494-4365-9BFF-0FF19AD7AA8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94B40118-80EF-4226-912B-CC9AC0B69E59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94B40118-80EF-4226-912B-CC9AC0B69E59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94B40118-80EF-4226-912B-CC9AC0B69E59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94B40118-80EF-4226-912B-CC9AC0B69E59}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

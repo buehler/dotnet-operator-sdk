@@ -1,0 +1,38 @@
+<Project>
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>11</LangVersion>
+    <Authors>Christoph Bühler</Authors>
+    <Owner>cbuehler</Owner>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageProjectUrl>https://github.com/buehler/dotnet-operator-sdk.git</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/buehler/dotnet-operator-sdk.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicense>Apache-2.0</PackageLicense>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+        <PackageReference
+                Include="StyleCop.Analyzers"
+                Version="1.2.0-beta.507"
+                PrivateAssets="all"
+                Condition="$(MSBuildProjectExtension) == '.csproj'"/>
+        <PackageReference
+                Include="SonarAnalyzer.CSharp"
+                Version="9.10.0.77988"
+                PrivateAssets="all"
+                Condition="$(MSBuildProjectExtension) == '.csproj'"/>
+        <PackageReference Include="Roslynator.Analyzers" Version="4.5.0" PrivateAssets="All" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    </PropertyGroup>
+</Project>
