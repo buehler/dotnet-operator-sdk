@@ -38,11 +38,11 @@ public class AdmissionResult
 
     internal static TResult NotImplemented<TResult>()
         where TResult : AdmissionResult, new() => new()
-    {
-        Valid = false,
-        StatusCode = StatusCodes.Status501NotImplemented,
-        StatusMessage = "The method is not implemented.",
-    };
+        {
+            Valid = false,
+            StatusCode = StatusCodes.Status501NotImplemented,
+            StatusMessage = "The method is not implemented.",
+        };
 
     internal static AdmissionResponse InternalServerError()
         => new()

@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
+
 using KubeOps.Operator.Comparing;
+
 using ReferenceEqualityComparer = KubeOps.Operator.Comparing.ReferenceEqualityComparer;
 
 namespace KubeOps.Operator.Entities.Extensions;

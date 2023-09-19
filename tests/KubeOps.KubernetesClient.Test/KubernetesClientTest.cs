@@ -1,5 +1,7 @@
 ﻿using FluentAssertions;
+
 using k8s.Models;
+
 using Xunit;
 
 namespace KubeOps.KubernetesClient.Test;

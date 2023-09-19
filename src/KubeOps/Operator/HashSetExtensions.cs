@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+
 using static KubeOps.Operator.Builder.IComponentRegistrar;
 
 namespace KubeOps.Operator;

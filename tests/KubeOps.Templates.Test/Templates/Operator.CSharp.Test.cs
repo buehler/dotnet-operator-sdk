@@ -1,4 +1,5 @@
 using FluentAssertions;
+
 using Xunit;
 
 namespace KubeOps.Templates.Test.Templates;
@@ -13,9 +14,9 @@ public class OperatorCSharpTest : IDisposable
     }
 
     [Fact]
-    public void Should_Create_Correct_Files()
+    public async Task Should_Create_Correct_Files()
     {
-        _executor.ExecuteCSharpTemplate("operator");
+        await _executor.ExecuteCSharpTemplate("operator");
         _executor.FileExists("Template.csproj").Should().BeTrue();
         _executor.FileExists("Program.cs").Should().BeTrue();
         _executor.FileExists("appsettings.Development.json").Should().BeTrue();
@@ -29,25 +30,27 @@ public class OperatorCSharpTest : IDisposable
     }
 
     [Fact]
-    public void Should_Add_KubeOps_Reference()
+    public async Task Should_Add_KubeOps_Reference()
     {
-        _executor.ExecuteCSharpTemplate("operator");
-        _executor.FileContains(@"PackageReference Include=""KubeOps""", "Template.csproj").Should().BeTrue();
+        await _executor.ExecuteCSharpTemplate("operator");
+        _executor.FileContains("""
+                               PackageReference Include="KubeOps"
+                               """, "Template.csproj").Should().BeTrue();
     }
 
     [Fact]
-    public void Should_Add_KubeOps_Reference_Into_Program_Code()
+    public async Task Should_Add_KubeOps_Reference_Into_Program_Code()
     {
-        _executor.ExecuteCSharpTemplate("operator");
+        await _executor.ExecuteCSharpTemplate("operator");
         _executor.FileContains("builder.Services.AddKubernetesOperator();", "Program.cs").Should().BeTrue();
         _executor.FileContains("app.UseKubernetesOperator();", "Program.cs").Should().BeTrue();
         _executor.FileContains("await app.RunOperatorAsync(args);", "Program.cs").Should().BeTrue();
     }
 
     [Fact]
-    public void Should_Add_Correct_Demo_Files()
+    public async Task Should_Add_Correct_Demo_Files()
     {
-        _executor.ExecuteCSharpTemplate("operator");
+        await _executor.ExecuteCSharpTemplate("operator");
 
         _executor.FileContains(
                 "public class V1DemoEntity : CustomKubernetesEntity<V1DemoEntity.V1DemoEntitySpec, V1DemoEntity.V1DemoEntityStatus>",

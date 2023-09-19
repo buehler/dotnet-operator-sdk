@@ -29,11 +29,14 @@ public sealed class MutationResult : AdmissionResult
     /// <returns>A <see cref="MutationResult"/> with a modified object.</returns>
     public static MutationResult Modified(object modifiedEntity, params string[] warnings) => new()
     {
-        ModifiedObject = modifiedEntity, Warnings = warnings,
+        ModifiedObject = modifiedEntity,
+        Warnings = warnings,
     };
 
     internal static MutationResult Fail(int statusCode, string statusMessage) => new()
     {
-        Valid = false, StatusCode = statusCode, StatusMessage = statusMessage,
+        Valid = false,
+        StatusCode = statusCode,
+        StatusMessage = statusMessage,
     };
 }

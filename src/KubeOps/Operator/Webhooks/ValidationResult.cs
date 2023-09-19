@@ -30,6 +30,8 @@ public sealed class ValidationResult : AdmissionResult
     /// <returns>An invalid <see cref="ValidationResult"/> with a custom status-code and status-message.</returns>
     public static ValidationResult Fail(int statusCode, string statusMessage) => new()
     {
-        Valid = false, StatusCode = statusCode, StatusMessage = statusMessage,
+        Valid = false,
+        StatusCode = statusCode,
+        StatusMessage = statusMessage,
     };
 }
