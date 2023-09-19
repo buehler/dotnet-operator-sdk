@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <PackageReference Include="CompareNETObjects" Version="4.79.0" />
-    <PackageReference Include="JsonDiffPatch" Version="2.0.61" />
     <PackageReference Include="Localtunnel" Version="1.0.5" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.0.2" />
     <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="4.0.2" />
@@ -29,6 +28,7 @@
     <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="7.0.0" />
     <PackageReference Include="SimpleBase" Version="4.0.0" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
+    <PackageReference Include="SystemTextJson.JsonDiffPatch" Version="1.3.1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
