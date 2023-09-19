@@ -1,16 +1,22 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
+
 using FluentAssertions;
+
 using k8s;
 using k8s.Models;
+
 using KubeOps.Operator;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Kubernetes;
 using KubeOps.Testing;
 using KubeOps.TestOperator.Entities;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Xunit;
 
 namespace KubeOps.Test.Operator.Controller;

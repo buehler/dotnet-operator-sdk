@@ -1,9 +1,12 @@
 ﻿using System.Net;
+
 using k8s.Autorest;
 using k8s.Models;
+
 using KubeOps.KubernetesClient;
 using KubeOps.KubernetesClient.LabelSelectors;
 using KubeOps.Operator.Entities.Extensions;
+
 using Timer = System.Timers.Timer;
 
 namespace KubeOps.Operator.Leadership;
@@ -43,7 +46,8 @@ internal class LeaderElector : IHostedService
 
         _leaseCheck?.Dispose();
         _leaseCheck = new Timer(
-            TimeSpan.FromSeconds(_settings.LeaderElectionCheckInterval).TotalMilliseconds) { AutoReset = true, };
+            TimeSpan.FromSeconds(_settings.LeaderElectionCheckInterval).TotalMilliseconds)
+        { AutoReset = true, };
 
         _logger.LogTrace("Fetching namespace for leader election.");
         _namespace = await _client.GetCurrentNamespace();

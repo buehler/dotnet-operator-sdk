@@ -6,7 +6,7 @@ public class TemplateInstaller : DotnetExecutor, IDisposable
 
     public TemplateInstaller()
     {
-        ExecuteDotnetProcess($"new -i {TemplatesPath}");
+        ExecuteDotnetProcess($"new -i {TemplatesPath}").Wait();
     }
 
     private static string TemplatesPath => Path.GetFullPath(
@@ -22,6 +22,6 @@ public class TemplateInstaller : DotnetExecutor, IDisposable
 
     public void Dispose()
     {
-        ExecuteDotnetProcess($"new -u {TemplatesPath}");
+        ExecuteDotnetProcess($"new -u {TemplatesPath}").Wait();
     }
 }

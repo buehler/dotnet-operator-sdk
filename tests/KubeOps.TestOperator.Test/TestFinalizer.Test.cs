@@ -1,12 +1,16 @@
 ﻿using k8s.Models;
+
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Testing;
 using KubeOps.TestOperator.Entities;
 using KubeOps.TestOperator.Finalizer;
 using KubeOps.TestOperator.TestManager;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Moq;
+
 using Xunit;
 
 namespace KubeOps.TestOperator.Test;

@@ -4,18 +4,18 @@ public class TemplateExecutor : DotnetExecutor, IDisposable
 {
     private string? _outputPath;
 
-    public void ExecuteCSharpTemplate(string template, string? name = "Template")
+    public async Task ExecuteCSharpTemplate(string template, string? name = "Template")
     {
         _outputPath ??= Path.Join(Path.GetTempPath(), Path.GetRandomFileName());
-        ExecuteDotnetProcess(
-            $@"new {template} -lang ""C#"" -n {name} -o {_outputPath} ");
+        await ExecuteDotnetProcess(
+            $"""new {template} -lang "C#" -n {name} -o {_outputPath} """);
     }
 
-    public void ExecuteFSharpTemplate(string template, string? name = "Template")
+    public async Task ExecuteFSharpTemplate(string template, string? name = "Template")
     {
         _outputPath ??= Path.Join(Path.GetTempPath(), Path.GetRandomFileName());
-        ExecuteDotnetProcess(
-            $@"new {template} -lang ""F#"" -n {name} -o {_outputPath} ");
+        await ExecuteDotnetProcess(
+            $"""new {template} -lang "F#" -n {name} -o {_outputPath} """);
     }
 
     public bool FileExists(params string[] name) =>

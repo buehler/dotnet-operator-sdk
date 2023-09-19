@@ -1,17 +1,24 @@
 ﻿using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Text.Json;
+
 using FluentAssertions;
+
 using k8s;
 using k8s.Models;
+
 using KubeOps.KubernetesClient;
 using KubeOps.Operator;
 using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Kubernetes;
+
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Reactive.Testing;
+
 using Moq;
+
 using Prometheus;
+
 using Xunit;
 
 namespace KubeOps.Test.Operator.Kubernetes;

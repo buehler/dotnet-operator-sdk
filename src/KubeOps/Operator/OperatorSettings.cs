@@ -1,8 +1,11 @@
 ﻿using System.Reflection;
 using System.Text.RegularExpressions;
+
 using KellermanSoftware.CompareNetObjects;
+
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Errors;
+
 using static System.Net.WebRequestMethods;
 
 namespace KubeOps.Operator;

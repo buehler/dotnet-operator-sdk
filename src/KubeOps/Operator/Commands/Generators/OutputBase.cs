@@ -1,4 +1,5 @@
 ﻿using KubeOps.Operator.Serialization;
+
 using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Operator.Commands.Generators;

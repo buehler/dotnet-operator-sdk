@@ -1,7 +1,10 @@
 using FluentAssertions;
+
 using KubeOps.Operator.Builder;
 using KubeOps.Testing;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Xunit;
 
 namespace KubeOps.TestOperator.Test;

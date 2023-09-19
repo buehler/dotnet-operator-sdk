@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
+
 using k8s;
 using k8s.Models;
+
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Caching;
 using KubeOps.Operator.Controller;
@@ -12,8 +14,10 @@ using KubeOps.Operator.Kubernetes;
 using KubeOps.Operator.Leadership;
 using KubeOps.Operator.Rbac;
 using KubeOps.Operator.Webhooks;
+
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 using Prometheus;
 
 namespace KubeOps.Operator.Builder;

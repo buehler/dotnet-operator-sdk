@@ -1,14 +1,21 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+
 using FluentAssertions;
+
 using k8s;
 using k8s.Models;
+
 using KubeOps.KubernetesClient;
 using KubeOps.Operator;
 using KubeOps.Operator.Events;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using SimpleBase;
+
 using Xunit;
 
 namespace KubeOps.Test.Operator.Events;
@@ -67,7 +74,9 @@ public class EventManagerTest
                     {
                         Metadata = new V1ObjectMeta
                         {
-                            Uid = "1234", Name = eventName, NamespaceProperty = testResource.Namespace(),
+                            Uid = "1234",
+                            Name = eventName,
+                            NamespaceProperty = testResource.Namespace(),
                         },
                         Count = 1,
                         LastTimestamp = DateTime.MinValue,
@@ -98,7 +107,9 @@ public class EventManagerTest
                     {
                         Metadata = new V1ObjectMeta
                         {
-                            Uid = "1234", Name = eventName, NamespaceProperty = testResource.Namespace(),
+                            Uid = "1234",
+                            Name = eventName,
+                            NamespaceProperty = testResource.Namespace(),
                         },
                         Count = 4,
                         LastTimestamp = DateTime.MinValue,

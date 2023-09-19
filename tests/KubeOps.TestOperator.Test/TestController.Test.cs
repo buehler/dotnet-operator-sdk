@@ -3,8 +3,11 @@ using KubeOps.Operator.Kubernetes;
 using KubeOps.Testing;
 using KubeOps.TestOperator.Entities;
 using KubeOps.TestOperator.TestManager;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Moq;
+
 using Xunit;
 
 namespace KubeOps.TestOperator.Test;

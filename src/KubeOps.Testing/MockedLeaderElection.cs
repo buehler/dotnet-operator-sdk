@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Subjects;
+
 using KubeOps.Operator.Leadership;
 
 namespace KubeOps.Testing;

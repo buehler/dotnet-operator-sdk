@@ -1,11 +1,16 @@
 ﻿using System.Net;
+
 using k8s.Autorest;
 using k8s.Models;
+
 using KubeOps.KubernetesClient;
 using KubeOps.Operator;
 using KubeOps.Operator.Leadership;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Xunit;
 
 namespace KubeOps.Test.Operator.Leadership;

@@ -23,12 +23,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{EF94C4
 ProjectSection(SolutionItems) = preProject
 	config\CodeAnalysis.targets = config\CodeAnalysis.targets
 	config\Common.targets = config\Common.targets
-	config\project.ruleset = config\project.ruleset
 	config\stylecop.json = config\stylecop.json
 	.gitignore = .gitignore
 	.releaserc.json = .releaserc.json
 	renovate.json = renovate.json
 	config\CommonTests.targets = config\CommonTests.targets
+	.editorconfig = .editorconfig
 EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.Testing", "src\KubeOps.Testing\KubeOps.Testing.csproj", "{4A6D1BEB-CB4C-495A-A20D-D8728F6BBC93}"
