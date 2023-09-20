@@ -8,5 +8,7 @@ public record EntityMetadata<TEntity>(string Kind, string Version, string? Group
 {
     public readonly Type EntityType = typeof(TEntity);
 
+    public string SingularName => Kind.ToLower();
+
     public string PluralName => Plural ?? $"{Kind.ToLower()}s";
 }

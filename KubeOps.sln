@@ -26,6 +26,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.Abstractions", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.Operator", "src\KubeOps.Operator\KubeOps.Operator.csproj", "{94B40118-80EF-4226-912B-CC9AC0B69E59}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.Generator", "src\KubeOps.Generator\KubeOps.Generator.csproj", "{759AE147-D4A4-44E3-914B-6CBB427D6223}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,7 @@ Global
 		{E1521548-7CAD-464D-BFD2-ECFBA3FFC7EF} = {4DB01062-6DC5-4028-BB72-C0619C2F5F2E}
 		{D29A46CF-E494-4365-9BFF-0FF19AD7AA8F} = {4DB01062-6DC5-4028-BB72-C0619C2F5F2E}
 		{94B40118-80EF-4226-912B-CC9AC0B69E59} = {4DB01062-6DC5-4028-BB72-C0619C2F5F2E}
+		{759AE147-D4A4-44E3-914B-6CBB427D6223} = {4DB01062-6DC5-4028-BB72-C0619C2F5F2E}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E9A0B04E-D90E-4B94-90E0-DD3666B098FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -57,5 +60,9 @@ Global
 		{94B40118-80EF-4226-912B-CC9AC0B69E59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94B40118-80EF-4226-912B-CC9AC0B69E59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94B40118-80EF-4226-912B-CC9AC0B69E59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{759AE147-D4A4-44E3-914B-6CBB427D6223}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{759AE147-D4A4-44E3-914B-6CBB427D6223}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{759AE147-D4A4-44E3-914B-6CBB427D6223}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{759AE147-D4A4-44E3-914B-6CBB427D6223}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

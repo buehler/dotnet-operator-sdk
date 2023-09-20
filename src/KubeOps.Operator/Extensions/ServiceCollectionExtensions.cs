@@ -1,4 +1,5 @@
-﻿using KubeOps.Operator.Builder;
+﻿using KubeOps.Abstractions.Builder;
+using KubeOps.Operator.Builder;
 
 using Microsoft.Extensions.DependencyInjection;
 

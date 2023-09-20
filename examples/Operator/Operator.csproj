@@ -6,9 +6,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\KubeOps.Abstractions\KubeOps.Abstractions.csproj" />
-      <ProjectReference Include="..\..\src\KubeOps.Operator\KubeOps.Operator.csproj" />
+        <ProjectReference Include="..\..\src\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
+        <ProjectReference Include="..\..\src\KubeOps.Operator\KubeOps.Operator.csproj"/>
+        <ProjectReference Include="..\..\src\KubeOps.Generator\KubeOps.Generator.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false"/>
     </ItemGroup>
-
 
 </Project>

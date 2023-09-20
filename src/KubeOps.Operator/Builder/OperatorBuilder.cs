@@ -1,6 +1,7 @@
 ﻿using k8s;
 using k8s.Models;
 
+using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Entities;
 using KubeOps.Operator.Watcher;
@@ -37,7 +38,7 @@ internal class OperatorBuilder : IOperatorBuilder
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        Services.AddScoped<TImplementation>();
+        Services.AddScoped<IEntityController<TEntity>, TImplementation>();
         Services.AddHostedService<ResourceWatcher<TEntity>>();
         Services.AddSingleton(metadata);
         return this;
