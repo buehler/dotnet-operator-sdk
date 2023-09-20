@@ -4,6 +4,7 @@ namespace KubeOps.Cli.Generator;
 
 [Command("generator", "gen", "g", Description = "Generates elements related to an operator. (Aliases: gen, g)")]
 [Subcommand(typeof(CrdGenerator))]
+
 // [Subcommand(typeof(DockerGenerator))]
 // [Subcommand(typeof(InstallerGenerator))]
 // [Subcommand(typeof(OperatorGenerator))]
