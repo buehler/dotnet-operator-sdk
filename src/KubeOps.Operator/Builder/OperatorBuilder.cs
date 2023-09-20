@@ -15,32 +15,28 @@ internal class OperatorBuilder : IOperatorBuilder
     public OperatorBuilder(IServiceCollection services)
     {
         Services = services;
-        // Services.AddSingleton(new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig()));
     }
 
     public IServiceCollection Services { get; }
 
-    public IOperatorBuilder AddEntityMetadata<TEntity>(EntityMetadata<TEntity> metadata) where TEntity : IKubernetesObject<V1ObjectMeta>
+    public IOperatorBuilder AddEntityMetadata<TEntity>(EntityMetadata<TEntity> metadata)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        throw new NotImplementedException();
+        Services.AddSingleton(metadata);
+        return this;
     }
 
     public IOperatorBuilder AddController<TImplementation, TEntity>()
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        Services.AddScoped<TImplementation>();
+        Services.AddScoped<IEntityController<TEntity>, TImplementation>();
         Services.AddHostedService<ResourceWatcher<TEntity>>();
         return this;
     }
 
     public IOperatorBuilder AddController<TImplementation, TEntity>(EntityMetadata<TEntity> metadata)
         where TImplementation : class, IEntityController<TEntity>
-        where TEntity : IKubernetesObject<V1ObjectMeta>
-    {
-        Services.AddScoped<IEntityController<TEntity>, TImplementation>();
-        Services.AddHostedService<ResourceWatcher<TEntity>>();
-        Services.AddSingleton(metadata);
-        return this;
-    }
+        where TEntity : IKubernetesObject<V1ObjectMeta> =>
+        AddController<TImplementation, TEntity>().AddEntityMetadata(metadata);
 }

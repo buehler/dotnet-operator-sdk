@@ -76,7 +76,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
         throw new NotImplementedException();
     }
 
-    private void OnError(Exception obj)
+    private void OnError(Exception e)
     {
         throw new NotImplementedException();
     }

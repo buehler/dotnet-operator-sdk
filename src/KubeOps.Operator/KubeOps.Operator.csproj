@@ -5,17 +5,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="KubernetesClient" Version="12.0.16" />
-      <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+        <PackageReference Include="KubernetesClient" Version="12.0.16"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1"/>
     </ItemGroup>
-
 
     <ItemGroup>
-      <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj" />
+        <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
     </ItemGroup>
-
-
-
-
-
+    
 </Project>
