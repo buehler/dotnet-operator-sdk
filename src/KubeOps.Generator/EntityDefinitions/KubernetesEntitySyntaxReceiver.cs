@@ -24,19 +24,15 @@ public class KubernetesEntitySyntaxReceiver : ISyntaxContextReceiver
 
         Entities.Add(new(
             cls,
-            GetArgumentValue(context.SemanticModel, attr, KindName) ?? cls.Identifier.ToString(),
-            GetArgumentValue(context.SemanticModel, attr, VersionName) ?? DefaultVersion,
-            GetArgumentValue(context.SemanticModel, attr, GroupName),
-            GetArgumentValue(context.SemanticModel, attr, PluralName)));
+            GetArgumentValue(attr, KindName) ?? cls.Identifier.ToString(),
+            GetArgumentValue(attr, VersionName) ?? DefaultVersion,
+            GetArgumentValue(attr, GroupName),
+            GetArgumentValue(attr, PluralName)));
     }
 
-    private string? GetArgumentValue(SemanticModel model, AttributeSyntax attr, string argName)
-    {
-        if (attr.ArgumentList?.Arguments.FirstOrDefault(a => a.NameEquals?.Name.ToString() == argName) is { } arg)
-        {
-            return model.GetOperation(arg.Expression)?.ConstantValue.Value?.ToString();
-        }
-
-        return null;
-    }
+    private static string? GetArgumentValue(AttributeSyntax attr, string argName) =>
+        attr.ArgumentList?.Arguments.FirstOrDefault(a => a.NameEquals?.Name.ToString() == argName) is
+            { Expression: LiteralExpressionSyntax { Token: { ValueText: { } value } } }
+            ? value
+            : null;
 }

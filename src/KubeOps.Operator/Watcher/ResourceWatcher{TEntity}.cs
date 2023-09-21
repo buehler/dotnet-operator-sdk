@@ -3,6 +3,7 @@ using k8s.Models;
 
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Entities;
+using KubeOps.Operator.Client;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,24 +23,11 @@ internal class ResourceWatcher<TEntity> : IHostedService
     public ResourceWatcher(
         ILogger<ResourceWatcher<TEntity>> logger,
         IServiceProvider provider,
-        EntityMetadata<TEntity> metadata)
+        IKubernetesClientFactory factory)
     {
         _logger = logger;
         _provider = provider;
-
-        var kubernetes = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
-        _client = metadata.Group switch
-        {
-            null => new GenericClient(
-                kubernetes,
-                metadata.Version,
-                metadata.PluralName),
-            _ => new GenericClient(
-                kubernetes,
-                metadata.Group,
-                metadata.Version,
-                metadata.PluralName),
-        };
+        _client = factory.GetClient<TEntity>();
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)

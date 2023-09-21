@@ -35,15 +35,7 @@ public class EntityDefinitionGenerator : ISourceGenerator
                 .WithMembers(
                     List<MemberDeclarationSyntax>(receiver.Entities.Select(e => FieldDeclaration(
                             VariableDeclaration(
-                                    GenericName(
-                                            Identifier("EntityMetadata"))
-                                        .WithTypeArgumentList(
-                                            TypeArgumentList(
-                                                SingletonSeparatedList<TypeSyntax>(
-                                                    IdentifierName(context.Compilation
-                                                        .GetSemanticModel(e.Class.SyntaxTree)
-                                                        .GetDeclaredSymbol(e.Class)!
-                                                        .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))))))
+                                    IdentifierName("EntityMetadata"))
                                 .WithVariables(
                                     SingletonSeparatedList(
                                         VariableDeclarator(e.Class.Identifier)
@@ -101,7 +93,15 @@ public class EntityDefinitionGenerator : ISourceGenerator
                                         MemberAccessExpression(
                                             SyntaxKind.SimpleMemberAccessExpression,
                                             IdentifierName("builder"),
-                                            IdentifierName("AddEntityMetadata")))
+                                            GenericName(Identifier("AddEntityMetadata"))
+                                                .WithTypeArgumentList(
+                                                    TypeArgumentList(
+                                                        SingletonSeparatedList<TypeSyntax>(
+                                                            IdentifierName(context.Compilation
+                                                                .GetSemanticModel(e.Class.SyntaxTree)
+                                                                .GetDeclaredSymbol(e.Class)!
+                                                                .ToDisplayString(SymbolDisplayFormat
+                                                                    .FullyQualifiedFormat)))))))
                                     .WithArgumentList(
                                         ArgumentList(
                                             SingletonSeparatedList(

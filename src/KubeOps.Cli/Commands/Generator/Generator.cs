@@ -1,6 +1,6 @@
 ﻿using McMaster.Extensions.CommandLineUtils;
 
-namespace KubeOps.Cli.Generator;
+namespace KubeOps.Cli.Commands.Generator;
 
 [Command("generator", "gen", "g", Description = "Generates elements related to an operator. (Aliases: gen, g)")]
 [Subcommand(typeof(CrdGenerator))]
@@ -11,9 +11,9 @@ namespace KubeOps.Cli.Generator;
 // [Subcommand(typeof(RbacGenerator))]
 internal class Generator
 {
-    public Task<int> OnExecuteAsync(CommandLineApplication app)
+    public int OnExecute(CommandLineApplication app)
     {
         app.ShowHelp();
-        return Task.FromResult(ExitCodes.UsageError);
+        return ExitCodes.UsageError;
     }
 }

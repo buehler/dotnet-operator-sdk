@@ -4,12 +4,12 @@ using McMaster.Extensions.CommandLineUtils;
 
 using Microsoft.Extensions.DependencyInjection;
 
-namespace KubeOps.Cli.Utilities;
+namespace KubeOps.Cli.Commands.Utilities;
 
 [Command(
-    "version",
-    "v",
-    Description = "Prints the actual server version of the connected kubernetes cluster. (Aliases: v)")]
+    "api-version",
+    "av",
+    Description = "Prints the actual server version of the connected kubernetes cluster. (Aliases: av)")]
 internal class Version
 {
     public async Task<int> OnExecuteAsync(CommandLineApplication app)

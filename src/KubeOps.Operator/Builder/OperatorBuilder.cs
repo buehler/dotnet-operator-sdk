@@ -4,6 +4,7 @@ using k8s.Models;
 using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Entities;
+using KubeOps.Operator.Client;
 using KubeOps.Operator.Watcher;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -12,17 +13,20 @@ namespace KubeOps.Operator.Builder;
 
 internal class OperatorBuilder : IOperatorBuilder
 {
+    private readonly IKubernetesClientFactory _entityClientFactory = new KubernetesClientFactory();
+
     public OperatorBuilder(IServiceCollection services)
     {
         Services = services;
+        Services.AddSingleton(_entityClientFactory);
     }
 
     public IServiceCollection Services { get; }
 
-    public IOperatorBuilder AddEntityMetadata<TEntity>(EntityMetadata<TEntity> metadata)
+    public IOperatorBuilder AddEntityMetadata<TEntity>(EntityMetadata metadata)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        Services.AddSingleton(metadata);
+        _entityClientFactory.RegisterMetadata<TEntity>(metadata);
         return this;
     }
 
@@ -35,8 +39,8 @@ internal class OperatorBuilder : IOperatorBuilder
         return this;
     }
 
-    public IOperatorBuilder AddController<TImplementation, TEntity>(EntityMetadata<TEntity> metadata)
+    public IOperatorBuilder AddController<TImplementation, TEntity>(EntityMetadata metadata)
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta> =>
-        AddController<TImplementation, TEntity>().AddEntityMetadata(metadata);
+        AddController<TImplementation, TEntity>().AddEntityMetadata<TEntity>(metadata);
 }

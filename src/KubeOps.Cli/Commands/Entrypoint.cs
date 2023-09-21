@@ -1,6 +1,6 @@
 ﻿using McMaster.Extensions.CommandLineUtils;
 
-namespace KubeOps.Cli;
+namespace KubeOps.Cli.Commands;
 
 [Command(Name = "kubeops", Description = "CLI for KubeOps.", UsePagerForHelpText = true)]
 [Subcommand(typeof(Generator.Generator))]

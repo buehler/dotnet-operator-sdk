@@ -12,14 +12,14 @@ public interface IOperatorBuilder
 {
     IServiceCollection Services { get; }
 
-    IOperatorBuilder AddEntityMetadata<TEntity>(EntityMetadata<TEntity> metadata)
+    IOperatorBuilder AddEntityMetadata<TEntity>(EntityMetadata metadata)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     IOperatorBuilder AddController<TImplementation, TEntity>()
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
-    IOperatorBuilder AddController<TImplementation, TEntity>(EntityMetadata<TEntity> metadata)
+    IOperatorBuilder AddController<TImplementation, TEntity>(EntityMetadata metadata)
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 }
