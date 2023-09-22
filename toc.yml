@@ -1,0 +1,4 @@
+- name: Docs
+  href: docs/
+- name: KubeOps API
+  href: docs/api/
