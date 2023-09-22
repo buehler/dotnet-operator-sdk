@@ -14,8 +14,9 @@ using Microsoft.CodeAnalysis.MSBuild;
 
 namespace KubeOps.Cli.SyntaxObjects;
 
-public sealed class ProjectParser
+public sealed class ProjectParser : IDisposable
 {
+    private readonly MSBuildWorkspace _workspace;
     private readonly Project _project;
 
     static ProjectParser()
@@ -23,8 +24,9 @@ public sealed class ProjectParser
         MSBuildLocator.RegisterDefaults();
     }
 
-    private ProjectParser(Project project)
+    private ProjectParser(MSBuildWorkspace workspace, Project project)
     {
+        _workspace = workspace;
         _project = project;
     }
 
@@ -32,7 +34,7 @@ public sealed class ProjectParser
     {
         var ws = MSBuildWorkspace.Create();
         var project = await ws.OpenProjectAsync(projectFile);
-        return new ProjectParser(project);
+        return new ProjectParser(ws, project);
     }
 
     public async IAsyncEnumerable<Type> Entities()
@@ -60,4 +62,6 @@ public sealed class ProjectParser
             yield return type;
         }
     }
+
+    public void Dispose() => _workspace.Dispose();
 }

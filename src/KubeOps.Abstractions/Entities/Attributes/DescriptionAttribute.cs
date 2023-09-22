@@ -7,10 +7,7 @@
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class)]
 public class DescriptionAttribute : Attribute
 {
-    public DescriptionAttribute(string description)
-    {
-        Description = description;
-    }
+    public DescriptionAttribute(string description) => Description = description;
 
     /// <summary>
     /// The given description for the property.

@@ -81,7 +81,19 @@ public static class CrdBuilder
             new V1CustomResourceValidation(MapType(entityType, columns, string.Empty));
         version.AdditionalPrinterColumns = entityType
             .GetCustomAttributes<GenericAdditionalPrinterColumnAttribute>(true)
-            .Select(a => a.ToAdditionalPrinterColumn())
+            .Select(a => new V1CustomResourceColumnDefinition
+            {
+                Name = a.Name,
+                JsonPath = a.JsonPath,
+                Type = a.Type,
+                Description = a.Description,
+                Format = a.Format,
+                Priority = a.Priority switch
+                {
+                    PrinterColumnPriority.StandardView => 0,
+                    _ => 1,
+                },
+            })
             .Concat(columns)
             .ToList();
 
@@ -116,7 +128,7 @@ public static class CrdBuilder
         {
             props.Type = Array;
             props.Items = MapType(
-                type.GetElementType() ?? throw new NullReferenceException("No Array Element Type found"),
+                type.GetElementType() ?? throw new ArgumentNullException(nameof(type), "No Array Element Type found"),
                 additionalColumns,
                 jsonPath);
         }
@@ -324,7 +336,11 @@ public static class CrdBuilder
                     Name = additionalColumn.Name ?? info.Name,
                     Description = props.Description,
                     JsonPath = jsonPath,
-                    Priority = additionalColumn.Priority,
+                    Priority = additionalColumn.Priority switch
+                    {
+                        PrinterColumnPriority.StandardView => 0,
+                        _ => 1,
+                    },
                     Type = props.Type,
                     Format = props.Format,
                 });

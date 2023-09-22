@@ -40,7 +40,11 @@ public class GenericAdditionalPrinterColumnAttribute : Attribute
     /// <summary>
     /// Description for the column.
     /// </summary>
+#if NETSTANDARD
     public string? Description { get; set; }
+#else
+    public string? Description { get; init; }
+#endif
 
     /// <summary>
     /// The type of the column.
@@ -100,7 +104,11 @@ public class GenericAdditionalPrinterColumnAttribute : Attribute
     /// </item>
     /// </list>
     /// </summary>
+#if NETSTANDARD
     public string? Format { get; set; }
+#else
+    public string? Format { get; init; }
+#endif
 
     /// <summary>
     /// The priority of the additional printer column.
@@ -116,16 +124,9 @@ public class GenericAdditionalPrinterColumnAttribute : Attribute
     /// </item>
     /// </list>
     /// </summary>
-    public int Priority { get; set; }
-
-    public V1CustomResourceColumnDefinition ToAdditionalPrinterColumn()
-        => new()
-        {
-            Name = Name,
-            Description = Description,
-            Format = Format,
-            Priority = Priority,
-            Type = Type,
-            JsonPath = JsonPath,
-        };
+#if NETSTANDARD
+    public PrinterColumnPriority Priority { get; set; }
+#else
+    public PrinterColumnPriority Priority { get; init; }
+#endif
 }

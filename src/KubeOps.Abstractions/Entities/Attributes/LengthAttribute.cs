@@ -7,14 +7,20 @@
 public class LengthAttribute : Attribute
 {
     /// <summary>
-    /// If not `-1`, define the minimum length.
-    /// -1 is used as the "null" - value.
+    /// Define the minimum length.
     /// </summary>
-    public long MinLength { get; init; } = -1;
+#if NETSTANDARD
+    public long? MinLength { get; set; }
+#else
+    public long? MinLength { get; init; }
+#endif
 
     /// <summary>
-    /// If not `-1`, define the maximum length.
-    /// -1 is used as the "null" - value.
+    /// Define the maximum length.
     /// </summary>
-    public long MaxLength { get; init; } = -1;
+#if NETSTANDARD
+    public long? MaxLength { get; set; }
+#else
+    public long? MaxLength { get; init; }
+#endif
 }

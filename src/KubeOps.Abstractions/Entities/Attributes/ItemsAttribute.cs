@@ -7,14 +7,20 @@
 public class ItemsAttribute : Attribute
 {
     /// <summary>
-    /// If not `-1`, defines the minimal item count for the property.
-    /// -1 is used as the "null" - value.
+    /// Defines the minimal item count for the property.
     /// </summary>
-    public long MinItems { get; init; } = -1;
+#if NETSTANDARD
+    public long? MinItems { get; set; }
+#else
+    public long? MinItems { get; init; }
+#endif
 
     /// <summary>
-    /// If not `-1`, defines the maximal item count for the property.
-    /// -1 is used as the "null" - value.
+    /// Defines the maximal item count for the property.
     /// </summary>
-    public long MaxItems { get; init; } = -1;
+#if NETSTANDARD
+    public long? MaxItems { get; set; }
+#else
+    public long? MaxItems { get; init; }
+#endif
 }

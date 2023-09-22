@@ -6,13 +6,19 @@
 [AttributeUsage(AttributeTargets.Property)]
 public class RangeMaximumAttribute : Attribute
 {
+    public RangeMaximumAttribute(double maximum, bool exclusiveMaximum = false)
+    {
+        Maximum = maximum;
+        ExclusiveMaximum = exclusiveMaximum;
+    }
+
     /// <summary>
     /// Maximum value to be set.
     /// </summary>
-    public double Maximum { get; init; }
+    public double Maximum { get; }
 
     /// <summary>
     /// Defines if the maximum value is included or excluded.
     /// </summary>
-    public bool ExclusiveMaximum { get; init; }
+    public bool ExclusiveMaximum { get; }
 }

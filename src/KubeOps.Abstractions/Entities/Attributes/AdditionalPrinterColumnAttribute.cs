@@ -6,10 +6,16 @@
 [AttributeUsage(AttributeTargets.Property)]
 public class AdditionalPrinterColumnAttribute : Attribute
 {
+    public AdditionalPrinterColumnAttribute(PrinterColumnPriority priority = default, string? name = null)
+    {
+        Name = name;
+        Priority = priority;
+    }
+
     /// <summary>
     /// The name of the column. Defaults to the property-name.
     /// </summary>
-    public string? Name { get; set; }
+    public string? Name { get; }
 
     /// <summary>
     /// The priority of the additional printer column.
@@ -25,5 +31,5 @@ public class AdditionalPrinterColumnAttribute : Attribute
     /// </item>
     /// </list>
     /// </summary>
-    public int Priority { get; set; }
+    public PrinterColumnPriority Priority { get; }
 }
