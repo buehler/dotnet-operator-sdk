@@ -30,3 +30,6 @@ bld/
 coverage.json
 coverage.info
 .vs
+
+# Docs
+_site

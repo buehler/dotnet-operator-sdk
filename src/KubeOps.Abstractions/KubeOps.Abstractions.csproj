@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageId>KubeOps.Abstractions</PackageId>
+        <PackageTags>Kubernetes Operator SDK Abstractions</PackageTags>
+        <PackageDescription>
+            Abstractions for the Kubernetes Operator SDK.
+            Used by KubeOps in general.
+        </PackageDescription>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="KubernetesClient.Models" Version="12.0.16"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0"/>
+    </ItemGroup>
+
+
+</Project>

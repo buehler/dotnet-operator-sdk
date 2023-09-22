@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net7.0</TargetFramework>
+        <IsPackable>true</IsPackable>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageId>KubeOps.Cli</PackageId>
+        <PackageTags>Kubernetes Operator SDK CLI</PackageTags>
+        <PackageDescription>
+            CLI Dotnet Tool for the Kubernetes Operator SDK.
+            Helps with generating CRDs and other elements for the Operator.
+        </PackageDescription>
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>kubeops</ToolCommandName>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="KubernetesClient" Version="12.0.16"/>
+        <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.1.0"/>
+        <PackageReference Include="Microsoft.Build.Locator" Version="1.6.10" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.7.0"/>
+        <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
+        <ProjectReference Include="..\KubeOps.Transpiler\KubeOps.Transpiler.csproj" />
+    </ItemGroup>
+</Project>
