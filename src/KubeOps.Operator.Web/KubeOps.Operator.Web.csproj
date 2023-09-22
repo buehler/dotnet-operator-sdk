@@ -5,6 +5,18 @@
         <IsPackable>true</IsPackable>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <PackageId>KubeOps.Operator.Web</PackageId>
+        <PackageTags>Kubernetes Operator SDK CustomResourceDefinition ASP.NET</PackageTags>
+        <PackageDescription>
+            This is an operator sdk written in c#.
+            It enables a developer to create a custom controller for CRDs
+            (CustomResourceDefinitions) that runs on kubernetes.
+            This operator uses ASP.net to support webhooks and external
+            access to the operator.
+        </PackageDescription>
+    </PropertyGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
     </ItemGroup>

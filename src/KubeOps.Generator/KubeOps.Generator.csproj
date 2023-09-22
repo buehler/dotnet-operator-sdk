@@ -5,6 +5,17 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <IsRoslynComponent>true</IsRoslynComponent>
         <IsPackable>true</IsPackable>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageId>KubeOps.Generator</PackageId>
+        <PackageTags>Kubernetes Operator SDK SourceGenerator</PackageTags>
+        <PackageDescription>
+            Source Generator for the Kubernetes Operator SDK.
+            Helps with EntityMetadata and registering them
+            within the Operator.
+        </PackageDescription>
     </PropertyGroup>
 
     <ItemGroup>

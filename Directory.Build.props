@@ -23,6 +23,16 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\"/>
+        <None Include="$(MSBuildThisFileDirectory)\LICENSE" Pack="true" PackagePath="\"/>
+        <None Include="$(MSBuildThisFileDirectory)\res\icon.png">
+            <Pack>true</Pack>
+            <PackagePath>\</PackagePath>
+            <Visible>false</Visible>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference
                 Include="StyleCop.Analyzers"
                 Version="1.2.0-beta.507"

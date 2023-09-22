@@ -7,6 +7,17 @@
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <PackageId>KubeOps.Cli</PackageId>
+        <PackageTags>Kubernetes Operator SDK CLI</PackageTags>
+        <PackageDescription>
+            CLI Dotnet Tool for the Kubernetes Operator SDK.
+            Helps with generating CRDs and other elements for the Operator.
+        </PackageDescription>
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>kubeops</ToolCommandName>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="KubernetesClient" Version="12.0.16"/>
         <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.1.0"/>
