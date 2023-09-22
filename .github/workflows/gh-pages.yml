@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - refactor/split-operator # TODO: test.
 
   workflow_dispatch:
 
@@ -21,55 +22,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
         with:
-          fetch-depth: 1
+          dotnet-version: 7.x
 
-      - run: mkdir public
-
-      - name: Build Index
-        uses: jaywcjlove/markdown-to-html-cli@main
-        with:
-          source: res/docs_index.md
-          output: public/index.html
-          github-corners: https://github.com/buehler/dotnet-operator-sdk
-
-      - name: Build Contribution
-        uses: jaywcjlove/markdown-to-html-cli@main
-        with:
-          source: CONTRIBUTING.md
-          output: public/contribution.html
-          github-corners: https://github.com/buehler/dotnet-operator-sdk
-
-      - name: Build KubeOps
-        uses: jaywcjlove/markdown-to-html-cli@main
-        with:
-          source: src/KubeOps/README.md
-          output: public/kubeops.html
-          github-corners: https://github.com/buehler/dotnet-operator-sdk/tree/master/src/KubeOps
-
-      - name: Build KubeOps.KubernetesClient
-        uses: jaywcjlove/markdown-to-html-cli@main
-        with:
-          source: src/KubeOps.KubernetesClient/README.md
-          output: public/kubeops-kubernetesclient.html
-          github-corners: https://github.com/buehler/dotnet-operator-sdk/tree/master/src/KubeOps.KubernetesClient
-
-      - name: Build KubeOps.Templates
-        uses: jaywcjlove/markdown-to-html-cli@main
-        with:
-          source: src/KubeOps.Templates/README.md
-          output: public/kubeops-templates.html
-          github-corners: https://github.com/buehler/dotnet-operator-sdk/tree/master/src/KubeOps.Templates
-
-      - name: Build KubeOps.Testing
-        uses: jaywcjlove/markdown-to-html-cli@main
-        with:
-          source: src/KubeOps.Testing/README.md
-          output: public/kubeops-testing.html
-          github-corners: https://github.com/buehler/dotnet-operator-sdk/tree/master/src/KubeOps.Testing
+      - run: dotnet tool restore
+        
+      - run: dotnet docfx
+        
+      - run: mv _site/README.html _site/index.html
 
       - uses: actions/upload-pages-artifact@v1
         with:
-          path: public
+          path: _site
 
       - uses: actions/deploy-pages@v1
