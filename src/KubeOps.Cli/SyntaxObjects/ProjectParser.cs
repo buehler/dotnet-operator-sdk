@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.MSBuild;
 
 namespace KubeOps.Cli.SyntaxObjects;
 
-public sealed class ProjectParser : IDisposable
+internal sealed class ProjectParser : IDisposable
 {
     private readonly MSBuildWorkspace _workspace;
     private readonly Project _project;

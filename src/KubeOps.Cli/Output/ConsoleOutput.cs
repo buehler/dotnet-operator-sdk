@@ -2,7 +2,7 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Cli.Output;
 
-public class ConsoleOutput
+internal class ConsoleOutput
 {
     private readonly IConsole _console;
 

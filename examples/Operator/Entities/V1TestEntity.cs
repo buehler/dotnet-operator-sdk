@@ -6,11 +6,11 @@ namespace Operator.Entities;
 [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
 public class V1TestEntity : IKubernetesObject<V1ObjectMeta>
 {
-    public string ApiVersion { get; set; }
+    public string ApiVersion { get; set; } = "testing.dev/v1";
 
-    public string Kind { get; set; }
+    public string Kind { get; set; } = "TestEntity";
 
-    public V1ObjectMeta Metadata { get; set; }
+    public V1ObjectMeta Metadata { get; set; } = new();
 
     public V1TestEntitySpec Spec { get; set; } = new();
 

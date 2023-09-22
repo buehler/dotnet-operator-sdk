@@ -4,7 +4,7 @@ using k8s;
 
 namespace KubeOps.Cli.Output;
 
-public class ResultOutput
+internal class ResultOutput
 {
     private readonly ConsoleOutput _console;
     private readonly IDictionary<string, object> _files = new Dictionary<string, object>();

@@ -13,7 +13,7 @@ using Namotion.Reflection;
 
 namespace KubeOps.Cli.Builder;
 
-public static class CrdBuilder
+internal static class CrdBuilder
 {
     private const string Integer = "integer";
     private const string Number = "number";
