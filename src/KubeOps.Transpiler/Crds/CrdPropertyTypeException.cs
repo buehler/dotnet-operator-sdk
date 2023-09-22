@@ -1,4 +1,4 @@
-namespace KubeOps.Cli.Builder;
+namespace KubeOps.Transpiler.Crds;
 
 public class CrdPropertyTypeException : Exception
 {

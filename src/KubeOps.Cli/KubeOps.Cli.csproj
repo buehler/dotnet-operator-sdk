@@ -14,17 +14,11 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0"/>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.7.0"/>
-        <PackageReference Include="Namotion.Reflection" Version="3.0.0" />
         <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
-
-
+        <ProjectReference Include="..\KubeOps.Transpiler\KubeOps.Transpiler.csproj" />
     </ItemGroup>
-
-
-
-
 </Project>

@@ -11,9 +11,9 @@ using KubeOps.Abstractions.Entities.Attributes;
 
 using Namotion.Reflection;
 
-namespace KubeOps.Cli.Builder;
+namespace KubeOps.Transpiler.Crds;
 
-internal static class CrdBuilder
+public static class CrdTranspiler
 {
     private const string Integer = "integer";
     private const string Number = "number";
@@ -35,7 +35,7 @@ internal static class CrdBuilder
         var entityAttribute = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
         if (entityAttribute == null)
         {
-            throw new ArgumentException("The given type is not a valid kubernetes entity.", nameof(entityType));
+            throw new ArgumentException("The given type is not a valid Kubernetes entity.", nameof(entityType));
         }
 
         var entityMetadata = new EntityMetadata(

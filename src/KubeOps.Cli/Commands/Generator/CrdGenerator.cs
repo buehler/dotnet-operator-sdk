@@ -1,6 +1,6 @@
-﻿using KubeOps.Cli.Builder;
-using KubeOps.Cli.Output;
+﻿using KubeOps.Cli.Output;
 using KubeOps.Cli.SyntaxObjects;
+using KubeOps.Transpiler.Crds;
 
 using McMaster.Extensions.CommandLineUtils;
 
@@ -54,7 +54,7 @@ internal class CrdGenerator
         _output.WriteLine($"Generate CRDs from project: {projectFile}.");
 
         var parser = await ProjectParser.CreateAsync(projectFile);
-        await foreach (var crd in parser.Entities().Select(CrdBuilder.Create))
+        await foreach (var crd in parser.Entities().Select(CrdTranspiler.Create))
         {
             _result.Add($"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLowerInvariant()}", crd);
         }
