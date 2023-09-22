@@ -1,4 +1,18 @@
-- name: Docs
+- name: Documentation and Usage
   href: docs/
-- name: KubeOps API
+- name: Contribution
+  href: ./CONTRIBUTING.md
+- name: Packages
+  items:
+    - name: KubeOps Abstractions
+      href: src/KubeOps.Abstractions/README.md
+    - name: KubeOps Cli
+      href: src/KubeOps.Cli/README.md
+    - name: KubeOps Generator
+      href: src/KubeOps.Generator/README.md
+    - name: KubeOps Operator
+      href: src/KubeOps.Operator/README.md
+    - name: KubeOps Operator Web
+      href: src/KubeOps.Operator.Web/README.md
+- name: API Reference
   href: docs/api/

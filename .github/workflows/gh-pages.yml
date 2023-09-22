@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - refactor/split-operator # TODO: test.
 
   workflow_dispatch:
 
@@ -22,17 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 7.x
 
       - run: dotnet tool restore
-        
+
       - run: dotnet docfx
-        
-      - run: mv _site/README.html _site/index.html
 
       - uses: actions/upload-pages-artifact@v1
         with:

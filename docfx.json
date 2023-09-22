@@ -13,6 +13,11 @@
           "toc.yml",
           "*.md"
         ]
+      },
+      {
+        "files": [
+          "src/**/*.md"
+        ]
       }
     ],
     "resource": [
