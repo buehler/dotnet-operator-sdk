@@ -1,4 +1,4 @@
-# KubeOps
+﻿# KubeOps
 
 ![Code Security Testing](https://github.com/buehler/dotnet-operator-sdk/workflows/Code%20Security%20Testing/badge.svg)
 ![.NET Release](https://github.com/buehler/dotnet-operator-sdk/workflows/.NET%20Release/badge.svg)
@@ -13,10 +13,7 @@ and each package contains a README.md with further information/documentation.
 
 ## Packages
 
-- [KubeOps](./src/KubeOps/README.md) - The core package of the SDK.
-- [KubeOps.Testing](./src/KubeOps.Testing/README.md) - Extensions that support integration testing.
-- [KubeOps.Templates](./src/KubeOps.Templates/README.md) - `dotnet new` templates for creating operators.
-- [KubeOps.KubernetesClient](./src/KubeOps.KubernetesClient/README.md) - An improved Kubernetes client to interact with Kubernetes APIs.
+TODO.
 
 ## Contribution
 
@@ -24,7 +21,7 @@ If you want to contribute, feel free to open a pull request or write issues :-)
 Read more about contribution (especially for setting up your local environment)
 in the [CONTRIBUTING file](./CONTRIBUTING.md).
 
-Short wrapup:
+In short:
 - Check out the code
 - Develop on KubeOps
 - Use some Kubernetes to run the test operator against

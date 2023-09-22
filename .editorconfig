@@ -3,6 +3,7 @@ root = true
 # All files
 [*]
 indent_style = space
+max_line_length = 120
 
 # Xml files
 [*.xml]
@@ -19,7 +20,7 @@ tab_width = 4
 
 # New line preferences
 end_of_line = crlf
-insert_final_newline = false
+insert_final_newline = true
 
 #### Custom Analyzer Rules ####
 
@@ -44,6 +45,16 @@ dotnet_diagnostic.SA1643.severity = none
 dotnet_diagnostic.SA1649.severity = none
 dotnet_diagnostic.RCS1029.severity = none
 dotnet_diagnostic.RCS1090.severity = none
+
+#### Custom Coding Conventions ####
+resharper_csharp_space_in_singleline_accessorholder = true
+resharper_csharp_space_between_accessors_in_singleline_property = true
+resharper_csharp_space_in_singleline_method = true
+resharper_csharp_space_in_singleline_anonymous_method = true
+resharper_csharp_space_within_single_line_array_initializer_braces = true
+resharper_csharp_trailing_comma_in_multiline_lists = true
+resharper_csharp_place_type_attribute_on_same_line = false
+resharper_csharp_place_attribute_on_same_line = false
 
 #### .NET Coding Conventions ####
 [*.{cs,vb}]

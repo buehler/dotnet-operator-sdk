@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageId>KubeOps.Operator</PackageId>
+        <PackageTags>Kubernetes Operator SDK CustomResourceDefinition</PackageTags>
+        <PackageDescription>
+            This is an operator sdk written in c#.
+            It enables a developer to create a custom controller for CRDs
+            (CustomResourceDefinitions) that runs on kubernetes. This operator
+            may run without ASP.net but needs the IHost of dotnet to run.
+        </PackageDescription>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="KubernetesClient" Version="12.0.16"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
+    </ItemGroup>
+    
+</Project>

@@ -3,9 +3,13 @@ name: Code Security Testing
 on:
   pull_request:
     branches:
-      - master
+      - main
   schedule:
     - cron: "0 20 * * 5"
+
+concurrency:
+  group: security
+  cancel-in-progress: true
 
 jobs:
   codeQL:
