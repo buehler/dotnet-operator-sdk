@@ -21,7 +21,7 @@
   <ItemGroup>
     <PackageReference Include="CompareNETObjects" Version="4.79.0" />
     <PackageReference Include="Localtunnel" Version="1.0.5" />
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.0.2" />
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.1.0" />
     <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="4.1.0" />
     <PackageReference Include="Namotion.Reflection" Version="2.1.1" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="7.0.0" />
