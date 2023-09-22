@@ -6,7 +6,7 @@ on:
       - main
       - release
   schedule:
-    - cron: '0 20 * * 5'
+    - cron: "0 20 * * 5"
 
 concurrency:
   group: security-${{ github.ref }}
@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['csharp']
+        language: ["csharp"]
 
     steps:
       - uses: actions/checkout@v3

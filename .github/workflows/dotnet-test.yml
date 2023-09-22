@@ -9,6 +9,10 @@ concurrency:
   group: testing-${{ github.ref }}
   cancel-in-progress: true
 
+concurrency:
+  group: testing
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Testing
