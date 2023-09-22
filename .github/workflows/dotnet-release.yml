@@ -3,8 +3,8 @@ name: .NET Release
 on:
   push:
     branches:
-      - master
-      - next
+      - main
+      - release
 
 jobs:
   semantic-release:
