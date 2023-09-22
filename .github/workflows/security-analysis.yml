@@ -7,6 +7,10 @@ on:
   schedule:
     - cron: "0 20 * * 5"
 
+concurrency:
+  group: security
+  cancel-in-progress: true
+
 jobs:
   codeQL:
     name: Analyze

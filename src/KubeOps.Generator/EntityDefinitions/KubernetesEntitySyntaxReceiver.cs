@@ -32,7 +32,7 @@ public class KubernetesEntitySyntaxReceiver : ISyntaxContextReceiver
 
     private static string? GetArgumentValue(AttributeSyntax attr, string argName) =>
         attr.ArgumentList?.Arguments.FirstOrDefault(a => a.NameEquals?.Name.ToString() == argName) is
-            { Expression: LiteralExpressionSyntax { Token: { ValueText: { } value } } }
+        { Expression: LiteralExpressionSyntax { Token: { ValueText: { } value } } }
             ? value
             : null;
 }
