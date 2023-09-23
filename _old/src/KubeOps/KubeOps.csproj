@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CompareNETObjects" Version="4.79.0" />
+    <PackageReference Include="CompareNETObjects" Version="4.82.0" />
     <PackageReference Include="Localtunnel" Version="1.0.5" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.1.0" />
     <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="4.1.0" />
