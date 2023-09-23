@@ -23,7 +23,7 @@
     <PackageReference Include="Localtunnel" Version="1.0.5" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.1.0" />
     <PackageReference Include="McMaster.Extensions.Hosting.CommandLine" Version="4.1.0" />
-    <PackageReference Include="Namotion.Reflection" Version="2.1.1" />
+    <PackageReference Include="Namotion.Reflection" Version="2.1.2" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="7.0.0" />
     <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="7.0.0" />
     <PackageReference Include="SimpleBase" Version="4.0.0" />
