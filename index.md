@@ -1,3 +1,3 @@
 ---
-redirect_url: ./readme.html
+redirect_url: ./README.html
 ---
