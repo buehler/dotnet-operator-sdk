@@ -6,7 +6,7 @@ on:
       - "**"
 
 concurrency:
-  group: testing
+  group: testing-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
