@@ -11,38 +11,6 @@ open k8s
 open k8s.Models
 open Namotion.Reflection
 
-type private PropType =
-    | Object
-    | Array
-    | String
-    | Integer
-    | Number
-    | Boolean
-
-    member self.value =
-        match self with
-        | Object -> "object"
-        | Array -> "array"
-        | String -> "string"
-        | Integer -> "integer"
-        | Number -> "number"
-        | Boolean -> "boolean"
-
-type private Format =
-    | Int32
-    | Int64
-    | Float
-    | Double
-    | DateTime
-
-    member self.value =
-        match self with
-        | Int32 -> "int32"
-        | Int64 -> "int64"
-        | Float -> "float"
-        | Double -> "double"
-        | DateTime -> "date-time"
-
 let private ignoredToplevelProperties = [ "metadata"; "apiversion"; "kind" ]
 
 let private propertyName (prop: PropertyInfo) =
@@ -67,6 +35,98 @@ let rec private isSimpleType (t: Type) =
         && t.GetGenericTypeDefinition() = typeof<Nullable<_>>
         && isSimpleType (t.GetGenericArguments() |> Seq.head))
 
+module private TypeMapping =
+    type private PropType =
+        | Object
+        | Array
+        | String
+        | Integer
+        | Number
+        | Boolean
+
+        member self.value =
+            match self with
+            | Object -> "object"
+            | Array -> "array"
+            | String -> "string"
+            | Integer -> "integer"
+            | Number -> "number"
+            | Boolean -> "boolean"
+
+    type private Format =
+        | Int32
+        | Int64
+        | Float
+        | Double
+        | DateTime
+
+        member self.value =
+            match self with
+            | Int32 -> "int32"
+            | Int64 -> "int64"
+            | Float -> "float"
+            | Double -> "double"
+            | DateTime -> "date-time"
+
+    let rec private isSimpleType (t: Type) =
+        t.IsPrimitive
+        || t = typeof<string>
+        || t = typeof<decimal>
+        || t = typeof<DateTime>
+        || t = typeof<DateTimeOffset>
+        || t = typeof<TimeSpan>
+        || t = typeof<Guid>
+        || t.IsEnum
+        || Convert.GetTypeCode(t) <> TypeCode.Object
+        || (t.IsGenericType
+            && t.GetGenericTypeDefinition() = typeof<Nullable<_>>
+            && isSimpleType (t.GetGenericArguments() |> Seq.head))
+
+    let private v1ObjectMeta (t: Type) _ =
+        if t = typeof<V1ObjectMeta> then
+            Some(V1JSONSchemaProps(Type = PropType.Object.value))
+        else
+            None
+
+    let private isArray (t: Type) map =
+        if t.IsArray then
+            Some(V1JSONSchemaProps(Type = PropType.Array.value, Items = (map <| t.GetElementType())))
+        else
+            None
+
+    let private mappers = [ v1ObjectMeta; isArray ]
+
+    let rec map (t: Type) =
+        match mappers |> List.choose (fun m -> m t map) |> List.tryHead with
+        | Some props -> props
+        | None -> failwithf $"Unsupported type: %s{t.Name}"
+
+module private AttributeMapping =
+    let private createMapper<'T when 'T :> Attribute and 'T: null>
+        fn
+        (prop: PropertyInfo)
+        (props: V1JSONSchemaProps ref)
+        =
+        match prop.GetCustomAttribute<'T>() with
+        | null -> ()
+        | attr -> fn attr props
+
+    let private itemsAttr =
+        createMapper<ItemsAttribute> (fun attr props ->
+            if attr.MinItems.HasValue then
+                props.Value.MinItems <- attr.MinItems.Value
+
+            if attr.MaxItems.HasValue then
+                props.Value.MaxItems <- attr.MaxItems.Value
+
+            ())
+
+    let mappers = [ itemsAttr ]
+
+    let map (prop: PropertyInfo) (props: V1JSONSchemaProps ref) =
+        mappers |> List.iter (fun m -> m prop props)
+        ()
+
 let rec private mapType (t: Type) =
     let description =
         match t.GetCustomAttributes<DescriptionAttribute>(true) |> Seq.tryHead with
@@ -75,8 +135,6 @@ let rec private mapType (t: Type) =
 
     let mutable props =
         match (t, isSimpleType t) with
-        | t, _ when t = typeof<V1ObjectMeta> -> V1JSONSchemaProps(Type = PropType.Object.value)
-        | t, _ when t.IsArray -> V1JSONSchemaProps(Type = PropType.Array.value, Items = (mapType <| t.GetElementType()))
         | t, false when t.IsGenericType && t.GetGenericTypeDefinition() = typeof<IDictionary<_, _>> ->
             V1JSONSchemaProps(
                 Type = PropType.Object.value,
@@ -201,6 +259,7 @@ and private map (prop: PropertyInfo) =
         props.Description <- description
 
     let ctx = prop.ToContextualProperty()
+
     if ctx.Nullability = Nullability.Nullable then
         props.Nullable <- true
     // TODO: prop stuff.
