@@ -1,9 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.1;net6.0;net7.0</TargetFrameworks>
+        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
         <IsPackable>true</IsPackable>
+        <LangVersion>7</LangVersion>
     </PropertyGroup>
+
 
     <PropertyGroup>
         <PackageId>KubeOps.Transpiler</PackageId>
@@ -25,7 +27,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Crds\TypeHandler\" />
+      <Compile Include="Entities.fs" />
+      <Compile Include="Crds.fs" />
+      <Compile Include="Rbac.fs" />
     </ItemGroup>
 
 </Project>
