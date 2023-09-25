@@ -4,8 +4,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C587731F-8191-4A19-8662-B89A60FE79A1}"
+	ProjectSection(SolutionItems) = preProject
+		test\Directory.Build.props = test\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4DB01062-6DC5-4028-BB72-C0619C2F5F2E}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{DC760E69-D0EA-417F-AE38-B12D0B04DE39}"
 EndProject
@@ -16,7 +22,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{DCC363
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		.releaserc.json = .releaserc.json
-		Directory.Build.props = Directory.Build.props
 		renovate.json = renovate.json
 	EndProjectSection
 EndProject

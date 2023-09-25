@@ -119,7 +119,7 @@ module private TypeMapping =
         else
             None
 
-    let private isResourceQuantityDictionary (t: Type) map =
+    let private isResourceQuantityDictionary (t: Type) _ =
         if
             t.IsGenericType
             && t.GetGenericTypeDefinition() = typeof<IDictionary<_, _>>
@@ -157,7 +157,7 @@ module private TypeMapping =
         else
             None
 
-    let private isArbitraryDictionary (t: Type) map =
+    let private isArbitraryDictionary (t: Type) _ =
         if
             typeof<IDictionary>.IsAssignableFrom t
             || (t.IsGenericType
@@ -170,7 +170,7 @@ module private TypeMapping =
         else
             None
 
-    let private isArbitraryEnumerableKeyValuePair (t: Type) map =
+    let private isArbitraryEnumerableKeyValuePair (t: Type) _ =
         if
             t.IsGenericType
             && (typeof<IEnumerable>.IsAssignableFrom <| t.GetGenericTypeDefinition())
@@ -213,13 +213,13 @@ module private TypeMapping =
         else
             None
 
-    let private isIntOrString (t: Type) map =
+    let private isIntOrString (t: Type) _ =
         if t = typeof<IntstrIntOrString> then
             Some(V1JSONSchemaProps(XKubernetesIntOrString = true))
         else
             None
 
-    let private isKubernetesObject (t: Type) map =
+    let private isKubernetesObject (t: Type) _ =
         if
             typeof<IKubernetesObject>.IsAssignableFrom t
             && not t.IsAbstract
@@ -236,55 +236,55 @@ module private TypeMapping =
         else
             None
 
-    let private isInt (t: Type) map =
+    let private isInt (t: Type) _ =
         if t = typeof<Int32> || Nullable.GetUnderlyingType(t) = typeof<int> then
             Some(V1JSONSchemaProps(Type = PropType.Integer.value, Format = Format.Int32.value))
         else
             None
 
-    let private isInt64 (t: Type) map =
+    let private isInt64 (t: Type) _ =
         if t = typeof<Int64> || Nullable.GetUnderlyingType(t) = typeof<int64> then
             Some(V1JSONSchemaProps(Type = PropType.Integer.value, Format = Format.Int64.value))
         else
             None
 
-    let private isFloat (t: Type) map =
+    let private isFloat (t: Type) _ =
         if t = typeof<float> || Nullable.GetUnderlyingType(t) = typeof<float> then
             Some(V1JSONSchemaProps(Type = PropType.Number.value, Format = Format.Float.value))
         else
             None
 
-    let private isDouble (t: Type) map =
+    let private isDouble (t: Type) _ =
         if t = typeof<double> || Nullable.GetUnderlyingType(t) = typeof<double> then
             Some(V1JSONSchemaProps(Type = PropType.Number.value, Format = Format.Double.value))
         else
             None
 
-    let private isString (t: Type) map =
+    let private isString (t: Type) _ =
         if t = typeof<string> || Nullable.GetUnderlyingType(t) = typeof<string> then
             Some(V1JSONSchemaProps(Type = PropType.String.value))
         else
             None
 
-    let private isBool (t: Type) map =
+    let private isBool (t: Type) _ =
         if t = typeof<bool> || Nullable.GetUnderlyingType(t) = typeof<bool> then
             Some(V1JSONSchemaProps(Type = PropType.Boolean.value))
         else
             None
 
-    let private isDateTime (t: Type) map =
+    let private isDateTime (t: Type) _ =
         if t = typeof<DateTime> || Nullable.GetUnderlyingType(t) = typeof<DateTime> then
             Some(V1JSONSchemaProps(Type = PropType.String.value, Format = Format.DateTime.value))
         else
             None
 
-    let private isEnum (t: Type) map =
+    let private isEnum (t: Type) _ =
         if t.IsEnum then
             Some(V1JSONSchemaProps(Type = PropType.String.value, EnumProperty = t.GetEnumNames().Cast<obj>().ToList()))
         else
             None
 
-    let private isNullableEnum (t: Type) map =
+    let private isNullableEnum (t: Type) _ =
         if Nullable.GetUnderlyingType(t) <> null && Nullable.GetUnderlyingType(t).IsEnum then
             Some(
                 V1JSONSchemaProps(
@@ -405,12 +405,12 @@ module private AttributeMapping =
             ())
 
     let private preserveUnknownAttr =
-        createMapper<PreserveUnknownFieldsAttribute> (fun attr props ->
+        createMapper<PreserveUnknownFieldsAttribute> (fun _ props ->
             props.Value.XKubernetesPreserveUnknownFields <- true
             ())
 
     let private embeddedAttr =
-        createMapper<EmbeddedResourceAttribute> (fun attr props ->
+        createMapper<EmbeddedResourceAttribute> (fun _ props ->
             props.Value.XKubernetesPreserveUnknownFields <- true
             props.Value.XKubernetesEmbeddedResource <- true
             props.Value.Properties <- null
@@ -465,36 +465,38 @@ let private mapPrinterCols (t: Type) =
         (List.ofArray <| t.GetProperties()) |> List.map (fun p -> (p, String.Empty))
 
     while not props.IsEmpty do
-        let (prop, path) :: rest = props
-        props <- rest
+        match props with
+        | [] -> failwith "Props should not be empty."
+        | (prop, path) :: rest ->
+            props <- rest
 
-        if prop.PropertyType.IsClass then
-            props <-
-                props
-                @ (List.ofArray <| prop.PropertyType.GetProperties()
-                   |> List.map (fun p -> (p, $"{path}.{propertyName prop}")))
+            if prop.PropertyType.IsClass then
+                props <-
+                    props
+                    @ (List.ofArray <| prop.PropertyType.GetProperties()
+                       |> List.map (fun p -> (p, $"{path}.{propertyName prop}")))
 
-        match prop.GetCustomAttribute<AdditionalPrinterColumnAttribute>() with
-        | null -> ()
-        | attr ->
-            let p = map prop
+            match prop.GetCustomAttribute<AdditionalPrinterColumnAttribute>() with
+            | null -> ()
+            | attr ->
+                let p = map prop
 
-            res <-
-                res
-                @ [ V1CustomResourceColumnDefinition(
-                        Name =
-                            (match attr.Name with
-                             | null -> propertyName prop
-                             | name -> name),
-                        JsonPath = path,
-                        Type = p.Type,
-                        Description = p.Description,
-                        Format = p.Format,
-                        Priority =
-                            match attr.Priority with
-                            | PrinterColumnPriority.StandardView -> 0
-                            | _ -> 1
-                    ) ]
+                res <-
+                    res
+                    @ [ V1CustomResourceColumnDefinition(
+                            Name =
+                                (match attr.Name with
+                                 | null -> propertyName prop
+                                 | name -> name),
+                            JsonPath = path,
+                            Type = p.Type,
+                            Description = p.Description,
+                            Format = p.Format,
+                            Priority =
+                                match attr.Priority with
+                                | PrinterColumnPriority.StandardView -> 0
+                                | _ -> 1
+                        ) ]
 
     res
     @ (List.ofSeq

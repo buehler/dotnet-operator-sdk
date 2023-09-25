@@ -6,6 +6,12 @@ open KubeOps.Abstractions.Entities
 open KubeOps.Abstractions.Entities.Attributes
 open k8s.Models
 
+/// <summary>
+/// Converts the given type to an <see cref="EntityMetadata"/> object.
+/// </summary>
+/// <param name="entityType">The type to convert.</param>
+/// <returns>The <see cref="EntityMetadata"/> object representing the type.</returns>
+/// <exception cref="ArgumentException">Thrown if the given type is not a valid Kubernetes entity.</exception>
 let ToEntityMetadata (entityType: Type) =
     match
         (entityType.GetCustomAttribute<KubernetesEntityAttribute>(),
