@@ -41,26 +41,6 @@ public class CrdGeneratorTest
     }
 
     [Fact]
-    public void Should_Generate_Correct_Number_Of_Crds()
-    {
-        _crds.Count().Should().Be(6);
-    }
-
-    [Fact]
-    public void Should_Not_Contain_Ignored_Entities()
-    {
-        _crds.Should()
-            .NotContain(crd => crd.Name().Contains("ignored", StringComparison.InvariantCultureIgnoreCase));
-    }
-
-    [Fact]
-    public void Should_Not_Contain_K8s_Entities()
-    {
-        _crds.Should()
-            .NotContain(crd => crd.Spec.Names.Kind == "Pod");
-    }
-
-    [Fact]
     public void Should_Set_Highest_Version_As_Storage()
     {
         var crd = _crds.First(c => c.Spec.Names.Kind == "VersionedEntity");

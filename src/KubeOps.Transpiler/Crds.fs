@@ -51,7 +51,6 @@ type private KubernetesVersionComparer() =
                     let y = extractVersion mY
                     x.CompareTo(y)
 
-
 let private propertyName (prop: PropertyInfo) =
     let name =
         match prop.GetCustomAttribute<JsonPropertyNameAttribute>() with
@@ -59,6 +58,91 @@ let private propertyName (prop: PropertyInfo) =
         | attr -> attr.Name
 
     $"{Char.ToLowerInvariant name[0]}{name[1..]}"
+
+module private AttributeMapping =
+    let private createMapper<'T when 'T :> Attribute and 'T: null>
+        fn
+        (prop: PropertyInfo)
+        (props: V1JSONSchemaProps ref)
+        =
+        match prop.GetCustomAttribute<'T>() with
+        | null -> ()
+        | attr -> fn attr props
+
+    let private extDoc =
+        createMapper<ExternalDocsAttribute> (fun attr props ->
+            props.Value.ExternalDocs <- V1ExternalDocumentation(attr.Description, attr.Url)
+            ())
+
+    let private itemsAttr =
+        createMapper<ItemsAttribute> (fun attr props ->
+            if attr.MinItems.HasValue then
+                props.Value.MinItems <- attr.MinItems.Value
+
+            if attr.MaxItems.HasValue then
+                props.Value.MaxItems <- attr.MaxItems.Value
+
+            ())
+
+    let private lengthAttr =
+        createMapper<LengthAttribute> (fun attr props ->
+            if attr.MinLength.HasValue then
+                props.Value.MinLength <- attr.MinLength.Value
+
+            if attr.MaxLength.HasValue then
+                props.Value.MaxLength <- attr.MaxLength.Value
+
+            ())
+
+    let private multipleOfAttr =
+        createMapper<MultipleOfAttribute> (fun attr props ->
+            props.Value.MultipleOf <- attr.Value
+            ())
+
+    let private patternAttr =
+        createMapper<PatternAttribute> (fun attr props ->
+            props.Value.Pattern <- attr.RegexPattern
+            ())
+
+    let private rangeMaxAttr =
+        createMapper<RangeMaximumAttribute> (fun attr props ->
+            props.Value.Maximum <- attr.Maximum
+            props.Value.ExclusiveMaximum <- attr.ExclusiveMaximum
+            ())
+
+    let private rangeMinAttr =
+        createMapper<RangeMinimumAttribute> (fun attr props ->
+            props.Value.Minimum <- attr.Minimum
+            props.Value.ExclusiveMinimum <- attr.ExclusiveMinimum
+            ())
+
+    let private preserveUnknownAttr =
+        createMapper<PreserveUnknownFieldsAttribute> (fun _ props ->
+            props.Value.XKubernetesPreserveUnknownFields <- true
+            ())
+
+    let private embeddedAttr =
+        createMapper<EmbeddedResourceAttribute> (fun _ props ->
+            props.Value.XKubernetesPreserveUnknownFields <- true
+            props.Value.XKubernetesEmbeddedResource <- true
+            props.Value.Properties <- null
+            props.Value.Type <- "object"
+            ())
+
+    let private mappers =
+        [ extDoc
+          itemsAttr
+          lengthAttr
+          multipleOfAttr
+          patternAttr
+          rangeMaxAttr
+          rangeMinAttr
+          preserveUnknownAttr
+          embeddedAttr ]
+
+    let map (prop: PropertyInfo) (props: V1JSONSchemaProps ref) =
+        mappers |> List.iter (fun m -> m prop props)
+        ()
 
 module private TypeMapping =
     type PropType =
@@ -229,6 +313,7 @@ module private TypeMapping =
             Some(
                 V1JSONSchemaProps(
                     Type = PropType.Object.value,
+                    Properties = null,
                     XKubernetesPreserveUnknownFields = true,
                     XKubernetesEmbeddedResource = true
                 )
@@ -249,13 +334,23 @@ module private TypeMapping =
             None
 
     let private isFloat (t: Type) _ =
-        if t = typeof<float> || Nullable.GetUnderlyingType(t) = typeof<float> then
+        if
+            t = typeof<float>
+            || Nullable.GetUnderlyingType(t) = typeof<float>
+            || t = typeof<Single>
+            || Nullable.GetUnderlyingType(t) = typeof<Single>
+        then
             Some(V1JSONSchemaProps(Type = PropType.Number.value, Format = Format.Float.value))
         else
             None
 
     let private isDouble (t: Type) _ =
-        if t = typeof<double> || Nullable.GetUnderlyingType(t) = typeof<double> then
+        if
+            t = typeof<double>
+            || Nullable.GetUnderlyingType(t) = typeof<double>
+            || t = typeof<Double>
+            || Nullable.GetUnderlyingType(t) = typeof<Double>
+        then
             Some(V1JSONSchemaProps(Type = PropType.Number.value, Format = Format.Double.value))
         else
             None
@@ -302,14 +397,17 @@ module private TypeMapping =
                     Type = PropType.Object.value,
                     Properties =
                         (t.GetProperties()
-                         |> Array.filter (fun p -> p.GetCustomAttribute<IgnorePropertyAttribute>() = null)
-                         |> Array.map (fun p -> (propertyName p, map p.PropertyType))
+                         |> Array.filter (fun p -> p.GetCustomAttribute<IgnoreAttribute>() = null)
+                         |> Array.map (fun p ->
+                             let schema = map p.PropertyType
+                             AttributeMapping.map p (ref schema)
+                             (propertyName p, schema))
                          |> dict),
                     Required =
                         match
                             t.GetProperties()
                             |> Array.filter (fun p -> p.GetCustomAttribute<RequiredAttribute>() <> null)
-                            |> Array.filter (fun p -> p.GetCustomAttribute<IgnorePropertyAttribute>() = null)
+                            |> Array.filter (fun p -> p.GetCustomAttribute<IgnoreAttribute>() = null)
                             |> Array.map propertyName
                         with
                         | [||] -> null
@@ -343,94 +441,15 @@ module private TypeMapping =
           isNotSimpleType ]
 
     let rec map (t: Type) =
-        match mappers |> List.choose (fun m -> m t map) |> List.tryHead with
-        | Some props -> props
-        | None -> failwithf $"Unsupported type: %s{t.Name}"
+        let rec mapping (t: Type) mappers =
+            match mappers with
+            | [] -> failwithf $"Unsupported type: %s{t.FullName}"
+            | m :: mappers ->
+                match m t map with
+                | Some props -> props
+                | None -> mapping t mappers
 
-module private AttributeMapping =
-    let private createMapper<'T when 'T :> Attribute and 'T: null>
-        fn
-        (prop: PropertyInfo)
-        (props: V1JSONSchemaProps ref)
-        =
-        match prop.GetCustomAttribute<'T>() with
-        | null -> ()
-        | attr -> fn attr props
-
-    let private extDoc =
-        createMapper<ExternalDocsAttribute> (fun attr props ->
-            props.Value.ExternalDocs <- V1ExternalDocumentation(attr.Description, attr.Url)
-            ())
-
-    let private itemsAttr =
-        createMapper<ItemsAttribute> (fun attr props ->
-            if attr.MinItems.HasValue then
-                props.Value.MinItems <- attr.MinItems.Value
-
-            if attr.MaxItems.HasValue then
-                props.Value.MaxItems <- attr.MaxItems.Value
-
-            ())
-
-    let private lengthAttr =
-        createMapper<LengthAttribute> (fun attr props ->
-            if attr.MinLength.HasValue then
-                props.Value.MinLength <- attr.MinLength.Value
-
-            if attr.MaxLength.HasValue then
-                props.Value.MaxLength <- attr.MaxLength.Value
-
-            ())
-
-    let private multipleOfAttr =
-        createMapper<MultipleOfAttribute> (fun attr props ->
-            props.Value.MultipleOf <- attr.Value
-            ())
-
-    let private patternAttr =
-        createMapper<PatternAttribute> (fun attr props ->
-            props.Value.Pattern <- attr.RegexPattern
-            ())
-
-    let private rangeMaxAttr =
-        createMapper<RangeMaximumAttribute> (fun attr props ->
-            props.Value.Maximum <- attr.Maximum
-            props.Value.ExclusiveMaximum <- attr.ExclusiveMaximum
-            ())
-
-    let private rangeMinAttr =
-        createMapper<RangeMinimumAttribute> (fun attr props ->
-            props.Value.Minimum <- attr.Minimum
-            props.Value.ExclusiveMinimum <- attr.ExclusiveMinimum
-            ())
-
-    let private preserveUnknownAttr =
-        createMapper<PreserveUnknownFieldsAttribute> (fun _ props ->
-            props.Value.XKubernetesPreserveUnknownFields <- true
-            ())
-
-    let private embeddedAttr =
-        createMapper<EmbeddedResourceAttribute> (fun _ props ->
-            props.Value.XKubernetesPreserveUnknownFields <- true
-            props.Value.XKubernetesEmbeddedResource <- true
-            props.Value.Properties <- null
-            props.Value.Type <- "object"
-            ())
-
-    let private mappers =
-        [ extDoc
-          itemsAttr
-          lengthAttr
-          multipleOfAttr
-          patternAttr
-          rangeMaxAttr
-          rangeMinAttr
-          preserveUnknownAttr
-          embeddedAttr ]
-
-    let map (prop: PropertyInfo) (props: V1JSONSchemaProps ref) =
-        mappers |> List.iter (fun m -> m prop props)
-        ()
+        mapping t mappers
 
 let private map (prop: PropertyInfo) =
     let description =
@@ -481,14 +500,16 @@ let private mapPrinterCols (t: Type) =
             | attr ->
                 let p = map prop
 
+                let name =
+                    match attr.Name with
+                    | null -> propertyName prop
+                    | name -> name
+
                 res <-
                     res
                     @ [ V1CustomResourceColumnDefinition(
-                            Name =
-                                (match attr.Name with
-                                 | null -> propertyName prop
-                                 | name -> name),
-                            JsonPath = path,
+                            Name = name,
+                            JsonPath = $"{path}.{propertyName prop}",
                             Type = p.Type,
                             Description = p.Description,
                             Format = p.Format,
@@ -514,6 +535,12 @@ let private mapPrinterCols (t: Type) =
                    | _ -> 1
            )))
 
+/// <summary>
+/// Transpiles the given Kubernetes entity type to a <see cref="V1CustomResourceDefinition"/> object.
+/// </summary>
+/// <param name="entityType">The Kubernetes entity type to transpile.</param>
+/// <returns>A <see cref="V1CustomResourceDefinition"/> object representing the transpiled entity type.</returns>
+/// <exception cref="ArgumentException">Thrown if the given type is not a valid Kubernetes entity.</exception>
 let Transpile (entityType: Type) =
     let entityMetadata, scope = Entities.ToEntityMetadata entityType
 
@@ -575,9 +602,17 @@ let Transpile (entityType: Type) =
 
     crd
 
+/// <summary>
+/// Transpiles the given sequence of Kubernetes entity types to a
+/// sequence of <see cref="V1CustomResourceDefinition"/> objects.
+/// The definitions are grouped by version and one stored version is defined.
+/// The transpiler fails when multiple stored versions are defined.
+/// </summary>
+/// <param name="entities">The sequence of Kubernetes entity types to transpile.</param>
+/// <returns>A sequence of <see cref="V1CustomResourceDefinition"/> objects representing the transpiled entity types.</returns>
 let TranspileByVersion (entities: Type seq) =
     entities
-    |> Seq.filter (fun t -> t.GetCustomAttribute<IgnoreEntityAttribute>() = null)
+    |> Seq.filter (fun t -> t.GetCustomAttribute<IgnoreAttribute>() = null)
     |> Seq.filter (fun t -> t.GetCustomAttribute<KubernetesEntityAttribute>() <> null)
     |> Seq.filter (fun t -> t.Assembly <> typeof<KubernetesEntityAttribute>.Assembly)
     |> Seq.map (fun t -> (Transpile t, t.GetCustomAttributes<StorageVersionAttribute>().Any()))

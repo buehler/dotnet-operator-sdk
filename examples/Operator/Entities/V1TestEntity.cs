@@ -4,7 +4,7 @@ using k8s.Models;
 namespace Operator.Entities;
 
 [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
-public class V1TestEntity : IKubernetesObject<V1ObjectMeta>
+public class V1TestEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1TestEntitySpec>, IStatus<V1TestEntityStatus>
 {
     public string ApiVersion { get; set; } = "testing.dev/v1";
 

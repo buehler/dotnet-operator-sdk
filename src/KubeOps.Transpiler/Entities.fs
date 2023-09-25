@@ -6,6 +6,12 @@ open KubeOps.Abstractions.Entities
 open KubeOps.Abstractions.Entities.Attributes
 open k8s.Models
 
+let private defaulted (value: string) (defaultValue: string) =
+    if String.IsNullOrWhiteSpace(value) then
+        defaultValue
+    else
+        value
+
 /// <summary>
 /// Converts the given type to an <see cref="EntityMetadata"/> object.
 /// </summary>
@@ -20,8 +26,8 @@ let ToEntityMetadata (entityType: Type) =
     | null, _ -> raise <| ArgumentException "The given type is not a valid Kubernetes entity."
     | attr, scope ->
         (EntityMetadata(
-            attr.Kind,
-            attr.ApiVersion,
+            defaulted attr.Kind entityType.Name,
+            defaulted attr.ApiVersion "v1",
             (if String.IsNullOrWhiteSpace(attr.Group) then
                  null
              else

@@ -33,7 +33,7 @@ internal sealed class ProjectParser : IDisposable
         foreach (var type in assembly
                      .DefinedTypes
                      .Where(t => t.GetCustomAttributes<KubernetesEntityAttribute>().Any())
-                     .Where(type => !type.GetCustomAttributes<IgnoreEntityAttribute>().Any()))
+                     .Where(type => !type.GetCustomAttributes<IgnoreAttribute>().Any()))
         {
             yield return type;
         }

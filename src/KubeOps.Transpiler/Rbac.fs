@@ -60,6 +60,11 @@ let private transpileEntityStatusAttributes (attributes: EntityRbacAttribute seq
             Verbs = convertToStrings (RbacVerb.Get ||| RbacVerb.Patch ||| RbacVerb.Update)
         ))
 
+/// <summary>
+/// Transpiles the given RBAC attributes to an enumerable of Kubernetes <see cref="V1PolicyRule"/> objects.
+/// </summary>
+/// <param name="attributes">The RBAC attributes to transpile.</param>
+/// <returns>An enumerable of <see cref="V1PolicyRule"/> objects representing the transpiled RBAC attributes.</returns>
 let Transpile (attributes: RbacAttribute seq) =
     let generic =
         attributes
