@@ -11,7 +11,11 @@ let private convertToStrings verbs =
         | RbacVerb.None -> Seq.empty
         | _ when verbs.HasFlag(RbacVerb.All) -> seq { "*" }
         | _ ->
+#if NETSTANDARD
+            Enum.GetValues(typeof<RbacVerb>).Cast<RbacVerb>()
+#else
             Enum.GetValues<RbacVerb>()
+#endif
             |> Seq.filter (fun x -> x <> RbacVerb.None && x <> RbacVerb.All)
             |> Seq.filter verbs.HasFlag
             |> Seq.map (fun x -> x.ToString().ToLower())

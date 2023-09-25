@@ -53,7 +53,7 @@ internal class CrdGenerator
         _output.WriteLine($"Generate CRDs from project: {projectFile}.");
 
         var parser = new ProjectParser(projectFile);
-        await foreach (var crd in parser.Entities().Select(Transpiler.Crds.Transpile))
+        foreach (var crd in Transpiler.Crds.TranspileByVersion(await parser.Entities().ToListAsync()))
         {
             _result.Add($"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLowerInvariant()}", crd);
         }
