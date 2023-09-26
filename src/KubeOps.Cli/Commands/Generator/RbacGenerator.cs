@@ -5,13 +5,13 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace KubeOps.Cli.Commands.Generator;
 
-[Command("crd", "crds", Description = "Generates the needed CRD for kubernetes. (Aliases: crds)")]
-internal class CrdGenerator
+[Command("rbac", "r", Description = "Generates rbac roles for the operator. (Aliases: r)")]
+internal class RbacGenerator
 {
     private readonly ConsoleOutput _output;
     private readonly ResultOutput _result;
 
-    public CrdGenerator(ConsoleOutput output, ResultOutput result)
+    public RbacGenerator(ConsoleOutput output, ResultOutput result)
     {
         _output = output;
         _result = result;
@@ -53,10 +53,8 @@ internal class CrdGenerator
         _output.WriteLine($"Generate CRDs from project: {projectFile}.");
 
         var parser = new ProjectParser(projectFile);
-        foreach (var crd in Transpiler.Crds.Transpile(await parser.Entities().ToListAsync()))
-        {
-            _result.Add($"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLowerInvariant()}", crd);
-        }
+        var attributes = await parser.RbacAttributes().ToListAsync();
+        _result.Add("file.yaml", Transpiler.Rbac.Transpile(attributes));
 
         if (OutputPath is not null)
         {

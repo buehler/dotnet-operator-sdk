@@ -2,38 +2,24 @@
   "build": {
     "content": [
       {
-        "files": [
-          "docs/api/**.yml"
-        ]
+        "files": ["docs/api/**.yml"]
       },
       {
-        "files": [
-          "docs/**.md",
-          "docs/**/toc.yml",
-          "toc.yml",
-          "*.md"
-        ]
+        "files": ["docs/**.md", "docs/**/toc.yml", "toc.yml", "*.md"]
       },
       {
-        "files": [
-          "src/**/*.md"
-        ]
+        "files": ["src/**/*.md"]
       }
     ],
     "resource": [
       {
-        "files": [
-          "res/**"
-        ]
+        "files": ["res/**"]
       }
     ],
     "output": "_site",
     "globalMetadataFiles": [],
     "fileMetadataFiles": [],
-    "template": [
-      "default",
-      "modern"
-    ],
+    "template": ["default", "modern"],
     "postProcessors": [],
     "keepFileLink": false,
     "disableGitFeatures": false
@@ -42,9 +28,7 @@
     {
       "src": [
         {
-          "files": [
-            "src/**/*.csproj"
-          ]
+          "files": ["src/**/*.csproj"]
         }
       ],
       "dest": "docs/api",

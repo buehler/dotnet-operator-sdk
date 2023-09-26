@@ -6,21 +6,27 @@
 [AttributeUsage(AttributeTargets.Property)]
 public class ItemsAttribute : Attribute
 {
+    public ItemsAttribute(long minItems = -1, long maxItems = -1)
+    {
+        MinItems = minItems switch
+        {
+            -1 => null,
+            _ => minItems,
+        };
+        MaxItems = maxItems switch
+        {
+            -1 => null,
+            _ => maxItems,
+        };
+    }
+
     /// <summary>
     /// Defines the minimal item count for the property.
     /// </summary>
-#if NETSTANDARD
-    public long? MinItems { get; set; }
-#else
-    public long? MinItems { get; init; }
-#endif
+    public long? MinItems { get; }
 
     /// <summary>
     /// Defines the maximal item count for the property.
     /// </summary>
-#if NETSTANDARD
-    public long? MaxItems { get; set; }
-#else
-    public long? MaxItems { get; init; }
-#endif
+    public long? MaxItems { get; }
 }

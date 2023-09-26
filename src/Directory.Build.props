@@ -2,6 +2,7 @@
     <PropertyGroup>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <IsPackable>true</IsPackable>
         <LangVersion>11</LangVersion>
         <Authors>Christoph Bühler</Authors>
         <Owner>cbuehler</Owner>
@@ -24,8 +25,8 @@
 
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\"/>
-        <None Include="$(MSBuildThisFileDirectory)\LICENSE" Pack="true" PackagePath="\"/>
-        <None Include="$(MSBuildThisFileDirectory)\res\icon.png">
+        <None Include="$(MSBuildThisFileDirectory)\..\LICENSE" Pack="true" PackagePath="\"/>
+        <None Include="$(MSBuildThisFileDirectory)\..\res\icon.png">
             <Pack>true</Pack>
             <PackagePath>\</PackagePath>
             <Visible>false</Visible>
