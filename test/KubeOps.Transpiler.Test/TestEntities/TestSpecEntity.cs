@@ -153,7 +153,7 @@ public class TestSpecEntitySpec
 [KubernetesEntity(Group = "kubeops.test.dev", ApiVersion = "V1")]
 [GenericAdditionalPrinterColumn(".metadata.namespace", "Namespace", "string")]
 [GenericAdditionalPrinterColumn(".metadata.creationTimestamp", "Age", "date")]
-public class TestSpecEntity : IKubernetesObject<V1ObjectMeta>, ISpec<TestSpecEntitySpec> 
+public class TestSpecEntity : IKubernetesObject<V1ObjectMeta>, ISpec<TestSpecEntitySpec>
 {
     public string ApiVersion { get; set; } = "kubeops.test.dev/v1";
     public string Kind { get; set; } = "TestSpecEntity";
