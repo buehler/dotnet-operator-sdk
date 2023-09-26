@@ -37,7 +37,7 @@ public class RbacTest
                 rule => rule.Resources.Contains("rbactest2s"));
         roles.Should().HaveCount(2);
     }
-    
+
     [Fact]
     public void Should_Group_Types_With_Same_Verbs_Together()
     {

@@ -57,10 +57,10 @@ public static partial class Crds
                 Plural = meta.PluralName,
                 ShortNames = type.GetCustomAttributes<KubernetesEntityShortNamesAttribute>(true)
                         .SelectMany(a => a.ShortNames).ToList() switch
-                    {
-                        { Count: > 0 } p => p,
-                        _ => null,
-                    },
+                {
+                    { Count: > 0 } p => p,
+                    _ => null,
+                },
             };
         crd.Spec.Scope = scope;
 
@@ -453,10 +453,10 @@ public static partial class Crds
                             .Where(p => p.GetCustomAttribute<IgnoreAttribute>() == null)
                             .Select(PropertyName)
                             .ToList() switch
-                        {
-                            { Count: > 0 } p => p,
-                            _ => null,
-                        },
+                    {
+                        { Count: > 0 } p => p,
+                        _ => null,
+                    },
                 }
                 : null;
 

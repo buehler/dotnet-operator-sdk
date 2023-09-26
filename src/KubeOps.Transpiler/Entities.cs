@@ -21,19 +21,19 @@ public static class Entities
     public static (EntityMetadata Metadata, string Scope) ToEntityMetadata(Type entityType)
         => (entityType.GetCustomAttribute<KubernetesEntityAttribute>(),
                 entityType.GetCustomAttribute<EntityScopeAttribute>()) switch
-            {
-                (null, _) => throw new ArgumentException("The given type is not a valid Kubernetes entity."),
-                ({ } attr, var scope) => (new(
-                        Defaulted(attr.Kind, entityType.Name),
-                        Defaulted(attr.ApiVersion, "v1"),
-                        attr.Group,
-                        attr.PluralName),
-                    scope switch
-                    {
-                        null => Enum.GetName(typeof(EntityScope), EntityScope.Namespaced) ?? "namespaced",
-                        _ => Enum.GetName(typeof(EntityScope), scope.Scope) ?? "namespaced",
-                    }),
-            };
+        {
+            (null, _) => throw new ArgumentException("The given type is not a valid Kubernetes entity."),
+            ({ } attr, var scope) => (new(
+                    Defaulted(attr.Kind, entityType.Name),
+                    Defaulted(attr.ApiVersion, "v1"),
+                    attr.Group,
+                    attr.PluralName),
+                scope switch
+                {
+                    null => Enum.GetName(typeof(EntityScope), EntityScope.Namespaced) ?? "namespaced",
+                    _ => Enum.GetName(typeof(EntityScope), scope.Scope) ?? "namespaced",
+                }),
+        };
 
     private static string Defaulted(string value, string defaultValue) =>
         string.IsNullOrWhiteSpace(value) ? defaultValue : value;
