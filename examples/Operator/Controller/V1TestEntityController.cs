@@ -1,4 +1,5 @@
 ﻿using KubeOps.Abstractions.Controller;
+using KubeOps.Abstractions.Rbac;
 
 using Microsoft.Extensions.Logging;
 
@@ -6,6 +7,7 @@ using Operator.Entities;
 
 namespace Operator.Controller;
 
+[EntityRbac(typeof(V1TestEntity), Verbs = RbacVerb.All)]
 public class V1TestEntityController : IEntityController<V1TestEntity>
 {
     private readonly ILogger<V1TestEntityController> _logger;

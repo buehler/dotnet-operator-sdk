@@ -6,21 +6,27 @@
 [AttributeUsage(AttributeTargets.Property)]
 public class LengthAttribute : Attribute
 {
+    public LengthAttribute(long minLength = -1, long maxLength = -1)
+    {
+        MinLength = minLength switch
+        {
+            -1 => null,
+            _ => minLength,
+        };
+        MaxLength = maxLength switch
+        {
+            -1 => null,
+            _ => maxLength,
+        };
+    }
+
     /// <summary>
     /// Define the minimum length.
     /// </summary>
-#if NETSTANDARD
-    public long? MinLength { get; set; }
-#else
-    public long? MinLength { get; init; }
-#endif
+    public long? MinLength { get; }
 
     /// <summary>
     /// Define the maximum length.
     /// </summary>
-#if NETSTANDARD
-    public long? MaxLength { get; set; }
-#else
-    public long? MaxLength { get; init; }
-#endif
+    public long? MaxLength { get; }
 }
