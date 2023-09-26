@@ -14,5 +14,7 @@
       href: src/KubeOps.Operator/README.md
     - name: KubeOps Operator Web
       href: src/KubeOps.Operator.Web/README.md
+    - name: KubeOps Transpiler
+      href: src/KubeOps.Transpiler/README.md
 - name: API Reference
   href: docs/api/
