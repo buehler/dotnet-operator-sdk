@@ -1,4 +1,5 @@
-﻿using KubeOps.Cli.Output;
+﻿using KubeOps.Abstractions.Kustomize;
+using KubeOps.Cli.Output;
 using KubeOps.Cli.SyntaxObjects;
 
 using McMaster.Extensions.CommandLineUtils;
@@ -53,10 +54,20 @@ internal class CrdGenerator
         _output.WriteLine($"Generate CRDs from project: {projectFile}.");
 
         var parser = new ProjectParser(projectFile);
-        foreach (var crd in Transpiler.Crds.Transpile(await parser.Entities().ToListAsync()))
+        var crds = Transpiler.Crds.Transpile(await parser.Entities().ToListAsync()).ToList();
+        foreach (var crd in crds)
         {
             _result.Add($"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLowerInvariant()}", crd);
         }
+
+        _result.Add(
+            $"kustomization.{Format.ToString().ToLowerInvariant()}",
+            new KustomizationConfig
+            {
+                Resources = crds
+                    .ConvertAll(crd => $"{crd.Metadata.Name.Replace('.', '_')}.{Format.ToString().ToLower()}"),
+                CommonLabels = new Dictionary<string, string> { { "operator-element", "crd" } },
+            });
 
         if (OutputPath is not null)
         {
