@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <ProjectReference Include="..\..\src\KubeOps.Transpiler\KubeOps.Transpiler.fsproj" />
+    <ProjectReference Include="..\..\src\KubeOps.Transpiler\KubeOps.Transpiler.csproj" />
   </ItemGroup>
 </Project>

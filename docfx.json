@@ -28,7 +28,7 @@
     {
       "src": [
         {
-          "files": ["src/**/*.csproj", "src/KubeOps.Transpiler/bin/Release/net7.0/KubeOps.Transpiler.dll"]
+          "files": ["src/**/*.csproj"]
         }
       ],
       "dest": "docs/api",
