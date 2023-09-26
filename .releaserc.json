@@ -33,10 +33,10 @@
       "@semantic-release/github",
       {
         "successComment": false,
-        "failComment": false,
+        "failComment": true,
         "assets": [
           {
-            "path": "artifacts/*.nupkg"
+            "path": "src/**/bin/Release/**/*.nupkg"
           }
         ]
       }
