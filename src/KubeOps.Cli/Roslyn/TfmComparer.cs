@@ -3,7 +3,7 @@
 namespace KubeOps.Cli.Roslyn;
 
 /// <summary>
-/// Tfm Comparer
+/// Tfm Comparer.
 /// </summary>
 internal sealed partial class TfmComparer : IComparer<string>
 {

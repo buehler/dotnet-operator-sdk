@@ -14,6 +14,9 @@ using Spectre.Console;
 
 namespace KubeOps.Cli.Roslyn;
 
+/// <summary>
+/// AssemblyParser.
+/// </summary>
 internal sealed partial class AssemblyParser
 {
     private readonly Assembly[] _assemblies;
