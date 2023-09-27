@@ -35,8 +35,4 @@
         <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
         <ProjectReference Include="..\KubeOps.Transpiler\KubeOps.Transpiler.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Commands\Generator\" />
-    </ItemGroup>
 </Project>

@@ -8,14 +8,17 @@ namespace KubeOps.Cli.Commands.Utilities;
 
 internal static class Version
 {
-    public static Command Command()
+    public static Command Command
     {
-        var cmd = new Command("api-version", "Prints the actual server version of the connected kubernetes cluster.");
-        cmd.AddAlias("av");
-        cmd.SetHandler(() =>
-            Handler(AnsiConsole.Console, new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig())));
+        get
+        {
+            var cmd = new Command("api-version", "Prints the actual server version of the connected kubernetes cluster.");
+            cmd.AddAlias("av");
+            cmd.SetHandler(() =>
+                Handler(AnsiConsole.Console, new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig())));
 
-        return cmd;
+            return cmd;
+        }
     }
 
     internal static async Task<int> Handler(IAnsiConsole console, IKubernetes client)
