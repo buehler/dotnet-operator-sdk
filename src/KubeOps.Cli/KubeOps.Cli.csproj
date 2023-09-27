@@ -18,16 +18,25 @@
 
     <ItemGroup>
         <PackageReference Include="KubernetesClient" Version="12.0.16"/>
-        <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.1.0"/>
         <PackageReference Include="Microsoft.Build.Locator" Version="1.6.10" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0"/>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.7.0"/>
+        <PackageReference Include="Spectre.Console" Version="0.47.0" />
+        <PackageReference Include="Spectre.Console.Analyzer" Version="0.47.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
         <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
         <ProjectReference Include="..\KubeOps.Transpiler\KubeOps.Transpiler.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Commands\Generator\" />
     </ItemGroup>
 </Project>

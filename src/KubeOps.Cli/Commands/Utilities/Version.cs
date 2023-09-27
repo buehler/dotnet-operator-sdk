@@ -1,29 +1,34 @@
-﻿using k8s;
+﻿using System.CommandLine;
 
-using McMaster.Extensions.CommandLineUtils;
+using k8s;
 
-using Microsoft.Extensions.DependencyInjection;
+using Spectre.Console;
 
 namespace KubeOps.Cli.Commands.Utilities;
 
-[Command(
-    "api-version",
-    "av",
-    Description = "Prints the actual server version of the connected kubernetes cluster. (Aliases: av)")]
-internal class Version
+internal static class Version
 {
-    public async Task<int> OnExecuteAsync(CommandLineApplication app)
+    public static Command Command()
     {
-        var client = app.GetRequiredService<IKubernetes>();
+        var cmd = new Command("api-version", "Prints the actual server version of the connected kubernetes cluster.");
+        cmd.AddAlias("av");
+        cmd.SetHandler(() =>
+            Handler(AnsiConsole.Console, new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig())));
+
+        return cmd;
+    }
+
+    internal static async Task<int> Handler(IAnsiConsole console, IKubernetes client)
+    {
         var version = await client.Version.GetCodeAsync();
-        await app.Out.WriteLineAsync(
-            $"""
-             The Kubernetes API reported the following version:
-             Git-Version: {version.GitVersion}
-             Major:       {version.Major}
-             Minor:       {version.Minor}
-             Platform:    {version.Platform}
-             """);
+        console.Write(new Table()
+            .Title("Kubernetes API Version")
+            .HideHeaders()
+            .AddColumns("Info", "Value")
+            .AddRow("Git-Version", version.GitVersion)
+            .AddRow("Major", version.Major)
+            .AddRow("Minor", version.Minor)
+            .AddRow("Platform", version.Platform));
 
         return ExitCodes.Success;
     }
