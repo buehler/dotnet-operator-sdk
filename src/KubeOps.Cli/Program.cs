@@ -1,22 +1,25 @@
-﻿using k8s;
+﻿using System.CommandLine;
+using System.CommandLine.Builder;
+using System.CommandLine.Parsing;
 
-using KubeOps.Cli.Commands;
-using KubeOps.Cli.Output;
+using KubeOps.Cli;
+using KubeOps.Cli.Commands.Generator;
 
-using McMaster.Extensions.CommandLineUtils;
+using Spectre.Console;
 
-using Microsoft.Extensions.DependencyInjection;
+using Version = KubeOps.Cli.Commands.Utilities.Version;
 
-var services = new ServiceCollection()
-    .AddSingleton<IKubernetes>(new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig()))
-    .AddSingleton<ConsoleOutput>()
-    .AddSingleton<ResultOutput>()
-    .AddSingleton(PhysicalConsole.Singleton)
-    .BuildServiceProvider();
-
-var app = new CommandLineApplication<Entrypoint>();
-app.Conventions
-    .UseDefaultConventions()
-    .UseConstructorInjection(services);
-
-await app.ExecuteAsync(args);
+await new CommandLineBuilder(new RootCommand(
+        "CLI for KubeOps. Commandline tool to help with management tasks such as generating or installing CRDs.")
+    {
+        Generator.Command, Version.Command,
+    })
+    .UseDefaults()
+    .UseParseErrorReporting(ExitCodes.UsageError)
+    .UseExceptionHandler((ex, ctx) =>
+    {
+        AnsiConsole.MarkupLine($"[red]An error ocurred whiled executing {ctx.ParseResult.CommandResult.Command}[/]");
+        AnsiConsole.WriteException(ex);
+    })
+    .Build()
+    .InvokeAsync(args);

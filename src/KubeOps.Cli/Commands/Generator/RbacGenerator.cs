@@ -1,70 +1,65 @@
-﻿using KubeOps.Cli.Output;
-using KubeOps.Cli.SyntaxObjects;
+﻿using System.CommandLine;
+using System.CommandLine.Help;
+using System.CommandLine.Invocation;
 
-using McMaster.Extensions.CommandLineUtils;
+using KubeOps.Abstractions.Kustomize;
+using KubeOps.Cli.Output;
+using KubeOps.Cli.Roslyn;
+
+using Spectre.Console;
 
 namespace KubeOps.Cli.Commands.Generator;
 
-[Command("rbac", "r", Description = "Generates rbac roles for the operator. (Aliases: r)")]
-internal class RbacGenerator
+internal static class RbacGenerator
 {
-    private readonly ConsoleOutput _output;
-    private readonly ResultOutput _result;
-
-    public RbacGenerator(ConsoleOutput output, ResultOutput result)
+    public static Command Command
     {
-        _output = output;
-        _result = result;
+        get
+        {
+            var cmd = new Command("rbac", "Generates rbac roles for the operator project or solution.")
+            {
+                Options.OutputFormat,
+                Options.OutputPath,
+                Options.SolutionProjectRegex,
+                Options.TargetFramework,
+                Arguments.SolutionOrProjectFile,
+            };
+            cmd.AddAlias("r");
+            cmd.SetHandler(ctx => Handler(AnsiConsole.Console, ctx));
+
+            return cmd;
+        }
     }
 
-    [Option(
-        Description = "The path the command will write the files to. If empty, prints output to console.",
-        LongName = "out")]
-    public string? OutputPath { get; set; }
-
-    [Option(
-        CommandOptionType.SingleValue,
-        Description = "Sets the output format for the generator.")]
-    public OutputFormat Format { get; set; }
-
-    [Argument(
-        0,
-        Description =
-            "Path to a *.csproj file to generate the CRD from. " +
-            "If omitted, the current directory is searched for one and the command fails if none is found.")]
-    public string? ProjectFile { get; set; }
-
-    public async Task<int> OnExecuteAsync()
+    internal static async Task Handler(IAnsiConsole console, InvocationContext ctx)
     {
-        _result.Format = Format;
-        var projectFile = ProjectFile ??
-                          Directory.EnumerateFiles(
-                                  Directory.GetCurrentDirectory(),
-                                  "*.csproj")
-                              .FirstOrDefault();
-        if (projectFile == null)
+        var file = ctx.ParseResult.GetValueForArgument(Arguments.SolutionOrProjectFile);
+        var outPath = ctx.ParseResult.GetValueForOption(Options.OutputPath);
+        var format = ctx.ParseResult.GetValueForOption(Options.OutputFormat);
+
+        var parser = file.Extension switch
         {
-            _output.WriteLine(
-                "No *.csproj file found. Either specify one or run the command in a directory with one.",
-                ConsoleColor.Red);
-            return ExitCodes.Error;
-        }
+            ".csproj" => await AssemblyParser.ForProject(console, file),
+            ".sln" => await AssemblyParser.ForSolution(
+                console,
+                file,
+                ctx.ParseResult.GetValueForOption(Options.SolutionProjectRegex),
+                ctx.ParseResult.GetValueForOption(Options.TargetFramework)),
+            _ => throw new NotSupportedException("Only *.csproj and *.sln files are supported."),
+        };
+        var result = new ResultOutput(console, format);
+        console.WriteLine($"Generate RBAC roles for {file.Name}.");
+        result.Add("file.yaml", Transpiler.Rbac.Transpile(parser.RbacAttributes()));
 
-        _output.WriteLine($"Generate CRDs from project: {projectFile}.");
-
-        var parser = new ProjectParser(projectFile);
-        var attributes = await parser.RbacAttributes().ToListAsync();
-        _result.Add("file.yaml", Transpiler.Rbac.Transpile(attributes));
-
-        if (OutputPath is not null)
+        if (outPath is not null)
         {
-            await _result.Write(OutputPath);
+            await result.Write(outPath);
         }
         else
         {
-            _result.Write();
+            result.Write();
         }
 
-        return ExitCodes.Success;
+        ctx.ExitCode = ExitCodes.Success;
     }
 }

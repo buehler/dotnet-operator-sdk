@@ -2,16 +2,21 @@ using System.Text;
 
 using k8s;
 
+using Spectre.Console;
+
 namespace KubeOps.Cli.Output;
 
 internal class ResultOutput
 {
-    private readonly ConsoleOutput _console;
+    private readonly IAnsiConsole _console;
+    private readonly OutputFormat _format;
     private readonly IDictionary<string, object> _files = new Dictionary<string, object>();
 
-    public ResultOutput(ConsoleOutput console) => _console = console;
-
-    public OutputFormat Format { get; set; }
+    public ResultOutput(IAnsiConsole console, OutputFormat format)
+    {
+        _console = console;
+        _format = format;
+    }
 
     public void Add(string filename, object content) => _files.Add(filename, content);
 
@@ -31,15 +36,16 @@ internal class ResultOutput
 
     public void Write()
     {
+        _console.Write(new Rule());
         foreach (var (filename, content) in _files)
         {
-            _console.WriteLine(filename, ConsoleColor.Cyan);
+            _console.MarkupLine($"[bold]File:[/] [underline]{filename}[/]");
             _console.WriteLine(Serialize(content));
-            _console.WriteLine();
+            _console.Write(new Rule());
         }
     }
 
-    private string Serialize(object data) => Format switch
+    private string Serialize(object data) => _format switch
     {
         OutputFormat.Yaml => KubernetesYaml.Serialize(data),
         OutputFormat.Json => KubernetesJson.Serialize(data),
