@@ -30,4 +30,9 @@ internal static class Options
         },
         description: "Regex pattern to filter projects in the solution to search for entities. " +
                      "If omitted, all projects are searched.");
+
+    public static readonly Option<bool> Force = new(
+        new[] { "--force", "-f" },
+        () => false,
+        description: "Do not bother the user with questions and just do it.");
 }

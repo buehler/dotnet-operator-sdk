@@ -37,14 +37,15 @@ internal static class RbacGenerator
         var outPath = ctx.ParseResult.GetValueForOption(Options.OutputPath);
         var format = ctx.ParseResult.GetValueForOption(Options.OutputFormat);
 
-        var parser = file.Extension switch
+        var parser = file switch
         {
-            ".csproj" => await AssemblyParser.ForProject(console, file),
-            ".sln" => await AssemblyParser.ForSolution(
+            { Extension: ".csproj", Exists: true } => await AssemblyParser.ForProject(console, file),
+            { Extension: ".sln", Exists: true } => await AssemblyParser.ForSolution(
                 console,
                 file,
                 ctx.ParseResult.GetValueForOption(Options.SolutionProjectRegex),
                 ctx.ParseResult.GetValueForOption(Options.TargetFramework)),
+            { Exists: false } => throw new FileNotFoundException($"The file {file.Name} does not exist."),
             _ => throw new NotSupportedException("Only *.csproj and *.sln files are supported."),
         };
         var result = new ResultOutput(console, format);
@@ -59,7 +60,5 @@ internal static class RbacGenerator
         {
             result.Write();
         }
-
-        ctx.ExitCode = ExitCodes.Success;
     }
 }
