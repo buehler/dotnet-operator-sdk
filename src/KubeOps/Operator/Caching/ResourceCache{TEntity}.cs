@@ -74,6 +74,8 @@ internal class ResourceCache<TEntity> : IResourceCache<TEntity>
         _metrics.CachedItemsSummary.Observe(_cache.Count);
     }
 
+    public bool Exists(TEntity resource) => _cache.ContainsKey(resource.Metadata.Uid);
+
     private CacheComparisonResult CompareCache(TEntity resource)
     {
         if (!Exists(resource))
@@ -100,8 +102,6 @@ internal class ResourceCache<TEntity> : IResourceCache<TEntity>
 
         return CacheComparisonResult.Other;
     }
-
-    private bool Exists(TEntity resource) => _cache.ContainsKey(resource.Metadata.Uid);
 
     private void Remove(string resourceUid)
     {

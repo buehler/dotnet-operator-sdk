@@ -10,6 +10,8 @@ internal interface IResourceCache<TEntity>
 
     TEntity Upsert(TEntity resource, out CacheComparisonResult result);
 
+    bool Exists(TEntity resource);
+
     void Fill(IEnumerable<TEntity> resources);
 
     void Remove(TEntity resource);
