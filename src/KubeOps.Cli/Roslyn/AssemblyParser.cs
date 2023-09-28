@@ -73,7 +73,9 @@ internal sealed partial class AssemblyParser
             tfm ??= "latest";
 
             console.MarkupLineInterpolated($"Compile solution [aqua]{slnFile.FullName}[/].");
-            console.MarkupLineInterpolated($"[grey]With project filter:[/] {projectFilter?.ToString()}");
+#pragma warning disable RCS1097
+            console.MarkupLineInterpolated($"[grey]With project filter:[/] {projectFilter.ToString()}");
+#pragma warning restore RCS1097
             console.MarkupLineInterpolated($"[grey]With Target Platform:[/] {tfm}");
 
             using var workspace = MSBuildWorkspace.Create();
