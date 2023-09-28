@@ -11,6 +11,7 @@ internal static class Generator
         {
             var cmd = new Command("generator", "Generates elements related to an operator.")
             {
+                CertificateGenerator.Command,
                 CrdGenerator.Command,
                 RbacGenerator.Command,
             };
