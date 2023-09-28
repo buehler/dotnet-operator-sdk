@@ -49,6 +49,7 @@ internal class ResultOutput
     {
         OutputFormat.Yaml => KubernetesYaml.Serialize(data),
         OutputFormat.Json => KubernetesJson.Serialize(data),
+        OutputFormat.Plain => data.ToString() ?? string.Empty,
         _ => throw new ArgumentException("Unknown output format."),
     };
 }
