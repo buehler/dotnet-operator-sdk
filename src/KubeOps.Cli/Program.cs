@@ -4,22 +4,24 @@ using System.CommandLine.Parsing;
 
 using KubeOps.Cli;
 using KubeOps.Cli.Commands.Generator;
+using KubeOps.Cli.Commands.Management;
 
 using Spectre.Console;
 
 using Version = KubeOps.Cli.Commands.Utilities.Version;
 
-await new CommandLineBuilder(new RootCommand(
+return await new CommandLineBuilder(new RootCommand(
         "CLI for KubeOps. Commandline tool to help with management tasks such as generating or installing CRDs.")
     {
-        Generator.Command, Version.Command,
+        Generator.Command, Version.Command, Install.Command, Uninstall.Command,
     })
     .UseDefaults()
     .UseParseErrorReporting(ExitCodes.UsageError)
     .UseExceptionHandler((ex, ctx) =>
     {
-        AnsiConsole.MarkupLine($"[red]An error ocurred whiled executing {ctx.ParseResult.CommandResult.Command}[/]");
-        AnsiConsole.WriteException(ex);
+        AnsiConsole.MarkupLineInterpolated($"[red]An error occurred whiled executing {ctx.ParseResult.CommandResult.Command}[/]");
+        AnsiConsole.MarkupLineInterpolated($"[red]{ex.Message}[/]");
+        ctx.ExitCode = ExitCodes.Error;
     })
     .Build()
     .InvokeAsync(args);
