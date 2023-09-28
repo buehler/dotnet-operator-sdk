@@ -4,7 +4,7 @@ namespace KubeOps.Cli;
 
 internal static class Arguments
 {
-    public static readonly Argument<FileInfo> SolutionOrProjectFile = new(
+    public static readonly Argument<FileInfo?> SolutionOrProjectFile = new(
         "sln/csproj file",
         () =>
         {
@@ -25,9 +25,7 @@ internal static class Arguments
             {
                 ({ } prj, _) => prj,
                 (_, { } sln) => sln,
-                _ => throw new FileNotFoundException(
-                    "No *.csproj or *.sln file found in current directory.",
-                    Directory.GetCurrentDirectory()),
+                _ => null,
             };
         },
         "A solution or project file where entities are located. " +
