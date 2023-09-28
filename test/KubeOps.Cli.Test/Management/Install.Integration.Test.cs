@@ -1,22 +1,10 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.CommandLine.Parsing;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 
 using k8s;
-using k8s.Models;
 
-using KubeOps.Abstractions.Entities.Attributes;
-using KubeOps.Abstractions.Rbac;
 using KubeOps.Cli.Commands.Management;
-using KubeOps.Cli.Roslyn;
 
-using Microsoft.Build.Locator;
-using Microsoft.CodeAnalysis.MSBuild;
-
-using Spectre.Console;
 using Spectre.Console.Testing;
 
 namespace KubeOps.Cli.Test.Management;
