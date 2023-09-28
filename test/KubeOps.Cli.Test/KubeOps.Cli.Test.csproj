@@ -1,3 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\KubeOps.Cli\KubeOps.Cli.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Spectre.Console.Testing" Version="0.47.0" />
+    </ItemGroup>
 </Project>
