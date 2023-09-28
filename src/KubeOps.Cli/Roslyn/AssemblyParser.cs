@@ -33,8 +33,10 @@ internal sealed partial class AssemblyParser
         FileInfo projectFile)
         => console.Status().StartAsync($"Compiling {projectFile.Name}...", async _ =>
         {
-            console.MarkupLine($"Compile project [aqua]{projectFile.FullName}[/].");
+            console.MarkupLineInterpolated($"Compile project [aqua]{projectFile.FullName}[/].");
             using var workspace = MSBuildWorkspace.Create();
+            workspace.SkipUnrecognizedProjects = true;
+            workspace.LoadMetadataForReferencedProjects = true;
             console.WriteLine("Load project.");
             var project = await workspace.OpenProjectAsync(projectFile.FullName);
             console.MarkupLine("[green]Project loaded.[/]");
@@ -70,11 +72,13 @@ internal sealed partial class AssemblyParser
             projectFilter ??= DefaultRegex();
             tfm ??= "latest";
 
-            console.MarkupLine($"Compile solution [aqua]{slnFile.FullName}[/].");
-            console.MarkupLine($"[grey]With project filter:[/] {projectFilter}");
-            console.MarkupLine($"[grey]With Target Platform:[/] {tfm}");
+            console.MarkupLineInterpolated($"Compile solution [aqua]{slnFile.FullName}[/].");
+            console.MarkupLineInterpolated($"[grey]With project filter:[/] {projectFilter?.ToString()}");
+            console.MarkupLineInterpolated($"[grey]With Target Platform:[/] {tfm}");
 
             using var workspace = MSBuildWorkspace.Create();
+            workspace.SkipUnrecognizedProjects = true;
+            workspace.LoadMetadataForReferencedProjects = true;
             console.WriteLine("Load solution.");
             var solution = await workspace.OpenSolutionAsync(slnFile.FullName);
             console.MarkupLine("[green]Solution loaded.[/]");
@@ -94,17 +98,17 @@ internal sealed partial class AssemblyParser
                 .Where(p => p != default)
                 .Select(async p =>
                 {
-                    console.MarkupLine(
+                    console.MarkupLineInterpolated(
                         $"Load compilation context for [aqua]{p.name}[/]{(p.tfm.Length > 0 ? $" [grey]{p.tfm}[/]" : string.Empty)}.");
                     var compilation = await p.project.GetCompilationAsync();
-                    console.MarkupLine($"[green]Compilation context loaded for {p.name}.[/]");
+                    console.MarkupLineInterpolated($"[green]Compilation context loaded for {p.name}.[/]");
                     if (compilation is null)
                     {
                         throw new AggregateException("Compilation could not be found.");
                     }
 
                     using var assemblyStream = new MemoryStream();
-                    console.MarkupLine(
+                    console.MarkupLineInterpolated(
                         $"Start compilation for [aqua]{p.name}[/]{(p.tfm.Length > 0 ? $" [grey]{p.tfm}[/]" : string.Empty)}.");
                     switch (compilation.Emit(assemblyStream))
                     {
@@ -113,7 +117,7 @@ internal sealed partial class AssemblyParser
                                 $"Compilation failed: {diag.Aggregate(new StringBuilder(), (sb, d) => sb.AppendLine(d.ToString()))}");
                     }
 
-                    console.MarkupLine($"[green]Compilation successful for {p.name}.[/]");
+                    console.MarkupLineInterpolated($"[green]Compilation successful for {p.name}.[/]");
                     return Assembly.Load(assemblyStream.ToArray());
                 }));
 

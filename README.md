@@ -1,8 +1,8 @@
 ﻿# KubeOps
 
-![Code Security Testing](https://github.com/buehler/dotnet-operator-sdk/workflows/Code%20Security%20Testing/badge.svg)
-![.NET Release](https://github.com/buehler/dotnet-operator-sdk/workflows/.NET%20Release/badge.svg)
-![.NET Testing](https://github.com/buehler/dotnet-operator-sdk/workflows/.NET%20Testing/badge.svg)
+[![.NET Pre-Release](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/dotnet-release.yml/badge.svg?branch=main)](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/dotnet-release.yml)
+[![.NET Release](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/dotnet-release.yml/badge.svg?branch=release)](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/dotnet-release.yml)
+[![Scheduled Code Security Testing](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/security-analysis.yml/badge.svg?event=schedule)](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/security-analysis.yml)
 
 This is the repository of "KubeOps" - The dotnet Kubernetes Operator SDK.
 

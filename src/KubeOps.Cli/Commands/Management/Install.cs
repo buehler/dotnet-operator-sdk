@@ -67,7 +67,7 @@ internal static class Install
 
         foreach (var crd in crds)
         {
-            console.MarkupLine(
+            console.MarkupLineInterpolated(
                 $"""Install [cyan]"{crd.Spec.Group}/{crd.Spec.Names.Kind}"[/] into the cluster.""");
 
             try
@@ -76,7 +76,7 @@ internal static class Install
                             fieldSelector: $"metadata.name={crd.Name()}"))
                 {
                     case { Items: [var existing] }:
-                        console.MarkupLine(
+                        console.MarkupLineInterpolated(
                             $"""[yellow]CRD "{crd.Spec.Group}/{crd.Spec.Names.Kind}" already exists.[/]""");
                         if (!force && console.Confirm("[yellow]Should the CRD be overwritten?[/]"))
                         {
@@ -92,7 +92,7 @@ internal static class Install
                         break;
                 }
 
-                console.MarkupLine(
+                console.MarkupLineInterpolated(
                     $"""[green]Installed / Updated CRD "{crd.Spec.Group}/{crd.Spec.Names.Kind}".[/]""");
             }
             catch (HttpOperationException)

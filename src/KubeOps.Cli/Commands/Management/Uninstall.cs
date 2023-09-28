@@ -73,7 +73,7 @@ internal static class Uninstall
 
         foreach (var crd in crds)
         {
-            console.MarkupLine(
+            console.MarkupLineInterpolated(
                 $"""Uninstall [cyan]"{crd.Spec.Group}/{crd.Spec.Names.Kind}"[/] from the cluster.""");
 
             try
@@ -83,11 +83,11 @@ internal static class Uninstall
                 {
                     case { Items: [var existing] }:
                         await client.ApiextensionsV1.DeleteCustomResourceDefinitionAsync(existing.Name());
-                        console.MarkupLine(
+                        console.MarkupLineInterpolated(
                             $"""[green]CRD "{crd.Spec.Group}/{crd.Spec.Names.Kind}" deleted.[/]""");
                         break;
                     default:
-                        console.MarkupLine(
+                        console.MarkupLineInterpolated(
                             $"""[green]CRD "{crd.Spec.Group}/{crd.Spec.Names.Kind}" did not exist.[/]""");
                         break;
                 }

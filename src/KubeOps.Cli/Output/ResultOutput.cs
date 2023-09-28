@@ -39,7 +39,7 @@ internal class ResultOutput
         _console.Write(new Rule());
         foreach (var (filename, content) in _files)
         {
-            _console.MarkupLine($"[bold]File:[/] [underline]{filename}[/]");
+            _console.MarkupLineInterpolated($"[bold]File:[/] [underline]{filename}[/]");
             _console.WriteLine(Serialize(content));
             _console.Write(new Rule());
         }
