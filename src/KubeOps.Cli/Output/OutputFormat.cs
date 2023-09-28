@@ -11,4 +11,9 @@ internal enum OutputFormat
     /// Format the output in Kubernetes JSON style.
     /// </summary>
     Json,
+
+    /// <summary>
+    /// Format the output in plain text style.
+    /// </summary>
+    Plain,
 }
