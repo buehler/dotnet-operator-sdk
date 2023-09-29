@@ -1,3 +1,5 @@
+using KubeOps.Generator.SyntaxReceiver;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -93,7 +95,7 @@ public class EntityDefinitionGenerator : ISourceGenerator
                                         MemberAccessExpression(
                                             SyntaxKind.SimpleMemberAccessExpression,
                                             IdentifierName("builder"),
-                                            GenericName(Identifier("AddEntityMetadata"))
+                                            GenericName(Identifier("AddEntity"))
                                                 .WithTypeArgumentList(
                                                     TypeArgumentList(
                                                         SingletonSeparatedList<TypeSyntax>(

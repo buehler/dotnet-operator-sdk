@@ -5,7 +5,7 @@ using k8s;
 using k8s.Models;
 
 using KubeOps.Abstractions.Controller;
-using KubeOps.Operator.Client;
+using KubeOps.KubernetesClient;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,18 +18,18 @@ internal class ResourceWatcher<TEntity> : IHostedService
 {
     private readonly ILogger<ResourceWatcher<TEntity>> _logger;
     private readonly IServiceProvider _provider;
-    private readonly GenericClient _client;
+    private readonly IKubernetesClient<TEntity> _client;
 
     private Watcher<TEntity>? _watcher;
 
     public ResourceWatcher(
         ILogger<ResourceWatcher<TEntity>> logger,
         IServiceProvider provider,
-        IKubernetesClientFactory factory)
+        IKubernetesClient<TEntity> client)
     {
         _logger = logger;
         _provider = provider;
-        _client = factory.GetClient<TEntity>();
+        _client = client;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -61,7 +61,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
             }
         }
 
-        _watcher = _client.Watch<TEntity>(OnEvent, OnError, OnClosed);
+        _watcher = _client.Watch(OnEvent, OnError, OnClosed);
     }
 
     private void StopWatching()

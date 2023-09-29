@@ -19,14 +19,14 @@ public interface IOperatorBuilder
     IServiceCollection Services { get; }
 
     /// <summary>
-    /// Add metadata for an entity to the operator.
+    /// Add an entity with its metadata to the operator.
     /// Metadata must be added for each entity to be used in
     /// controllers and other elements.
     /// </summary>
     /// <param name="metadata">The metadata of the entity.</param>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
     /// <returns>The builder for chaining.</returns>
-    IOperatorBuilder AddEntityMetadata<TEntity>(EntityMetadata metadata)
+    IOperatorBuilder AddEntity<TEntity>(EntityMetadata metadata)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <summary>
@@ -48,7 +48,7 @@ public interface IOperatorBuilder
     /// <typeparam name="TImplementation">Implementation type of the controller.</typeparam>
     /// <typeparam name="TEntity">Entity type.</typeparam>
     /// <returns>The builder for chaining.</returns>
-    IOperatorBuilder AddController<TImplementation, TEntity>(EntityMetadata metadata)
+    IOperatorBuilder AddControllerWithEntity<TImplementation, TEntity>(EntityMetadata metadata)
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 }
