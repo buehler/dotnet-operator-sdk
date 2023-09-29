@@ -8,6 +8,7 @@ using k8s;
 using k8s.Models;
 
 using KubeOps.KubernetesClient;
+using KubeOps.Operator.Caching;
 using KubeOps.Operator.DevOps;
 
 namespace KubeOps.Operator.Kubernetes;
@@ -21,6 +22,7 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
     private readonly IKubernetesClient _client;
     private readonly ILogger<ResourceWatcher<TEntity>> _logger;
     private readonly IResourceWatcherMetrics<TEntity> _metrics;
+    private readonly IResourceCache<TEntity> _resourceCache;
     private readonly OperatorSettings _settings;
     private readonly Subject<TimeSpan> _reconnectHandler = new();
     private readonly IDisposable _reconnectSubscription;
@@ -34,11 +36,13 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
         IKubernetesClient client,
         ILogger<ResourceWatcher<TEntity>> logger,
         IResourceWatcherMetrics<TEntity> metrics,
+        IResourceCache<TEntity> resourceCache,
         OperatorSettings settings)
     {
         _client = client;
         _logger = logger;
         _metrics = metrics;
+        _resourceCache = resourceCache;
         _settings = settings;
         _reconnectSubscription =
             _reconnectHandler
@@ -130,6 +134,16 @@ internal class ResourceWatcher<TEntity> : IDisposable, IResourceWatcher<TEntity>
             resource.Metadata.Name);
 
         _metrics.WatchedEvents.Inc();
+
+        if (_resourceCache.Exists(resource) && type == WatchEventType.Added)
+        {
+            _logger.LogTrace(
+                @"The resource ""{kind}/{name}"" binded to the watcher event already exist in cache. Skipping ""{watchEvent}"" event",
+                resource.Kind,
+                resource.Name(),
+                type);
+            return;
+        }
 
         switch (type)
         {

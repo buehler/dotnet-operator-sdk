@@ -49,8 +49,10 @@ internal class EventQueue<TEntity> : IEventQueue<TEntity>
             .GroupBy(e => e.Resource.Uid())
             .Select(
                 group => group
-                    .Select(ProcessDelay)
-                    .Switch())
+                    .GroupBy(e => e.Type)
+                    .Select(typedGroup => typedGroup
+                        .Select(ProcessDelay).Switch())
+                    .Merge())
             .Merge()
             .Select(UpdateResourceData)
             .Merge()

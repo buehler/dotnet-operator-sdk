@@ -9,8 +9,11 @@ using k8s.Models;
 
 using KubeOps.KubernetesClient;
 using KubeOps.Operator;
+using KubeOps.Operator.Caching;
 using KubeOps.Operator.DevOps;
 using KubeOps.Operator.Kubernetes;
+using KubeOps.Test.TestEntities;
+using KubeOps.TestOperator.Entities;
 
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Reactive.Testing;
@@ -35,6 +38,10 @@ public class ResourceWatcherTest
 
     private readonly Mock<IKubernetesClient> _client = new();
     private readonly Mock<IResourceWatcherMetrics<TestResource>> _metrics = new();
+    private readonly Mock<IResourceCache<TestResource>> _resourceCacheMock;
+
+    public ResourceWatcherTest() =>
+        _resourceCacheMock = new Mock<IResourceCache<TestResource>>(MockBehavior.Strict);
 
     [Fact]
     public async Task Should_Restart_Watcher_On_Exception()
@@ -50,6 +57,7 @@ public class ResourceWatcherTest
             _client.Object,
             new NullLogger<ResourceWatcher<TestResource>>(),
             _metrics.Object,
+            _resourceCacheMock.Object,
             settings);
 
         var testScheduler = new TestScheduler();
@@ -105,6 +113,7 @@ public class ResourceWatcherTest
             _client.Object,
             new NullLogger<ResourceWatcher<TestResource>>(),
             _metrics.Object,
+            _resourceCacheMock.Object,
             settings);
 
         var testScheduler = new TestScheduler();
@@ -139,7 +148,12 @@ public class ResourceWatcherTest
         _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
         _metrics.Setup(c => c.WatcherExceptions).Returns(Mock.Of<ICounter>());
 
-        using var resourceWatcher = new ResourceWatcher<TestResource>(_client.Object, new NullLogger<ResourceWatcher<TestResource>>(), _metrics.Object, settings);
+        using var resourceWatcher = new ResourceWatcher<TestResource>(
+            _client.Object, 
+            new NullLogger<ResourceWatcher<TestResource>>(), 
+            _metrics.Object, 
+            _resourceCacheMock.Object, 
+            settings);
 
         await resourceWatcher.StartAsync();
 
@@ -166,7 +180,12 @@ public class ResourceWatcherTest
         _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
         _metrics.Setup(c => c.WatcherExceptions).Returns(Mock.Of<ICounter>());
 
-        using var resourceWatcher = new ResourceWatcher<TestResource>(_client.Object, new NullLogger<ResourceWatcher<TestResource>>(), _metrics.Object, settings);
+        using var resourceWatcher = new ResourceWatcher<TestResource>(
+            _client.Object, 
+            new NullLogger<ResourceWatcher<TestResource>>(), 
+            _metrics.Object, 
+            _resourceCacheMock.Object, 
+            settings);
 
         await resourceWatcher.StartAsync();
 
@@ -188,7 +207,12 @@ public class ResourceWatcherTest
 
         SetupResourceWatcherMetrics();
 
-        using var resourceWatcher = new ResourceWatcher<TestResource>(_client.Object, new NullLogger<ResourceWatcher<TestResource>>(), _metrics.Object, settings);
+        using var resourceWatcher = new ResourceWatcher<TestResource>(
+            _client.Object, 
+            new NullLogger<ResourceWatcher<TestResource>>(), 
+            _metrics.Object, 
+            _resourceCacheMock.Object, 
+            settings);
 
         await resourceWatcher.StartAsync();
 
@@ -212,6 +236,9 @@ public class ResourceWatcherTest
 
         Action<WatchEventType, TestResource> onWatcherEvent = null!;
 
+        _resourceCacheMock.Setup(c => c.Exists(It.IsAny<TestResource>()))
+            .Returns(false);
+
         _client.Setup(
                 c => c.Watch(
                     It.IsAny<TimeSpan>(),
@@ -234,6 +261,7 @@ public class ResourceWatcherTest
             _client.Object,
             new NullLogger<ResourceWatcher<TestResource>>(),
             _metrics.Object,
+            _resourceCacheMock.Object,
             settings);
 
         var watchEvents = resourceWatcher.WatchEvents.Replay(1);
@@ -273,7 +301,12 @@ public class ResourceWatcherTest
         _metrics.Setup(c => c.Running).Returns(Mock.Of<IGauge>());
         _metrics.Setup(c => c.WatcherClosed).Returns(Mock.Of<ICounter>());
 
-        using var resourceWatcher = new ResourceWatcher<TestResource>(_client.Object, new NullLogger<ResourceWatcher<TestResource>>(), _metrics.Object, settings);
+        using var resourceWatcher = new ResourceWatcher<TestResource>(
+            _client.Object, 
+            new NullLogger<ResourceWatcher<TestResource>>(), 
+            _metrics.Object, 
+            _resourceCacheMock.Object, 
+            settings);
 
         await resourceWatcher.StartAsync();
 
