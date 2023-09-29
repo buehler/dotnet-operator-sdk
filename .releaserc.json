@@ -1,11 +1,15 @@
 {
   "debug": true,
   "branches": [
-    "master",
     {
-      "name": "next",
-      "prerelease": "prerelease"
-    }
+      "name": "maintenance/7.x",
+      "range": "7.x"
+    },
+    {
+      "name": "main",
+      "prerelease": "pre"
+    },
+    "release"
   ],
   "plugins": [
     "@semantic-release/commit-analyzer",
@@ -29,10 +33,10 @@
       "@semantic-release/github",
       {
         "successComment": false,
-        "failComment": false,
+        "failComment": true,
         "assets": [
           {
-            "path": "artifacts/*.nupkg"
+            "path": "src/**/bin/Release/**/*.nupkg"
           }
         ]
       }

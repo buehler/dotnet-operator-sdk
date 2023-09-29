@@ -3,9 +3,14 @@ name: Code Security Testing
 on:
   pull_request:
     branches:
-      - master
+      - main
+      - release
   schedule:
-    - cron: "0 20 * * 5"
+    - cron: '0 20 * * 5'
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   codeQL:
@@ -15,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["csharp"]
+        language: ['csharp']
 
     steps:
       - uses: actions/checkout@v3
