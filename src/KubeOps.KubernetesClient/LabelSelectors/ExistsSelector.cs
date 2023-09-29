@@ -3,7 +3,8 @@
 /// <summary>
 /// Selector that checks if a certain label exists.
 /// </summary>
-public record ExistsSelector(string Label) : ILabelSelector
+/// <param name="Label">The label that needs to exist on the entity/resource.</param>
+public record ExistsSelector(string Label) : LabelSelector
 {
-    public string ToExpression() => $"{Label}";
+    protected override string ToExpression() => $"{Label}";
 }
