@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageId>KubeOps.KubernetesClient</PackageId>
+        <PackageTags>Kubernetes Dotnet Client API</PackageTags>
+        <PackageDescription>
+            Kubernetes Client written in DotNet. Based on the implementation of
+            Google (https://github.com/kubernetes-client/csharp) but with dotnet native language
+            features like generics. Internally uses the "GenericClient" of the Google KubernetesClient.
+            However, wraps the methods around with true generics.
+        </PackageDescription>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="KubernetesClient" Version="12.0.16"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
+    </ItemGroup>
+
+</Project>
