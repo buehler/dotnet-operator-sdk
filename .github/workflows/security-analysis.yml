@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - release
   schedule:
     - cron: "0 20 * * 5"
 
