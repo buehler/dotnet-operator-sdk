@@ -23,7 +23,7 @@ internal class OperatorBuilder : IOperatorBuilder
     public IOperatorBuilder AddEntity<TEntity>(EntityMetadata metadata)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        Services.AddSingleton<IKubernetesClient<TEntity>>(new KubernetesClient<TEntity>(metadata));
+        Services.AddTransient<IKubernetesClient<TEntity>>(_ => new KubernetesClient<TEntity>(metadata));
         return this;
     }
 

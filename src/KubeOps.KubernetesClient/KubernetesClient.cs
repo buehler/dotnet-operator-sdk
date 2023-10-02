@@ -10,7 +10,7 @@ using KubeOps.KubernetesClient.LabelSelectors;
 namespace KubeOps.KubernetesClient;
 
 /// <inheritdoc cref="IKubernetesClient{TEntity}"/>
-public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
+public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>, IDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private const string DownwardApiNamespaceFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
@@ -57,12 +57,14 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
             null => new GenericClient(
                 client,
                 metadata.Version,
-                metadata.PluralName),
+                metadata.PluralName,
+                false),
             _ => new GenericClient(
                 client,
                 metadata.Group,
                 metadata.Version,
-                metadata.PluralName),
+                metadata.PluralName,
+                false),
         };
     }
 
@@ -259,4 +261,21 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
                 watch: true,
                 cancellationToken: cancellationToken),
         }).Watch(onEvent, onError, onClose);
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposing)
+        {
+            return;
+        }
+
+        _client.Dispose();
+        _genericClient.Dispose();
+    }
 }
