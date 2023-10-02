@@ -19,9 +19,15 @@ public interface IOperatorBuilder
     IServiceCollection Services { get; }
 
     /// <summary>
-    /// Add an entity with its metadata to the operator.
-    /// Metadata must be added for each entity to be used in
-    /// controllers and other elements.
+    /// <para>
+    /// Register an entity within the operator.
+    /// Entities must be registered to be used in controllers and other
+    /// elements like Kubernetes clients.
+    /// </para>
+    /// <para>
+    /// This method will also register a transient IKubernetesClient{TEntity} for
+    /// the entity.
+    /// </para>
     /// </summary>
     /// <param name="metadata">The metadata of the entity.</param>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
