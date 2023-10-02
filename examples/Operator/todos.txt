@@ -1,0 +1,10 @@
+﻿todo:
+- finalizer
+- events
+- leadership election
+- requeue
+- build targets
+- other CLI commands
+- web: webhooks
+- cache?
+- try .net 8 AOT?
