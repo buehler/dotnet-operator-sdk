@@ -18,10 +18,11 @@ public class OperatorBuilderGeneratorTest
 
                 public static class OperatorBuilderExtensions
                 {
-                    public static IOperatorBuilder RegisterResources(this IOperatorBuilder builder)
+                    public static IOperatorBuilder RegisterComponents(this IOperatorBuilder builder)
                     {
                         builder.RegisterEntities();
                         builder.RegisterControllers();
+                        builder.RegisterFinalizers();
                         return builder;
                     }
                 }

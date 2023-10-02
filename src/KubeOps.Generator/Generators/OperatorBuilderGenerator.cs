@@ -12,7 +12,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 namespace KubeOps.Generator.Generators;
 
 [Generator]
-public class OperatorBuilderGenerator : ISourceGenerator
+internal class OperatorBuilderGenerator : ISourceGenerator
 {
     public void Initialize(GeneratorInitializationContext context)
     {
@@ -27,7 +27,7 @@ public class OperatorBuilderGenerator : ISourceGenerator
             .WithMembers(SingletonList<MemberDeclarationSyntax>(ClassDeclaration("OperatorBuilderExtensions")
                 .WithModifiers(TokenList(
                     Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword)))
-                .AddMembers(MethodDeclaration(IdentifierName("IOperatorBuilder"), "RegisterResources")
+                .AddMembers(MethodDeclaration(IdentifierName("IOperatorBuilder"), "RegisterComponents")
                     .WithModifiers(
                         TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword)))
                     .WithParameterList(ParameterList(
@@ -52,6 +52,12 @@ public class OperatorBuilderGenerator : ISourceGenerator
                                         SyntaxKind.SimpleMemberAccessExpression,
                                         IdentifierName("builder"),
                                         IdentifierName("RegisterControllers")))),
+                        ExpressionStatement(
+                            InvocationExpression(
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        IdentifierName("builder"),
+                                        IdentifierName("RegisterFinalizers")))),
                         ReturnStatement(IdentifierName("builder")))))))
             .NormalizeWhitespace();
 
