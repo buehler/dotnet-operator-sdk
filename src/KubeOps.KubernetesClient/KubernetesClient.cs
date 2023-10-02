@@ -154,7 +154,7 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>, IDisposable
         };
 
     /// <inheritdoc />
-    public Task UpdateStatus(TEntity entity)
+    public Task<TEntity> UpdateStatus(TEntity entity)
         => entity.Namespace() switch
         {
             { } ns => _client.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync<TEntity>(

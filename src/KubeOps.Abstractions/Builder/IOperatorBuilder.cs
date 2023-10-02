@@ -3,6 +3,7 @@ using k8s.Models;
 
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Entities;
+using KubeOps.Abstractions.Finalizer;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -56,5 +57,9 @@ public interface IOperatorBuilder
     /// <returns>The builder for chaining.</returns>
     IOperatorBuilder AddControllerWithEntity<TImplementation, TEntity>(EntityMetadata metadata)
         where TImplementation : class, IEntityController<TEntity>
+        where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+    IOperatorBuilder AddFinalizer<TImplementation, TEntity>(string identifier)
+        where TImplementation : class, IEntityFinalizer<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 }

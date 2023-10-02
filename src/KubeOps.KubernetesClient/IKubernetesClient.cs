@@ -111,7 +111,7 @@ public interface IKubernetesClient<TEntity>
     /// </summary>
     /// <param name="entity">The entity that contains a status object.</param>
     /// <returns>A task that completes when the call was made.</returns>
-    public Task UpdateStatus(TEntity entity);
+    public Task<TEntity> UpdateStatus(TEntity entity);
 
     /// <summary>
     /// Delete a given entity from the Kubernetes API.
