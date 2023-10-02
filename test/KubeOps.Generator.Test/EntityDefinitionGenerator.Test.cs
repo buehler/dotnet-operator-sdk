@@ -66,7 +66,7 @@ public class EntityDefinitionGeneratorTest
                          }
                      }
                      """)]
-    public void Should_Generate_Correct_Definitions(string input, string expectedResult)
+    public void Should_Generate_Correct_Code(string input, string expectedResult)
     {
         var inputCompilation = input.CreateCompilation();
         expectedResult = expectedResult.ReplaceLineEndings();

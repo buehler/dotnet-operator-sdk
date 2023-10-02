@@ -46,6 +46,12 @@ public class OperatorBuilderGenerator : ISourceGenerator
                                         SyntaxKind.SimpleMemberAccessExpression,
                                         IdentifierName("builder"),
                                         IdentifierName("RegisterEntities")))),
+                        ExpressionStatement(
+                            InvocationExpression(
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        IdentifierName("builder"),
+                                        IdentifierName("RegisterControllers")))),
                         ReturnStatement(IdentifierName("builder")))))))
             .NormalizeWhitespace();
 
