@@ -1,5 +1,4 @@
 ﻿todo:
-- finalizer
 - events
 - leadership election
 - requeue
