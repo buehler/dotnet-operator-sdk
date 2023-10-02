@@ -12,7 +12,7 @@ builder.Logging.SetMinimumLevel(LogLevel.Trace);
 
 builder.Services
     .AddKubernetesOperator()
-    .RegisterEntitiyMetadata()
+    .RegisterEntityMetadata()
     .AddController<V1TestEntityController, V1TestEntity>();
 
 using var host = builder.Build();
