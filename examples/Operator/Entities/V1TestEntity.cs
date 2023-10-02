@@ -15,4 +15,6 @@ public class V1TestEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1TestEntityS
     public V1TestEntitySpec Spec { get; set; } = new();
 
     public V1TestEntityStatus Status { get; set; } = new();
+
+    public override string ToString() => $"Test Entity ({Metadata.Name}): {Spec.Username} ({Spec.Email})";
 }

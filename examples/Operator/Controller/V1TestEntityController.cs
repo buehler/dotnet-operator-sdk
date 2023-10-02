@@ -19,13 +19,13 @@ public class V1TestEntityController : IEntityController<V1TestEntity>
 
     public Task ReconcileAsync(V1TestEntity entity)
     {
-        _logger.LogInformation("Reconciling entity {EntityName}.", entity.Metadata.Name);
+        _logger.LogInformation("Reconciling entity {Entity}.", entity);
         return Task.CompletedTask;
     }
 
     public Task DeletedAsync(V1TestEntity entity)
     {
-        _logger.LogInformation("Deleting entity {EntityName}.", entity.Metadata.Name);
+        _logger.LogInformation("Deleting entity {Entity}.", entity);
         return Task.CompletedTask;
     }
 }
