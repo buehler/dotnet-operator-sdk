@@ -17,12 +17,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{DC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Operator", "examples\Operator\Operator.csproj", "{E9A0B04E-D90E-4B94-90E0-DD3666B098FF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{DCC36310-C31F-4BCE-B252-2827A060ED7B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution", "solution", "{DCC36310-C31F-4BCE-B252-2827A060ED7B}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		.releaserc.json = .releaserc.json
 		renovate.json = renovate.json
+		README.md = README.md
+		CONTRIBUTING.md = CONTRIBUTING.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.Cli", "src\KubeOps.Cli\KubeOps.Cli.csproj", "{E1521548-7CAD-464D-BFD2-ECFBA3FFC7EF}"
