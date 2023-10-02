@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
 
-using KubeOps.Generator.EntityDefinitions;
+using KubeOps.Generator.Generators;
 
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -15,7 +15,7 @@ public class EntityDefinitionGeneratorTest
 
                     public static class EntityDefinitions
                     {
-                        public static IOperatorBuilder RegisterEntityMetadata(this IOperatorBuilder builder)
+                        public static IOperatorBuilder RegisterEntities(this IOperatorBuilder builder)
                         {
                             return builder;
                         }
@@ -33,7 +33,7 @@ public class EntityDefinitionGeneratorTest
                      public static class EntityDefinitions
                      {
                          public static readonly EntityMetadata V1TestEntity = new("TestEntity", "v1", "testing.dev", null);
-                         public static IOperatorBuilder RegisterEntityMetadata(this IOperatorBuilder builder)
+                         public static IOperatorBuilder RegisterEntities(this IOperatorBuilder builder)
                          {
                              builder.AddEntity<global::V1TestEntity>(V1TestEntity);
                              return builder;
@@ -58,7 +58,7 @@ public class EntityDefinitionGeneratorTest
                      {
                          public static readonly EntityMetadata V1TestEntity = new("TestEntity", "v1", "testing.dev", null);
                          public static readonly EntityMetadata V1AnotherEntity = new("AnotherEntity", "v1", "testing.dev", null);
-                         public static IOperatorBuilder RegisterEntityMetadata(this IOperatorBuilder builder)
+                         public static IOperatorBuilder RegisterEntities(this IOperatorBuilder builder)
                          {
                              builder.AddEntity<global::V1TestEntity>(V1TestEntity);
                              builder.AddEntity<global::V1AnotherEntity>(V1AnotherEntity);

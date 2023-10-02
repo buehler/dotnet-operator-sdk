@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace KubeOps.Generator.EntityDefinitions;
+namespace KubeOps.Generator.Generators;
 
 [Generator]
 public class EntityDefinitionGenerator : ISourceGenerator
@@ -79,7 +79,7 @@ public class EntityDefinitionGenerator : ISourceGenerator
                                 Token(SyntaxKind.PublicKeyword),
                                 Token(SyntaxKind.StaticKeyword),
                                 Token(SyntaxKind.ReadOnlyKeyword))))))
-                .AddMembers(MethodDeclaration(IdentifierName("IOperatorBuilder"), "RegisterEntityMetadata")
+                .AddMembers(MethodDeclaration(IdentifierName("IOperatorBuilder"), "RegisterEntities")
                     .WithModifiers(
                         TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword)))
                     .WithParameterList(ParameterList(

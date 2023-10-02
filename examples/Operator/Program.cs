@@ -3,17 +3,13 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-using Operator.Controller;
-using Operator.Entities;
-
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Logging.SetMinimumLevel(LogLevel.Trace);
 
 builder.Services
     .AddKubernetesOperator()
-    .RegisterEntityMetadata()
-    .AddController<V1TestEntityController, V1TestEntity>();
+    .RegisterResources();
 
 using var host = builder.Build();
 await host.RunAsync();
