@@ -55,7 +55,7 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
         Check(1, "changed");
         return;
 
-        void Check(int idx, string username)
+        static void Check(int idx, string username)
         {
             var (method, entity) = _mock.Invocations[idx];
             method.Should().Be("ReconcileAsync");
