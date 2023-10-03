@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace KubeOps.Generator.SyntaxReceiver;
 
-public class EntityControllerSyntaxReceiver : ISyntaxContextReceiver
+internal class EntityControllerSyntaxReceiver : ISyntaxContextReceiver
 {
     public List<(ClassDeclarationSyntax Controller, string EntityName)> Controllers { get; } = new();
 

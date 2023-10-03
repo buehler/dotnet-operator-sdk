@@ -9,7 +9,7 @@ builder.Logging.SetMinimumLevel(LogLevel.Trace);
 
 builder.Services
     .AddKubernetesOperator()
-    .RegisterResources();
+    .RegisterComponents();
 
 using var host = builder.Build();
 await host.RunAsync();

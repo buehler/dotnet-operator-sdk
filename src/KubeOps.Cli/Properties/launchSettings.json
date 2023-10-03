@@ -1,0 +1,30 @@
+﻿{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "CLI Generate RBAC": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
+      "commandLineArgs": "gen rbac ../../examples/Operator/Operator.csproj"
+    },
+    "CLI Generate Cert": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
+      "commandLineArgs": "g cert test-operator"
+    },
+    "CLI Generate CRDs": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
+      "commandLineArgs": "g c ../../examples/Operator/Operator.csproj"
+    },
+    "CLI Install": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
+      "commandLineArgs": "i ../../examples/Operator/Operator.csproj -f"
+    },
+    "CLI Uninstall": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
+      "commandLineArgs": "u ../../examples/Operator/Operator.csproj -f"
+    }
+  }
+}
