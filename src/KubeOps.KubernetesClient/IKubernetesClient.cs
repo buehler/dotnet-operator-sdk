@@ -5,13 +5,14 @@ using KubeOps.Abstractions.Entities;
 using KubeOps.KubernetesClient.LabelSelectors;
 
 namespace KubeOps.KubernetesClient;
-
+// TODO: make all sync calls as well.
+// TODO: test list / get call.
 /// <summary>
 /// Client for the Kubernetes API. Contains various methods to manage Kubernetes entities.
 /// This client is specific to an entity of type <typeparamref name="TEntity"/>.
 /// </summary>
 /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
-public interface IKubernetesClient<TEntity>
+public interface IKubernetesClient<TEntity> : IDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     /// <summary>

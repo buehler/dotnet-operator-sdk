@@ -1,0 +1,26 @@
+﻿using KubeOps.Abstractions.Controller;
+using KubeOps.Operator.Test.TestEntities;
+
+namespace KubeOps.Operator.Test.Controller.Operator;
+
+public class TestController : IEntityController<V1IntegrationTestEntity>
+{
+    private readonly ControllerMockService _svc;
+
+    public TestController(ControllerMockService svc)
+    {
+        _svc = svc;
+    }
+
+    public Task ReconcileAsync(V1IntegrationTestEntity entity)
+    {
+        _svc.Reconcile(entity);
+        return Task.CompletedTask;
+    }
+
+    public Task DeletedAsync(V1IntegrationTestEntity entity)
+    {
+        _svc.Delete(entity);
+        return Task.CompletedTask;
+    }
+}

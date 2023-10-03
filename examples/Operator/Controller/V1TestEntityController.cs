@@ -19,7 +19,7 @@ public class V1TestEntityController : IEntityController<V1TestEntity>
     private readonly EntityFinalizerAttacher<FinalizerTwo, V1TestEntity> _finalizer2;
 
     public V1TestEntityController(
-        ILogger<V1TestEntityController> logger, 
+        ILogger<V1TestEntityController> logger,
         IKubernetesClient<V1TestEntity> client,
         EntityFinalizerAttacher<FinalizerOne, V1TestEntity> finalizer1,
         EntityFinalizerAttacher<FinalizerTwo, V1TestEntity> finalizer2)

@@ -59,6 +59,20 @@ public interface IOperatorBuilder
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
+    /// <summary>
+    /// Add a finalizer implementation for a specific entity.
+    /// This adds the implementation as a transient service and registers
+    /// the finalizer with the provided identifier. Then an
+    /// <see cref="EntityFinalizerAttacher{TImplementation,TEntity}"/> is registered to
+    /// provide a delegate for attaching the finalizer to an entity.
+    /// </summary>
+    /// <param name="identifier">
+    /// The identifier for the finalizer.
+    /// This string is added to the Kubernetes entity as a finalizer.
+    /// </param>
+    /// <typeparam name="TImplementation">Type of the finalizer implementation.</typeparam>
+    /// <typeparam name="TEntity">Type of the Kubernetes entity.</typeparam>
+    /// <returns>The builder for chaining.</returns>
     IOperatorBuilder AddFinalizer<TImplementation, TEntity>(string identifier)
         where TImplementation : class, IEntityFinalizer<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>;

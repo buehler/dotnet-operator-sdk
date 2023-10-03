@@ -6,5 +6,6 @@
 - other CLI commands
 - error handling
 - web: webhooks
+- docs
 - cache?
 - try .net 8 AOT?

@@ -1,4 +1,6 @@
-﻿using k8s;
+﻿using System.Text.Json.Serialization;
+
+using k8s;
 
 namespace KubeOps.Abstractions.Entities;
 
@@ -17,5 +19,6 @@ public abstract class CustomKubernetesEntity<TSpec, TStatus> : CustomKubernetesE
     /// <summary>
     /// Status object for the entity.
     /// </summary>
+    // [JsonPropertyName("status")]
     public TStatus Status { get; set; } = new();
 }
