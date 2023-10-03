@@ -12,7 +12,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 namespace KubeOps.Generator.Generators;
 
 [Generator]
-public class EntityDefinitionGenerator : ISourceGenerator
+internal class EntityDefinitionGenerator : ISourceGenerator
 {
     public void Initialize(GeneratorInitializationContext context)
     {

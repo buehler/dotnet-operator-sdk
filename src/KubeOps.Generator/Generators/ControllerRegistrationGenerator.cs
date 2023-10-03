@@ -12,7 +12,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 namespace KubeOps.Generator.Generators;
 
 [Generator]
-public class ControllerRegistrationGenerator : ISourceGenerator
+internal class ControllerRegistrationGenerator : ISourceGenerator
 {
     private readonly EntityControllerSyntaxReceiver _ctrlReceiver = new();
     private readonly KubernetesEntitySyntaxReceiver _entityReceiver = new();

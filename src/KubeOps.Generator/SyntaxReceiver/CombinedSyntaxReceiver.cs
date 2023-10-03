@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 
 namespace KubeOps.Generator.SyntaxReceiver;
 
-public class CombinedSyntaxReceiver : ISyntaxContextReceiver
+internal class CombinedSyntaxReceiver : ISyntaxContextReceiver
 {
     private readonly ISyntaxContextReceiver[] _receivers;
 

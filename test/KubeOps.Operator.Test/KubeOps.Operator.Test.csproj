@@ -1,3 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\KubeOps.Operator\KubeOps.Operator.csproj" />
+    <ProjectReference Include="..\..\src\KubeOps.Transpiler\KubeOps.Transpiler.csproj" />
+  </ItemGroup>
 </Project>
