@@ -15,7 +15,7 @@ namespace KubeOps.Operator.Test.Controller;
 public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifetime
 {
     private IKubernetesClient<V1IntegrationTestEntity> _client = null!;
-    private static readonly ControllerMockService _mock = new();
+    private static readonly InvocationCounter<V1IntegrationTestEntity> _mock = new();
 
     public EntityControllerIntegrationTest(HostBuilder hostBuilder) : base(hostBuilder)
     {
@@ -32,7 +32,7 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
 
         _mock.Invocations.Count.Should().Be(1);
         var (method, entity) = _mock.Invocations[0];
-        method.Should().Be("Reconcile");
+        method.Should().Be("ReconcileAsync");
         entity.Should().BeOfType<V1IntegrationTestEntity>();
         entity.Name().Should().Be("test-entity");
         entity.Spec.Username.Should().Be("username");
@@ -59,7 +59,7 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
         void Check(int idx, string username)
         {
             var (method, entity) = _mock.Invocations[idx];
-            method.Should().Be("Reconcile");
+            method.Should().Be("ReconcileAsync");
             entity.Should().BeOfType<V1IntegrationTestEntity>();
             entity.Spec.Username.Should().Be(username);
         }
@@ -77,8 +77,8 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
         await _mock.WaitForInvocations;
 
         _mock.Invocations.Count.Should().Be(2);
-        _mock.Invocations[0].Method.Should().Be("Reconcile");
-        _mock.Invocations[1].Method.Should().Be("Delete");
+        _mock.Invocations[0].Method.Should().Be("ReconcileAsync");
+        _mock.Invocations[1].Method.Should().Be("DeletedAsync");
     }
 
     public async Task InitializeAsync()
