@@ -72,7 +72,7 @@ internal class OperatorBuilder : IOperatorBuilder
                 identifier,
                 entity.Kind,
                 entity.Name());
-            return await client.Update(entity);
+            return await client.UpdateAsync(entity);
         });
 
         return this;
