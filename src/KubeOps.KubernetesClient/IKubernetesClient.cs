@@ -6,10 +6,6 @@ using KubeOps.KubernetesClient.LabelSelectors;
 
 namespace KubeOps.KubernetesClient;
 
-// TODO: make all sync calls as well.
-// TODO: test list / get call.
-// TODO: update list call
-
 /// <summary>
 /// Client for the Kubernetes API. Contains various methods to manage Kubernetes entities.
 /// This client is specific to an entity of type <typeparamref name="TEntity"/>.

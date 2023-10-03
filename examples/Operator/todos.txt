@@ -9,3 +9,7 @@
 - docs
 - cache?
 - try .net 8 AOT?
+- client:
+        // TODO: make all sync calls as well.
+        // TODO: test list / get call.
+        // TODO: update list call
