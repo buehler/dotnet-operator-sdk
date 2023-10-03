@@ -20,7 +20,7 @@ public class InvocationCounter<TEntity>
         Invocations.Add((name, entity));
         if (Invocations.Count >= TargetInvocationCount)
         {
-            _task.SetResult();
+            _task.TrySetResult();
         }
     }
 

@@ -2,9 +2,9 @@
 
 using k8s.Models;
 
+using KubeOps.Abstractions.Controller;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Extensions;
-using KubeOps.Operator.Test.Controller.Operator;
 using KubeOps.Operator.Test.TestEntities;
 using KubeOps.Transpiler;
 
@@ -19,12 +19,12 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
 
     public EntityControllerIntegrationTest(HostBuilder hostBuilder) : base(hostBuilder)
     {
+        _mock.Clear();
     }
 
     [Fact]
     public async Task Should_Call_Reconcile_On_New_Entity()
     {
-        _mock.Clear();
         (await _client.List("default")).Count.Should().Be(0);
 
         await _client.Create(new("test-entity", "username", "default"));
@@ -41,7 +41,6 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
     [Fact]
     public async Task Should_Call_Reconcile_On_Modification_Of_Entity()
     {
-        _mock.Clear();
         _mock.TargetInvocationCount = 2;
         (await _client.List("default")).Count.Should().Be(0);
 
@@ -64,11 +63,10 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
             entity.Spec.Username.Should().Be(username);
         }
     }
-    
+
     [Fact]
     public async Task Should_Call_Delete_For_Deleted_Entity()
     {
-        _mock.Clear();
         _mock.TargetInvocationCount = 2;
         (await _client.List("default")).Count.Should().Be(0);
 
@@ -96,5 +94,27 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
         var entities = await _client.List("default");
         await _client.Delete(entities);
         _client.Dispose();
+    }
+
+    private class TestController : IEntityController<V1IntegrationTestEntity>
+    {
+        private readonly InvocationCounter<V1IntegrationTestEntity> _svc;
+
+        public TestController(InvocationCounter<V1IntegrationTestEntity> svc)
+        {
+            _svc = svc;
+        }
+
+        public Task ReconcileAsync(V1IntegrationTestEntity entity)
+        {
+            _svc.Invocation(entity);
+            return Task.CompletedTask;
+        }
+
+        public Task DeletedAsync(V1IntegrationTestEntity entity)
+        {
+            _svc.Invocation(entity);
+            return Task.CompletedTask;
+        }
     }
 }
