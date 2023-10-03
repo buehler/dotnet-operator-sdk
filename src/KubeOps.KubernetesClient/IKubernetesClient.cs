@@ -45,7 +45,10 @@ public interface IKubernetesClient<TEntity> : IDisposable
     /// </summary>
     /// <param name="downwardApiEnvName">Customizable name of the env var to check for the namespace.</param>
     /// <returns>A string containing the current namespace (or a fallback of it).</returns>
-    Task<string> GetCurrentNamespace(string downwardApiEnvName = "POD_NAMESPACE");
+    Task<string> GetCurrentNamespaceAsync(string downwardApiEnvName = "POD_NAMESPACE");
+
+    /// <inheritdoc cref="GetCurrentNamespaceAsync" />
+    string GetCurrentNamespace(string downwardApiEnvName = "POD_NAMESPACE");
 
     /// <summary>
     /// Fetch and return an entity from the Kubernetes API.
@@ -56,7 +59,10 @@ public interface IKubernetesClient<TEntity> : IDisposable
     /// If it is omitted, the entity must be a cluster wide entity.
     /// </param>
     /// <returns>The found entity of the given type, or null otherwise.</returns>
-    Task<TEntity?> Get(string name, string? @namespace = null);
+    Task<TEntity?> GetAsync(string name, string? @namespace = null);
+
+    /// <inheritdoc cref="GetAsync"/>
+    TEntity? Get(string name, string? @namespace = null);
 
     /// <summary>
     /// Fetch and return a list of entities from the Kubernetes API.
@@ -64,7 +70,7 @@ public interface IKubernetesClient<TEntity> : IDisposable
     /// <param name="namespace">If the entities are namespaced, provide the name of the namespace.</param>
     /// <param name="labelSelector">A string, representing an optional label selector for filtering fetched objects.</param>
     /// <returns>A list of Kubernetes entities.</returns>
-    Task<IList<TEntity>> List(
+    Task<IList<TEntity>> ListAsync(
         string? @namespace = null,
         string? labelSelector = null);
 
@@ -76,7 +82,17 @@ public interface IKubernetesClient<TEntity> : IDisposable
     /// </param>
     /// <param name="labelSelectors">A list of label-selectors to apply to the search.</param>
     /// <returns>A list of Kubernetes entities.</returns>
-    Task<IList<TEntity>> List(
+    Task<IList<TEntity>> ListAsync(
+        string? @namespace = null,
+        params LabelSelector[] labelSelectors);
+
+    /// <inheritdoc cref="ListAsync(string?,string?)"/>
+    IList<TEntity> List(
+        string? @namespace = null,
+        string? labelSelector = null);
+
+    /// <inheritdoc cref="ListAsync(string?,LabelSelector[])"/>
+    IList<TEntity> List(
         string? @namespace = null,
         params LabelSelector[] labelSelectors);
 
@@ -86,10 +102,17 @@ public interface IKubernetesClient<TEntity> : IDisposable
     /// </summary>
     /// <param name="entity">The entity in question.</param>
     /// <returns>The saved instance of the entity.</returns>
-    async Task<TEntity> Save(TEntity entity) => await Get(entity.Name(), entity.Namespace()) switch
+    async Task<TEntity> SaveAsync(TEntity entity) => await GetAsync(entity.Name(), entity.Namespace()) switch
     {
-        { } e => await Update(entity.WithResourceVersion(e)),
-        _ => await Create(entity),
+        { } e => await UpdateAsync(entity.WithResourceVersion(e)),
+        _ => await CreateAsync(entity),
+    };
+
+    /// <inheritdoc cref="SaveAsync"/>
+    TEntity Save(TEntity entity) => Get(entity.Name(), entity.Namespace()) switch
+    {
+        { } e => Update(entity.WithResourceVersion(e)),
+        _ => Create(entity),
     };
 
     /// <summary>
@@ -97,50 +120,71 @@ public interface IKubernetesClient<TEntity> : IDisposable
     /// </summary>
     /// <param name="entity">The entity instance.</param>
     /// <returns>The created instance of the entity.</returns>
-    Task<TEntity> Create(TEntity entity);
+    Task<TEntity> CreateAsync(TEntity entity);
+
+    /// <inheritdoc cref="CreateAsync"/>
+    TEntity Create(TEntity entity);
 
     /// <summary>
     /// Update the given entity on the Kubernetes API.
     /// </summary>
     /// <param name="entity">The entity instance.</param>
     /// <returns>The updated instance of the entity.</returns>
-    Task<TEntity> Update(TEntity entity);
+    Task<TEntity> UpdateAsync(TEntity entity);
+
+    /// <inheritdoc cref="UpdateAsync"/>
+    TEntity Update(TEntity entity);
 
     /// <summary>
     /// Update the status object of a given entity on the Kubernetes API.
     /// </summary>
     /// <param name="entity">The entity that contains a status object.</param>
+    /// <returns>The entity with the updated status.</returns>
+    Task<TEntity> UpdateStatusAsync(TEntity entity);
+
+    /// <inheritdoc cref="UpdateStatusAsync"/>
+    TEntity UpdateStatus(TEntity entity);
+
+    /// <inheritdoc cref="Delete(TEntity)"/>
     /// <returns>A task that completes when the call was made.</returns>
-    public Task<TEntity> UpdateStatus(TEntity entity);
+    Task DeleteAsync(TEntity entity);
+
+    /// <inheritdoc cref="Delete(IEnumerable{TEntity})"/>
+    /// <returns>A task that completes when the call was made.</returns>
+    Task DeleteAsync(IEnumerable<TEntity> entities);
+
+    /// <inheritdoc cref="Delete(TEntity[])"/>
+    /// <returns>A task that completes when the call was made.</returns>
+    Task DeleteAsync(params TEntity[] entities);
+
+    /// <inheritdoc cref="Delete(string,string?)"/>
+    /// <returns>A task that completes when the call was made.</returns>
+    Task DeleteAsync(string name, string? @namespace = null);
 
     /// <summary>
     /// Delete a given entity from the Kubernetes API.
     /// </summary>
     /// <param name="entity">The entity in question.</param>
-    /// <returns>A task that completes when the call was made.</returns>
-    Task Delete(TEntity entity);
+    void Delete(TEntity entity);
 
     /// <summary>
     /// Delete a given list of entities from the Kubernetes API.
     /// </summary>
     /// <param name="entities">The entities in question.</param>
-    /// <returns>A task that completes when the calls were made.</returns>
-    Task Delete(IEnumerable<TEntity> entities);
+    void Delete(IEnumerable<TEntity> entities);
 
     /// <summary>
     /// Delete a given list of entities from the Kubernetes API.
     /// </summary>
     /// <param name="entities">The entities in question.</param>
-    /// <returns>A task that completes when the calls were made.</returns>
-    Task Delete(params TEntity[] entities);
+    void Delete(params TEntity[] entities);
 
     /// <summary>
     /// Delete a given entity by name from the Kubernetes API.
     /// </summary>
     /// <param name="name">The name of the entity.</param>
     /// <param name="namespace">The optional namespace of the entity.</param>
-    /// <returns>A task that completes when the call was made.</returns>
-    Task Delete(string name, string? @namespace = null);
+    void Delete(string name, string? @namespace = null);
 
     /// <summary>
     /// Create a entity watcher on the Kubernetes API.

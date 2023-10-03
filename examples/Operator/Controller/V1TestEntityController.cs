@@ -38,9 +38,9 @@ public class V1TestEntityController : IEntityController<V1TestEntity>
         entity = await _finalizer2(entity);
 
         entity.Status.Status = "Reconciling";
-        entity = await _client.UpdateStatus(entity);
+        entity = await _client.UpdateStatusAsync(entity);
         entity.Status.Status = "Reconciled";
-        await _client.UpdateStatus(entity);
+        await _client.UpdateStatusAsync(entity);
     }
 
     public Task DeletedAsync(V1TestEntity entity)

@@ -202,7 +202,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
 
         await finalizer.FinalizeAsync(entity);
         entity.RemoveFinalizer(identifier);
-        await _client.Update(entity);
+        await _client.UpdateAsync(entity);
         _logger.LogInformation(
             """Entity "{kind}/{name}" finalized with "{finalizer}".""",
             entity.Kind,
