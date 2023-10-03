@@ -25,9 +25,9 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
     [Fact]
     public async Task Should_Call_Reconcile_On_New_Entity()
     {
-        (await _client.List("default")).Count.Should().Be(0);
+        (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.Create(new("test-entity", "username", "default"));
+        await _client.CreateAsync(new("test-entity", "username", "default"));
         await _mock.WaitForInvocations;
 
         _mock.Invocations.Count.Should().Be(1);
@@ -42,11 +42,11 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
     public async Task Should_Call_Reconcile_On_Modification_Of_Entity()
     {
         _mock.TargetInvocationCount = 2;
-        (await _client.List("default")).Count.Should().Be(0);
+        (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        var result = await _client.Create(new("test-entity", "username", "default"));
+        var result = await _client.CreateAsync(new("test-entity", "username", "default"));
         result.Spec.Username = "changed";
-        await _client.Update(result);
+        await _client.UpdateAsync(result);
         await _mock.WaitForInvocations;
 
         _mock.Invocations.Count.Should().Be(2);
@@ -68,10 +68,10 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
     public async Task Should_Call_Delete_For_Deleted_Entity()
     {
         _mock.TargetInvocationCount = 2;
-        (await _client.List("default")).Count.Should().Be(0);
+        (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        var result = await _client.Create(new("test-entity", "username", "default"));
-        await _client.Delete(result);
+        var result = await _client.CreateAsync(new("test-entity", "username", "default"));
+        await _client.DeleteAsync(result);
         await _mock.WaitForInvocations;
 
         _mock.Invocations.Count.Should().Be(2);
@@ -91,8 +91,8 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
 
     public async Task DisposeAsync()
     {
-        var entities = await _client.List("default");
-        await _client.Delete(entities);
+        var entities = await _client.ListAsync("default");
+        await _client.DeleteAsync(entities);
         _client.Dispose();
     }
 

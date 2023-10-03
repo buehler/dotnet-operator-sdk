@@ -4,7 +4,7 @@ using k8s.Models;
 
 namespace KubeOps.KubernetesClient.Test;
 
-public class KubernetesClientTest : IDisposable
+public class KubernetesClientAsyncTest : IDisposable
 {
     private readonly IKubernetesClient<V1ConfigMap> _client =
         new KubernetesClient<V1ConfigMap>(new("ConfigMap", "v1", null, "configmaps"));
@@ -12,16 +12,16 @@ public class KubernetesClientTest : IDisposable
     private readonly IList<V1ConfigMap> _objects = new List<V1ConfigMap>();
 
     [Fact]
-    public void Should_Return_Namespace()
+    public async Task Should_Return_Namespace()
     {
-        var ns = _client.GetCurrentNamespace();
+        var ns = await _client.GetCurrentNamespaceAsync();
         ns.Should().Be("default");
     }
 
     [Fact]
-    public void Should_Create_Some_Object()
+    public async Task Should_Create_Some_Object()
     {
-        var config = _client.Create(
+        var config = await _client.CreateAsync(
             new V1ConfigMap
             {
                 Kind = V1ConfigMap.KubeKind,
@@ -37,9 +37,9 @@ public class KubernetesClientTest : IDisposable
     }
 
     [Fact]
-    public void Should_Get_Some_Object()
+    public async Task Should_Get_Some_Object()
     {
-        var config = _client.Create(
+        var config = await _client.CreateAsync(
             new V1ConfigMap
             {
                 Kind = V1ConfigMap.KubeKind,
@@ -49,7 +49,7 @@ public class KubernetesClientTest : IDisposable
             });
 
         _objects.Add(config);
-        _objects.Add(_client.Create(
+        _objects.Add(await _client.CreateAsync(
             new V1ConfigMap
             {
                 Kind = V1ConfigMap.KubeKind,
@@ -57,7 +57,7 @@ public class KubernetesClientTest : IDisposable
                 Metadata = new(name: RandomName(), namespaceProperty: "default"),
                 Data = new Dictionary<string, string> { { "Hello", "World" } },
             }));
-        _objects.Add(_client.Create(
+        _objects.Add(await _client.CreateAsync(
             new V1ConfigMap
             {
                 Kind = V1ConfigMap.KubeKind,
@@ -66,14 +66,14 @@ public class KubernetesClientTest : IDisposable
                 Data = new Dictionary<string, string> { { "Hello", "World" } },
             }));
 
-        var fetched = _client.Get(config.Name(), config.Namespace());
+        var fetched = await _client.GetAsync(config.Name(), config.Namespace());
         fetched!.Name().Should().Be(config.Name());
     }
 
     [Fact]
-    public void Should_Update_Some_Object()
+    public async Task Should_Update_Some_Object()
     {
-        var config = _client.Create(
+        var config = await _client.CreateAsync(
             new V1ConfigMap
             {
                 Kind = V1ConfigMap.KubeKind,
@@ -85,16 +85,16 @@ public class KubernetesClientTest : IDisposable
         _objects.Add(config);
 
         config.Data.Add("test", "value");
-        config = _client.Update(config);
+        config = await _client.UpdateAsync(config);
         var r2 = config.Metadata.ResourceVersion;
 
         r1.Should().NotBe(r2);
     }
 
     [Fact]
-    public void Should_List_Some_Objects()
+    public async Task Should_List_Some_Objects()
     {
-        var config1 = _client.Create(
+        var config1 = await _client.CreateAsync(
             new V1ConfigMap
             {
                 Kind = V1ConfigMap.KubeKind,
@@ -102,7 +102,7 @@ public class KubernetesClientTest : IDisposable
                 Metadata = new(name: RandomName(), namespaceProperty: "default"),
                 Data = new Dictionary<string, string> { { "Hello", "World" } },
             });
-        var config2 = _client.Create(
+        var config2 = await _client.CreateAsync(
             new V1ConfigMap
             {
                 Kind = V1ConfigMap.KubeKind,
@@ -114,16 +114,16 @@ public class KubernetesClientTest : IDisposable
         _objects.Add(config1);
         _objects.Add(config2);
 
-        var configs = _client.List("default");
+        var configs = await _client.ListAsync("default");
 
         // there are _at least_ 2 config maps (the two that were created)
         configs.Count.Should().BeGreaterOrEqualTo(2);
     }
 
     [Fact]
-    public void Should_Delete_Some_Object()
+    public async Task Should_Delete_Some_Object()
     {
-        var config1 = _client.Create(
+        var config1 = await _client.CreateAsync(
             new V1ConfigMap
             {
                 Kind = V1ConfigMap.KubeKind,
@@ -131,7 +131,7 @@ public class KubernetesClientTest : IDisposable
                 Metadata = new(name: RandomName(), namespaceProperty: "default"),
                 Data = new Dictionary<string, string> { { "Hello", "World" } },
             });
-        var config2 = _client.Create(
+        var config2 = await _client.CreateAsync(
             new V1ConfigMap
             {
                 Kind = V1ConfigMap.KubeKind,
@@ -141,17 +141,17 @@ public class KubernetesClientTest : IDisposable
             });
         _objects.Add(config1);
 
-        var configs = _client.List("default");
+        var configs = await _client.ListAsync("default");
         configs.Count.Should().BeGreaterOrEqualTo(2);
 
-        _client.Delete(config2);
+        await _client.DeleteAsync(config2);
 
-        configs = _client.List("default");
+        configs = await _client.ListAsync("default");
         configs.Count.Should().BeGreaterOrEqualTo(1);
     }
 
     [Fact]
-    public void Should_Not_Throw_On_Not_Found_Delete()
+    public async Task Should_Not_Throw_On_Not_Found_Delete()
     {
         var config = new V1ConfigMap
         {
@@ -160,7 +160,7 @@ public class KubernetesClientTest : IDisposable
             Metadata = new(name: RandomName(), namespaceProperty: "default"),
             Data = new Dictionary<string, string> { { "Hello", "World" } },
         };
-        _client.Delete(config);
+        await _client.DeleteAsync(config);
     }
 
     public void Dispose()

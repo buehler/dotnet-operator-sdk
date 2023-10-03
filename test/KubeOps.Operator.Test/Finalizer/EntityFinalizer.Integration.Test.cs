@@ -29,9 +29,9 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         var watcherCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 2 };
         using var watcher = _client.Watch((_, e) => watcherCounter.Invocation(e));
 
-        (await _client.List("default")).Count.Should().Be(0);
+        (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.Create(new("first", "first", "default"));
+        await _client.CreateAsync(new("first", "first", "default"));
         await _mock.WaitForInvocations;
         await watcherCounter.WaitForInvocations;
 
@@ -49,9 +49,9 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         var watcherCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 3 };
         using var watcher = _client.Watch((_, e) => watcherCounter.Invocation(e));
 
-        (await _client.List("default")).Count.Should().Be(0);
+        (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.Create(new("first-second", "first-second", "default"));
+        await _client.CreateAsync(new("first-second", "first-second", "default"));
         await _mock.WaitForInvocations;
         await watcherCounter.WaitForInvocations;
 
@@ -69,13 +69,13 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         var watcherCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 2 };
         using var watcher = _client.Watch((_, e) => watcherCounter.Invocation(e));
 
-        (await _client.List("default")).Count.Should().Be(0);
+        (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.Create(new("first", "first", "default"));
+        await _client.CreateAsync(new("first", "first", "default"));
         await _mock.WaitForInvocations;
         await watcherCounter.WaitForInvocations;
 
-        var result = await _client.Get("first", "default");
+        var result = await _client.GetAsync("first", "default");
         result!.Metadata.Finalizers.Should().Contain("first");
     }
 
@@ -85,13 +85,13 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         var watcherCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 3 };
         using var watcher = _client.Watch((_, e) => watcherCounter.Invocation(e));
 
-        (await _client.List("default")).Count.Should().Be(0);
+        (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.Create(new("first-second", "first-second", "default"));
+        await _client.CreateAsync(new("first-second", "first-second", "default"));
         await _mock.WaitForInvocations;
         await watcherCounter.WaitForInvocations;
 
-        var result = await _client.Get("first-second", "default");
+        var result = await _client.GetAsync("first-second", "default");
         result!.Metadata.Finalizers.Should().Contain("first");
         result.Metadata.Finalizers.Should().Contain("second");
     }
@@ -102,9 +102,9 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         var attachCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 2 };
         using (_client.Watch((_, e) => attachCounter.Invocation(e)))
         {
-            (await _client.List("default")).Count.Should().Be(0);
+            (await _client.ListAsync("default")).Count.Should().Be(0);
 
-            await _client.Create(new("first", "first", "default"));
+            await _client.CreateAsync(new("first", "first", "default"));
 
             // 1 invocation for create
             await _mock.WaitForInvocations;
@@ -121,7 +121,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         var finalizeCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 3 };
         using (_client.Watch((_, e) => finalizeCounter.Invocation(e)))
         {
-            await _client.Delete("first", "default");
+            await _client.DeleteAsync("first", "default");
             // 2 invocations: call to delete, update after finalize
             await finalizeCounter.WaitForInvocations;
             // 1 invocation for delete
@@ -139,9 +139,9 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         var attachCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 3 };
         using (_client.Watch((_, e) => attachCounter.Invocation(e)))
         {
-            (await _client.List("default")).Count.Should().Be(0);
+            (await _client.ListAsync("default")).Count.Should().Be(0);
 
-            await _client.Create(new("first-second", "first-second", "default"));
+            await _client.CreateAsync(new("first-second", "first-second", "default"));
 
             // 1 invocation for create
             await _mock.WaitForInvocations;
@@ -159,7 +159,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         var finalizeCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 4 };
         using (_client.Watch((_, e) => finalizeCounter.Invocation(e)))
         {
-            await _client.Delete("first-second", "default");
+            await _client.DeleteAsync("first-second", "default");
             // 2 invocations: call to delete, update after finalize
             await finalizeCounter.WaitForInvocations;
             // 1 invocation for delete
@@ -186,7 +186,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
 
     public async Task DisposeAsync()
     {
-        var entities = await _client.List("default");
+        var entities = await _client.ListAsync("default");
         foreach (var e in entities)
         {
             if (e.Metadata.Finalizers is null)
@@ -195,10 +195,10 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
             }
 
             e.Metadata.Finalizers.Clear();
-            await _client.Update(e);
+            await _client.UpdateAsync(e);
         }
 
-        await _client.Delete(entities);
+        await _client.DeleteAsync(entities);
         _client.Dispose();
     }
 

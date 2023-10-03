@@ -72,7 +72,7 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
     public Uri BaseUri => _client.BaseUri;
 
     /// <inheritdoc />
-    public async Task<string> GetCurrentNamespace(string downwardApiEnvName = "POD_NAMESPACE")
+    public async Task<string> GetCurrentNamespaceAsync(string downwardApiEnvName = "POD_NAMESPACE")
     {
         if (_clientConfig.Namespace is { } configValue)
         {
@@ -94,7 +94,29 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
     }
 
     /// <inheritdoc />
-    public async Task<TEntity?> Get(string name, string? @namespace = null)
+    public string GetCurrentNamespace(string downwardApiEnvName = "POD_NAMESPACE")
+    {
+        if (_clientConfig.Namespace is { } configValue)
+        {
+            return configValue;
+        }
+
+        if (Environment.GetEnvironmentVariable(downwardApiEnvName) is { } envValue)
+        {
+            return envValue;
+        }
+
+        if (File.Exists(DownwardApiNamespaceFile))
+        {
+            var ns = File.ReadAllText(DownwardApiNamespaceFile);
+            return ns.Trim();
+        }
+
+        return DefaultNamespace;
+    }
+
+    /// <inheritdoc />
+    public async Task<TEntity?> GetAsync(string name, string? @namespace = null)
     {
         var list = @namespace switch
         {
@@ -119,7 +141,32 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
     }
 
     /// <inheritdoc />
-    public async Task<IList<TEntity>> List(string? @namespace = null, string? labelSelector = null)
+    public TEntity? Get(string name, string? @namespace = null)
+    {
+        var list = @namespace switch
+        {
+            null => _client.CustomObjects.ListClusterCustomObject<EntityList<TEntity>>(
+                _metadata.Group ?? string.Empty,
+                _metadata.Version,
+                _metadata.PluralName,
+                fieldSelector: $"metadata.name={name}"),
+            _ => _client.CustomObjects.ListNamespacedCustomObject<EntityList<TEntity>>(
+                _metadata.Group ?? string.Empty,
+                _metadata.Version,
+                @namespace,
+                _metadata.PluralName,
+                fieldSelector: $"metadata.name={name}"),
+        };
+
+        return list switch
+        {
+            { Items: [var existing] } => existing,
+            _ => default,
+        };
+    }
+
+    /// <inheritdoc />
+    public async Task<IList<TEntity>> ListAsync(string? @namespace = null, string? labelSelector = null)
         => (@namespace switch
         {
             null => await _client.CustomObjects.ListClusterCustomObjectAsync<EntityList<TEntity>>(
@@ -136,11 +183,32 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
         }).Items;
 
     /// <inheritdoc />
-    public Task<IList<TEntity>> List(string? @namespace = null, params LabelSelector[] labelSelectors)
+    public Task<IList<TEntity>> ListAsync(string? @namespace = null, params LabelSelector[] labelSelectors)
+        => ListAsync(@namespace, labelSelectors.ToExpression());
+
+    /// <inheritdoc />
+    public IList<TEntity> List(string? @namespace = null, string? labelSelector = null)
+        => (@namespace switch
+        {
+            null => _client.CustomObjects.ListClusterCustomObject<EntityList<TEntity>>(
+                _metadata.Group ?? string.Empty,
+                _metadata.Version,
+                _metadata.PluralName,
+                labelSelector: labelSelector),
+            _ => _client.CustomObjects.ListNamespacedCustomObject<EntityList<TEntity>>(
+                _metadata.Group ?? string.Empty,
+                _metadata.Version,
+                @namespace,
+                _metadata.PluralName,
+                labelSelector: labelSelector),
+        }).Items;
+
+    /// <inheritdoc />
+    public IList<TEntity> List(string? @namespace = null, params LabelSelector[] labelSelectors)
         => List(@namespace, labelSelectors.ToExpression());
 
     /// <inheritdoc />
-    public Task<TEntity> Create(TEntity entity)
+    public Task<TEntity> CreateAsync(TEntity entity)
         => entity.Namespace() switch
         {
             { } ns => _genericClient.CreateNamespacedAsync(entity, ns),
@@ -148,7 +216,11 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
         };
 
     /// <inheritdoc />
-    public Task<TEntity> Update(TEntity entity)
+    public TEntity Create(TEntity entity)
+        => CreateAsync(entity).GetAwaiter().GetResult();
+
+    /// <inheritdoc />
+    public Task<TEntity> UpdateAsync(TEntity entity)
         => entity.Namespace() switch
         {
             { } ns => _genericClient.ReplaceNamespacedAsync(entity, ns, entity.Name()),
@@ -156,7 +228,11 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
         };
 
     /// <inheritdoc />
-    public Task<TEntity> UpdateStatus(TEntity entity)
+    public TEntity Update(TEntity entity)
+        => UpdateAsync(entity).GetAwaiter().GetResult();
+
+    /// <inheritdoc />
+    public Task<TEntity> UpdateStatusAsync(TEntity entity)
         => entity.Namespace() switch
         {
             { } ns => _client.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync<TEntity>(
@@ -175,20 +251,39 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
         };
 
     /// <inheritdoc />
-    public Task Delete(TEntity entity) => Delete(
+    public TEntity UpdateStatus(TEntity entity)
+        => entity.Namespace() switch
+        {
+            { } ns => _client.CustomObjects.ReplaceNamespacedCustomObjectStatus<TEntity>(
+                entity,
+                _metadata.Group ?? string.Empty,
+                _metadata.Version,
+                ns,
+                _metadata.PluralName,
+                entity.Name()),
+            _ => _client.CustomObjects.ReplaceClusterCustomObjectStatus<TEntity>(
+                entity,
+                _metadata.Group ?? string.Empty,
+                _metadata.Version,
+                _metadata.PluralName,
+                entity.Name()),
+        };
+
+    /// <inheritdoc />
+    public Task DeleteAsync(TEntity entity) => DeleteAsync(
         entity.Name(),
         entity.Namespace());
 
     /// <inheritdoc />
-    public Task Delete(IEnumerable<TEntity> entities) =>
-        Task.WhenAll(entities.Select(Delete));
+    public Task DeleteAsync(IEnumerable<TEntity> entities) =>
+        Task.WhenAll(entities.Select(DeleteAsync));
 
     /// <inheritdoc />
-    public Task Delete(params TEntity[] entities) =>
-        Task.WhenAll(entities.Select(Delete));
+    public Task DeleteAsync(params TEntity[] entities) =>
+        Task.WhenAll(entities.Select(DeleteAsync));
 
     /// <inheritdoc />
-    public async Task Delete(string name, string? @namespace = null)
+    public async Task DeleteAsync(string name, string? @namespace = null)
     {
         try
         {
@@ -207,6 +302,22 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
             // The resource was not found. We can ignore this.
         }
     }
+
+    /// <inheritdoc />
+    public void Delete(TEntity entity)
+        => DeleteAsync(entity).GetAwaiter().GetResult();
+
+    /// <inheritdoc />
+    public void Delete(IEnumerable<TEntity> entities)
+        => DeleteAsync(entities).GetAwaiter().GetResult();
+
+    /// <inheritdoc />
+    public void Delete(params TEntity[] entities)
+        => DeleteAsync(entities).GetAwaiter().GetResult();
+
+    /// <inheritdoc />
+    public void Delete(string name, string? @namespace = null)
+        => DeleteAsync(name, @namespace).GetAwaiter().GetResult();
 
     /// <inheritdoc />
     public Watcher<TEntity> Watch(
