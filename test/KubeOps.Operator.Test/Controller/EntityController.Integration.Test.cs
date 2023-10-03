@@ -27,7 +27,7 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
     {
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.CreateAsync(new("test-entity", "username", "default"));
+        await _client.CreateAsync(new V1IntegrationTestEntity("test-entity", "username", "default"));
         await _mock.WaitForInvocations;
 
         _mock.Invocations.Count.Should().Be(1);
@@ -44,7 +44,7 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
         _mock.TargetInvocationCount = 2;
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        var result = await _client.CreateAsync(new("test-entity", "username", "default"));
+        var result = await _client.CreateAsync(new V1IntegrationTestEntity("test-entity", "username", "default"));
         result.Spec.Username = "changed";
         await _client.UpdateAsync(result);
         await _mock.WaitForInvocations;
@@ -70,7 +70,7 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
         _mock.TargetInvocationCount = 2;
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        var result = await _client.CreateAsync(new("test-entity", "username", "default"));
+        var result = await _client.CreateAsync(new V1IntegrationTestEntity("test-entity", "username", "default"));
         await _client.DeleteAsync(result);
         await _mock.WaitForInvocations;
 
