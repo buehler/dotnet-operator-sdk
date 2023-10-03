@@ -50,7 +50,7 @@ internal class OperatorBuilder : IOperatorBuilder
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         Services.AddTransient<TImplementation>();
-        Services.AddSingleton(new FinalizerRegistration<TEntity>(identifier, typeof(TImplementation)));
+        Services.AddSingleton(new FinalizerRegistration(identifier, typeof(TImplementation), typeof(TEntity)));
         Services.AddTransient<EntityFinalizerAttacher<TImplementation, TEntity>>(services => async entity =>
         {
             var logger = services.GetService<ILogger<EntityFinalizerAttacher<TImplementation, TEntity>>>();

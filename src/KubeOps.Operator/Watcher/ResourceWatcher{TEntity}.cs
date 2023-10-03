@@ -23,7 +23,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
     private readonly IServiceProvider _provider;
     private readonly IKubernetesClient<TEntity> _client;
     private readonly ConcurrentDictionary<string, long> _entityCache = new();
-    private readonly Lazy<List<FinalizerRegistration<TEntity>>> _finalizers;
+    private readonly Lazy<List<FinalizerRegistration>> _finalizers;
 
     private Watcher<TEntity>? _watcher;
 
@@ -35,7 +35,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
         _logger = logger;
         _provider = provider;
         _client = client;
-        _finalizers = new(() => _provider.GetServices<FinalizerRegistration<TEntity>>().ToList());
+        _finalizers = new(() => _provider.GetServices<FinalizerRegistration>().ToList());
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -181,7 +181,8 @@ internal class ResourceWatcher<TEntity> : IHostedService
     private async Task ReconcileFinalizer(TEntity entity)
     {
         var pendingFinalizer = entity.Finalizers();
-        if (_finalizers.Value.Find(reg => pendingFinalizer.Contains(reg.Identifier)) is not
+        if (_finalizers.Value.Find(reg =>
+                reg.EntityType == entity.GetType() && pendingFinalizer.Contains(reg.Identifier)) is not
             { Identifier: var identifier, FinalizerType: var type })
         {
             _logger.LogDebug(

@@ -1,7 +1,3 @@
-﻿using k8s;
-using k8s.Models;
+﻿namespace KubeOps.Operator.Finalizer;
 
-namespace KubeOps.Operator.Finalizer;
-
-internal record FinalizerRegistration<TEntity>(string Identifier, Type FinalizerType)
-    where TEntity : IKubernetesObject<V1ObjectMeta>;
+internal record FinalizerRegistration(string Identifier, Type FinalizerType, Type EntityType);
