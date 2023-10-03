@@ -31,7 +31,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
 
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.CreateAsync(new("first", "first", "default"));
+        await _client.CreateAsync(new V1IntegrationTestEntity("first", "first", "default"));
         await _mock.WaitForInvocations;
         await watcherCounter.WaitForInvocations;
 
@@ -51,7 +51,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
 
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.CreateAsync(new("first-second", "first-second", "default"));
+        await _client.CreateAsync(new V1IntegrationTestEntity("first-second", "first-second", "default"));
         await _mock.WaitForInvocations;
         await watcherCounter.WaitForInvocations;
 
@@ -71,7 +71,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
 
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.CreateAsync(new("first", "first", "default"));
+        await _client.CreateAsync(new V1IntegrationTestEntity("first", "first", "default"));
         await _mock.WaitForInvocations;
         await watcherCounter.WaitForInvocations;
 
@@ -87,7 +87,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
 
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.CreateAsync(new("first-second", "first-second", "default"));
+        await _client.CreateAsync(new V1IntegrationTestEntity("first-second", "first-second", "default"));
         await _mock.WaitForInvocations;
         await watcherCounter.WaitForInvocations;
 
@@ -104,7 +104,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         {
             (await _client.ListAsync("default")).Count.Should().Be(0);
 
-            await _client.CreateAsync(new("first", "first", "default"));
+            await _client.CreateAsync(new V1IntegrationTestEntity("first", "first", "default"));
 
             // 1 invocation for create
             await _mock.WaitForInvocations;
@@ -141,7 +141,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         {
             (await _client.ListAsync("default")).Count.Should().Be(0);
 
-            await _client.CreateAsync(new("first-second", "first-second", "default"));
+            await _client.CreateAsync(new V1IntegrationTestEntity("first-second", "first-second", "default"));
 
             // 1 invocation for create
             await _mock.WaitForInvocations;
