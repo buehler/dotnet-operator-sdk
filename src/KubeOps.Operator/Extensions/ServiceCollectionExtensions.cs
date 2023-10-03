@@ -5,6 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace KubeOps.Operator.Extensions;
 
+/// <summary>
+/// Method extensions for the <see cref="IServiceCollection"/>.
+/// </summary>
 public static class ServiceCollectionExtensions
 {
     /// <summary>

@@ -10,7 +10,7 @@ using KubeOps.KubernetesClient.LabelSelectors;
 namespace KubeOps.KubernetesClient;
 
 /// <inheritdoc cref="IKubernetesClient{TEntity}"/>
-public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>, IDisposable
+public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private const string DownwardApiNamespaceFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
@@ -101,12 +101,14 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>, IDisposable
             null => await _client.CustomObjects.ListClusterCustomObjectAsync<EntityList<TEntity>>(
                 _metadata.Group ?? string.Empty,
                 _metadata.Version,
-                _metadata.PluralName),
+                _metadata.PluralName,
+                fieldSelector: $"metadata.name={name}"),
             _ => await _client.CustomObjects.ListNamespacedCustomObjectAsync<EntityList<TEntity>>(
                 _metadata.Group ?? string.Empty,
                 _metadata.Version,
                 @namespace,
-                _metadata.PluralName),
+                _metadata.PluralName,
+                fieldSelector: $"metadata.name={name}"),
         };
 
         return list switch
@@ -154,7 +156,7 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>, IDisposable
         };
 
     /// <inheritdoc />
-    public Task UpdateStatus(TEntity entity)
+    public Task<TEntity> UpdateStatus(TEntity entity)
         => entity.Namespace() switch
         {
             { } ns => _client.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync<TEntity>(
@@ -193,10 +195,10 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>, IDisposable
             switch (@namespace)
             {
                 case not null:
-                    await _genericClient.DeleteNamespacedAsync<TEntity>(@namespace, name);
+                    await _genericClient.DeleteNamespacedAsync<V1Status>(@namespace, name);
                     break;
                 default:
-                    await _genericClient.DeleteAsync<TEntity>(name);
+                    await _genericClient.DeleteAsync<V1Status>(name);
                     break;
             }
         }

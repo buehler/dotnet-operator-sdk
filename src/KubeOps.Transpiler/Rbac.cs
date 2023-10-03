@@ -4,8 +4,17 @@ using KubeOps.Abstractions.Rbac;
 
 namespace KubeOps.Transpiler;
 
+/// <summary>
+/// Class for the conversion of <see cref="RbacAttribute"/>s to <see cref="V1PolicyRule"/>s.
+/// </summary>
 public static class Rbac
 {
+    /// <summary>
+    /// Convert a list of <see cref="RbacAttribute"/>s to a list of <see cref="V1PolicyRule"/>s.
+    /// The rules are grouped by entity type and verbs.
+    /// </summary>
+    /// <param name="attributes">List of <see cref="RbacAttribute"/>s.</param>
+    /// <returns>A converted, grouped list of <see cref="V1PolicyRule"/>s.</returns>
     public static IEnumerable<V1PolicyRule> Transpile(IEnumerable<RbacAttribute> attributes)
     {
         var list = attributes.ToList();

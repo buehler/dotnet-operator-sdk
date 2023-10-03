@@ -3,6 +3,6 @@
   "extends": ["github>buehler/renovate-config", ":disableMajorUpdates"],
   "ignorePaths": ["_old/"],
   "dotnet": {
-    "ignoreDeps": ["StyleCop.Analyzers", "KubeOps.Cli"]
+    "ignoreDeps": ["StyleCop.Analyzers"]
   }
 }

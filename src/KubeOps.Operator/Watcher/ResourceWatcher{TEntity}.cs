@@ -1,11 +1,14 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Collections.Concurrent;
+using System.Runtime.Serialization;
 using System.Text.Json;
 
 using k8s;
 using k8s.Models;
 
 using KubeOps.Abstractions.Controller;
+using KubeOps.Abstractions.Finalizer;
 using KubeOps.KubernetesClient;
+using KubeOps.Operator.Finalizer;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,6 +22,8 @@ internal class ResourceWatcher<TEntity> : IHostedService
     private readonly ILogger<ResourceWatcher<TEntity>> _logger;
     private readonly IServiceProvider _provider;
     private readonly IKubernetesClient<TEntity> _client;
+    private readonly ConcurrentDictionary<string, long> _entityCache = new();
+    private readonly Lazy<List<FinalizerRegistration>> _finalizers;
 
     private Watcher<TEntity>? _watcher;
 
@@ -30,6 +35,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
         _logger = logger;
         _provider = provider;
         _client = client;
+        _finalizers = new(() => _provider.GetServices<FinalizerRegistration>().ToList());
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -108,27 +114,28 @@ internal class ResourceWatcher<TEntity> : IHostedService
             entity.Kind,
             entity.Name());
 
-        if (type is WatchEventType.Bookmark or WatchEventType.Error)
-        {
-            return;
-        }
-
-        await using var scope = _provider.CreateAsyncScope();
-        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity>>();
         try
         {
             switch (type)
             {
-                case WatchEventType.Added:
-                case WatchEventType.Modified:
-                    await controller.ReconcileAsync(entity);
+                case WatchEventType.Added or WatchEventType.Modified:
+                    switch (entity)
+                    {
+                        case { Metadata.DeletionTimestamp: null }:
+                            await ReconcileModification(entity);
+                            break;
+                        case { Metadata: { DeletionTimestamp: not null, Finalizers.Count: > 0 } }:
+                            await ReconcileFinalizer(entity);
+                            break;
+                    }
+
                     break;
                 case WatchEventType.Deleted:
-                    await controller.DeletedAsync(entity);
+                    await ReconcileDeletion(entity);
                     break;
                 default:
                     _logger.LogWarning(
-                        """Received unknown watch event type "{eventType}" for "{kind}/{name}".""",
+                        """Received unsupported event "{eventType}" for "{kind}/{name}".""",
                         type,
                         entity.Kind,
                         entity.Name());
@@ -137,12 +144,69 @@ internal class ResourceWatcher<TEntity> : IHostedService
         }
         catch (Exception e)
         {
-            _logger.LogWarning(
+            _logger.LogError(
                 e,
                 "Reconciliation of {eventType} for {kind}/{name} failed.",
                 type,
                 entity.Kind,
                 entity.Name());
         }
+    }
+
+    private async Task ReconcileModification(TEntity entity)
+    {
+        var latestGeneration = _entityCache.GetOrAdd(entity.Uid(), 0);
+        if (entity.Generation() <= latestGeneration)
+        {
+            _logger.LogDebug(
+                """Entity "{kind}/{name}" modification did not modify generation. Skip event.""",
+                entity.Kind,
+                entity.Name());
+            return;
+        }
+
+        _entityCache.TryUpdate(entity.Uid(), entity.Generation() ?? 1, latestGeneration);
+        await using var scope = _provider.CreateAsyncScope();
+        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity>>();
+        await controller.ReconcileAsync(entity);
+    }
+
+    private async Task ReconcileDeletion(TEntity entity)
+    {
+        await using var scope = _provider.CreateAsyncScope();
+        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity>>();
+        await controller.DeletedAsync(entity);
+    }
+
+    private async Task ReconcileFinalizer(TEntity entity)
+    {
+        var pendingFinalizer = entity.Finalizers();
+        if (_finalizers.Value.Find(reg =>
+                reg.EntityType == entity.GetType() && pendingFinalizer.Contains(reg.Identifier)) is not
+            { Identifier: var identifier, FinalizerType: var type })
+        {
+            _logger.LogDebug(
+                """Entity "{kind}/{name}" is finalizing but this operator has no registered finalizers for it.""",
+                entity.Kind,
+                entity.Name());
+            return;
+        }
+
+        if (_provider.GetRequiredService(type) is not IEntityFinalizer<TEntity> finalizer)
+        {
+            _logger.LogError(
+                """Finalizer "{identifier}" was no IEntityFinalizer<TEntity>.""",
+                identifier);
+            return;
+        }
+
+        await finalizer.FinalizeAsync(entity);
+        entity.RemoveFinalizer(identifier);
+        await _client.Update(entity);
+        _logger.LogInformation(
+            """Entity "{kind}/{name}" finalized with "{finalizer}".""",
+            entity.Kind,
+            entity.Name(),
+            identifier);
     }
 }

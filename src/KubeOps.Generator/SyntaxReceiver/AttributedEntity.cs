@@ -2,7 +2,7 @@
 
 namespace KubeOps.Generator.SyntaxReceiver;
 
-public record struct AttributedEntity(
+internal record struct AttributedEntity(
     ClassDeclarationSyntax Class,
     string Kind,
     string Version,

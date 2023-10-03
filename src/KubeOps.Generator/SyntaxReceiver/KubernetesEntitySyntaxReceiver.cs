@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace KubeOps.Generator.SyntaxReceiver;
 
-public class KubernetesEntitySyntaxReceiver : ISyntaxContextReceiver
+internal class KubernetesEntitySyntaxReceiver : ISyntaxContextReceiver
 {
     private const string KindName = "Kind";
     private const string GroupName = "Group";
