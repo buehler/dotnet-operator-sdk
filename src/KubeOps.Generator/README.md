@@ -48,6 +48,75 @@ public static class EntityDefinitions
 }
 ```
 
+### Entity Initializer
+
+All entities must have their `Kind` and `ApiVersion` fields set.
+To achieve this, the generator creates an initializer file for each entity
+that is annotated with the `KubernetesEntityAttribute`.
+
+For each **partial** class that does not contain a default constructor,
+the generator will create a default constructor that sets the `Kind` and `ApiVersion` fields.
+
+For each **non partial** class, a method extension is created that sets
+the `Kind` and `ApiVersion` fields.
+
+> [!NOTE]
+> Setting your class partial is crucial for the generator to create the constructor.
+> Also, if some default constructor is already present, the generator uses the
+> method extension fallback.
+
+#### Example
+
+```csharp
+namespace Operator.Entities;
+
+[KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+public partial class V1TestEntity : CustomKubernetesEntity
+{
+}
+```
+
+The **partial** defined entity above will generate the following `V1TestEntity.init.g.cs` file:
+
+```csharp
+namespace Operator.Entities;
+public partial class V1TestEntity
+{
+    public V1TestEntity()
+    {
+        ApiVersion = "testing.dev/v1";
+        Kind = "TestEntity";
+    }
+}
+```
+
+The **non partial** defined entity below:
+
+```csharp
+namespace Operator.Entities;
+
+[KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+public class V1TestEntity : CustomKubernetesEntity
+{
+}
+```
+
+will generate a static method extension in `EntityInitializer.g.cs`
+for the entity to initialize the fields:
+
+```csharp
+public static class EntityInitializer
+{
+    public static global::Operator.Entities.V1ClusterTestEntity Initialize(this global::Operator.Entities.V1ClusterTestEntity entity)
+    {
+        entity.ApiVersion = "testing.dev/v1";
+        entity.Kind = "ClusterTestEntity";
+        return entity;
+    }
+}
+```
+
+
 ### Controller Registrations
 
 The generator creates a file in the root namespace called `ControllerRegistrations.g.cs`.
