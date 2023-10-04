@@ -1,8 +1,0 @@
-﻿apiVersion: testing.dev/v2
-kind: TestEntity
-metadata:
-  name: my-test-entity
-spec:
-  spec: string
-  username: userNaMe
-  stringOrInteger: 1337
