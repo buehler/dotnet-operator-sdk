@@ -1,9 +1,13 @@
-﻿using k8s;
+﻿using System.Security.Cryptography;
+using System.Text;
+
+using k8s;
 using k8s.Models;
 
 using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Entities;
+using KubeOps.Abstractions.Events;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.Abstractions.Queue;
 using KubeOps.KubernetesClient;
@@ -21,6 +25,91 @@ internal class OperatorBuilder : IOperatorBuilder
     public OperatorBuilder(IServiceCollection services)
     {
         Services = services;
+        Services.AddTransient<IKubernetesClient<Corev1Event>>(_ => new KubernetesClient<Corev1Event>(new(
+            Corev1Event.KubeKind, Corev1Event.KubeApiVersion, Plural: Corev1Event.KubePluralName)));
+        Services.AddTransient<EventPublisher>(
+            services =>
+                async (entity, reason, message, type) =>
+                {
+                    var logger = services.GetService<ILogger<EventPublisher>>();
+                    var client = services.GetRequiredService<IKubernetesClient<Corev1Event>>();
+
+                    var @namespace = entity.Namespace() ?? "default";
+                    logger?.LogTrace(
+                        "Encoding event name with: {resourceName}.{resourceNamespace}.{reason}.{message}.{type}.",
+                        entity.Name(),
+                        @namespace,
+                        reason,
+                        message,
+                        type);
+
+                    var eventName =
+                        Convert.ToHexString(
+                            SHA512.HashData(
+                                Encoding.UTF8.GetBytes(
+                                    $"{entity.Name()}.{@namespace}.{reason}.{message}.{type}")));
+
+                    logger?.LogTrace("""Search or create event with name "{name}".""", eventName);
+
+                    var @event = await client.GetAsync(eventName, @namespace) ??
+                                 new Corev1Event
+                                 {
+                                     Kind = Corev1Event.KubeKind,
+                                     ApiVersion = Corev1Event.KubeApiVersion,
+                                     Metadata = new()
+                                     {
+                                         Name = eventName,
+                                         NamespaceProperty = @namespace,
+                                         Annotations =
+                                             new Dictionary<string, string>
+                                             {
+                                                 {
+                                                     "originalName",
+                                                     $"{entity.Name()}.{@namespace}.{reason}.{message}.{type}"
+                                                 },
+                                                 { "nameHash", "sha512" },
+                                                 { "nameEncoding", "Hex String" },
+                                             },
+                                     },
+                                     Type = type.ToString(),
+                                     Reason = reason,
+                                     Message = message,
+                                     // ReportingComponent = _settings.Name,
+                                     ReportingInstance = Environment.MachineName,
+                                     // Source = new() { Component = _settings.Name, },
+                                     InvolvedObject = entity.MakeObjectReference(),
+                                     FirstTimestamp = DateTime.UtcNow,
+                                     LastTimestamp = DateTime.UtcNow,
+                                     Count = 0,
+                                 };
+
+                    @event.Count++;
+                    @event.LastTimestamp = DateTime.UtcNow;
+                    logger?.LogTrace(
+                        "Save event with new count {count} and last timestamp {timestamp}",
+                        @event.Count,
+                        @event.LastTimestamp);
+
+                    try
+                    {
+                        await client.SaveAsync(@event);
+                        logger?.LogInformation(
+                            """Created or updated event with name "{name}" to new count {count} on entity "{kind}/{name}".""",
+                            eventName,
+                            @event.Count,
+                            entity.Kind,
+                            entity.Name());
+                    }
+                    catch (Exception e)
+                    {
+                        logger?.LogError(
+                            e,
+                            """Could not publish event with name "{name}" on entity "{kind}/{name}".""",
+                            eventName,
+                            entity.Kind,
+                            entity.Name());
+                    }
+                });
     }
 
     public IServiceCollection Services { get; }

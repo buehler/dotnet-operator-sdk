@@ -39,4 +39,20 @@ public static class Extensions
         entity.EnsureMetadata().ResourceVersion = other.ResourceVersion();
         return entity;
     }
+
+    /// <summary>
+    /// Create a <see cref="V1ObjectReference"/> of a kubernetes object.
+    /// </summary>
+    /// <param name="kubernetesObject">The object that should be translated.</param>
+    /// <returns>The created <see cref="V1ObjectReference"/>.</returns>
+    public static V1ObjectReference MakeObjectReference(this IKubernetesObject<V1ObjectMeta> kubernetesObject)
+        => new()
+        {
+            ApiVersion = kubernetesObject.ApiVersion,
+            Kind = kubernetesObject.Kind,
+            Name = kubernetesObject.Metadata.Name,
+            NamespaceProperty = kubernetesObject.Metadata.NamespaceProperty,
+            ResourceVersion = kubernetesObject.Metadata.ResourceVersion,
+            Uid = kubernetesObject.Metadata.Uid,
+        };
 }
