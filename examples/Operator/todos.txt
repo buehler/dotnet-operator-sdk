@@ -1,7 +1,6 @@
 ﻿todo:
 - events
 - leadership election
-- requeue
 - build targets
 - other CLI commands
 - error handling

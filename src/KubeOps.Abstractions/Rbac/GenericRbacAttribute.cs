@@ -21,7 +21,7 @@ public class GenericRbacAttribute : RbacAttribute
 #if NETSTANDARD
     public string[] Groups { get; set; } = { };
 #else
-    public string[] Groups { get; init; } = { };
+    public string[] Groups { get; init; } = Array.Empty<string>();
 #endif
 
     /// <summary>
@@ -34,7 +34,7 @@ public class GenericRbacAttribute : RbacAttribute
 #if NETSTANDARD
     public string[] Resources { get; set; } = { };
 #else
-    public string[] Resources { get; init; } = { };
+    public string[] Resources { get; init; } = Array.Empty<string>();
 #endif
 
     /// <summary>
@@ -43,7 +43,7 @@ public class GenericRbacAttribute : RbacAttribute
 #if NETSTANDARD
     public string[] Urls { get; set; } = { };
 #else
-    public string[] Urls { get; init; } = { };
+    public string[] Urls { get; init; } = Array.Empty<string>();
 #endif
 
     /// <summary>

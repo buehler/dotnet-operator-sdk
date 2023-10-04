@@ -9,6 +9,7 @@ using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Finalizer;
+using KubeOps.Operator.Queue;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,6 +23,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
     private readonly ILogger<ResourceWatcher<TEntity>> _logger;
     private readonly IServiceProvider _provider;
     private readonly IKubernetesClient<TEntity> _client;
+    private readonly TimedEntityQueue<TEntity> _queue;
     private readonly ConcurrentDictionary<string, long> _entityCache = new();
     private readonly Lazy<List<FinalizerRegistration>> _finalizers;
 
@@ -30,17 +32,20 @@ internal class ResourceWatcher<TEntity> : IHostedService
     public ResourceWatcher(
         ILogger<ResourceWatcher<TEntity>> logger,
         IServiceProvider provider,
-        IKubernetesClient<TEntity> client)
+        IKubernetesClient<TEntity> client,
+        TimedEntityQueue<TEntity> queue)
     {
         _logger = logger;
         _provider = provider;
         _client = client;
+        _queue = queue;
         _finalizers = new(() => _provider.GetServices<FinalizerRegistration>().ToList());
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting resource watcher for {ResourceType}.", typeof(TEntity).Name);
+        _queue.RequeueRequested += OnEntityRequeue;
         WatchResource();
         return Task.CompletedTask;
     }
@@ -49,6 +54,8 @@ internal class ResourceWatcher<TEntity> : IHostedService
     {
         _logger.LogInformation("Stopping resource watcher for {ResourceType}.", typeof(TEntity).Name);
         StopWatching();
+        _queue.RequeueRequested -= OnEntityRequeue;
+        _queue.Clear();
         return Task.CompletedTask;
     }
 
@@ -79,6 +86,24 @@ internal class ResourceWatcher<TEntity> : IHostedService
     {
         _logger.LogDebug("The server closed the connection. Trying to reconnect.");
         WatchResource();
+    }
+
+    private async void OnEntityRequeue(object? sender, (string Name, string? Namespace) queued)
+    {
+        _logger.LogTrace(
+            """Execute requested requeued reconciliation for "{name}".""",
+            queued.Name);
+
+        if (await _client.GetAsync(queued.Name, queued.Namespace) is not { } entity)
+        {
+            _logger.LogWarning(
+                """Requeued entity "{name}" was not found. Skip reconciliation.""",
+                queued.Name);
+            return;
+        }
+
+        _entityCache.TryRemove(entity.Uid(), out _);
+        await ReconcileModification(entity);
     }
 
     private void OnError(Exception e)
@@ -113,6 +138,8 @@ internal class ResourceWatcher<TEntity> : IHostedService
             type,
             entity.Kind,
             entity.Name());
+
+        _queue.RemoveIfQueued(entity);
 
         try
         {
@@ -183,7 +210,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
         var pendingFinalizer = entity.Finalizers();
         if (_finalizers.Value.Find(reg =>
                 reg.EntityType == entity.GetType() && pendingFinalizer.Contains(reg.Identifier)) is not
-                { Identifier: var identifier, FinalizerType: var type })
+            { Identifier: var identifier, FinalizerType: var type })
         {
             _logger.LogDebug(
                 """Entity "{kind}/{name}" is finalizing but this operator has no registered finalizers for it.""",
