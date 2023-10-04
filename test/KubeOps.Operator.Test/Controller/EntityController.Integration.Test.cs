@@ -14,12 +14,12 @@ namespace KubeOps.Operator.Test.Controller;
 
 public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifetime
 {
+    private static readonly InvocationCounter<V1IntegrationTestEntity> Mock = new();
     private IKubernetesClient<V1IntegrationTestEntity> _client = null!;
-    private static readonly InvocationCounter<V1IntegrationTestEntity> _mock = new();
 
     public EntityControllerIntegrationTest(HostBuilder hostBuilder) : base(hostBuilder)
     {
-        _mock.Clear();
+        Mock.Clear();
     }
 
     [Fact]
@@ -28,10 +28,10 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
         await _client.CreateAsync(new V1IntegrationTestEntity("test-entity", "username", "default"));
-        await _mock.WaitForInvocations;
+        await Mock.WaitForInvocations;
 
-        _mock.Invocations.Count.Should().Be(1);
-        var (method, entity) = _mock.Invocations[0];
+        Mock.Invocations.Count.Should().Be(1);
+        var (method, entity) = Mock.Invocations[0];
         method.Should().Be("ReconcileAsync");
         entity.Should().BeOfType<V1IntegrationTestEntity>();
         entity.Name().Should().Be("test-entity");
@@ -41,15 +41,15 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
     [Fact]
     public async Task Should_Call_Reconcile_On_Modification_Of_Entity()
     {
-        _mock.TargetInvocationCount = 2;
+        Mock.TargetInvocationCount = 2;
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
         var result = await _client.CreateAsync(new V1IntegrationTestEntity("test-entity", "username", "default"));
         result.Spec.Username = "changed";
         await _client.UpdateAsync(result);
-        await _mock.WaitForInvocations;
+        await Mock.WaitForInvocations;
 
-        _mock.Invocations.Count.Should().Be(2);
+        Mock.Invocations.Count.Should().Be(2);
 
         Check(0, "username");
         Check(1, "changed");
@@ -57,7 +57,7 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
 
         static void Check(int idx, string username)
         {
-            var (method, entity) = _mock.Invocations[idx];
+            var (method, entity) = Mock.Invocations[idx];
             method.Should().Be("ReconcileAsync");
             entity.Should().BeOfType<V1IntegrationTestEntity>();
             entity.Spec.Username.Should().Be(username);
@@ -67,16 +67,16 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
     [Fact]
     public async Task Should_Call_Delete_For_Deleted_Entity()
     {
-        _mock.TargetInvocationCount = 2;
+        Mock.TargetInvocationCount = 2;
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
         var result = await _client.CreateAsync(new V1IntegrationTestEntity("test-entity", "username", "default"));
         await _client.DeleteAsync(result);
-        await _mock.WaitForInvocations;
+        await Mock.WaitForInvocations;
 
-        _mock.Invocations.Count.Should().Be(2);
-        _mock.Invocations[0].Method.Should().Be("ReconcileAsync");
-        _mock.Invocations[1].Method.Should().Be("DeletedAsync");
+        Mock.Invocations.Count.Should().Be(2);
+        Mock.Invocations[0].Method.Should().Be("ReconcileAsync");
+        Mock.Invocations[1].Method.Should().Be("DeletedAsync");
     }
 
     public async Task InitializeAsync()
@@ -84,7 +84,7 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
         var meta = Entities.ToEntityMetadata(typeof(V1IntegrationTestEntity)).Metadata;
         _client = new KubernetesClient<V1IntegrationTestEntity>(meta);
         await _hostBuilder.ConfigureAndStart(builder => builder.Services
-            .AddSingleton(_mock)
+            .AddSingleton(Mock)
             .AddKubernetesOperator()
             .AddControllerWithEntity<TestController, V1IntegrationTestEntity>(meta));
     }

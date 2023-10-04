@@ -1,5 +1,6 @@
 ﻿using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Finalizer;
+using KubeOps.Abstractions.Queue;
 using KubeOps.Abstractions.Rbac;
 using KubeOps.KubernetesClient;
 
@@ -15,32 +16,26 @@ public class V1TestEntityController : IEntityController<V1TestEntity>
 {
     private readonly ILogger<V1TestEntityController> _logger;
     private readonly IKubernetesClient<V1TestEntity> _client;
-    private readonly EntityFinalizerAttacher<FinalizerOne, V1TestEntity> _finalizer1;
-    private readonly EntityFinalizerAttacher<FinalizerTwo, V1TestEntity> _finalizer2;
+    private readonly EntityRequeue<V1TestEntity> _requeue;
 
     public V1TestEntityController(
         ILogger<V1TestEntityController> logger,
         IKubernetesClient<V1TestEntity> client,
-        EntityFinalizerAttacher<FinalizerOne, V1TestEntity> finalizer1,
-        EntityFinalizerAttacher<FinalizerTwo, V1TestEntity> finalizer2)
+        EntityRequeue<V1TestEntity> requeue)
     {
         _logger = logger;
         _client = client;
-        _finalizer1 = finalizer1;
-        _finalizer2 = finalizer2;
+        _requeue = requeue;
     }
 
     public async Task ReconcileAsync(V1TestEntity entity)
     {
         _logger.LogInformation("Reconciling entity {Entity}.", entity);
 
-        entity = await _finalizer1(entity);
-        entity = await _finalizer2(entity);
-
-        entity.Status.Status = "Reconciling";
-        entity = await _client.UpdateStatusAsync(entity);
         entity.Status.Status = "Reconciled";
         await _client.UpdateStatusAsync(entity);
+
+        _requeue(entity, TimeSpan.FromSeconds(5));
     }
 
     public Task DeletedAsync(V1TestEntity entity)

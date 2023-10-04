@@ -31,6 +31,8 @@ public sealed class HostBuilder : IAsyncDisposable
     private IHost? _host;
     private bool _isRunning;
 
+    public IServiceProvider Services => _host?.Services ?? throw new InvalidOperationException();
+
     public async Task ConfigureAndStart(Action<HostApplicationBuilder> configure)
     {
         if (_host is not null && _isRunning)
