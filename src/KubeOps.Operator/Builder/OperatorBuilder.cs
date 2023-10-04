@@ -5,8 +5,10 @@ using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Finalizer;
+using KubeOps.Abstractions.Queue;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Finalizer;
+using KubeOps.Operator.Queue;
 using KubeOps.Operator.Watcher;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +38,20 @@ internal class OperatorBuilder : IOperatorBuilder
     {
         Services.AddScoped<IEntityController<TEntity>, TImplementation>();
         Services.AddHostedService<ResourceWatcher<TEntity>>();
+        Services.AddSingleton(new TimedEntityQueue<TEntity>());
+        Services.AddTransient<EntityRequeue<TEntity>>(services => (entity, timespan) =>
+        {
+            var logger = services.GetService<ILogger<EntityRequeue<TEntity>>>();
+            var queue = services.GetRequiredService<TimedEntityQueue<TEntity>>();
+
+            logger?.LogTrace(
+                """Requeue entity "{kind}/{name}" in {milliseconds}ms.""",
+                entity.Kind,
+                entity.Name(),
+                timespan.TotalMilliseconds);
+
+            queue.Enqueue(entity, timespan);
+        });
 
         return this;
     }
