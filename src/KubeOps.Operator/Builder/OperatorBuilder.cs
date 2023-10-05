@@ -2,6 +2,8 @@
 using System.Text;
 
 using k8s;
+using k8s.LeaderElection;
+using k8s.LeaderElection.ResourceLock;
 using k8s.Models;
 
 using KubeOps.Abstractions.Builder;
@@ -22,13 +24,13 @@ namespace KubeOps.Operator.Builder;
 
 internal class OperatorBuilder : IOperatorBuilder
 {
+    private readonly OperatorSettings _settings;
+
     public OperatorBuilder(IServiceCollection services, OperatorSettings settings)
     {
+        _settings = settings;
         Services = services;
-        Services.AddSingleton(settings);
-        Services.AddTransient<IKubernetesClient<Corev1Event>>(_ => new KubernetesClient<Corev1Event>(new(
-            Corev1Event.KubeKind, Corev1Event.KubeApiVersion, Plural: Corev1Event.KubePluralName)));
-        Services.AddTransient(CreateEventPublisher());
+        AddOperatorBase();
     }
 
     public IServiceCollection Services { get; }
@@ -45,9 +47,17 @@ internal class OperatorBuilder : IOperatorBuilder
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         Services.AddScoped<IEntityController<TEntity>, TImplementation>();
-        Services.AddHostedService<ResourceWatcher<TEntity>>();
         Services.AddSingleton(new TimedEntityQueue<TEntity>());
         Services.AddTransient(CreateEntityRequeue<TEntity>());
+
+        if (_settings.EnableLeaderElection)
+        {
+            Services.AddHostedService<LeaderAwareResourceWatcher<TEntity>>();
+        }
+        else
+        {
+            Services.AddHostedService<ResourceWatcher<TEntity>>();
+        }
 
         return this;
     }
@@ -99,7 +109,7 @@ internal class OperatorBuilder : IOperatorBuilder
 
     private static Func<IServiceProvider, EntityRequeue<TEntity>> CreateEntityRequeue<TEntity>()
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        => services => (entity, timespan) =>
+        => services => (entity, timeSpan) =>
         {
             var logger = services.GetService<ILogger<EntityRequeue<TEntity>>>();
             var queue = services.GetRequiredService<TimedEntityQueue<TEntity>>();
@@ -108,9 +118,9 @@ internal class OperatorBuilder : IOperatorBuilder
                 """Requeue entity "{kind}/{name}" in {milliseconds}ms.""",
                 entity.Kind,
                 entity.Name(),
-                timespan.TotalMilliseconds);
+                timeSpan.TotalMilliseconds);
 
-            queue.Enqueue(entity, timespan);
+            queue.Enqueue(entity, timeSpan);
         };
 
     private static Func<IServiceProvider, EventPublisher> CreateEventPublisher()
@@ -192,4 +202,33 @@ internal class OperatorBuilder : IOperatorBuilder
                         entity.Name());
                 }
             };
+
+    private void AddOperatorBase()
+    {
+        Services.AddSingleton(_settings);
+        Services.AddTransient<IKubernetesClient<Corev1Event>>(_ => new KubernetesClient<Corev1Event>(new(
+            Corev1Event.KubeKind, Corev1Event.KubeApiVersion, Plural: Corev1Event.KubePluralName)));
+        Services.AddTransient(CreateEventPublisher());
+
+        if (_settings.EnableLeaderElection)
+        {
+            using var client = new KubernetesClient<Corev1Event>(new(
+                Corev1Event.KubeKind, Corev1Event.KubeApiVersion, Plural: Corev1Event.KubePluralName));
+
+            var elector = new LeaderElector(
+                new LeaderElectionConfig(
+                    new LeaseLock(
+                        new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig()),
+                        client.GetCurrentNamespace(),
+                        $"{_settings.Name}-leader",
+                        Environment.MachineName))
+                {
+                    LeaseDuration = _settings.LeaderElectionLeaseDuration,
+                    RenewDeadline = _settings.LeaderElectionRenewDeadline,
+                    RetryPeriod = _settings.LeaderElectionRetryPeriod,
+                });
+            Services.AddSingleton(elector);
+            elector.RunAsync();
+        }
+    }
 }

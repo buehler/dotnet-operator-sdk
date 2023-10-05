@@ -104,7 +104,7 @@ public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
 
             if (_svc.Invocations.Count < _svc.TargetInvocationCount)
             {
-                _requeue(entity, TimeSpan.FromMilliseconds(1));
+                _requeue(entity, TimeSpan.FromMilliseconds(10));
             }
         }
     }
