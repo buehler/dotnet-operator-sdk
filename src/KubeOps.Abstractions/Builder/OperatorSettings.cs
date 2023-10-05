@@ -31,27 +31,32 @@ public sealed class OperatorSettings
 
     /// <summary>
     /// <para>
-    /// Defines if the leader elector should run. You may disable this,
-    /// if you don't intend to run your operator multiple times.
+    /// Whether the leader elector should run. You should enable
+    /// this if you plan to run the operator redundantly.
     /// </para>
     /// <para>
-    /// If this is disabled, and an operator runs in multiple instance
-    /// (in the same namespace) it can lead to a "split brain" problem.
+    /// If this is disabled and an operator runs in multiple instances
+    /// (in the same namespace), it can lead to a "split brain" problem.
     /// </para>
     /// <para>
-    /// This could be disabled when developing locally.
+    /// Defaults to `false`.
     /// </para>
     /// </summary>
-    public bool EnableLeaderElection { get; set; } = true;
+    public bool EnableLeaderElection { get; set; }
 
     /// <summary>
-    /// The interval in seconds in which this particular instance of the operator
-    /// will check for leader election.
+    /// Defines how long one lease is valid for any leader.
+    /// Defaults to 15 seconds.
     /// </summary>
-    public ushort LeaderElectionCheckInterval { get; set; } = 15;
+    public TimeSpan LeaderElectionLeaseDuration { get; set; } = TimeSpan.FromSeconds(15);
 
     /// <summary>
-    /// The duration in seconds in which the leader lease is valid.
+    /// When the leader elector tries to refresh the leadership lease.
     /// </summary>
-    public ushort LeaderElectionLeaseDuration { get; set; } = 30;
+    public TimeSpan LeaderElectionRenewDeadline { get; set; } = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// The wait timeout if the lease cannot be acquired.
+    /// </summary>
+    public TimeSpan LeaderElectionRetryPeriod { get; set; } = TimeSpan.FromSeconds(2);
 }

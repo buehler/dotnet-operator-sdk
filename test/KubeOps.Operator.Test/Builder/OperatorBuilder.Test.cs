@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 
+using k8s.LeaderElection;
 using k8s.Models;
 
 using KubeOps.Abstractions.Builder;
@@ -83,6 +84,31 @@ public class OperatorBuilderTest
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(EntityFinalizerAttacher<TestFinalizer, V1IntegrationTestEntity>) &&
             s.Lifetime == ServiceLifetime.Transient);
+    }
+
+    [Fact]
+    public void Should_Add_Leader_Elector()
+    {
+        var builder = new OperatorBuilder(new ServiceCollection(), new() { EnableLeaderElection = true });
+        builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(k8s.LeaderElection.LeaderElector) &&
+            s.Lifetime == ServiceLifetime.Singleton);
+    }
+
+    [Fact]
+    public void Should_Add_LeaderAwareResourceWatcher()
+    {
+        var builder = new OperatorBuilder(new ServiceCollection(), new() { EnableLeaderElection = true });
+        builder.AddController<TestController, V1IntegrationTestEntity>();
+
+        builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(IHostedService) &&
+            s.ImplementationType == typeof(LeaderAwareResourceWatcher<V1IntegrationTestEntity>) &&
+            s.Lifetime == ServiceLifetime.Singleton);
+        builder.Services.Should().NotContain(s =>
+            s.ServiceType == typeof(IHostedService) &&
+            s.ImplementationType == typeof(ResourceWatcher<V1IntegrationTestEntity>) &&
+            s.Lifetime == ServiceLifetime.Singleton);
     }
 
     private class TestController : IEntityController<V1IntegrationTestEntity>
