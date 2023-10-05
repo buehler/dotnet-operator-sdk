@@ -27,53 +27,6 @@ internal class OperatorGenerator : OutputBase
 
     public async Task<int> OnExecuteAsync(CommandLineApplication app)
     {
-        var fileWriter = new FileWriter(app.Out);
-
-        if (OutputPath != null &&
-            _hasWebhooks &&
-            (!File.Exists(Path.Join(OutputPath, "ca.pem")) || !File.Exists(Path.Join(OutputPath, "ca-key.pem"))))
-        {
-            using var certManager = new CertificateGenerator(app.Out);
-            await certManager.CreateCaCertificateAsync(OutputPath);
-        }
-
-        fileWriter.Add(
-            $"kustomization.{Format.ToString().ToLower()}",
-            EntitySerializer.Serialize(
-                new KustomizationConfig
-                {
-                    Resources = new List<string> { $"deployment.{Format.ToString().ToLower()}", },
-                    CommonLabels = new Dictionary<string, string> { { "operator-element", "operator-instance" }, },
-                    ConfigMapGenerator = _hasWebhooks
-                        ? new List<KustomizationConfigMapGenerator>
-                        {
-                            new() { Name = "webhook-ca", Files = new List<string> { "ca.pem", "ca-key.pem", }, },
-                            new()
-                            {
-                                Name = "webhook-config",
-                                Literals = new List<string>
-                                {
-                                    $"KESTREL__ENDPOINTS__HTTP__URL=http://0.0.0.0:{_settings.HttpPort}",
-                                    $"KESTREL__ENDPOINTS__HTTPS__URL=https://0.0.0.0:{_settings.HttpsPort}",
-                                    "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__PATH=/certs/ca.pem",
-                                    "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__KEYPATH=/certs/ca-key.pem",
-                                },
-                            },
-                        }
-                        : new List<KustomizationConfigMapGenerator>
-                        {
-                            new()
-                            {
-                                Name = "webhook-config",
-                                Literals = new List<string>
-                                {
-                                    $"KESTREL__ENDPOINTS__HTTP__URL=http://0.0.0.0:{_settings.HttpPort}",
-                                },
-                            },
-                        },
-                },
-                Format));
-
         fileWriter.Add(
             $"deployment.{Format.ToString().ToLower()}",
             EntitySerializer.Serialize(
