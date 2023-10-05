@@ -21,6 +21,11 @@
       "workingDirectory": "$(ProjectDir)",
       "commandLineArgs": "g op"
     },
+    "CLI Generate Docker": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
+      "commandLineArgs": "g docker"
+    },
     "CLI Install": {
       "commandName": "Project",
       "workingDirectory": "$(ProjectDir)",

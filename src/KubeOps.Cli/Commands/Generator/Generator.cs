@@ -13,6 +13,7 @@ internal static class Generator
             {
                 CertificateGenerator.Command,
                 CrdGenerator.Command,
+                DockerGenerator.Command,
                 OperatorGenerator.Command,
                 RbacGenerator.Command,
             };
