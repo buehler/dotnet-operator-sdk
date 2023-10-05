@@ -29,13 +29,13 @@ public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
     [Fact]
     public async Task Should_Create_New_Event()
     {
-        const string eventName = "test-entity.default.REASON.message.Normal";
+        const string eventName = "single-entity.default.REASON.message.Normal";
         var encodedEventName =
             Convert.ToHexString(
                 SHA512.HashData(
                     Encoding.UTF8.GetBytes(eventName)));
 
-        await _client.CreateAsync(new V1IntegrationTestEntity("test-entity", "username", "default"));
+        await _client.CreateAsync(new V1IntegrationTestEntity("single-entity", "username", "default"));
         await Mock.WaitForInvocations;
 
         var eventClient = _hostBuilder.Services.GetRequiredService<IKubernetesClient<Corev1Event>>();

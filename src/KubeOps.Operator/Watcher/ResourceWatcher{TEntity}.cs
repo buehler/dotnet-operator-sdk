@@ -5,6 +5,7 @@ using System.Text.Json;
 using k8s;
 using k8s.Models;
 
+using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.KubernetesClient;
@@ -24,6 +25,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
     private readonly IServiceProvider _provider;
     private readonly IKubernetesClient<TEntity> _client;
     private readonly TimedEntityQueue<TEntity> _queue;
+    private readonly OperatorSettings _settings;
     private readonly ConcurrentDictionary<string, long> _entityCache = new();
     private readonly Lazy<List<FinalizerRegistration>> _finalizers;
     private bool _stopped;
@@ -34,12 +36,14 @@ internal class ResourceWatcher<TEntity> : IHostedService
         ILogger<ResourceWatcher<TEntity>> logger,
         IServiceProvider provider,
         IKubernetesClient<TEntity> client,
-        TimedEntityQueue<TEntity> queue)
+        TimedEntityQueue<TEntity> queue,
+        OperatorSettings settings)
     {
         _logger = logger;
         _provider = provider;
         _client = client;
         _queue = queue;
+        _settings = settings;
         _finalizers = new(() => _provider.GetServices<FinalizerRegistration>().ToList());
     }
 
@@ -77,7 +81,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
             }
         }
 
-        _watcher = _client.Watch(OnEvent, OnError, OnClosed);
+        _watcher = _client.Watch(OnEvent, OnError, OnClosed, @namespace: _settings.Namespace);
     }
 
     private void StopWatching()
