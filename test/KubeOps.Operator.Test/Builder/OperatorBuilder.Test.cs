@@ -1,8 +1,11 @@
 ﻿using FluentAssertions;
 
+using k8s.Models;
+
 using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Entities;
+using KubeOps.Abstractions.Events;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.Abstractions.Queue;
 using KubeOps.KubernetesClient;
@@ -19,10 +22,24 @@ namespace KubeOps.Operator.Test.Builder;
 
 public class OperatorBuilderTest
 {
-    private readonly IOperatorBuilder _builder = new OperatorBuilder(new ServiceCollection());
+    private readonly IOperatorBuilder _builder = new OperatorBuilder(new ServiceCollection(), new());
 
     [Fact]
-    public void Should_Add_KubernetesClient_For_Entity()
+    public void Should_Add_Default_Resources()
+    {
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(OperatorSettings) &&
+            s.Lifetime == ServiceLifetime.Singleton);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(IKubernetesClient<Corev1Event>) &&
+            s.Lifetime == ServiceLifetime.Transient);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(EventPublisher) &&
+            s.Lifetime == ServiceLifetime.Transient);
+    }
+    
+    [Fact]
+    public void Should_Add_Entity_Resources()
     {
         _builder.AddEntity<V1IntegrationTestEntity>(new EntityMetadata("test", "v1", "testentities"));
 
@@ -32,7 +49,7 @@ public class OperatorBuilderTest
     }
 
     [Fact]
-    public void Should_Add_ResourceWatcher_And_Controller()
+    public void Should_Add_Controller_Resources()
     {
         _builder.AddController<TestController, V1IntegrationTestEntity>();
 
