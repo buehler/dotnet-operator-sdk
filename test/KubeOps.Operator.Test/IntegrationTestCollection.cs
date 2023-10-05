@@ -41,7 +41,11 @@ public sealed class HostBuilder : IAsyncDisposable
         }
 
         var builder = Host.CreateApplicationBuilder();
-        builder.Logging.SetMinimumLevel(LogLevel.Warning);
+#if DEBUG
+        builder.Logging.SetMinimumLevel(LogLevel.Trace);
+#else
+        builder.Logging.SetMinimumLevel(LogLevel.None);
+#endif
         configure(builder);
         _host = builder.Build();
         await _host.StartAsync();
