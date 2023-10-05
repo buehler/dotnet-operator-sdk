@@ -2,7 +2,6 @@
 - other CLI commands
 - build targets
 - error handling
-- namespaced operator
 - web: webhooks
 - docs
 - try .net 8 AOT?
