@@ -26,6 +26,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
     private readonly TimedEntityQueue<TEntity> _queue;
     private readonly ConcurrentDictionary<string, long> _entityCache = new();
     private readonly Lazy<List<FinalizerRegistration>> _finalizers;
+    private bool _stopped;
 
     private Watcher<TEntity>? _watcher;
 
@@ -42,17 +43,19 @@ internal class ResourceWatcher<TEntity> : IHostedService
         _finalizers = new(() => _provider.GetServices<FinalizerRegistration>().ToList());
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    public virtual Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting resource watcher for {ResourceType}.", typeof(TEntity).Name);
+        _stopped = false;
         _queue.RequeueRequested += OnEntityRequeue;
         WatchResource();
         return Task.CompletedTask;
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public virtual Task StopAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Stopping resource watcher for {ResourceType}.", typeof(TEntity).Name);
+        _stopped = true;
         StopWatching();
         _queue.RequeueRequested -= OnEntityRequeue;
         _queue.Clear();
@@ -84,8 +87,11 @@ internal class ResourceWatcher<TEntity> : IHostedService
 
     private void OnClosed()
     {
-        _logger.LogDebug("The server closed the connection. Trying to reconnect.");
-        WatchResource();
+        _logger.LogDebug("The server closed the connection.");
+        if (!_stopped)
+        {
+            WatchResource();
+        }
     }
 
     private async void OnEntityRequeue(object? sender, (string Name, string? Namespace) queued)
