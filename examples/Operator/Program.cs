@@ -1,4 +1,4 @@
-﻿using KubeOps.Operator.Extensions;
+﻿using KubeOps.Operator;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

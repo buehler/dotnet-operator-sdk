@@ -1,11 +1,8 @@
 ﻿using FluentAssertions;
 
-using k8s.Models;
-
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Queue;
 using KubeOps.KubernetesClient;
-using KubeOps.Operator.Extensions;
 using KubeOps.Operator.Queue;
 using KubeOps.Operator.Test.TestEntities;
 using KubeOps.Transpiler;
