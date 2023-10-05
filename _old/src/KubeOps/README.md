@@ -540,6 +540,7 @@ The event manager allows you to either publish an event that you created
 by yourself, or helps you publish events with predefined data.
 
 If you want to use the helper:
+
 ```c#
 // fetch from DI, or inject into your controller.
 IEventManager manager = services.GetRequiredService<IEventManager>;
@@ -553,6 +554,7 @@ await manager.PublishAsync(resource, "reason", "my fancy message");
 ```
 
 If you want full control over the event:
+
 ```c#
 // fetch from DI, or inject into your controller.
 IEventManager manager = services.GetRequiredService<IEventManager>;
@@ -573,12 +575,14 @@ If you don't want to call the `KubeOps.Operator.Events.IEventManager.PublishAsyn
 all the time with the same arguments, you can create delegates.
 
 There exist two different delegates:
+
 - "AsyncStaticPublisher": Predefined event
   on a predefined resource.
 - "AsyncPublisher": Predefined event
   on a variable resource.
 
 To use the static publisher:
+
 ```c#
 var publisher = manager.CreatePublisher(resource, "reason", "message");
 await publisher();
@@ -588,6 +592,7 @@ await publisher(); // again without specifying reason / message and so on.
 ```
 
 To use the dynamic publisher:
+
 ```c#
 var publisher = manager.CreatePublisher("reason", "message");
 await publisher(resource);
@@ -599,6 +604,7 @@ await publisher(resource); // again without specifying reason / message and so o
 The dynamic publisher can be used to predefine the event for your resources.
 
 As an example in a controller:
+
 ```c#
 public class TestController : IResourceController<V1TestEntity>
 {
@@ -1065,26 +1071,26 @@ The props file just defines the defaults.
 You can overwrite the default behaviour of the building parts with the following
 variables that you can add in a `<PropertyGroup>` in your `csproj` file:
 
-| Property               | Description                                                                | Default Value                                                           |
-| ---------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| KubeOpsBasePath        | Base path for all other elements                                           | `$(MSBuildProjectDirectory)`                                            |
-| KubeOpsDockerfilePath  | The path of the dockerfile                                                 | `$(KubeOpsBasePath)\Dockerfile`                                         |
-| KubeOpsDockerTag       | Which dotnet sdk / run tag should be used                                  | `latest`                                                                |
-| KubeOpsConfigRoot      | The base directory for generated elements                                  | `$(KubeOpsBasePath)\config`                                             |
-| KubeOpsCrdDir          | The directory for the generated crds                                       | `$(KubeOpsConfigRoot)\crds`                                             |
-| KubeOpsCrdFormat       | Output format for crds                                                     | `Yaml`                                                                  |
-| KubeOpsCrdUseOldCrds   | Use V1Beta version of crd instead of V1<br>(for kubernetes version < 1.16) | `false`                                                                 |
-| KubeOpsRbacDir         | Where to put the roles                                                     | `$(KubeOpsConfigRoot)\rbac`                                             |
-| KubeOpsRbacFormat      | Output format for rbac                                                     | `Yaml`                                                                  |
-| KubeOpsOperatorDir     | Where to put operator related elements<br>(e.g. Deployment)                | `$(KubeOpsConfigRoot)\operator`                                         |
-| KubeOpsOperatorFormat  | Output format for the operator                                             | `Yaml`                                                                  |
-| KubeOpsInstallerDir    | Where to put the installation files<br>(e.g. Namespace / Kustomization)    | `$(KubeOpsConfigRoot)\install`                                          |
-| KubeOpsInstallerFormat | Output format for the installation files                                   | `Yaml`                                                                  |
-| KubeOpsSkipDockerfile  | Skip dockerfile during build                                               | `""`                                                                    |
-| KubeOpsSkipCrds        | Skip crd generation during build                                           | `""`                                                                    |
-| KubeOpsSkipRbac        | Skip rbac generation during build                                          | `""`                                                                    |
-| KubeOpsSkipOperator    | Skip operator generation during build                                      | `""`                                                                    |
-| KubeOpsSkipInstaller   | Skip installer generation during build                                     | `""`                                                                    |
+| Property               | Description                                                                | Default Value                   |
+| ---------------------- | -------------------------------------------------------------------------- | ------------------------------- |
+| KubeOpsBasePath        | Base path for all other elements                                           | `$(MSBuildProjectDirectory)`    |
+| KubeOpsDockerfilePath  | The path of the dockerfile                                                 | `$(KubeOpsBasePath)\Dockerfile` |
+| KubeOpsDockerTag       | Which dotnet sdk / run tag should be used                                  | `latest`                        |
+| KubeOpsConfigRoot      | The base directory for generated elements                                  | `$(KubeOpsBasePath)\config`     |
+| KubeOpsCrdDir          | The directory for the generated crds                                       | `$(KubeOpsConfigRoot)\crds`     |
+| KubeOpsCrdFormat       | Output format for crds                                                     | `Yaml`                          |
+| KubeOpsCrdUseOldCrds   | Use V1Beta version of crd instead of V1<br>(for kubernetes version < 1.16) | `false`                         |
+| KubeOpsRbacDir         | Where to put the roles                                                     | `$(KubeOpsConfigRoot)\rbac`     |
+| KubeOpsRbacFormat      | Output format for rbac                                                     | `Yaml`                          |
+| KubeOpsOperatorDir     | Where to put operator related elements<br>(e.g. Deployment)                | `$(KubeOpsConfigRoot)\operator` |
+| KubeOpsOperatorFormat  | Output format for the operator                                             | `Yaml`                          |
+| KubeOpsInstallerDir    | Where to put the installation files<br>(e.g. Namespace / Kustomization)    | `$(KubeOpsConfigRoot)\install`  |
+| KubeOpsInstallerFormat | Output format for the installation files                                   | `Yaml`                          |
+| KubeOpsSkipDockerfile  | Skip dockerfile during build                                               | `""`                            |
+| KubeOpsSkipCrds        | Skip crd generation during build                                           | `""`                            |
+| KubeOpsSkipRbac        | Skip rbac generation during build                                          | `""`                            |
+| KubeOpsSkipOperator    | Skip operator generation during build                                      | `""`                            |
+| KubeOpsSkipInstaller   | Skip installer generation during build                                     | `""`                            |
 
 ## Advanced Topics
 

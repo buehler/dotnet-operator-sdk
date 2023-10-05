@@ -5,7 +5,6 @@ using k8s.Models;
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.KubernetesClient;
-using KubeOps.Operator.Extensions;
 using KubeOps.Operator.Test.TestEntities;
 using KubeOps.Transpiler;
 
