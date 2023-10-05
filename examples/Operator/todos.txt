@@ -1,6 +1,6 @@
 ﻿todo:
-- build targets
 - other CLI commands
+- build targets
 - error handling
 - namespaced operator
 - web: webhooks

@@ -2,7 +2,11 @@
 using System.CommandLine.Help;
 using System.CommandLine.Invocation;
 
+using k8s;
+using k8s.Models;
+
 using KubeOps.Abstractions.Kustomize;
+using KubeOps.Abstractions.Rbac;
 using KubeOps.Cli.Output;
 using KubeOps.Cli.Roslyn;
 
@@ -50,7 +54,39 @@ internal static class RbacGenerator
         };
         var result = new ResultOutput(console, format);
         console.WriteLine($"Generate RBAC roles for {file.Name}.");
-        result.Add("file.yaml", Transpiler.Rbac.Transpile(parser.RbacAttributes()));
+
+        var attributes = parser.RbacAttributes().ToList();
+        attributes.Add(new EntityRbacAttribute(typeof(Corev1Event))
+        {
+            Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Create | RbacVerb.Update,
+        });
+        attributes.Add(new EntityRbacAttribute(typeof(V1Lease)) { Verbs = RbacVerb.All, });
+
+        var role = new V1ClusterRole(rules: Transpiler.Rbac.Transpile(attributes).ToList()).Initialize();
+        role.Metadata.Name = "operator-role";
+        result.Add($"operator-role.{format.ToString().ToLowerInvariant()}", role);
+
+        var roleBinding = new V1ClusterRoleBinding(
+                roleRef: new V1RoleRef(V1ClusterRole.KubeGroup, V1ClusterRole.KubeKind, "operator-role"),
+                subjects: new List<V1Subject>
+                {
+                    new(V1ServiceAccount.KubeKind, "default", namespaceProperty: "system"),
+                })
+            .Initialize();
+        roleBinding.Metadata.Name = "operator-role-binding";
+        result.Add($"operator-role-binding.{format.ToString().ToLowerInvariant()}", roleBinding);
+
+        result.Add(
+            $"kustomization.{format.ToString().ToLowerInvariant()}",
+            new KustomizationConfig
+            {
+                Resources = new List<string>
+                {
+                    $"operator-role.{format.ToString().ToLowerInvariant()}",
+                    $"operator-role-binding.{format.ToString().ToLowerInvariant()}",
+                },
+                CommonLabels = new Dictionary<string, string> { { "operator-element", "rbac" }, },
+            });
 
         if (outPath is not null)
         {
