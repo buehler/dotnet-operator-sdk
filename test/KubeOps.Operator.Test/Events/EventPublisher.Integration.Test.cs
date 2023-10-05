@@ -43,7 +43,7 @@ public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
         e!.Count.Should().Be(1);
         e.Metadata.Annotations.Should().Contain(a => a.Key == "originalName" && a.Value == eventName);
     }
-    
+
     [Fact]
     public async Task Should_Increase_Count_On_Existing_Event()
     {

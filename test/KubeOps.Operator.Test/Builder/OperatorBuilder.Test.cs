@@ -37,7 +37,7 @@ public class OperatorBuilderTest
             s.ServiceType == typeof(EventPublisher) &&
             s.Lifetime == ServiceLifetime.Transient);
     }
-    
+
     [Fact]
     public void Should_Add_Entity_Resources()
     {

@@ -210,7 +210,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
         var pendingFinalizer = entity.Finalizers();
         if (_finalizers.Value.Find(reg =>
                 reg.EntityType == entity.GetType() && pendingFinalizer.Contains(reg.Identifier)) is not
-            { Identifier: var identifier, FinalizerType: var type })
+                { Identifier: var identifier, FinalizerType: var type })
         {
             _logger.LogDebug(
                 """Entity "{kind}/{name}" is finalizing but this operator has no registered finalizers for it.""",
