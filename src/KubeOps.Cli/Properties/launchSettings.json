@@ -16,6 +16,11 @@
       "workingDirectory": "$(ProjectDir)",
       "commandLineArgs": "g c ../../examples/Operator/Operator.csproj"
     },
+    "CLI Generate Operator": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
+      "commandLineArgs": "g op"
+    },
     "CLI Install": {
       "commandName": "Project",
       "workingDirectory": "$(ProjectDir)",

@@ -13,6 +13,7 @@ internal static class Generator
             {
                 CertificateGenerator.Command,
                 CrdGenerator.Command,
+                OperatorGenerator.Command,
                 RbacGenerator.Command,
             };
             cmd.AddAlias("gen");
