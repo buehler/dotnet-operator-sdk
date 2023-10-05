@@ -1,9 +1,13 @@
-﻿using k8s;
+﻿using System.Security.Cryptography;
+using System.Text;
+
+using k8s;
 using k8s.Models;
 
 using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Entities;
+using KubeOps.Abstractions.Events;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.Abstractions.Queue;
 using KubeOps.KubernetesClient;
@@ -18,9 +22,13 @@ namespace KubeOps.Operator.Builder;
 
 internal class OperatorBuilder : IOperatorBuilder
 {
-    public OperatorBuilder(IServiceCollection services)
+    public OperatorBuilder(IServiceCollection services, OperatorSettings settings)
     {
         Services = services;
+        Services.AddSingleton(settings);
+        Services.AddTransient<IKubernetesClient<Corev1Event>>(_ => new KubernetesClient<Corev1Event>(new(
+            Corev1Event.KubeKind, Corev1Event.KubeApiVersion, Plural: Corev1Event.KubePluralName)));
+        Services.AddTransient(CreateEventPublisher());
     }
 
     public IServiceCollection Services { get; }
@@ -39,19 +47,7 @@ internal class OperatorBuilder : IOperatorBuilder
         Services.AddScoped<IEntityController<TEntity>, TImplementation>();
         Services.AddHostedService<ResourceWatcher<TEntity>>();
         Services.AddSingleton(new TimedEntityQueue<TEntity>());
-        Services.AddTransient<EntityRequeue<TEntity>>(services => (entity, timespan) =>
-        {
-            var logger = services.GetService<ILogger<EntityRequeue<TEntity>>>();
-            var queue = services.GetRequiredService<TimedEntityQueue<TEntity>>();
-
-            logger?.LogTrace(
-                """Requeue entity "{kind}/{name}" in {milliseconds}ms.""",
-                entity.Kind,
-                entity.Name(),
-                timespan.TotalMilliseconds);
-
-            queue.Enqueue(entity, timespan);
-        });
+        Services.AddTransient(CreateEntityRequeue<TEntity>());
 
         return this;
     }
@@ -67,7 +63,17 @@ internal class OperatorBuilder : IOperatorBuilder
     {
         Services.AddTransient<TImplementation>();
         Services.AddSingleton(new FinalizerRegistration(identifier, typeof(TImplementation), typeof(TEntity)));
-        Services.AddTransient<EntityFinalizerAttacher<TImplementation, TEntity>>(services => async entity =>
+        Services.AddTransient(CreateFinalizerAttacher<TImplementation, TEntity>(identifier));
+
+        return this;
+    }
+
+    private static Func<IServiceProvider, EntityFinalizerAttacher<TImplementation, TEntity>> CreateFinalizerAttacher<
+        TImplementation, TEntity>(
+        string identifier)
+        where TImplementation : class, IEntityFinalizer<TEntity>
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+        => services => async entity =>
         {
             var logger = services.GetService<ILogger<EntityFinalizerAttacher<TImplementation, TEntity>>>();
             var client = services.GetRequiredService<IKubernetesClient<TEntity>>();
@@ -89,8 +95,101 @@ internal class OperatorBuilder : IOperatorBuilder
                 entity.Kind,
                 entity.Name());
             return await client.UpdateAsync(entity);
-        });
+        };
 
-        return this;
-    }
+    private static Func<IServiceProvider, EntityRequeue<TEntity>> CreateEntityRequeue<TEntity>()
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+        => services => (entity, timespan) =>
+        {
+            var logger = services.GetService<ILogger<EntityRequeue<TEntity>>>();
+            var queue = services.GetRequiredService<TimedEntityQueue<TEntity>>();
+
+            logger?.LogTrace(
+                """Requeue entity "{kind}/{name}" in {milliseconds}ms.""",
+                entity.Kind,
+                entity.Name(),
+                timespan.TotalMilliseconds);
+
+            queue.Enqueue(entity, timespan);
+        };
+
+    private static Func<IServiceProvider, EventPublisher> CreateEventPublisher()
+        => services =>
+            async (entity, reason, message, type) =>
+            {
+                var logger = services.GetService<ILogger<EventPublisher>>();
+                using var client = services.GetRequiredService<IKubernetesClient<Corev1Event>>();
+                var settings = services.GetRequiredService<OperatorSettings>();
+
+                var @namespace = entity.Namespace() ?? "default";
+                logger?.LogTrace(
+                    "Encoding event name with: {resourceName}.{resourceNamespace}.{reason}.{message}.{type}.",
+                    entity.Name(),
+                    @namespace,
+                    reason,
+                    message,
+                    type);
+
+                var eventName = $"{entity.Name()}.{@namespace}.{reason}.{message}.{type}";
+                var encodedEventName =
+                    Convert.ToHexString(
+                        SHA512.HashData(
+                            Encoding.UTF8.GetBytes(eventName)));
+
+                logger?.LogTrace("""Search or create event with name "{name}".""", encodedEventName);
+
+                var @event = await client.GetAsync(encodedEventName, @namespace) ??
+                             new Corev1Event
+                             {
+                                 Metadata = new()
+                                 {
+                                     Name = encodedEventName,
+                                     NamespaceProperty = @namespace,
+                                     Annotations =
+                                         new Dictionary<string, string>
+                                         {
+                                             { "originalName", eventName },
+                                             { "nameHash", "sha512" },
+                                             { "nameEncoding", "Hex String" },
+                                         },
+                                 },
+                                 Type = type.ToString(),
+                                 Reason = reason,
+                                 Message = message,
+                                 ReportingComponent = settings.Name,
+                                 ReportingInstance = Environment.MachineName,
+                                 Source = new() { Component = settings.Name, },
+                                 InvolvedObject = entity.MakeObjectReference(),
+                                 FirstTimestamp = DateTime.UtcNow,
+                                 LastTimestamp = DateTime.UtcNow,
+                                 Count = 0,
+                             }.Initialize();
+
+                @event.Count++;
+                @event.LastTimestamp = DateTime.UtcNow;
+                logger?.LogTrace(
+                    "Save event with new count {count} and last timestamp {timestamp}",
+                    @event.Count,
+                    @event.LastTimestamp);
+
+                try
+                {
+                    await client.SaveAsync(@event);
+                    logger?.LogInformation(
+                        """Created or updated event with name "{name}" to new count {count} on entity "{kind}/{name}".""",
+                        eventName,
+                        @event.Count,
+                        entity.Kind,
+                        entity.Name());
+                }
+                catch (Exception e)
+                {
+                    logger?.LogError(
+                        e,
+                        """Could not publish event with name "{name}" on entity "{kind}/{name}".""",
+                        eventName,
+                        entity.Kind,
+                        entity.Name());
+                }
+            };
 }

@@ -4,7 +4,7 @@ using k8s.Models;
 
 namespace KubeOps.KubernetesClient.Test;
 
-public class KubernetesClientAsyncTest : IDisposable
+public class KubernetesClientAsyncTest : IntegrationTestBase, IDisposable
 {
     private readonly IKubernetesClient<V1ConfigMap> _client =
         new KubernetesClient<V1ConfigMap>(new("ConfigMap", "v1", null, "configmaps"));
