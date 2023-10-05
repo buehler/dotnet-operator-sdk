@@ -2,6 +2,7 @@
 using k8s.LeaderElection;
 using k8s.Models;
 
+using KubeOps.Abstractions.Builder;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Queue;
 
@@ -20,8 +21,9 @@ internal class LeaderAwareResourceWatcher<TEntity> : ResourceWatcher<TEntity>
         IServiceProvider provider,
         IKubernetesClient<TEntity> client,
         TimedEntityQueue<TEntity> queue,
+        OperatorSettings settings,
         LeaderElector elector)
-        : base(logger, provider, client, queue)
+        : base(logger, provider, client, queue, settings)
     {
         _logger = logger;
         _elector = elector;
