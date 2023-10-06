@@ -26,7 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Build\Generator.targets">
+        <Content Include="Build\KubeOps.Operator.targets">
             <PackagePath>build/</PackagePath>
         </Content>
     </ItemGroup>
