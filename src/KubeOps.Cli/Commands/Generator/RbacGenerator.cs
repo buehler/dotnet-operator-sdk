@@ -28,7 +28,6 @@ internal static class RbacGenerator
                 Options.TargetFramework,
                 Arguments.SolutionOrProjectFile,
             };
-            cmd.AddAlias("r");
             cmd.SetHandler(ctx => Handler(AnsiConsole.Console, ctx));
 
             return cmd;

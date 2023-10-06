@@ -1,6 +1,4 @@
 ﻿todo:
-- other CLI commands
-- build targets
 - error handling
 - web: webhooks
 - docs

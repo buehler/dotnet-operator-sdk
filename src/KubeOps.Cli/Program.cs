@@ -13,7 +13,7 @@ using Version = KubeOps.Cli.Commands.Utilities.Version;
 return await new CommandLineBuilder(new RootCommand(
         "CLI for KubeOps. Commandline tool to help with management tasks such as generating or installing CRDs.")
     {
-        Generator.Command, Version.Command, Install.Command, Uninstall.Command,
+        Generate.Command, Version.Command, Install.Command, Uninstall.Command,
     })
     .UseDefaults()
     .UseParseErrorReporting(ExitCodes.UsageError)

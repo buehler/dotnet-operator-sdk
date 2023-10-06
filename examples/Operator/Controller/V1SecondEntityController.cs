@@ -23,8 +23,9 @@ public class V1SecondEntityController : IEntityController<V1SecondEntity>
         _logger = logger;
     }
 
-    public async Task ReconcileAsync(V1SecondEntity entity)
+    public Task ReconcileAsync(V1SecondEntity entity)
     {
         _logger.LogInformation("Reconciling entity {Entity}.", entity);
+        return Task.CompletedTask;
     }
 }
