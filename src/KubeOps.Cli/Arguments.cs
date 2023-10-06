@@ -41,4 +41,8 @@ internal static class Arguments
         "namespace",
         () => "default",
         "The Kubernetes namespace that the operator will be run.");
+
+    public static readonly Argument<string> OperatorName = new(
+        "name",
+        "Name of the operator.");
 }

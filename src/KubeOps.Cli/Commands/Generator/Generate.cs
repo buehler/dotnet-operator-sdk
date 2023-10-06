@@ -3,17 +3,18 @@ using System.CommandLine.Help;
 
 namespace KubeOps.Cli.Commands.Generator;
 
-internal static class Generator
+internal static class Generate
 {
     public static Command Command
     {
         get
         {
-            var cmd = new Command("generator", "Generates elements related to an operator.")
+            var cmd = new Command("generate", "Generates elements related to an operator.")
             {
                 CertificateGenerator.Command,
                 CrdGenerator.Command,
                 DockerGenerator.Command,
+                InstallerGenerator.Command,
                 OperatorGenerator.Command,
                 RbacGenerator.Command,
             };

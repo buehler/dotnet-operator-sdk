@@ -24,5 +24,11 @@
         <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
         <ProjectReference Include="..\KubeOps.KubernetesClient\KubeOps.KubernetesClient.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="Build\Generator.targets">
+            <PackagePath>build/</PackagePath>
+        </Content>
+    </ItemGroup>
     
 </Project>

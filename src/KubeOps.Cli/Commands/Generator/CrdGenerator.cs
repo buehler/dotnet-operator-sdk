@@ -16,7 +16,7 @@ internal static class CrdGenerator
     {
         get
         {
-            var cmd = new Command("crd", "Generates CRDs for Kubernetes based on a solution or project.")
+            var cmd = new Command("crds", "Generates CRDs for Kubernetes based on a solution or project.")
             {
                 Options.OutputFormat,
                 Options.OutputPath,
@@ -24,8 +24,6 @@ internal static class CrdGenerator
                 Options.TargetFramework,
                 Arguments.SolutionOrProjectFile,
             };
-            cmd.AddAlias("crds");
-            cmd.AddAlias("c");
             cmd.SetHandler(ctx => Handler(AnsiConsole.Console, ctx));
 
             return cmd;
