@@ -4,7 +4,7 @@
     "CLI Generate RBAC": {
       "commandName": "Project",
       "workingDirectory": "$(ProjectDir)",
-      "commandLineArgs": "gen rbac ../../examples/Operator/Operator.csproj"
+      "commandLineArgs": "g rbac ../../examples/Operator/Operator.csproj"
     },
     "CLI Generate Cert": {
       "commandName": "Project",
@@ -14,7 +14,7 @@
     "CLI Generate CRDs": {
       "commandName": "Project",
       "workingDirectory": "$(ProjectDir)",
-      "commandLineArgs": "g c ../../examples/Operator/Operator.csproj"
+      "commandLineArgs": "g crds ../../examples/Operator/Operator.csproj"
     },
     "CLI Generate Operator": {
       "commandName": "Project",
@@ -25,6 +25,11 @@
       "commandName": "Project",
       "workingDirectory": "$(ProjectDir)",
       "commandLineArgs": "g docker"
+    },
+    "CLI Generate Installer": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
+      "commandLineArgs": "g installer demo-operator"
     },
     "CLI Install": {
       "commandName": "Project",
