@@ -2,4 +2,3 @@
 - error handling
 - web: webhooks
 - docs
-- try .net 8 AOT?
