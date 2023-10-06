@@ -1,4 +1,3 @@
 ﻿todo:
-- error handling
 - web: webhooks
 - docs

@@ -29,6 +29,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
     private readonly ConcurrentDictionary<string, long> _entityCache = new();
     private readonly Lazy<List<FinalizerRegistration>> _finalizers;
     private bool _stopped;
+    private uint _watcherReconnectRetries;
 
     private Watcher<TEntity>? _watcher;
 
@@ -81,21 +82,14 @@ internal class ResourceWatcher<TEntity> : IHostedService
             }
         }
 
+        _logger.LogDebug("""Create watcher for entity of type "{type}".""", typeof(TEntity));
         _watcher = _client.Watch(OnEvent, OnError, OnClosed, @namespace: _settings.Namespace);
     }
 
     private void StopWatching()
     {
         _watcher?.Dispose();
-    }
-
-    private void OnClosed()
-    {
-        _logger.LogDebug("The server closed the connection.");
-        if (!_stopped)
-        {
-            WatchResource();
-        }
+        _watcher = null;
     }
 
     private async void OnEntityRequeue(object? sender, (string Name, string? Namespace) queued)
@@ -116,7 +110,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
         await ReconcileModification(entity);
     }
 
-    private void OnError(Exception e)
+    private async void OnError(Exception e)
     {
         switch (e)
         {
@@ -138,11 +132,34 @@ internal class ResourceWatcher<TEntity> : IHostedService
         }
 
         _logger.LogError(e, """There was an error while watching the resource "{resource}".""", typeof(TEntity));
+        StopWatching();
+        _watcherReconnectRetries++;
+
+        var delay = TimeSpan
+            .FromSeconds(Math.Pow(2, Math.Clamp(_watcherReconnectRetries, 0, 5)))
+            .Add(TimeSpan.FromMilliseconds(new Random().Next(0, 1000)));
+        _logger.LogWarning(
+            "There were {retries} errors / retries in the watcher. Wait {seconds}s before next attempt to connect.",
+            _watcherReconnectRetries,
+            delay.TotalSeconds);
+        await Task.Delay(delay);
+
         WatchResource();
+    }
+
+    private void OnClosed()
+    {
+        _logger.LogDebug("The watcher was closed.");
+        if (!_stopped && _watcherReconnectRetries == 0)
+        {
+            WatchResource();
+        }
     }
 
     private async void OnEvent(WatchEventType type, TEntity entity)
     {
+        _watcherReconnectRetries = 0;
+
         _logger.LogTrace(
             """Received watch event "{eventType}" for "{kind}/{name}".""",
             type,
