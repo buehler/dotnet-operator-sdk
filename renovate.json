@@ -1,8 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>buehler/renovate-config", ":disableMajorUpdates"],
-  "ignorePaths": ["_old/"],
+  "ignorePaths": ["_old/", "examples/"],
   "dotnet": {
-    "ignoreDeps": ["StyleCop.Analyzers"]
+    "ignoreDeps": ["StyleCop.Analyzers", "KubeOps.Cli"]
   }
 }
