@@ -17,16 +17,16 @@ namespace KubeOps.Cli.Roslyn;
 /// <summary>
 /// AssemblyParser.
 /// </summary>
-internal sealed partial class AssemblyParser
+internal sealed partial class AssemblyParser : IDisposable
 {
-    private readonly Assembly[] _assemblies;
+    private readonly MetadataLoadContext _context;
 
     static AssemblyParser()
     {
         MSBuildLocator.RegisterDefaults();
     }
 
-    private AssemblyParser(params Assembly[] assemblies) => _assemblies = assemblies;
+    private AssemblyParser(MetadataLoadContext context) => _context = context;
 
     public static Task<AssemblyParser> ForProject(
         IAnsiConsole console,
@@ -59,7 +59,11 @@ internal sealed partial class AssemblyParser
 
             console.MarkupLine("[green]Compilation successful.[/]");
             console.WriteLine();
-            return new AssemblyParser(Assembly.Load(assemblyStream.ToArray()));
+            var mlc = new MetadataLoadContext(
+                new PathAssemblyResolver(project.MetadataReferences.Select(m => m.Display ?? string.Empty)));
+            mlc.LoadFromByteArray(assemblyStream.ToArray());
+
+            return new AssemblyParser(mlc);
         });
 
     public static Task<AssemblyParser> ForSolution(
@@ -124,18 +128,22 @@ internal sealed partial class AssemblyParser
                 }));
 
             console.WriteLine();
-            return new AssemblyParser(assemblies);
+            return new AssemblyParser(new MetadataLoadContext(new PathAssemblyResolver(new string[] { })));
         });
 
     public IEnumerable<Type> Entities() =>
-        _assemblies
+        _context
+            .GetAssemblies()
             .SelectMany(a => a.DefinedTypes)
-            .Where(t => t.GetCustomAttributes<KubernetesEntityAttribute>().Any())
-            .Where(type => !type.GetCustomAttributes<IgnoreAttribute>().Any());
+            .Select(t => (t, attrs: CustomAttributeData.GetCustomAttributes(t)))
+            .Where(e => e.attrs.Any(a => a.AttributeType.Name == nameof(KubernetesEntityAttribute)) &&
+                        e.attrs.All(a => a.AttributeType.Name != nameof(IgnoreAttribute)))
+            .Select(e => e.t);
 
     public IEnumerable<RbacAttribute> RbacAttributes()
     {
-        foreach (var type in _assemblies
+        foreach (var type in _context
+                     .GetAssemblies()
                      .SelectMany(a => a.DefinedTypes)
                      .SelectMany(t =>
                          t.GetCustomAttributes<GenericRbacAttribute>()))
@@ -143,13 +151,19 @@ internal sealed partial class AssemblyParser
             yield return type;
         }
 
-        foreach (var type in _assemblies
+        foreach (var type in _context
+                     .GetAssemblies()
                      .SelectMany(a => a.DefinedTypes)
                      .SelectMany(t =>
                          t.GetCustomAttributes<EntityRbacAttribute>()))
         {
             yield return type;
         }
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
     }
 
     [GeneratedRegex(".*")]

@@ -5,6 +5,7 @@ using System.CommandLine.Invocation;
 using KubeOps.Abstractions.Kustomize;
 using KubeOps.Cli.Output;
 using KubeOps.Cli.Roslyn;
+using KubeOps.Transpiler;
 
 using Spectre.Console;
 
@@ -50,6 +51,9 @@ internal static class CrdGenerator
         var result = new ResultOutput(console, format);
 
         console.WriteLine($"Generate CRDs for {file.Name}.");
+        var e = parser.Entities().ToList();
+        var c = Crds.Transpile(e.First());
+        
         var crds = Transpiler.Crds.Transpile(parser.Entities()).ToList();
         foreach (var crd in crds)
         {

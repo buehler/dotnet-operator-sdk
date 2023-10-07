@@ -16,6 +16,7 @@
 
     <ItemGroup>
         <PackageReference Include="Namotion.Reflection" Version="3.0.0" />
+        <PackageReference Include="System.Reflection.MetadataLoadContext" Version="7.0.0" />
     </ItemGroup>
 
     <ItemGroup>
