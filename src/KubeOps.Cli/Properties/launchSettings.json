@@ -14,6 +14,11 @@
     "CLI Generate CRDs": {
       "commandName": "Project",
       "workingDirectory": "$(ProjectDir)",
+      "commandLineArgs": "g crds ../../examples/Operator/Operator.csproj"
+    },
+    "CLI Generate Webhook CRDs": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
       "commandLineArgs": "g crds ../../examples/WebhookOperator/WebhookOperator.csproj"
     },
     "CLI Generate Operator": {
