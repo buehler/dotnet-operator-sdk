@@ -1,4 +1,7 @@
-﻿using k8s.Models;
+﻿using System.Reflection;
+
+using k8s.KubeConfigModels;
+using k8s.Models;
 
 using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Entities.Attributes;
@@ -7,7 +10,7 @@ namespace KubeOps.Cli.Transpilation;
 
 internal static class Entities
 {
-    public static (EntityMetadata Metadata, string Scope) ToEntityMetadata(Type entityType)
+    public static (EntityMetadata Metadata, string Scope) ToEntityMetadata(MetadataLoadContext context, Type entityType)
         => (entityType.GetCustomAttributeData<KubernetesEntityAttribute>(),
                 entityType.GetCustomAttributeData<EntityScopeAttribute>()) switch
             {
@@ -23,11 +26,9 @@ internal static class Entities
                         attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.PluralName))),
                     scope switch
                     {
-                        null => Enum.GetName(typeof(EntityScope), EntityScope.Namespaced) ?? "namespaced",
+                        null => Enum.GetName(EntityScope.Namespaced) ?? "namespaced",
                         _ => Enum.GetName(
-                                 typeof(EntityScope),
-                                 attr.GetCustomAttributeNamedArg<EntityScope>(nameof(EntityScopeAttribute.Scope))) ??
-                             "namespaced",
+                            scope.GetCustomAttributeCtorArg<EntityScope>(context, 0)) ?? "namespaced",
                     }),
             };
 

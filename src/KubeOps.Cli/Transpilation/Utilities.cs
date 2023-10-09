@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace KubeOps.Cli.Transpilation;
 
-public static class Utilities
+internal static class Utilities
 {
     public static CustomAttributeData? GetCustomAttributeData<TAttribute>(this Type type)
         where TAttribute : Attribute
@@ -28,8 +28,26 @@ public static class Utilities
             ? value
             : default;
 
-    public static T? GetCustomAttributeCtorArg<T>(this CustomAttributeData attr, int index) =>
-        attr.ConstructorArguments[index].Value is T value
-            ? value
+    public static T? GetCustomAttributeCtorArg<T>(this CustomAttributeData attr, MetadataLoadContext ctx, int index) =>
+        attr.ConstructorArguments.Count >= index + 1 &&
+        attr.ConstructorArguments[index].ArgumentType == ctx.GetContextType<T>()
+            ? (T)attr.ConstructorArguments[index].Value!
             : default;
+
+    public static Type GetContextType<T>(this MetadataLoadContext context)
+        => context.GetContextType(typeof(T));
+
+    public static Type GetContextType(this MetadataLoadContext context, Type type)
+    {
+        foreach (var assembly in context.GetAssemblies())
+        {
+            if (assembly.GetType(type.FullName!) is { } t)
+            {
+                return t;
+            }
+        }
+
+        var newAssembly = context.LoadFromAssemblyPath(type.Assembly.Location);
+        return newAssembly.GetType(type.FullName!)!;
+    }
 }
