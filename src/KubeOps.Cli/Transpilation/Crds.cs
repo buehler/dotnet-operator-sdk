@@ -29,6 +29,7 @@ internal static class Crds
 
     public static V1CustomResourceDefinition Transpile(this MetadataLoadContext context, Type type)
     {
+        type = context.GetContextType(type);
         var (meta, scope) = Entities.ToEntityMetadata(type);
         var crd = new V1CustomResourceDefinition(new()).Initialize();
 
