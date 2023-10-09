@@ -73,11 +73,7 @@ public static class Rbac
         RbacVerb.None => Array.Empty<string>(),
         _ when verbs.HasFlag(RbacVerb.All) => new[] { "*" },
         _ =>
-#if NETSTANDARD
-            Enum.GetValues(typeof(RbacVerb)).Cast<RbacVerb>()
-#else
             Enum.GetValues<RbacVerb>()
-#endif
                 .Where(v => verbs.HasFlag(v) && v != RbacVerb.All && v != RbacVerb.None)
                 .Select(v => v.ToString().ToLowerInvariant())
                 .ToArray(),

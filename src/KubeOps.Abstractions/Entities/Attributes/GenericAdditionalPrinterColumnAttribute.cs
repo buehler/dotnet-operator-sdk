@@ -1,6 +1,4 @@
-﻿using k8s.Models;
-
-namespace KubeOps.Abstractions.Entities.Attributes;
+﻿namespace KubeOps.Abstractions.Entities.Attributes;
 
 /// <summary>
 /// Defines a generic additional printer column.
@@ -40,11 +38,7 @@ public class GenericAdditionalPrinterColumnAttribute : Attribute
     /// <summary>
     /// Description for the column.
     /// </summary>
-#if NETSTANDARD
-    public string? Description { get; set; }
-#else
     public string? Description { get; init; }
-#endif
 
     /// <summary>
     /// The type of the column.
@@ -104,11 +98,7 @@ public class GenericAdditionalPrinterColumnAttribute : Attribute
     /// </item>
     /// </list>
     /// </summary>
-#if NETSTANDARD
-    public string? Format { get; set; }
-#else
     public string? Format { get; init; }
-#endif
 
     /// <summary>
     /// The priority of the additional printer column.
@@ -124,9 +114,5 @@ public class GenericAdditionalPrinterColumnAttribute : Attribute
     /// </item>
     /// </list>
     /// </summary>
-#if NETSTANDARD
-    public PrinterColumnPriority Priority { get; set; }
-#else
     public PrinterColumnPriority Priority { get; init; }
-#endif
 }

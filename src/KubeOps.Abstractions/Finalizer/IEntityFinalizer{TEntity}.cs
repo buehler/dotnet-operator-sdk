@@ -15,10 +15,6 @@ public interface IEntityFinalizer<in TEntity>
     /// </summary>
     /// <param name="entity">The kubernetes entity that needs to be finalized.</param>
     /// <returns>A task that resolves when the operation is done.</returns>
-#if NETSTANDARD2_0
-    Task FinalizeAsync(TEntity entity);
-#else
     Task FinalizeAsync(TEntity entity) =>
         Task.CompletedTask;
-#endif
 }
