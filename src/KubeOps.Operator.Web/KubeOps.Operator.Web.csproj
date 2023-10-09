@@ -18,6 +18,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
+        <ProjectReference Include="..\KubeOps.Generator\KubeOps.Generator.csproj" />
     </ItemGroup>
 
 </Project>

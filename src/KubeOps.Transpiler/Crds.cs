@@ -304,11 +304,7 @@ public static partial class Crds
                 { Name: { } attrName } => attrName,
             };
 
-#if NETSTANDARD2_0
-            return $"{name.Substring(0, 1).ToLowerInvariant()}{name.Substring(1)}";
-#else
             return $"{name[..1].ToLowerInvariant()}{name[1..]}";
-#endif
         }
 
         private static Func<Type, Func<Type, V1JSONSchemaProps?>, V1JSONSchemaProps?> Mapper(
@@ -475,9 +471,7 @@ public static partial class Crds
 
         private static bool IsGenericEnumerableType(
             Type type,
-#if NET
             [NotNullWhen(true)]
-#endif
             out Type? closingType)
         {
             if (type.IsGenericType && typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()))

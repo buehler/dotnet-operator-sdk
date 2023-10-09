@@ -41,12 +41,8 @@ public interface IEntityController<in TEntity>
     /// </summary>
     /// <param name="entity">The entity that fired the reconcile event.</param>
     /// <returns>A task that completes when the reconciliation is done.</returns>
-#if NETSTANDARD2_0
-    Task ReconcileAsync(TEntity entity);
-#else
     Task ReconcileAsync(TEntity entity) =>
         Task.CompletedTask;
-#endif
 
     /// <summary>
     /// Called for `delete` events for a given entity.
@@ -55,10 +51,6 @@ public interface IEntityController<in TEntity>
     /// <returns>
     /// A task that completes, when the reconciliation is done.
     /// </returns>
-#if NETSTANDARD2_0
-    Task DeletedAsync(TEntity entity);
-#else
     Task DeletedAsync(TEntity entity) =>
         Task.CompletedTask;
-#endif
 }
