@@ -18,11 +18,7 @@ public class GenericRbacAttribute : RbacAttribute
     /// "apiGroups: ...".
     /// </para>
     /// </summary>
-#if NETSTANDARD
-    public string[] Groups { get; set; } = { };
-#else
     public string[] Groups { get; init; } = Array.Empty<string>();
-#endif
 
     /// <summary>
     /// <para>List of resources.</para>
@@ -31,20 +27,12 @@ public class GenericRbacAttribute : RbacAttribute
     /// "resources: ["pods"]".
     /// </para>
     /// </summary>
-#if NETSTANDARD
-    public string[] Resources { get; set; } = { };
-#else
     public string[] Resources { get; init; } = Array.Empty<string>();
-#endif
 
     /// <summary>
     /// List of urls.
     /// </summary>
-#if NETSTANDARD
-    public string[] Urls { get; set; } = { };
-#else
     public string[] Urls { get; init; } = Array.Empty<string>();
-#endif
 
     /// <summary>
     /// <para>Flags ("list") of allowed verbs.</para>
@@ -53,9 +41,5 @@ public class GenericRbacAttribute : RbacAttribute
     /// "verbs: ["get", "list", "watch"]".
     /// </para>
     /// </summary>
-#if NETSTANDARD
-    public RbacVerb Verbs { get; set; }
-#else
     public RbacVerb Verbs { get; init; }
-#endif
 }

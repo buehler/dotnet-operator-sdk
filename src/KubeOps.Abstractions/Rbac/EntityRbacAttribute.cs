@@ -31,9 +31,5 @@ public class EntityRbacAttribute : RbacAttribute
     /// "verbs: ["get", "list", "watch"]".
     /// </para>
     /// </summary>
-#if NETSTANDARD
-    public RbacVerb Verbs { get; set; }
-#else
     public RbacVerb Verbs { get; init; }
-#endif
 }
