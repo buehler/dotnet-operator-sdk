@@ -10,7 +10,7 @@ namespace KubeOps.Cli.Transpilation;
 
 internal static class Entities
 {
-    public static (EntityMetadata Metadata, string Scope) ToEntityMetadata(MetadataLoadContext context, Type entityType)
+    public static (EntityMetadata Metadata, string Scope) ToEntityMetadata(this MetadataLoadContext context, Type entityType)
         => (entityType.GetCustomAttributeData<KubernetesEntityAttribute>(),
                 entityType.GetCustomAttributeData<EntityScopeAttribute>()) switch
             {

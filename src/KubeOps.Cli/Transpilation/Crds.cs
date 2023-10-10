@@ -32,7 +32,7 @@ internal static class Crds
     public static V1CustomResourceDefinition Transpile(this MetadataLoadContext context, Type type)
     {
         type = context.GetContextType(type);
-        var (meta, scope) = Entities.ToEntityMetadata(context, type);
+        var (meta, scope) = context.ToEntityMetadata(type);
         var crd = new V1CustomResourceDefinition(new()).Initialize();
 
         crd.Metadata.Name = $"{meta.PluralName}.{meta.Group}";

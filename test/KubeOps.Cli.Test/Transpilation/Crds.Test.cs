@@ -158,7 +158,7 @@ public class CrdsTest : IClassFixture<MlcProvider>
     public void Should_Use_Correct_CRD()
     {
         var crd = _mlc.Transpile(typeof(Entity));
-        var (ced, scope) = Entities.ToEntityMetadata(_mlc, typeof(Entity));
+        var (ced, scope) = _mlc.ToEntityMetadata(typeof(Entity));
 
         crd.Kind.Should().Be(V1CustomResourceDefinition.KubeKind);
         crd.Metadata.Name.Should().Be($"{ced.PluralName}.{ced.Group}");

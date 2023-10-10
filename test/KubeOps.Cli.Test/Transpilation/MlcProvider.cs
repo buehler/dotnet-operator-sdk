@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis.MSBuild;
 
+namespace KubeOps.Cli.Test.Transpilation;
+
 public class MlcProvider : IAsyncLifetime
 {
     static MlcProvider()
