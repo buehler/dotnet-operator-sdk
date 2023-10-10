@@ -6,8 +6,6 @@ using KubeOps.Operator;
 
 using Microsoft.AspNetCore.HttpOverrides;
 
-using WebhookOperator.Services;
-
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddKubernetesOperator()
@@ -23,12 +21,6 @@ builder.Services
 
 var app = builder.Build();
 
-// app.UseForwardedHeaders(
-//     new()
-//     {
-//         ForwardedHeaders = ForwardedHeaders.XForwardedProto,
-//         KnownNetworks = { new IPNetwork(IPAddress.Parse("0.0.0.0"), 0) },
-//     });
 app.UseRouting();
 app.UseDeveloperExceptionPage();
 app.MapControllers();

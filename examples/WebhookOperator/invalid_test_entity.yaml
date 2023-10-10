@@ -1,0 +1,6 @@
+apiVersion: webhook.dev/v1
+kind: TestEntity
+metadata:
+  name: invalid-test-webhook-entity
+spec:
+  username: forbidden
