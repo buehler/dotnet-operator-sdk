@@ -4,6 +4,7 @@ using System.CommandLine.Invocation;
 using KubeOps.Abstractions.Kustomize;
 using KubeOps.Cli.Output;
 using KubeOps.Cli.Transpilation;
+using KubeOps.Transpiler;
 
 using Spectre.Console;
 

@@ -6,6 +6,7 @@ using k8s.Autorest;
 using k8s.Models;
 
 using KubeOps.Cli.Transpilation;
+using KubeOps.Transpiler;
 
 using Spectre.Console;
 

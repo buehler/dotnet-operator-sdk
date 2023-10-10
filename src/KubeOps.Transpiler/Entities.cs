@@ -1,18 +1,17 @@
 ﻿using System.Reflection;
 
-using k8s.KubeConfigModels;
 using k8s.Models;
 
 using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Entities.Attributes;
 
-namespace KubeOps.Cli.Transpilation;
+namespace KubeOps.Transpiler;
 
 internal static class Entities
 {
     public static (EntityMetadata Metadata, string Scope) ToEntityMetadata(this MetadataLoadContext context, Type entityType)
-        => (entityType.GetCustomAttributeData<KubernetesEntityAttribute>(),
-                entityType.GetCustomAttributeData<EntityScopeAttribute>()) switch
+        => (context.GetContextType(entityType).GetCustomAttributeData<KubernetesEntityAttribute>(),
+                context.GetContextType(entityType).GetCustomAttributeData<EntityScopeAttribute>()) switch
             {
                 (null, _) => throw new ArgumentException("The given type is not a valid Kubernetes entity."),
                 ({ } attr, var scope) => (new(

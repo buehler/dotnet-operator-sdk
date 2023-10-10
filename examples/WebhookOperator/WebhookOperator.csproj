@@ -13,4 +13,8 @@
         <ProjectReference Include="..\..\src\KubeOps.Operator.Web\KubeOps.Operator.Web.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Localtunnel" Version="1.0.5" />
+    </ItemGroup>
+
 </Project>

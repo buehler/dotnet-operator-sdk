@@ -9,10 +9,11 @@ using k8s.Models;
 
 using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Entities.Attributes;
+using KubeOps.Transpiler.Kubernetes;
 
-namespace KubeOps.Cli.Transpilation;
+namespace KubeOps.Transpiler;
 
-internal static class Crds
+public static class Crds
 {
     private const string Integer = "integer";
     private const string Number = "number";

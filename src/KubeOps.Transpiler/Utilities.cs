@@ -1,10 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reflection;
-using System.Text.Json.Serialization;
 
-namespace KubeOps.Cli.Transpilation;
+namespace KubeOps.Transpiler;
 
-internal static class Utilities
+public static class Utilities
 {
     public static CustomAttributeData? GetCustomAttributeData<TAttribute>(this Type type)
         where TAttribute : Attribute

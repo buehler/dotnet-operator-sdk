@@ -6,6 +6,7 @@ using k8s.Models;
 
 using KubeOps.Abstractions.Entities.Attributes;
 using KubeOps.Abstractions.Rbac;
+using KubeOps.Transpiler;
 
 using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis.MSBuild;

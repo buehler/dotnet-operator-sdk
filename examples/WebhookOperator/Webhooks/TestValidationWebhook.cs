@@ -20,7 +20,7 @@ public class ValidationWebhook<TEntity> : ControllerBase
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     [HttpPost]
-    private async Task<IActionResult> Validate([FromBody] AdmissionRequest<TEntity> request)
+    public async Task<IActionResult> Validate([FromBody]AdmissionReview<TEntity> request)
     {
         return Ok();
     }
@@ -33,7 +33,7 @@ public class ValidationWebhookAttribute : RouteAttribute
     }
 }
 
-class AdmissionReview<TEntity> : IKubernetesObject
+public class AdmissionReview<TEntity> : IKubernetesObject
 {
     public AdmissionReview()
     {
@@ -54,7 +54,7 @@ class AdmissionReview<TEntity> : IKubernetesObject
     public AdmissionResponse? Response { get; set; }
 }
 
-class AdmissionRequest<TEntity>
+public class AdmissionRequest<TEntity>
 {
     [JsonPropertyName("uid")]
     public string Uid { get; init; } = string.Empty;
@@ -72,7 +72,7 @@ class AdmissionRequest<TEntity>
     public bool DryRun { get; set; }
 }
 
-class AdmissionResponse
+public class AdmissionResponse
 {
     public const string JsonPatch = "JSONPatch";
 
@@ -94,7 +94,7 @@ class AdmissionResponse
     [JsonPropertyName("patch")]
     public string? Patch { get; set; }
 
-    internal sealed class Reason
+    public sealed class Reason
     {
         [JsonPropertyName("code")]
         public int Code { get; init; }

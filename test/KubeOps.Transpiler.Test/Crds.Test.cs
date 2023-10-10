@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.ObjectModel;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 
 using FluentAssertions;
@@ -10,17 +9,8 @@ using k8s.Models;
 
 using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Entities.Attributes;
-using KubeOps.Cli.Transpilation;
 
-using Microsoft.Build.Locator;
-using Microsoft.CodeAnalysis.MSBuild;
-
-namespace KubeOps.Cli.Test.Transpilation;
-
-internal static class Str
-{
-    public static string ToCamelCase(this string t) => $"{t[..1].ToLowerInvariant()}{t[1..]}";
-}
+namespace KubeOps.Transpiler.Test;
 
 public class CrdsTest : IClassFixture<MlcProvider>
 {
