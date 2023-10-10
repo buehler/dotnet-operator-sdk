@@ -17,13 +17,13 @@ internal static class Entities
                 (null, _) => throw new ArgumentException("The given type is not a valid Kubernetes entity."),
                 ({ } attr, var scope) => (new(
                         Defaulted(
-                            attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.Kind)),
+                            attr.GetCustomAttributeNamedArg<string>(context, nameof(KubernetesEntityAttribute.Kind)),
                             entityType.Name),
                         Defaulted(
-                            attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.ApiVersion)),
+                            attr.GetCustomAttributeNamedArg<string>(context, nameof(KubernetesEntityAttribute.ApiVersion)),
                             "v1"),
-                        attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.Group)),
-                        attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.PluralName))),
+                        attr.GetCustomAttributeNamedArg<string>(context, nameof(KubernetesEntityAttribute.Group)),
+                        attr.GetCustomAttributeNamedArg<string>(context, nameof(KubernetesEntityAttribute.PluralName))),
                     scope switch
                     {
                         null => Enum.GetName(EntityScope.Namespaced) ?? "namespaced",

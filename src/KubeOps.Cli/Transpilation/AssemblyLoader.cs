@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using k8s.Models;
 
 using KubeOps.Abstractions.Entities.Attributes;
+using KubeOps.Abstractions.Rbac;
 
 using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis.MSBuild;
@@ -56,8 +57,7 @@ internal static partial class AssemblyLoader
             console.WriteLine();
             var mlc = new MetadataLoadContext(
                 new PathAssemblyResolver(project.MetadataReferences.Select(m => m.Display ?? string.Empty)
-                    .Concat(new[] { typeof(object).Assembly.Location })),
-                coreAssemblyName: typeof(object).Assembly.GetName().Name);
+                    .Concat(new[] { typeof(object).Assembly.Location })));
             mlc.LoadFromByteArray(assemblyStream.ToArray());
 
             return mlc;
@@ -128,8 +128,7 @@ internal static partial class AssemblyLoader
             console.WriteLine();
             var mlc = new MetadataLoadContext(
                 new PathAssemblyResolver(assemblies.SelectMany(a => a.Refs)
-                    .Concat(new[] { typeof(object).Assembly.Location }).Distinct()),
-                coreAssemblyName: typeof(object).Assembly.GetName().Name);
+                    .Concat(new[] { typeof(object).Assembly.Location }).Distinct()));
             foreach (var assembly in assemblies)
             {
                 mlc.LoadFromByteArray(assembly.Assembly);
@@ -144,6 +143,25 @@ internal static partial class AssemblyLoader
         .Where(e => e.attrs.Any(a => a.AttributeType.Name == nameof(KubernetesEntityAttribute)) &&
                     e.attrs.All(a => a.AttributeType.Name != nameof(IgnoreAttribute)))
         .Select(e => e.t);
+
+    public static IEnumerable<CustomAttributeData> RbacAttributes(this MetadataLoadContext context)
+    {
+        foreach (var type in context.GetAssemblies()
+                     .SelectMany(a => a.DefinedTypes)
+                     .SelectMany(t =>
+                         t.GetCustomAttributesData<GenericRbacAttribute>()))
+        {
+            yield return type;
+        }
+
+        foreach (var type in context.GetAssemblies()
+                     .SelectMany(a => a.DefinedTypes)
+                     .SelectMany(t =>
+                         t.GetCustomAttributesData<EntityRbacAttribute>()))
+        {
+            yield return type;
+        }
+    }
 
     [GeneratedRegex(".*")]
     private static partial Regex DefaultRegex();

@@ -177,9 +177,9 @@ internal static class Crds
                 Name = attr.GetCustomAttributeCtorArg<string>(context, 1),
                 JsonPath = attr.GetCustomAttributeCtorArg<string>(context, 0),
                 Type = attr.GetCustomAttributeCtorArg<string>(context, 2),
-                Description = attr.GetCustomAttributeNamedArg<string>("Description"),
-                Format = attr.GetCustomAttributeNamedArg<string>("Format"),
-                Priority = attr.GetCustomAttributeNamedArg<PrinterColumnPriority>("Priority") switch
+                Description = attr.GetCustomAttributeNamedArg<string>(context, "Description"),
+                Format = attr.GetCustomAttributeNamedArg<string>(context, "Format"),
+                Priority = attr.GetCustomAttributeNamedArg<PrinterColumnPriority>(context, "Priority") switch
                 {
                     PrinterColumnPriority.StandardView => 0,
                     _ => 1,

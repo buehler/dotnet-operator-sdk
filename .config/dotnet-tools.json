@@ -5,10 +5,6 @@
     "docfx": {
       "version": "2.71.0",
       "commands": ["docfx"]
-    },
-    "kubeops.cli": {
-      "version": "8.0.0-pre.16",
-      "commands": ["kubeops"]
     }
   }
 }

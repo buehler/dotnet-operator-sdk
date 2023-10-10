@@ -22,38 +22,6 @@ internal static class Str
     public static string ToCamelCase(this string t) => $"{t[..1].ToLowerInvariant()}{t[1..]}";
 }
 
-public class MlcProvider : IAsyncLifetime
-{
-    static MlcProvider()
-    {
-        MSBuildLocator.RegisterDefaults();
-    }
-
-    public MetadataLoadContext Mlc { get; private set; } = null!;
-
-    public async Task InitializeAsync()
-    {
-        using var workspace = MSBuildWorkspace.Create();
-        workspace.SkipUnrecognizedProjects = true;
-        workspace.LoadMetadataForReferencedProjects = true;
-        var project = await workspace.OpenProjectAsync("../../../KubeOps.Cli.Test.csproj");
-
-        Mlc = new MetadataLoadContext(
-            new PathAssemblyResolver(
-                Directory
-                    .GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll")
-                    .Concat(Directory.GetFiles(Path.GetDirectoryName(project.OutputFilePath)!, "*.dll"))
-                    .Distinct()),
-            coreAssemblyName: typeof(object).Assembly.GetName().Name);
-    }
-
-    public Task DisposeAsync()
-    {
-        Mlc.Dispose();
-        return Task.CompletedTask;
-    }
-}
-
 public class CrdsTest : IClassFixture<MlcProvider>
 {
     private readonly MetadataLoadContext _mlc;

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.ObjectModel;
+using System.Reflection;
 using System.Text.Json.Serialization;
 
 namespace KubeOps.Cli.Transpilation;
@@ -23,10 +24,16 @@ internal static class Utilities
             .GetCustomAttributes(type)
             .Where(a => a.AttributeType.Name == typeof(TAttribute).Name);
 
-    public static T? GetCustomAttributeNamedArg<T>(this CustomAttributeData attr, string name) =>
-        attr.NamedArguments.FirstOrDefault(a => a.MemberName == name).TypedValue.Value is T value
-            ? value
+    public static T? GetCustomAttributeNamedArg<T>(this CustomAttributeData attr, MetadataLoadContext ctx, string name) =>
+        attr.NamedArguments.FirstOrDefault(a => a.MemberName == name).TypedValue.ArgumentType == ctx.GetContextType<T>()
+            ? (T)attr.NamedArguments.FirstOrDefault(a => a.MemberName == name).TypedValue.Value!
             : default;
+
+    public static IList<string> GetCustomAttributeNamedStringArrayArg(this CustomAttributeData attr, string name) =>
+        attr.NamedArguments.FirstOrDefault(a => a.MemberName == name).TypedValue.Value is
+            ReadOnlyCollection<CustomAttributeTypedArgument> value
+            ? value.Select(v => v.Value?.ToString() ?? string.Empty).ToList()
+            : new List<string>();
 
     public static T? GetCustomAttributeCtorArg<T>(this CustomAttributeData attr, MetadataLoadContext ctx, int index) =>
         attr.ConstructorArguments.Count >= index + 1 &&
