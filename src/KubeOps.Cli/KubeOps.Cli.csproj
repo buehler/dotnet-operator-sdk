@@ -32,6 +32,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
+        <ProjectReference Include="..\KubeOps.Operator.Web\KubeOps.Operator.Web.csproj" />
         <ProjectReference Include="..\KubeOps.Transpiler\KubeOps.Transpiler.csproj" />
     </ItemGroup>
 

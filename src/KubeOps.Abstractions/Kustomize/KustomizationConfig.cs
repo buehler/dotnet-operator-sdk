@@ -47,4 +47,9 @@ public class KustomizationConfig : KubernetesObject
     /// List of <see cref="KustomizationConfigMapGenerator"/>.
     /// </summary>
     public IList<KustomizationConfigMapGenerator>? ConfigMapGenerator { get; set; }
+
+    /// <summary>
+    /// List of <see cref="KustomizationSecretGenerator"/>.
+    /// </summary>
+    public IList<KustomizationSecretGenerator>? SecretGenerator { get; set; }
 }
