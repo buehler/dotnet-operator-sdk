@@ -17,7 +17,15 @@ public class MlcProvider : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        using var workspace = MSBuildWorkspace.Create();
+        var assemblyConfigurationAttribute =
+            typeof(MlcProvider).Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
+        var buildConfigurationName = assemblyConfigurationAttribute?.Configuration ?? "Debug";
+
+        using var workspace = MSBuildWorkspace.Create(new Dictionary<string, string>
+        {
+            { "Configuration", buildConfigurationName },
+        });
+
         workspace.SkipUnrecognizedProjects = true;
         workspace.LoadMetadataForReferencedProjects = true;
         var project = await workspace.OpenProjectAsync("../../../KubeOps.Transpiler.Test.csproj");
