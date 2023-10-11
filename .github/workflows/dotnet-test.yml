@@ -14,6 +14,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build:
+    name: Building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.x
+
+      - name: Execute Tests
+        run: dotnet build --configuration Release
+
   test:
     name: Testing
     runs-on: ubuntu-latest
@@ -29,4 +43,4 @@ jobs:
         uses: helm/kind-action@v1.8.0
 
       - name: Execute Tests
-        run: dotnet test --configuration Release
+        run: dotnet test

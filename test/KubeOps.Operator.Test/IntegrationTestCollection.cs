@@ -1,16 +1,15 @@
-﻿using k8s;
+﻿using System.Reflection;
+
+using k8s;
 using k8s.Models;
 
 using KubeOps.Operator.Test.TestEntities;
 using KubeOps.Transpiler;
 
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-
 namespace KubeOps.Operator.Test;
 
 [CollectionDefinition(Name, DisableParallelization = true)]
-public class IntegrationTestCollection : ICollectionFixture<CrdInstaller>
+public class IntegrationTestCollection : ICollectionFixture<CrdInstaller>, ICollectionFixture<MlcProvider>
 {
     public const string Name = "Integration Tests";
 }
@@ -19,82 +18,48 @@ public class IntegrationTestCollection : ICollectionFixture<CrdInstaller>
 public abstract class IntegrationTestBase : IClassFixture<HostBuilder>
 {
     protected readonly HostBuilder _hostBuilder;
+    protected readonly MetadataLoadContext _mlc;
 
-    protected IntegrationTestBase(HostBuilder hostBuilder)
+    protected IntegrationTestBase(HostBuilder hostBuilder, MlcProvider provider)
     {
         _hostBuilder = hostBuilder;
+        _mlc = provider.Mlc;
     }
 }
 
-public sealed class HostBuilder : IAsyncDisposable
+public sealed class CrdInstaller : IAsyncLifetime
 {
-    private IHost? _host;
-    private bool _isRunning;
+    private List<V1CustomResourceDefinition> _crds = new();
 
-    public IServiceProvider Services => _host?.Services ?? throw new InvalidOperationException();
-
-    public async Task ConfigureAndStart(Action<HostApplicationBuilder> configure)
+    public async Task InitializeAsync()
     {
-        if (_host is not null && _isRunning)
-        {
-            return;
-        }
+        await using var p = new MlcProvider();
+        await p.InitializeAsync();
+        _crds = p.Mlc.Transpile(new[] { typeof(V1IntegrationTestEntity) }).ToList();
 
-        var builder = Host.CreateApplicationBuilder();
-#if DEBUG
-        builder.Logging.SetMinimumLevel(LogLevel.Trace);
-#else
-        builder.Logging.SetMinimumLevel(LogLevel.None);
-#endif
-        configure(builder);
-        _host = builder.Build();
-        await _host.StartAsync();
-        _isRunning = true;
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        _isRunning = false;
-        if (_host is null)
-        {
-            return;
-        }
-
-        await _host.StopAsync();
-        _host.Dispose();
-    }
-}
-
-public sealed class CrdInstaller : IDisposable
-{
-    private readonly IReadOnlyList<V1CustomResourceDefinition> _crds = Crds
-        .Transpile(new[] { typeof(V1IntegrationTestEntity) })
-        .ToList();
-
-    public CrdInstaller()
-    {
         using var client = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
         foreach (var crd in _crds)
         {
-            switch (client.ApiextensionsV1.ListCustomResourceDefinition(fieldSelector: $"metadata.name={crd.Name()}"))
+            switch (await client.ApiextensionsV1.ListCustomResourceDefinitionAsync(
+                        fieldSelector: $"metadata.name={crd.Name()}"))
             {
                 case { Items: [var existing] }:
                     crd.Metadata.ResourceVersion = existing.ResourceVersion();
-                    client.ApiextensionsV1.ReplaceCustomResourceDefinition(crd, crd.Name());
+                    await client.ApiextensionsV1.ReplaceCustomResourceDefinitionAsync(crd, crd.Name());
                     break;
                 default:
-                    client.ApiextensionsV1.CreateCustomResourceDefinition(crd);
+                    await client.ApiextensionsV1.CreateCustomResourceDefinitionAsync(crd);
                     break;
             }
         }
     }
 
-    public void Dispose()
+    public async Task DisposeAsync()
     {
         using var client = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
         foreach (var crd in _crds)
         {
-            client.ApiextensionsV1.DeleteCustomResourceDefinition(crd.Name());
+            await client.ApiextensionsV1.DeleteCustomResourceDefinitionAsync(crd.Name());
         }
     }
 }
