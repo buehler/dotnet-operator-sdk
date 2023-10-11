@@ -27,7 +27,7 @@ public sealed partial class KubernetesVersionComparer : IComparer<string>
         }
 
 #if NET7_0_OR_GREATER
-            var matchX = KubernetesVersionRegex().Match(x);
+        var matchX = KubernetesVersionRegex().Match(x);
 #else
         var matchX = KubernetesVersionRegex.Match(x);
 #endif
@@ -37,7 +37,7 @@ public sealed partial class KubernetesVersionComparer : IComparer<string>
         }
 
 #if NET7_0_OR_GREATER
-            var matchY = KubernetesVersionRegex().Match(y);
+        var matchY = KubernetesVersionRegex().Match(y);
 #else
         var matchY = KubernetesVersionRegex.Match(y);
 #endif
@@ -52,8 +52,8 @@ public sealed partial class KubernetesVersionComparer : IComparer<string>
     }
 
 #if NET7_0_OR_GREATER
-        [GeneratedRegex("^v(?<major>[0-9]+)((?<stream>alpha|beta)(?<minor>[0-9]+))?$", RegexOptions.Compiled)]
-        private static partial Regex KubernetesVersionRegex();
+    [GeneratedRegex("^v(?<major>[0-9]+)((?<stream>alpha|beta)(?<minor>[0-9]+))?$", RegexOptions.Compiled)]
+    private static partial Regex KubernetesVersionRegex();
 #endif
 
     private Version ExtractVersion(Match match)

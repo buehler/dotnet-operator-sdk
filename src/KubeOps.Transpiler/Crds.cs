@@ -135,7 +135,8 @@ public static class Crds
         return $"{name[..1].ToLowerInvariant()}{name[1..]}";
     }
 
-    private static IEnumerable<V1CustomResourceColumnDefinition> MapPrinterColumns(this MetadataLoadContext context,
+    private static IEnumerable<V1CustomResourceColumnDefinition> MapPrinterColumns(
+        this MetadataLoadContext context,
         Type type)
     {
         var props = type.GetProperties().Select(p => (Prop: p, Path: string.Empty)).ToList();
@@ -196,13 +197,8 @@ public static class Crds
         // TODO: xml docs
         props.Description ??= prop.GetCustomAttributeData<DescriptionAttribute>()
             ?.GetCustomAttributeCtorArg<string>(context, 0);
-        if (string.IsNullOrWhiteSpace(props.Description))
-        {
-            props.Description = null;
-        }
 
-        props.Nullable = new NullabilityInfoContext().Create(prop).ReadState == NullabilityState.Nullable ||
-                         prop.PropertyType.FullName?.Contains("Nullable") == true;
+        props.Nullable = prop.IsNullable();
 
         if (prop.GetCustomAttributeData<ExternalDocsAttribute>() is { } extDocs)
         {
@@ -272,7 +268,9 @@ public static class Crds
 
         if (type.IsArray && type.GetElementType() != null)
         {
-            return new V1JSONSchemaProps { Type = Array, Items = context.Map(type.GetElementType()!) };
+            var items = context.Map(type.GetElementType()!);
+            items.Nullable = type.GetElementType()!.IsNullable();
+            return new V1JSONSchemaProps { Type = Array, Items = items };
         }
 
         if (!IsSimpleType(type)
@@ -291,21 +289,18 @@ public static class Crds
             type.GenericTypeArguments.Single().GetGenericTypeDefinition() ==
             context.GetContextType(typeof(KeyValuePair<,>)))
         {
-            return new V1JSONSchemaProps
-            {
-                Type = Object,
-                AdditionalProperties = context.Map(type.GenericTypeArguments.Single().GenericTypeArguments[1]),
-            };
+            var props = context.Map(type.GenericTypeArguments.Single().GenericTypeArguments[1]);
+            props.Nullable = type.GenericTypeArguments.Single().GenericTypeArguments[1].IsNullable();
+            return new V1JSONSchemaProps { Type = Object, AdditionalProperties = props, };
         }
 
         if (!IsSimpleType(type)
             && type.IsGenericType
             && type.GetGenericTypeDefinition() == context.GetContextType(typeof(IDictionary<,>)))
         {
-            return new V1JSONSchemaProps
-            {
-                Type = Object, AdditionalProperties = context.Map(type.GenericTypeArguments[1]),
-            };
+            var props = context.Map(type.GenericTypeArguments[1]);
+            props.Nullable = type.GenericTypeArguments[1].IsNullable();
+            return new V1JSONSchemaProps { Type = Object, AdditionalProperties = props, };
         }
 
         if (!IsSimpleType(type) &&
@@ -320,7 +315,9 @@ public static class Crds
 
         if (!IsSimpleType(type) && IsGenericEnumerableType(type, out Type? closingType))
         {
-            return new V1JSONSchemaProps { Type = Array, Items = context.Map(closingType), };
+            var items = context.Map(closingType);
+            items.Nullable = closingType.IsNullable();
+            return new V1JSONSchemaProps { Type = Array, Items = items };
         }
 
         if (type == context.GetContextType<IntstrIntOrString>())

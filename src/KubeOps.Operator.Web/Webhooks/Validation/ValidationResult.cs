@@ -1,27 +1,27 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace KubeOps.Operator.Web.Webhooks.Validation;
 
-public class ValidationResult
+/// <summary>
+///
+/// </summary>
+/// <param name="Valid"></param>
+public record ValidationResult(bool Valid = true) : IActionResult
 {
-    /// <summary>
-    /// Determines if the result of the admission webhook is
-    /// either valid or invalid.
-    /// </summary>
-    public bool Valid { get; init; } = true;
+    internal string Uid { get; init; } = string.Empty;
 
     /// <summary>
-    /// Provides a (http) status code for Kubernetes for an admission result.
-    /// This field may be used to provide additional information to the
-    /// user.
+    /// Provides additional information to the validation result.
+    /// The message is displayed to the user if the validation fails.
+    /// The status code can provide more information about the error.
+    /// <a href="https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#response">
+    /// See "Extensible Admission Controller Response"
+    /// </a>
     /// </summary>
-    public int? StatusCode { get; init; }
-
-    /// <summary>
-    /// Provide an additional status message for the admission result.
-    /// This provides additional information for the user.
-    /// </summary>
-    public string? StatusMessage { get; init; }
+    public AdmissionStatus? Status { get; init; }
 
     /// <summary>
     /// Despite being "valid", the validation can add a list of warnings to the user.
@@ -30,4 +30,28 @@ public class ValidationResult
     /// If more than 4096 characters are submitted, additional messages are ignored.
     /// </summary>
     public IList<string> Warnings { get; init; } = new List<string>();
+
+    public async Task ExecuteResultAsync(ActionContext context)
+    {
+        var response = context.HttpContext.Response;
+        if (string.IsNullOrWhiteSpace(Uid))
+        {
+            response.StatusCode = StatusCodes.Status500InternalServerError;
+            await response.WriteAsync("No request UID was provided.");
+            return;
+        }
+
+        await response.WriteAsJsonAsync(
+            new AdmissionResponse
+            {
+                Response = new()
+                {
+                    Uid = Uid,
+                    Allowed = Valid,
+                    Status = Status,
+                    Warnings = Warnings.ToArray(),
+                },
+            },
+            AdmissionResponse.SerializerOptions);
+    }
 }

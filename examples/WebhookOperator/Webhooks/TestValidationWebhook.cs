@@ -11,7 +11,7 @@ public class TestValidationWebhook : ValidationWebhook<V1TestEntity>
     {
         if (entity.Spec.Username == "forbidden")
         {
-            return Fail("name may not be 'forbidden'.");
+            return Fail("name may not be 'forbidden'.", 422);
         }
 
         return Success();

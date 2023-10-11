@@ -36,11 +36,11 @@ public class ValidationWebhook<TEntity> : ControllerBase
                 request.Request.DryRun),
             DeleteOperation => await Delete(request.Request.OldObject!, request.Request.DryRun),
             _ => Fail(
-                StatusCodes.Status422UnprocessableEntity,
-                $"Operation {request.Request.Operation} is not supported."),
+                $"Operation {request.Request.Operation} is not supported.",
+                StatusCodes.Status422UnprocessableEntity),
         };
 
-        return Ok(new ValidationResponse(request.Request.Uid, result));
+        return result with { Uid = request.Request.Uid };
     }
 
     [NonAction]
@@ -49,15 +49,12 @@ public class ValidationWebhook<TEntity> : ControllerBase
 
     [NonAction]
     protected ValidationResult Fail()
-        => new() { Valid = false };
+        => new(false);
 
     [NonAction]
     protected ValidationResult Fail(string reason)
-        => new() { Valid = false, StatusMessage = reason };
+        => new(false) { Status = new(reason) };
 
     [NonAction]
-    protected ValidationResult Fail(int statusCode, string reason) => new()
-    {
-        Valid = false, StatusCode = statusCode, StatusMessage = reason,
-    };
+    protected ValidationResult Fail(string reason, int statusCode) => new(false) { Status = new(reason, statusCode), };
 }

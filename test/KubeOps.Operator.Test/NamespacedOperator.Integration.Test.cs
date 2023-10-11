@@ -18,7 +18,7 @@ public class NamespacedOperatorIntegrationTest : IntegrationTestBase, IAsyncLife
     private IKubernetesClient<V1IntegrationTestEntity> _client = null!;
     private IKubernetesClient<V1Namespace> _nsClient = null!;
 
-    public NamespacedOperatorIntegrationTest(HostBuilder hostBuilder) : base(hostBuilder)
+    public NamespacedOperatorIntegrationTest(HostBuilder hostBuilder, MlcProvider provider) : base(hostBuilder, provider)
     {
         Mock.Clear();
     }
@@ -51,7 +51,7 @@ public class NamespacedOperatorIntegrationTest : IntegrationTestBase, IAsyncLife
 
     public async Task InitializeAsync()
     {
-        var meta = Entities.ToEntityMetadata(typeof(V1IntegrationTestEntity)).Metadata;
+        var meta = _mlc.ToEntityMetadata(typeof(V1IntegrationTestEntity)).Metadata;
         _client = new KubernetesClient<V1IntegrationTestEntity>(meta);
         _nsClient = new KubernetesClient<V1Namespace>(new(V1Namespace.KubeKind, V1Namespace.KubeApiVersion,
             V1Namespace.KubeGroup, V1Namespace.KubePluralName));

@@ -62,8 +62,9 @@ public class CrdsTest : IClassFixture<MlcProvider>
 
     [Theory]
     [InlineData(typeof(StringArrayEntity), "string", false)]
-    [InlineData(typeof(NullableStringArrayEntity), "string", true)]
+    [InlineData(typeof(NullableStringArrayEntity), "string", false)]
     [InlineData(typeof(EnumerableIntEntity), "integer", false)]
+    [InlineData(typeof(EnumerableNullableIntEntity), "integer", true)]
     [InlineData(typeof(HashSetIntEntity), "integer", false)]
     [InlineData(typeof(SetIntEntity), "integer", false)]
     [InlineData(typeof(InheritedEnumerableEntity), "integer", false)]
@@ -73,7 +74,7 @@ public class CrdsTest : IClassFixture<MlcProvider>
         var crd = _mlc.Transpile(type);
         var prop = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"].Items as V1JSONSchemaProps;
         prop!.Type.Should().Be(expectedType);
-        // TODO prop.Nullable.Should().Be(isNullable);
+        prop.Nullable.Should().Be(isNullable);
     }
 
     [Fact]
@@ -192,236 +193,236 @@ public class CrdsTest : IClassFixture<MlcProvider>
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
         specProperties.Description.Should().NotBe("");
     }
-    
+
     [Fact]
     public void Should_Set_Description()
     {
         var crd = _mlc.Transpile(typeof(DescriptionAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.Description.Should().NotBe("");
     }
-    
+
     [Fact]
     public void Should_Set_ExternalDocs()
     {
         var crd = _mlc.Transpile(typeof(ExtDocsAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.ExternalDocs.Url.Should().NotBe("");
     }
-    
+
     [Fact]
     public void Should_Set_ExternalDocs_Description()
     {
         var crd = _mlc.Transpile(typeof(ExtDocsWithDescriptionAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.ExternalDocs.Description.Should().NotBe("");
     }
-    
+
     [Fact]
     public void Should_Set_Items_Information()
     {
         var crd = _mlc.Transpile(typeof(ItemsAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
-    
+
         specProperties.Type.Should().Be("array");
         (specProperties.Items as V1JSONSchemaProps)?.Type?.Should().Be("string");
         specProperties.MaxItems.Should().Be(42);
         specProperties.MinItems.Should().Be(13);
     }
-    
+
     [Fact]
     public void Should_Set_Length_Information()
     {
         var crd = _mlc.Transpile(typeof(LengthAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
-    
+
         specProperties.MinLength.Should().Be(2);
         specProperties.MaxLength.Should().Be(42);
     }
-    
+
     [Fact]
     public void Should_Set_MultipleOf()
     {
         var crd = _mlc.Transpile(typeof(MultipleOfAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
-    
+
         specProperties.MultipleOf.Should().Be(2);
     }
-    
+
     [Fact]
     public void Should_Set_Pattern()
     {
         var crd = _mlc.Transpile(typeof(PatternAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
-    
+
         specProperties.Pattern.Should().Be(@"/\d*/");
     }
-    
+
     [Fact]
     public void Should_Set_RangeMinimum()
     {
         var crd = _mlc.Transpile(typeof(RangeMinimumAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
-    
+
         specProperties.Minimum.Should().Be(15);
         specProperties.ExclusiveMinimum.Should().BeTrue();
     }
-    
+
     [Fact]
     public void Should_Set_RangeMaximum()
     {
         var crd = _mlc.Transpile(typeof(RangeMaximumAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
-    
+
         specProperties.Maximum.Should().Be(15);
         specProperties.ExclusiveMaximum.Should().BeTrue();
     }
-    
+
     [Fact]
     public void Should_Set_Required()
     {
         var crd = _mlc.Transpile(typeof(RequiredAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
         specProperties.Required.Should().Contain("property");
     }
-    
+
     [Fact]
     public void Should_Not_Contain_Ignored_Property()
     {
         var crd = _mlc.Transpile(typeof(IgnoreAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
         specProperties.Properties.Should().NotContainKey("property");
     }
-    
+
     [Fact]
     public void Should_Set_Preserve_Unknown_Fields()
     {
         var crd = _mlc.Transpile(typeof(PreserveUnknownFieldsAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.XKubernetesPreserveUnknownFields.Should().BeTrue();
     }
-    
+
     [Fact]
     public void Should_Set_EmbeddedResource_Fields()
     {
         var crd = _mlc.Transpile(typeof(EmbeddedResourceAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.XKubernetesEmbeddedResource.Should().BeTrue();
     }
-    
+
     [Fact]
     public void Should_Set_Preserve_Unknown_Fields_On_Dictionaries()
     {
         var crd = _mlc.Transpile(typeof(SimpleDictionaryEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.XKubernetesPreserveUnknownFields.Should().BeTrue();
     }
-    
+
     [Fact]
     public void Should_Not_Set_Preserve_Unknown_Fields_On_Generic_Dictionaries()
     {
         var crd = _mlc.Transpile(typeof(DictionaryEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.XKubernetesPreserveUnknownFields.Should().BeNull();
     }
-    
+
     [Fact]
     public void Should_Not_Set_Preserve_Unknown_Fields_On_KeyValuePair_Enumerable()
     {
         var crd = _mlc.Transpile(typeof(EnumerableKeyPairsEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.XKubernetesPreserveUnknownFields.Should().BeNull();
     }
-    
+
     [Fact]
     public void Should_Not_Set_Properties_On_Dictionaries()
     {
         var crd = _mlc.Transpile(typeof(SimpleDictionaryEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.Properties.Should().BeNull();
     }
-    
+
     [Fact]
     public void Should_Not_Set_Properties_On_Generic_Dictionaries()
     {
         var crd = _mlc.Transpile(typeof(DictionaryEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.Properties.Should().BeNull();
     }
-    
+
     [Fact]
     public void Should_Not_Set_Properties_On_KeyValuePair_Enumerable()
     {
         var crd = _mlc.Transpile(typeof(EnumerableKeyPairsEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.Properties.Should().BeNull();
     }
-    
+
     [Fact]
     public void Should_Set_AdditionalProperties_On_Dictionaries_For_Value_type()
     {
         var crd = _mlc.Transpile(typeof(DictionaryEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.AdditionalProperties.Should().NotBeNull();
     }
-    
+
     [Fact]
     public void Should_Set_AdditionalProperties_On_KeyValuePair_For_Value_type()
     {
         var crd = _mlc.Transpile(typeof(EnumerableKeyPairsEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.AdditionalProperties.Should().NotBeNull();
     }
-    
+
     [Fact]
     public void Should_Set_IntOrString()
     {
         var crd = _mlc.Transpile(typeof(IntstrOrStringEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.Properties.Should().BeNull();
         specProperties.XKubernetesIntOrString.Should().BeTrue();
     }
-    
+
     [Fact]
     public void Should_Use_PropertyName_From_JsonPropertyAttribute()
     {
         var crd = _mlc.Transpile(typeof(JsonPropNameAttrEntity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties;
         specProperties.Should().Contain(p => p.Key == "otherName");
     }
-    
+
     [Fact]
     public void Must_Not_Contain_Ignored_TopLevel_Properties()
     {
         var crd = _mlc.Transpile(typeof(Entity));
-    
+
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties;
         specProperties.Should().NotContainKeys("metadata", "apiVersion", "kind");
     }
-    
+
     [Fact]
     public void Should_Add_AdditionalPrinterColumns()
     {
@@ -429,7 +430,7 @@ public class CrdsTest : IClassFixture<MlcProvider>
         var apc = crd.Spec.Versions.First().AdditionalPrinterColumns;
         apc.Should().ContainSingle(def => def.JsonPath == ".property");
     }
-    
+
     [Fact]
     public void Should_Add_AdditionalPrinterColumns_With_Prio()
     {
@@ -437,7 +438,7 @@ public class CrdsTest : IClassFixture<MlcProvider>
         var apc = crd.Spec.Versions.First().AdditionalPrinterColumns;
         apc.Should().ContainSingle(def => def.JsonPath == ".property" && def.Priority == 1);
     }
-    
+
     [Fact]
     public void Should_Add_AdditionalPrinterColumns_With_Name()
     {
@@ -445,23 +446,23 @@ public class CrdsTest : IClassFixture<MlcProvider>
         var apc = crd.Spec.Versions.First().AdditionalPrinterColumns;
         apc.Should().ContainSingle(def => def.JsonPath == ".property" && def.Name == "OtherName");
     }
-    
+
     [Fact]
     public void Should_Add_GenericAdditionalPrinterColumns()
     {
         var crd = _mlc.Transpile(typeof(GenericAdditionalPrinterColumnAttrEntity));
         var apc = crd.Spec.Versions.First().AdditionalPrinterColumns;
-    
+
         apc.Should().NotBeNull();
         apc.Should().ContainSingle(def => def.JsonPath == ".metadata.namespace" && def.Name == "Namespace");
     }
-    
+
     [Fact]
     public void Should_Correctly_Use_Entity_Scope_Attribute()
     {
         var scopedCrd = _mlc.Transpile(typeof(Entity));
         var clusterCrd = _mlc.Transpile(typeof(ScopeAttrEntity));
-    
+
         scopedCrd.Spec.Scope.Should().Be("Namespaced");
         clusterCrd.Spec.Scope.Should().Be("Cluster");
     }
@@ -569,6 +570,12 @@ public class CrdsTest : IClassFixture<MlcProvider>
     {
         public string[]? Property { get; set; } = null!;
     }
+    
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class EnumerableNullableIntEntity : CustomKubernetesEntity
+    {
+        public IEnumerable<int?> Property { get; set; } = null!;
+    }
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     private class EnumerableIntEntity : CustomKubernetesEntity
@@ -621,7 +628,7 @@ public class CrdsTest : IClassFixture<MlcProvider>
             Value2,
         }
     }
-    
+
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     private class SimpleDictionaryEntity : CustomKubernetesEntity
     {
@@ -841,7 +848,7 @@ public class CrdsTest : IClassFixture<MlcProvider>
             public string Property { get; set; } = null!;
         }
     }
-    
+
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     public class PreserveUnknownFieldsAttrEntity : CustomKubernetesEntity
     {
@@ -855,7 +862,7 @@ public class CrdsTest : IClassFixture<MlcProvider>
         [EmbeddedResource]
         public string Property { get; set; } = null!;
     }
-    
+
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     public class AdditionalPrinterColumnAttrEntity : CustomKubernetesEntity
     {
@@ -899,7 +906,7 @@ public class CrdsTest : IClassFixture<MlcProvider>
     {
         public string Property { get; set; } = null!;
     }
-    
+
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     public class JsonPropNameAttrEntity : CustomKubernetesEntity
     {

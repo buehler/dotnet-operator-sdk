@@ -23,7 +23,8 @@ public static class Utilities
             .GetCustomAttributes(type)
             .Where(a => a.AttributeType.Name == typeof(TAttribute).Name);
 
-    public static T? GetCustomAttributeNamedArg<T>(this CustomAttributeData attr, MetadataLoadContext ctx, string name) =>
+    public static T?
+        GetCustomAttributeNamedArg<T>(this CustomAttributeData attr, MetadataLoadContext ctx, string name) =>
         attr.NamedArguments.FirstOrDefault(a => a.MemberName == name).TypedValue.ArgumentType == ctx.GetContextType<T>()
             ? (T)attr.NamedArguments.FirstOrDefault(a => a.MemberName == name).TypedValue.Value!
             : default;
@@ -56,4 +57,11 @@ public static class Utilities
         var newAssembly = context.LoadFromAssemblyPath(type.Assembly.Location);
         return newAssembly.GetType(type.FullName!)!;
     }
+
+    public static bool IsNullable(this Type type)
+        => type.FullName?.Contains("Nullable") == true;
+
+    public static bool IsNullable(this PropertyInfo prop)
+        => new NullabilityInfoContext().Create(prop).ReadState == NullabilityState.Nullable ||
+           prop.PropertyType.FullName?.Contains("Nullable") == true;
 }

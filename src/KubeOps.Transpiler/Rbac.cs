@@ -63,8 +63,7 @@ internal static class Rbac
         //             Resources = new[] { $"{crd.Metadata.PluralName}/status" },
         //             Verbs = ConvertToStrings(RbacVerb.Get | RbacVerb.Patch | RbacVerb.Update),
         //         });
-
-        return generic; //.Concat(entities).Concat(entityStatus);
+        return generic; // .Concat(entities).Concat(entityStatus);
     }
 
     private static string[] ConvertToStrings(RbacVerb verbs) => verbs switch

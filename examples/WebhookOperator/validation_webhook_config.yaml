@@ -6,7 +6,7 @@ webhooks:
   - admissionReviewVersions:
       - v1
     clientConfig:
-      url: https://f487-2a02-169-601-0-ad64-cd7-b178-7a5b.ngrok-free.app/validate/v1testentity
+      url: https://290f-2a02-169-601-0-ad64-cd7-b178-7a5b.ngrok-free.app/validate/v1testentity
     failurePolicy: Fail
     matchPolicy: Exact
     name: test.web.hook.com
