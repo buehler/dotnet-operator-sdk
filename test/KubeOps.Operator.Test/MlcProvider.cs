@@ -10,7 +10,7 @@ namespace KubeOps.Operator.Test;
 
 public class MlcProvider : IAsyncLifetime
 {
-    private static readonly SemaphoreSlim _semaphore = new(1, 1);
+    private static readonly SemaphoreSlim Semaphore = new(1, 1);
 
     static MlcProvider()
     {
@@ -23,7 +23,7 @@ public class MlcProvider : IAsyncLifetime
     {
         try
         {
-            await _semaphore.WaitAsync();
+            await Semaphore.WaitAsync();
             using var workspace = MSBuildWorkspace.Create();
             workspace.SkipUnrecognizedProjects = true;
             workspace.LoadMetadataForReferencedProjects = true;
@@ -36,7 +36,7 @@ public class MlcProvider : IAsyncLifetime
         }
         finally
         {
-            _semaphore.Release();
+            Semaphore.Release();
         }
     }
 

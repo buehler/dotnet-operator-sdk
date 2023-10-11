@@ -1,6 +1,0 @@
-apiVersion: demo-operators.io/v1
-kind: UserConfig
-metadata:
-  name: demo-user
-spec:
-  username: my user
