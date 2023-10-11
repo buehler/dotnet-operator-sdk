@@ -7,8 +7,18 @@ using KubeOps.Abstractions.Entities.Attributes;
 
 namespace KubeOps.Transpiler;
 
+/// <summary>
+/// Transpiler for Kubernetes entities to create entity metadata.
+/// </summary>
 public static class Entities
 {
+    /// <summary>
+    /// Create a metadata / scope tuple out of a given entity type.
+    /// </summary>
+    /// <param name="context">The context that loaded the types.</param>
+    /// <param name="entityType">The type to convert.</param>
+    /// <returns>A tuple that contains <see cref="EntityMetadata"/> and a scope.</returns>
+    /// <exception cref="ArgumentException">Thrown when the type contains no <see cref="KubernetesEntityAttribute"/>.</exception>
     public static (EntityMetadata Metadata, string Scope) ToEntityMetadata(this MetadataLoadContext context, Type entityType)
         => (context.GetContextType(entityType).GetCustomAttributeData<KubernetesEntityAttribute>(),
                 context.GetContextType(entityType).GetCustomAttributeData<EntityScopeAttribute>()) switch

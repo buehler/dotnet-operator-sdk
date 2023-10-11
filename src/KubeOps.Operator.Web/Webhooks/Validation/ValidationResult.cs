@@ -1,14 +1,12 @@
-﻿using System.Text.Json;
-
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KubeOps.Operator.Web.Webhooks.Validation;
 
 /// <summary>
-///
+/// The validation result for the validation (admission) request to a webhook.
 /// </summary>
-/// <param name="Valid"></param>
+/// <param name="Valid">Whether the validation / the entity is valid or not.</param>
 public record ValidationResult(bool Valid = true) : IActionResult
 {
     internal string Uid { get; init; } = string.Empty;
@@ -31,6 +29,7 @@ public record ValidationResult(bool Valid = true) : IActionResult
     /// </summary>
     public IList<string> Warnings { get; init; } = new List<string>();
 
+    /// <inheritdoc/>
     public async Task ExecuteResultAsync(ActionContext context)
     {
         var response = context.HttpContext.Response;

@@ -2,6 +2,9 @@
 
 namespace KubeOps.Operator.Web.Webhooks;
 
+/// <summary>
+/// Base class for admission review requests.
+/// </summary>
 public abstract class AdmissionReview
 {
     [JsonPropertyName("apiVersion")]

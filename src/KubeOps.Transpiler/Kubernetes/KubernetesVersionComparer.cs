@@ -3,7 +3,10 @@
 namespace KubeOps.Transpiler.Kubernetes;
 
 /// <summary>
-/// KubernetesVersionComparer. TODO.
+/// Comparer for Kubernetes Versions. Uses the version priority according to
+/// <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#version-priority">
+/// the Kubernetes documentation
+/// </a>.
 /// </summary>
 public sealed partial class KubernetesVersionComparer : IComparer<string>
 {

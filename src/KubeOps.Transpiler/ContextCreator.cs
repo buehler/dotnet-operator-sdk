@@ -2,8 +2,19 @@
 
 namespace KubeOps.Transpiler;
 
+/// <summary>
+/// Helper to create <see cref="MetadataLoadContext"/>s.
+/// </summary>
 public static class ContextCreator
 {
+    /// <summary>
+    /// Create a new <see cref="MetadataLoadContext"/> with the given <paramref name="assemblyPaths"/>
+    /// and directly load an assembly into it.
+    /// </summary>
+    /// <param name="assemblyPaths">A list of paths.</param>
+    /// <param name="assembly">The byte array that contains the assembly to load.</param>
+    /// <param name="coreAssemblyName">Optional core assembly name.</param>
+    /// <returns>The configured <see cref="MetadataLoadContext"/>.</returns>
     public static MetadataLoadContext Create(
         IEnumerable<string> assemblyPaths,
         byte[] assembly,
@@ -14,6 +25,12 @@ public static class ContextCreator
         return mlc;
     }
 
+    /// <summary>
+    /// Create a new <see cref="MetadataLoadContext"/> with the given <paramref name="assemblyPaths"/>.
+    /// </summary>
+    /// <param name="assemblyPaths">A list of paths.</param>
+    /// <param name="coreAssemblyName">Optional core assembly name.</param>
+    /// <returns>The configured <see cref="MetadataLoadContext"/>.</returns>
     public static MetadataLoadContext Create(IEnumerable<string> assemblyPaths, string? coreAssemblyName = null) =>
         new(new PathAssemblyResolver(assemblyPaths), coreAssemblyName: coreAssemblyName);
 }

@@ -13,6 +13,9 @@ using KubeOps.Transpiler.Kubernetes;
 
 namespace KubeOps.Transpiler;
 
+/// <summary>
+/// CRD transpiler for Kubernetes entities.
+/// </summary>
 public static class Crds
 {
     private const string Integer = "integer";
@@ -30,6 +33,12 @@ public static class Crds
 
     private static readonly string[] IgnoredToplevelProperties = { "metadata", "apiversion", "kind" };
 
+    /// <summary>
+    /// Transpile a single type to a CRD.
+    /// </summary>
+    /// <param name="context">The <see cref="MetadataLoadContext"/>.</param>
+    /// <param name="type">The type to convert.</param>
+    /// <returns>The converted custom resource definition.</returns>
     public static V1CustomResourceDefinition Transpile(this MetadataLoadContext context, Type type)
     {
         type = context.GetContextType(type);
@@ -42,7 +51,10 @@ public static class Crds
         crd.Spec.Names =
             new V1CustomResourceDefinitionNames
             {
-                Kind = meta.Kind, ListKind = meta.ListKind, Singular = meta.SingularName, Plural = meta.PluralName,
+                Kind = meta.Kind,
+                ListKind = meta.ListKind,
+                Singular = meta.SingularName,
+                Plural = meta.PluralName,
             };
         crd.Spec.Scope = scope;
         if (type.GetCustomAttributeData<KubernetesEntityShortNamesAttribute>()?.ConstructorArguments[0].Value is
@@ -82,6 +94,12 @@ public static class Crds
         return crd;
     }
 
+    /// <summary>
+    /// Transpile a list of entities to CRDs and group them by version.
+    /// </summary>
+    /// <param name="context">The <see cref="MetadataLoadContext"/>.</param>
+    /// <param name="types">The types to convert.</param>
+    /// <returns>The converted custom resource definitions.</returns>
     public static IEnumerable<V1CustomResourceDefinition> Transpile(
         this MetadataLoadContext context,
         IEnumerable<Type> types)
@@ -194,7 +212,6 @@ public static class Crds
     {
         var props = context.Map(prop.PropertyType);
 
-        // TODO: xml docs
         props.Description ??= prop.GetCustomAttributeData<DescriptionAttribute>()
             ?.GetCustomAttributeCtorArg<string>(context, 0);
 
@@ -389,7 +406,8 @@ public static class Crds
         {
             return new V1JSONSchemaProps
             {
-                Type = String, EnumProperty = Enum.GetNames(type.GetGenericArguments()[0]).Cast<object>().ToList(),
+                Type = String,
+                EnumProperty = Enum.GetNames(type.GetGenericArguments()[0]).Cast<object>().ToList(),
             };
         }
 
@@ -410,10 +428,10 @@ public static class Crds
                         .Where(p => p.GetCustomAttributeData<IgnoreAttribute>() == null)
                         .Select(p => p.GetPropertyName(context))
                         .ToList() switch
-                    {
-                        { Count: > 0 } p => p,
-                        _ => null,
-                    },
+                {
+                    { Count: > 0 } p => p,
+                    _ => null,
+                },
             };
         }
 

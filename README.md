@@ -26,6 +26,7 @@ The following packages exist:
 | [KubeOps.KubernetesClient](./src/KubeOps.KubernetesClient/README.md) | Extended client to communicate with the Kubernetes API | [![Nuget](https://img.shields.io/nuget/vpre/KubeOps.KubernetesClient?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps.KubernetesClient/absoluteLatest) |
 | [KubeOps.Operator](./src/KubeOps.Operator/README.md)                 | Main SDK entrypoint to create an operator              | [![Nuget](https://img.shields.io/nuget/vpre/KubeOps.Operator?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps.Operator/absoluteLatest)                 |
 | [KubeOps.Operator.Web](./src/KubeOps.Operator.Web/README.md)         | Web part of the operator (for webhooks)                | [![Nuget](https://img.shields.io/nuget/vpre/KubeOps.Operator.Web?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps.Operator.Web/absoluteLatest)         |
+| [KubeOps.Transpiler](./src/KubeOps.Transpiler/README.md)             | Transpilation helpers for CRDs and RBAC elements       | [![Nuget](https://img.shields.io/nuget/vpre/KubeOps.Transpiler?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps.Transpiler/absoluteLatest)             |
 
 ## Contribution
 

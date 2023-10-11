@@ -12,7 +12,7 @@ can just build the image and then use "imagePullPolicy: Never".
 
 A running example on Docker for Desktop looks like this:
 
-1. Build the project locally with the dotnet tool `KubeOps.Cli` installed
+1. Build the project locally
 2. Build the docker image with `docker build -t kubeops-demo-operator:latest .`
 3. Add the imagePullPolicy patch to the created `kustomization.yaml` in the config dir
    ```yaml

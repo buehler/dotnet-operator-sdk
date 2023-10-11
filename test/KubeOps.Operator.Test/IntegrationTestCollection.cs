@@ -9,13 +9,13 @@ using KubeOps.Transpiler;
 namespace KubeOps.Operator.Test;
 
 [CollectionDefinition(Name, DisableParallelization = true)]
-public class IntegrationTestCollection : ICollectionFixture<CrdInstaller>
+public class IntegrationTestCollection : ICollectionFixture<CrdInstaller>, ICollectionFixture<MlcProvider>
 {
     public const string Name = "Integration Tests";
 }
 
 [Collection(IntegrationTestCollection.Name)]
-public abstract class IntegrationTestBase : IClassFixture<HostBuilder>, IClassFixture<MlcProvider>
+public abstract class IntegrationTestBase : IClassFixture<HostBuilder>
 {
     protected readonly HostBuilder _hostBuilder;
     protected readonly MetadataLoadContext _mlc;

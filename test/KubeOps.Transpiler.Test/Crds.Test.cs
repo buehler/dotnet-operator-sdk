@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.ObjectModel;
-using System.Reflection;
 using System.Text.Json.Serialization;
 
 using FluentAssertions;
@@ -12,13 +11,10 @@ using KubeOps.Abstractions.Entities.Attributes;
 
 namespace KubeOps.Transpiler.Test;
 
-public class CrdsTest : IClassFixture<MlcProvider>
+public class CrdsTest : TranspilerTestBase
 {
-    private readonly MetadataLoadContext _mlc;
-
-    public CrdsTest(MlcProvider provider)
+    public CrdsTest(MlcProvider provider) : base(provider)
     {
-        _mlc = provider.Mlc;
     }
 
     [Theory]
@@ -570,7 +566,7 @@ public class CrdsTest : IClassFixture<MlcProvider>
     {
         public string[]? Property { get; set; } = null!;
     }
-    
+
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     private class EnumerableNullableIntEntity : CustomKubernetesEntity
     {
