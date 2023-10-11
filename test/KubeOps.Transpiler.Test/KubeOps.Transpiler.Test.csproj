@@ -1,5 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\KubeOps.Transpiler\KubeOps.Transpiler.csproj" />
-  </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="KubernetesClient" Version="12.1.1"/>
+        <PackageReference Include="Microsoft.Build.Locator" Version="1.6.10" />
+        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.7.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.7.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.7.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\KubeOps.Transpiler\KubeOps.Transpiler.csproj" />
+    </ItemGroup>
+
 </Project>

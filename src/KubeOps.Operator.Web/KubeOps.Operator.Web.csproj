@@ -17,8 +17,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
-        <ProjectReference Include="..\KubeOps.Operator\KubeOps.Operator.csproj" />
+        <ProjectReference Include="..\KubeOps.Operator\KubeOps.Operator.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
     </ItemGroup>
 
 </Project>

@@ -1,0 +1,6 @@
+apiVersion: webhook.dev/v1
+kind: TestEntity
+metadata:
+  name: test-webhook-entity
+spec:
+  username: my-username

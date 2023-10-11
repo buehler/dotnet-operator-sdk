@@ -19,7 +19,7 @@ public class LeaderAwarenessIntegrationTest : IntegrationTestBase, IAsyncLifetim
     private readonly IKubernetesClient<V1Lease> _leaseClient = new KubernetesClient<V1Lease>(new(V1Lease.KubeKind,
         V1Lease.KubeApiVersion, V1Lease.KubeGroup, V1Lease.KubePluralName));
 
-    public LeaderAwarenessIntegrationTest(HostBuilder hostBuilder) : base(hostBuilder)
+    public LeaderAwarenessIntegrationTest(HostBuilder hostBuilder, MlcProvider provider) : base(hostBuilder, provider)
     {
         Mock.Clear();
     }
@@ -36,7 +36,7 @@ public class LeaderAwarenessIntegrationTest : IntegrationTestBase, IAsyncLifetim
 
     public async Task InitializeAsync()
     {
-        var meta = Entities.ToEntityMetadata(typeof(V1IntegrationTestEntity)).Metadata;
+        var meta = _mlc.ToEntityMetadata(typeof(V1IntegrationTestEntity)).Metadata;
         _client = new KubernetesClient<V1IntegrationTestEntity>(meta);
         await _hostBuilder.ConfigureAndStart(builder => builder.Services
             .AddSingleton(Mock)

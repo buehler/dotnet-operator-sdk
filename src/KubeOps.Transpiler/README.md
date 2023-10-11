@@ -19,7 +19,8 @@ have a `KubernetesEntityAttribute` attached) to
 `V1CustomResourceDefinition` objects:
 
 ```csharp
-Crds
-    .Transpile(typeof(V1TestEntity), typeof(V2TestEntity))
-    .ToList();
+// Create a MLC.
+var mlc = new MetadataLoadContext(/* */);
+
+mlc.Transpile(typeof(MyCustomResource));
 ```

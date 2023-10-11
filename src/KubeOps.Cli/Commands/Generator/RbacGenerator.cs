@@ -1,5 +1,4 @@
 ﻿using System.CommandLine;
-using System.CommandLine.Help;
 using System.CommandLine.Invocation;
 
 using k8s;
@@ -8,7 +7,8 @@ using k8s.Models;
 using KubeOps.Abstractions.Kustomize;
 using KubeOps.Abstractions.Rbac;
 using KubeOps.Cli.Output;
-using KubeOps.Cli.Roslyn;
+using KubeOps.Cli.Transpilation;
+using KubeOps.Transpiler;
 
 using Spectre.Console;
 
@@ -42,8 +42,8 @@ internal static class RbacGenerator
 
         var parser = file switch
         {
-            { Extension: ".csproj", Exists: true } => await AssemblyParser.ForProject(console, file),
-            { Extension: ".sln", Exists: true } => await AssemblyParser.ForSolution(
+            { Extension: ".csproj", Exists: true } => await AssemblyLoader.ForProject(console, file),
+            { Extension: ".sln", Exists: true } => await AssemblyLoader.ForSolution(
                 console,
                 file,
                 ctx.ParseResult.GetValueForOption(Options.SolutionProjectRegex),
@@ -54,14 +54,12 @@ internal static class RbacGenerator
         var result = new ResultOutput(console, format);
         console.WriteLine($"Generate RBAC roles for {file.Name}.");
 
-        var attributes = parser.RbacAttributes().ToList();
-        attributes.Add(new EntityRbacAttribute(typeof(Corev1Event))
-        {
-            Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Create | RbacVerb.Update,
-        });
-        attributes.Add(new EntityRbacAttribute(typeof(V1Lease)) { Verbs = RbacVerb.All, });
+        var attributes = parser
+            .RbacAttributes()
+            .Concat(parser.GetContextType<DefaultRbacAttributes>().GetCustomAttributesData<EntityRbacAttribute>())
+            .ToList();
 
-        var role = new V1ClusterRole(rules: Transpiler.Rbac.Transpile(attributes).ToList()).Initialize();
+        var role = new V1ClusterRole(rules: parser.Transpile(attributes).ToList()).Initialize();
         role.Metadata.Name = "operator-role";
         result.Add($"operator-role.{format.ToString().ToLowerInvariant()}", role);
 
@@ -95,5 +93,11 @@ internal static class RbacGenerator
         {
             result.Write();
         }
+    }
+
+    [EntityRbac(typeof(Corev1Event), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Create | RbacVerb.Update)]
+    [EntityRbac(typeof(V1Lease), Verbs = RbacVerb.All)]
+    private sealed class DefaultRbacAttributes
+    {
     }
 }
