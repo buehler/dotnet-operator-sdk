@@ -10,10 +10,10 @@
       href: src/KubeOps.Cli/README.md
     - name: KubeOps Generator
       href: src/KubeOps.Generator/README.md
-    - name: KubeOps Operator
-      href: src/KubeOps.Operator/README.md
     - name: KubeOps Kubernetes Client
       href: src/KubeOps.KubernetesClient/README.md
+    - name: KubeOps Operator
+      href: src/KubeOps.Operator/README.md
     - name: KubeOps Operator Web
       href: src/KubeOps.Operator.Web/README.md
     - name: KubeOps Transpiler
