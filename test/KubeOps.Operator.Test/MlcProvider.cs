@@ -21,10 +21,17 @@ public class MlcProvider : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
+        var assemblyConfigurationAttribute =
+            typeof(MlcProvider).Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
+        var buildConfigurationName = assemblyConfigurationAttribute?.Configuration ?? "Debug";
+
         try
         {
             await Semaphore.WaitAsync();
-            using var workspace = MSBuildWorkspace.Create();
+            using var workspace = MSBuildWorkspace.Create(new Dictionary<string, string>
+            {
+                { "Configuration", buildConfigurationName },
+            });
             workspace.SkipUnrecognizedProjects = true;
             workspace.LoadMetadataForReferencedProjects = true;
             var project = await workspace.OpenProjectAsync("../../../KubeOps.Operator.Test.csproj");
