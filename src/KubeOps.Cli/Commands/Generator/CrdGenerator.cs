@@ -1,10 +1,10 @@
 ﻿using System.CommandLine;
-using System.CommandLine.Help;
 using System.CommandLine.Invocation;
 
 using KubeOps.Abstractions.Kustomize;
 using KubeOps.Cli.Output;
-using KubeOps.Cli.Roslyn;
+using KubeOps.Cli.Transpilation;
+using KubeOps.Transpiler;
 
 using Spectre.Console;
 
@@ -38,8 +38,8 @@ internal static class CrdGenerator
 
         var parser = file switch
         {
-            { Extension: ".csproj", Exists: true } => await AssemblyParser.ForProject(console, file),
-            { Extension: ".sln", Exists: true } => await AssemblyParser.ForSolution(
+            { Extension: ".csproj", Exists: true } => await AssemblyLoader.ForProject(console, file),
+            { Extension: ".sln", Exists: true } => await AssemblyLoader.ForSolution(
                 console,
                 file,
                 ctx.ParseResult.GetValueForOption(Options.SolutionProjectRegex),
@@ -50,7 +50,7 @@ internal static class CrdGenerator
         var result = new ResultOutput(console, format);
 
         console.WriteLine($"Generate CRDs for {file.Name}.");
-        var crds = Transpiler.Crds.Transpile(parser.Entities()).ToList();
+        var crds = parser.Transpile(parser.GetEntities()).ToList();
         foreach (var crd in crds)
         {
             result.Add($"{crd.Metadata.Name.Replace('.', '_')}.{format.ToString().ToLowerInvariant()}", crd);

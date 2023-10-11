@@ -21,7 +21,7 @@ public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
     private static readonly InvocationCounter<V1IntegrationTestEntity> Mock = new();
     private IKubernetesClient<V1IntegrationTestEntity> _client = null!;
 
-    public EventPublisherIntegrationTest(HostBuilder hostBuilder) : base(hostBuilder)
+    public EventPublisherIntegrationTest(HostBuilder hostBuilder, MlcProvider provider) : base(hostBuilder, provider)
     {
         Mock.Clear();
     }
@@ -65,7 +65,7 @@ public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var meta = Entities.ToEntityMetadata(typeof(V1IntegrationTestEntity)).Metadata;
+        var meta = _mlc.ToEntityMetadata(typeof(V1IntegrationTestEntity)).Metadata;
         _client = new KubernetesClient<V1IntegrationTestEntity>(meta);
         await _hostBuilder.ConfigureAndStart(builder => builder.Services
             .AddSingleton(Mock)

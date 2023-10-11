@@ -5,7 +5,7 @@ using k8s;
 using k8s.Autorest;
 using k8s.Models;
 
-using KubeOps.Cli.Roslyn;
+using KubeOps.Cli.Transpilation;
 using KubeOps.Transpiler;
 
 using Spectre.Console;
@@ -43,8 +43,8 @@ internal static class Install
 
         var parser = file switch
         {
-            { Extension: ".csproj", Exists: true } => await AssemblyParser.ForProject(console, file),
-            { Extension: ".sln", Exists: true } => await AssemblyParser.ForSolution(
+            { Extension: ".csproj", Exists: true } => await AssemblyLoader.ForProject(console, file),
+            { Extension: ".sln", Exists: true } => await AssemblyLoader.ForSolution(
                 console,
                 file,
                 ctx.ParseResult.GetValueForOption(Options.SolutionProjectRegex),
@@ -54,7 +54,7 @@ internal static class Install
         };
 
         console.WriteLine($"Install CRDs from {file.Name}.");
-        var crds = Crds.Transpile(parser.Entities()).ToList();
+        var crds = parser.Transpile(parser.GetEntities()).ToList();
         if (crds.Count == 0)
         {
             console.WriteLine("No CRDs found. Exiting.");
