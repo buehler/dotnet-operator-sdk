@@ -86,7 +86,43 @@ like "normal" `IActionResult` creation methods.
 
 ## Mutation Hooks
 
-TODO.
+To create a mutation webhook, first create a new class
+that implements the `MutationWebhook<T>` base class.
+Then decorate the webhook with the `MutationWebhookAttribute`
+to set the route correctly.
+
+After that setup, you may overwrite any of the following methods:
+
+- Create
+- CreateAsync
+- Update
+- UpdateAsync
+- Delete
+- DeleteAsync
+
+The async methods take precedence over the sync methods.
+
+An example of such a mutation webhook looks like:
+
+```csharp
+[MutationWebhook(typeof(V1TestEntity))]
+public class TestMutationWebhook : MutationWebhook<V1TestEntity>
+{
+    public override MutationResult<V1TestEntity> Create(V1TestEntity entity, bool dryRun)
+    {
+        if (entity.Spec.Username == "overwrite")
+        {
+            entity.Spec.Username = "random overwritten";
+            return Modified(entity);
+        }
+
+        return NoChanges();
+    }
+}
+```
+
+To create the mutation results, use the `protected` methods (`NoChanges`, `Modified`, and `Fail`)
+like "normal" `IActionResult` creation methods.
 
 ## Conversion Hooks
 

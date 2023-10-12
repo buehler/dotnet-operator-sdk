@@ -3,4 +3,4 @@ kind: TestEntity
 metadata:
   name: test-webhook-entity
 spec:
-  username: my-username
+  username: overwrite
