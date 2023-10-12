@@ -4,6 +4,7 @@
         <TargetFramework>net7.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+<!--        <KubeOpsCli>dotnet run &#45;&#45;project ../../src/KubeOps.Cli/ &#45;&#45; </KubeOpsCli>-->
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,5 +13,13 @@
                           ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\..\src\KubeOps.Operator.Web\KubeOps.Operator.Web.csproj" />
     </ItemGroup>
+
+<!--    <ItemGroup>-->
+<!--      <PackageReference Include="KubeOps.Generator" Version="8.0.0-pre.20" />-->
+<!--      <PackageReference Include="KubeOps.Operator.Web" Version="8.0.0-pre.20" />-->
+<!--    </ItemGroup>-->
+
+<!--    <Import Project="..\..\src\KubeOps.Operator\Build\KubeOps.Operator.targets" />-->
+<!--    <Import Project="..\..\src\KubeOps.Operator.Web\Build\KubeOps.Operator.Web.targets" />-->
 
 </Project>

@@ -1,4 +1,4 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="GenerateAfterBuild">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <Target Name="BaseConfig">
         <PropertyGroup>
             <OperatorName Condition="'$(OperatorName)' == ''">$(AssemblyName.ToLowerInvariant())</OperatorName>
@@ -16,12 +16,14 @@
         <PropertyGroup>
             <KubeOpsAssemblyTimestampBeforeCompile>%(IntermediateAssembly.ModifiedTime)</KubeOpsAssemblyTimestampBeforeCompile>
         </PropertyGroup>
+        <Message Text="Fetched intermediate assembly before compile timestamp: %(IntermediateAssembly.ModifiedTime)"/>
     </Target>
 
     <Target Name="GetAssemblyAfterTimestamp" AfterTargets="CoreCompile">
         <PropertyGroup>
             <KubeOpsAssemblyTimestampAfterCompile>%(IntermediateAssembly.ModifiedTime)</KubeOpsAssemblyTimestampAfterCompile>
         </PropertyGroup>
+        <Message Text="Fetched intermediate assembly before compile timestamp: %(IntermediateAssembly.ModifiedTime)"/>
     </Target>
 
     <Target Name="GenerateCrds" DependsOnTargets="BaseConfig">
@@ -61,19 +63,19 @@
         <Exec Condition="!Exists('$(KubeOpsGenInstallerOut)\kustomization.yaml')"
               Command="$(KubeOpsCli) generate installer --out $(KubeOpsGenInstallerOut) $(OperatorName)"/>
     </Target>
-
-    <Target Name="GenerateAfterBuild"
-            AfterTargets="Build"
+    
+    <Target Name="GenerateOperatorResources"
+            AfterTargets="CopyFilesToOutputDirectory"
             DependsOnTargets="BaseConfig"
-            Condition="'$(OutputType)' == 'exe' And ('$(KubeOpsAssemblyTimestampBeforeCompile)' != '$(KubeOpsAssemblyTimestampAfterCompile)' Or '$(Configuration)' == 'Release')">
+            Condition="'$(OutputType.ToLowerInvariant())' == 'exe' And ('$(KubeOpsAssemblyTimestampBeforeCompile)' != '$(KubeOpsAssemblyTimestampAfterCompile)' Or '$(Configuration)' == 'Release')">
         <Exec IgnoreExitCode="true" StandardOutputImportance="low" StandardErrorImportance="low" Command="$(KubeOpsCli) -h">
             <Output TaskParameter="ExitCode" PropertyName="CliInstalled"/>
         </Exec>
         <Message Importance="high" Condition="$(CliInstalled) == 1" Text="KubeOps CLI is not installed as tool, cannot generate stuff for projects. Please install it with 'dotnet tool install KubeOps.Cli' to use automatic build generation."/>
-        <CallTarget Targets="GenerateCrds" Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipCrds)' == ''"/>
-        <CallTarget Targets="GenerateRbac" Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipRbac)' == ''"/>
-        <CallTarget Targets="GenerateOperator" Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipOperator)' == ''"/>
-        <CallTarget Targets="GenerateDockerfile" Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipDocker)' == ''"/>
-        <CallTarget Targets="GenerateInstaller" Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipInstaller)' == ''"/>
+        <CallTarget ContinueOnError="true" Targets="GenerateCrds" Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipCrds)' == ''"/>
+        <CallTarget ContinueOnError="true" Targets="GenerateRbac" Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipRbac)' == ''"/>
+        <CallTarget ContinueOnError="true" Targets="GenerateOperator" Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipOperator)' == ''"/>
+        <CallTarget ContinueOnError="true" Targets="GenerateDockerfile" Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipDocker)' == ''"/>
+        <CallTarget ContinueOnError="true" Targets="GenerateInstaller" Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipInstaller)' == ''"/>
     </Target>
 </Project>

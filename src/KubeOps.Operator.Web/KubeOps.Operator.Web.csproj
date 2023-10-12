@@ -24,4 +24,10 @@
         <FrameworkReference Include="Microsoft.AspNetCore.App"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Include="Build\KubeOps.Operator.Web.targets">
+            <PackagePath>build/</PackagePath>
+        </Content>
+    </ItemGroup>
+
 </Project>

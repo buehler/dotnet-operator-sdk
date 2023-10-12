@@ -1,0 +1,20 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <Target Name="GenerateOperator" DependsOnTargets="BaseConfig">
+        <Message Text="Generating Operator resources" Importance="high" />
+        <Message Text="Configuration path: $(KubeOpsGenOperatorOut)" Importance="normal" />
+        <Exec Command="$(KubeOpsCli) generate webhook-operator --out $(KubeOpsGenOperatorOut) $(OperatorName)" />
+    </Target>
+
+    <Target Name="GenerateDockerfile" DependsOnTargets="BaseConfig">
+        <Message Text="Generating Dockerfile" Importance="high" />
+        <Message Text="Dockerfile path: $(KubeOpsGenDockerOut)\Dockerfile" Importance="normal" />
+
+        <Message Condition="Exists('$(KubeOpsGenDockerOut)\Dockerfile')"
+                 Text="Dockerfile already exists, do not overwrite in case of custom config."
+                 Importance="high" />
+        <Exec Condition="!Exists('$(KubeOpsGenDockerOut)\Dockerfile')"
+              Command="$(KubeOpsCli) generate docker --out $(KubeOpsGenDockerOut) --webhooks" />
+    </Target>
+
+</Project>

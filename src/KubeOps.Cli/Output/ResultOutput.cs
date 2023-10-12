@@ -9,16 +9,18 @@ namespace KubeOps.Cli.Output;
 internal class ResultOutput
 {
     private readonly IAnsiConsole _console;
-    private readonly OutputFormat _format;
-    private readonly IDictionary<string, object> _files = new Dictionary<string, object>();
+    private readonly OutputFormat _defaultFormat;
+    private readonly Dictionary<string, (object, OutputFormat)> _files = new();
 
-    public ResultOutput(IAnsiConsole console, OutputFormat format)
+    public ResultOutput(IAnsiConsole console, OutputFormat defaultFormat)
     {
         _console = console;
-        _format = format;
+        _defaultFormat = defaultFormat;
     }
 
-    public void Add(string filename, object content) => _files.Add(filename, content);
+    public void Add(string filename, object content) => _files.Add(filename, (content, _defaultFormat));
+
+    public void Add(string filename, object content, OutputFormat format) => _files.Add(filename, (content, format));
 
     public async Task Write(string outputDirectory)
     {
@@ -45,11 +47,11 @@ internal class ResultOutput
         }
     }
 
-    private string Serialize(object data) => _format switch
+    private static string Serialize((object Object, OutputFormat Format) data) => data.Format switch
     {
-        OutputFormat.Yaml => KubernetesYaml.Serialize(data),
-        OutputFormat.Json => KubernetesJson.Serialize(data),
-        OutputFormat.Plain => data.ToString() ?? string.Empty,
+        OutputFormat.Yaml => KubernetesYaml.Serialize(data.Object),
+        OutputFormat.Json => KubernetesJson.Serialize(data.Object),
+        OutputFormat.Plain => data.Object.ToString() ?? string.Empty,
         _ => throw new ArgumentException("Unknown output format."),
     };
 }
