@@ -41,10 +41,10 @@ internal static class WebhookOperatorGenerator
 
     internal static async Task Handler(IAnsiConsole console, InvocationContext ctx)
     {
+        var name = ctx.ParseResult.GetValueForArgument(Arguments.OperatorName);
         var file = ctx.ParseResult.GetValueForArgument(Arguments.SolutionOrProjectFile);
         var outPath = ctx.ParseResult.GetValueForOption(Options.OutputPath);
         var format = ctx.ParseResult.GetValueForOption(Options.OutputFormat);
-        var name = ctx.ParseResult.GetValueForArgument(Arguments.OperatorName);
 
         var result = new ResultOutput(console, format);
         console.WriteLine("Generate webhook resources.");
@@ -202,7 +202,7 @@ internal static class WebhookOperatorGenerator
                 },
                 ClientConfig = new Admissionregistrationv1WebhookClientConfig
                 {
-                    CaBundle = Encoding.UTF8.GetBytes(caCert.ToPem()),
+                    CaBundle = Encoding.ASCII.GetBytes(Convert.ToBase64String(Encoding.ASCII.GetBytes(caCert.ToPem()))),
                     Service = new Admissionregistrationv1ServiceReference
                     {
                         Name = "operator", Path = $"/validate/{entity.Name.ToLowerInvariant()}",
@@ -238,10 +238,10 @@ internal static class WebhookOperatorGenerator
                         Name = "webhook-config",
                         Literals = new List<string>
                         {
+                            "KESTREL__ENDPOINTS__HTTP__URL=http://0.0.0.0:5000",
+                            "KESTREL__ENDPOINTS__HTTPS__URL=https://0.0.0.0:5001",
                             "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__PATH=/certs/svc.pem",
                             "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__KEYPATH=/certs/svc-key.pem",
-                            "KESTREL__ENDPOINTS__HTTP__URL=https://0.0.0.0:5000",
-                            "KESTREL__ENDPOINTS__HTTPS__URL=https://0.0.0.0:5001",
                         },
                     },
                 },

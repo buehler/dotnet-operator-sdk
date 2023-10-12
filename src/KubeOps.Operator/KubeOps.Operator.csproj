@@ -28,9 +28,6 @@
         <Content Include="Build\KubeOps.Operator.targets">
             <PackagePath>build/</PackagePath>
         </Content>
-        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>$(MSBuildProjectName).Web</_Parameter1>
-        </AssemblyAttribute>
     </ItemGroup>
     
 </Project>

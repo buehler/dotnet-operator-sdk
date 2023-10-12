@@ -35,4 +35,9 @@ internal static class Options
         new[] { "--force", "-f" },
         () => false,
         description: "Do not bother the user with questions and just do it.");
+
+    public static readonly Option<bool> IsWebhookOperator = new(
+        new[] { "--webhooks" },
+        () => false,
+        description: "Whether the operator contains webhooks (changes some resources).");
 }
