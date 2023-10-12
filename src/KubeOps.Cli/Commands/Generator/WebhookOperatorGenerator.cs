@@ -205,7 +205,8 @@ internal static class WebhookOperatorGenerator
                     CaBundle = Encoding.ASCII.GetBytes(Convert.ToBase64String(Encoding.ASCII.GetBytes(caCert.ToPem()))),
                     Service = new Admissionregistrationv1ServiceReference
                     {
-                        Name = "operator", Path = $"/validate/{entity.Name.ToLowerInvariant()}",
+                        Name = "operator",
+                        Path = $"/validate/{entity.Name.ToLowerInvariant()}",
                     },
                 },
             });

@@ -1,0 +1,49 @@
+﻿apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validation-webhooks
+webhooks:
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      url: https://e9f2-85-195-221-58.ngrok-free.app/validate/v1testentity
+    matchPolicy: Exact
+    name: test.web.hook.com
+    rules:
+      - apiGroups:
+          - webhook.dev
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        resources:
+          - testentitys
+    sideEffects: None
+    timeoutSeconds: 10
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mutation-webhooks
+webhooks:
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      url: https://e9f2-85-195-221-58.ngrok-free.app/mutate/v1testentity
+    matchPolicy: Exact
+    name: test.web.hook.com
+    rules:
+      - apiGroups:
+          - webhook.dev
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        resources:
+          - testentitys
+    sideEffects: None
+    timeoutSeconds: 10
