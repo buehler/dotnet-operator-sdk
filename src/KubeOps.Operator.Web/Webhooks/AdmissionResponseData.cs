@@ -19,4 +19,10 @@ internal sealed class AdmissionResponseData
 
     [JsonPropertyName("warnings")]
     public string[]? Warnings { get; init; }
+
+    [JsonPropertyName("patch")]
+    public string? Patch { get; init; }
+
+    [JsonPropertyName("patchType")]
+    public string? PatchType { get; init; }
 }

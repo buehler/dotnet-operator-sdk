@@ -78,7 +78,7 @@ internal static class Install
                     case { Items: [var existing] }:
                         console.MarkupLineInterpolated(
                             $"""[yellow]CRD "{crd.Spec.Group}/{crd.Spec.Names.Kind}" already exists.[/]""");
-                        if (!force && console.Confirm("[yellow]Should the CRD be overwritten?[/]"))
+                        if (!force && !console.Confirm("[yellow]Should the CRD be overwritten?[/]"))
                         {
                             ctx.ExitCode = ExitCodes.Aborted;
                             return;

@@ -130,7 +130,7 @@ public abstract class ValidationWebhook<TEntity> : ControllerBase
     /// <returns>A <see cref="ValidationResult"/>.</returns>
     [NonAction]
     protected ValidationResult Fail(string reason)
-        => new(false) { Status = new(reason) };
+        => Fail() with { Status = new(reason) };
 
     /// <summary>
     /// Create a <see cref="ValidationResult"/> that will fail the validation.
@@ -142,5 +142,5 @@ public abstract class ValidationWebhook<TEntity> : ControllerBase
     /// <param name="statusCode">The custom status code.</param>
     /// <returns>A <see cref="ValidationResult"/>.</returns>
     [NonAction]
-    protected ValidationResult Fail(string reason, int statusCode) => new(false) { Status = new(reason, statusCode), };
+    protected ValidationResult Fail(string reason, int statusCode) => Fail() with { Status = new(reason, statusCode), };
 }
