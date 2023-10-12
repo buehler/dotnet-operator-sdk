@@ -6,6 +6,7 @@ using k8s.Models;
 
 using KubeOps.Abstractions.Entities.Attributes;
 using KubeOps.Abstractions.Rbac;
+using KubeOps.Operator.Web.Webhooks.Validation;
 using KubeOps.Transpiler;
 
 using Microsoft.Build.Locator;
@@ -145,7 +146,7 @@ internal static partial class AssemblyLoader
                     e.attrs.All(a => a.AttributeType.Name != nameof(IgnoreAttribute)))
         .Select(e => e.t);
 
-    public static IEnumerable<CustomAttributeData> RbacAttributes(this MetadataLoadContext context)
+    public static IEnumerable<CustomAttributeData> GetRbacAttributes(this MetadataLoadContext context)
     {
         foreach (var type in context.GetAssemblies()
                      .SelectMany(a => a.DefinedTypes)
@@ -163,6 +164,13 @@ internal static partial class AssemblyLoader
             yield return type;
         }
     }
+
+    public static IEnumerable<Type> GetValidatedEntities(this MetadataLoadContext context) => context.GetAssemblies()
+        .SelectMany(a => a.DefinedTypes)
+        .Where(t => t.BaseType?.Name == typeof(ValidationWebhook<>).Name &&
+                    t.BaseType?.Namespace == typeof(ValidationWebhook<>).Namespace)
+        .Select(t => t.BaseType!.GenericTypeArguments[0])
+        .Distinct();
 
     [GeneratedRegex(".*")]
     private static partial Regex DefaultRegex();

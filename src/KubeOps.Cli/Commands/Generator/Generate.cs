@@ -17,6 +17,7 @@ internal static class Generate
                 InstallerGenerator.Command,
                 OperatorGenerator.Command,
                 RbacGenerator.Command,
+                WebhookOperatorGenerator.Command,
             };
             cmd.AddAlias("gen");
             cmd.AddAlias("g");

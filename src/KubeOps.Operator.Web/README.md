@@ -94,4 +94,20 @@ TODO.
 
 ## Installing In The Cluster
 
-TODO.
+When creating an operator with webhooks, certain special resources must be provided
+to run in the cluster. When this package is referenced and KubeOps.Cli is installed,
+these resources should be generated automatically. Basically, instead of
+generating a dockerfile with `dotnet:runtime` as final image, you'll need
+`dotnet:aspnet` and the operator needs a service and the certificates
+for the HTTPS connection since webhooks only operate over HTTPS.
+
+With the KubeOps.Cli package you can generate the required resources or
+let the customized Build targets do it for you.
+
+The targets create a CA certificate and a server certificate (with respective keys),
+a service, and the webhook registrations required for you.
+
+> [!WARNING]
+> The generated certificate has a validity of 5 years. After that time,
+> the certificate needs to be renewed. For now, there is no automatic
+> renewal process.

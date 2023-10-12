@@ -26,6 +26,11 @@
       "workingDirectory": "$(ProjectDir)",
       "commandLineArgs": "g op"
     },
+    "CLI Generate Webhook Operator": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
+      "commandLineArgs": "g wh-op kub-wh-op ../../examples/WebhookOperator/WebhookOperator.csproj"
+    },
     "CLI Generate Docker": {
       "commandName": "Project",
       "workingDirectory": "$(ProjectDir)",
