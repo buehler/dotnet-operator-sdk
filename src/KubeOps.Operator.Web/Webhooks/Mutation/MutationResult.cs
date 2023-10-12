@@ -1,5 +1,3 @@
-using System.Text.Json.JsonDiffPatch;
-using System.Text.Json.JsonDiffPatch.Diffs.Formatters;
 using System.Text.Json.Nodes;
 
 using k8s;
@@ -13,6 +11,8 @@ namespace KubeOps.Operator.Web.Webhooks.Mutation;
 /// <summary>
 /// The mutation result for the mutation (admission) request to a webhook.
 /// </summary>
+/// <param name="ModifiedObject">The modified entity if any changes are requested.</param>
+/// <typeparam name="TEntity">The type of the entity.</typeparam>
 public record MutationResult<TEntity>(TEntity? ModifiedObject = default) : IActionResult
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
