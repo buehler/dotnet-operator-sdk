@@ -55,7 +55,7 @@ internal static class RbacGenerator
         console.WriteLine($"Generate RBAC roles for {file.Name}.");
 
         var attributes = parser
-            .RbacAttributes()
+            .GetRbacAttributes()
             .Concat(parser.GetContextType<DefaultRbacAttributes>().GetCustomAttributesData<EntityRbacAttribute>())
             .ToList();
 

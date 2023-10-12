@@ -1,7 +1,7 @@
 ﻿namespace KubeOps.Abstractions.Kustomize;
 
 /// <summary>
-/// Entitiy for config map generators in a kustomization.yaml file.
+/// Entity for config map generators in a kustomization.yaml file.
 /// </summary>
 public class KustomizationConfigMapGenerator
 {
