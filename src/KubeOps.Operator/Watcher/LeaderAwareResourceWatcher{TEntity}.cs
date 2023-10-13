@@ -19,11 +19,10 @@ internal class LeaderAwareResourceWatcher<TEntity> : ResourceWatcher<TEntity>
     public LeaderAwareResourceWatcher(
         ILogger<LeaderAwareResourceWatcher<TEntity>> logger,
         IServiceProvider provider,
-        IKubernetesClient<TEntity> client,
         TimedEntityQueue<TEntity> queue,
         OperatorSettings settings,
         LeaderElector elector)
-        : base(logger, provider, client, queue, settings)
+        : base(logger, provider, queue, settings)
     {
         _logger = logger;
         _elector = elector;

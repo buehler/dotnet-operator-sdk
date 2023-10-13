@@ -178,7 +178,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         await _hostBuilder.ConfigureAndStart(builder => builder.Services
             .AddSingleton(Mock)
             .AddKubernetesOperator()
-            .AddControllerWithEntity<TestController, V1IntegrationTestEntity>(meta)
+            .AddController<TestController, V1IntegrationTestEntity>()
             .AddFinalizer<FirstFinalizer, V1IntegrationTestEntity>("first")
             .AddFinalizer<SecondFinalizer, V1IntegrationTestEntity>("second"));
     }

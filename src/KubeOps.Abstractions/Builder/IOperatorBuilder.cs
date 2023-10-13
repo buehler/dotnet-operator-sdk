@@ -21,19 +21,30 @@ public interface IOperatorBuilder
 
     /// <summary>
     /// <para>
-    /// Register an entity within the operator.
-    /// Entities must be registered to be used in controllers and other
-    /// elements like Kubernetes clients.
-    /// </para>
-    /// <para>
-    /// This method will also register a transient IKubernetesClient{TEntity} for
-    /// the entity.
+    /// Register an entity Kubernetes client within the operator.
+    /// This is used to register IKubernetesClient{TEntity} for the entity.
+    /// An alternative way to create any Kubernetes client is to use the
+    /// KubernetesClientFactory or instantiate the client by yourself.
     /// </para>
     /// </summary>
     /// <param name="metadata">The metadata of the entity.</param>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
     /// <returns>The builder for chaining.</returns>
-    IOperatorBuilder AddEntity<TEntity>(EntityMetadata metadata)
+    IOperatorBuilder AddEntityClient<TEntity>(EntityMetadata metadata)
+        where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+    /// <summary>
+    /// <para>
+    /// Register an entity Kubernetes client within the operator.
+    /// This is used to register IKubernetesClient{TEntity} for the entity.
+    /// An alternative way to create any Kubernetes client is to use the
+    /// KubernetesClientFactory or instantiate the client by yourself.
+    /// This method uses reflection to get the metadata from the entity.
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the entity.</typeparam>
+    /// <returns>The builder for chaining.</returns>
+    IOperatorBuilder AddEntityClient<TEntity>()
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <summary>
@@ -44,18 +55,6 @@ public interface IOperatorBuilder
     /// <typeparam name="TEntity">Entity type.</typeparam>
     /// <returns>The builder for chaining.</returns>
     IOperatorBuilder AddController<TImplementation, TEntity>()
-        where TImplementation : class, IEntityController<TEntity>
-        where TEntity : IKubernetesObject<V1ObjectMeta>;
-
-    /// <summary>
-    /// Add a controller implementation for a specific entity with the
-    /// entity metadata.
-    /// </summary>
-    /// <param name="metadata">The metadata of the entity.</param>
-    /// <typeparam name="TImplementation">Implementation type of the controller.</typeparam>
-    /// <typeparam name="TEntity">Entity type.</typeparam>
-    /// <returns>The builder for chaining.</returns>
-    IOperatorBuilder AddControllerWithEntity<TImplementation, TEntity>(EntityMetadata metadata)
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
