@@ -70,7 +70,7 @@ public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
         await _hostBuilder.ConfigureAndStart(builder => builder.Services
             .AddSingleton(Mock)
             .AddKubernetesOperator()
-            .AddControllerWithEntity<TestController, V1IntegrationTestEntity>(meta));
+            .AddController<TestController, V1IntegrationTestEntity>());
     }
 
     public async Task DisposeAsync()

@@ -13,6 +13,7 @@ using KubeOps.Abstractions.Events;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.Abstractions.Queue;
 using KubeOps.KubernetesClient;
+using KubeOps.Operator.Client;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
 using KubeOps.Operator.Watcher;
@@ -35,10 +36,17 @@ internal class OperatorBuilder : IOperatorBuilder
 
     public IServiceCollection Services { get; }
 
-    public IOperatorBuilder AddEntity<TEntity>(EntityMetadata metadata)
+    public IOperatorBuilder AddEntityClient<TEntity>(EntityMetadata metadata)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        Services.AddTransient<IKubernetesClient<TEntity>>(_ => new KubernetesClient<TEntity>(metadata));
+        Services.AddTransient<IKubernetesClient<TEntity>>(_ => KubernetesClientFactory.Create<TEntity>(metadata));
+        return this;
+    }
+
+    public IOperatorBuilder AddEntityClient<TEntity>()
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        Services.AddTransient<IKubernetesClient<TEntity>>(_ => KubernetesClientFactory.Create<TEntity>());
         return this;
     }
 
@@ -62,11 +70,6 @@ internal class OperatorBuilder : IOperatorBuilder
         return this;
     }
 
-    public IOperatorBuilder AddControllerWithEntity<TImplementation, TEntity>(EntityMetadata metadata)
-        where TImplementation : class, IEntityController<TEntity>
-        where TEntity : IKubernetesObject<V1ObjectMeta> =>
-        AddController<TImplementation, TEntity>().AddEntity<TEntity>(metadata);
-
     public IOperatorBuilder AddFinalizer<TImplementation, TEntity>(string identifier)
         where TImplementation : class, IEntityFinalizer<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -86,7 +89,8 @@ internal class OperatorBuilder : IOperatorBuilder
         => services => async entity =>
         {
             var logger = services.GetService<ILogger<EntityFinalizerAttacher<TImplementation, TEntity>>>();
-            var client = services.GetRequiredService<IKubernetesClient<TEntity>>();
+            using var client = services.GetService<IKubernetesClient<TEntity>>() ??
+                               KubernetesClientFactory.Create<TEntity>();
 
             logger?.LogTrace(
                 """Try to add finalizer "{finalizer}" on entity "{kind}/{name}".""",
@@ -206,14 +210,13 @@ internal class OperatorBuilder : IOperatorBuilder
     private void AddOperatorBase()
     {
         Services.AddSingleton(_settings);
-        Services.AddTransient<IKubernetesClient<Corev1Event>>(_ => new KubernetesClient<Corev1Event>(new(
-            Corev1Event.KubeKind, Corev1Event.KubeApiVersion, Plural: Corev1Event.KubePluralName)));
+
+        Services.AddTransient(_ => KubernetesClientFactory.Create<Corev1Event>());
         Services.AddTransient(CreateEventPublisher());
 
         if (_settings.EnableLeaderElection)
         {
-            using var client = new KubernetesClient<Corev1Event>(new(
-                Corev1Event.KubeKind, Corev1Event.KubeApiVersion, Plural: Corev1Event.KubePluralName));
+            using var client = KubernetesClientFactory.Create<Corev1Event>();
 
             var elector = new LeaderElector(
                 new LeaderElectionConfig(

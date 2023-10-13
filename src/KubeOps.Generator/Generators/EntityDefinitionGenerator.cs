@@ -98,7 +98,7 @@ internal class EntityDefinitionGenerator : ISourceGenerator
                                         MemberAccessExpression(
                                             SyntaxKind.SimpleMemberAccessExpression,
                                             IdentifierName("builder"),
-                                            GenericName(Identifier("AddEntity"))
+                                            GenericName(Identifier("AddEntityClient"))
                                                 .WithTypeArgumentList(
                                                     TypeArgumentList(
                                                         SingletonSeparatedList<TypeSyntax>(

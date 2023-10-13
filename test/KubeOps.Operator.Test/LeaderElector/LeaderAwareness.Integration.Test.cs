@@ -41,7 +41,7 @@ public class LeaderAwarenessIntegrationTest : IntegrationTestBase, IAsyncLifetim
         await _hostBuilder.ConfigureAndStart(builder => builder.Services
             .AddSingleton(Mock)
             .AddKubernetesOperator(s => s.EnableLeaderElection = true)
-            .AddControllerWithEntity<TestController, V1IntegrationTestEntity>(meta));
+            .AddController<TestController, V1IntegrationTestEntity>());
     }
 
     public async Task DisposeAsync()
