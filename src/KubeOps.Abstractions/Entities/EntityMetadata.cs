@@ -17,10 +17,12 @@ public record EntityMetadata(string Kind, string Version, string? Group = null, 
     /// <summary>
     /// Name of the singular entity.
     /// </summary>
-    public string SingularName => Kind.ToLower();
+    public string SingularName => Kind.ToLowerInvariant();
 
     /// <summary>
     /// Name of the plural entity.
     /// </summary>
-    public string PluralName => Plural ?? $"{Kind.ToLower()}s";
+    public string PluralName => (Plural ?? $"{Kind}s").ToLowerInvariant();
+
+    public string GroupWithVersion => $"{Group ?? string.Empty}/{Version}".TrimStart('/');
 }
