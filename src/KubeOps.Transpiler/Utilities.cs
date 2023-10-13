@@ -62,6 +62,23 @@ public static class Utilities
             : default;
 
     /// <summary>
+    /// Load a specific named argument from a custom attribute.
+    /// Without the metadata load context, this method is only usable for types in the same loaded assembly.
+    /// Named arguments are in the property-notation:
+    /// <c>[KubernetesEntity(Kind = "foobar")]</c>.
+    /// </summary>
+    /// <param name="attr">The attribute in question.</param>
+    /// <param name="name">The name of the argument.</param>
+    /// <typeparam name="T">What target type the argument has.</typeparam>
+    /// <returns>The argument value if found.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the data did not match the target type.</exception>
+    public static T?
+        GetCustomAttributeNamedArg<T>(this CustomAttributeData attr, string name) =>
+        attr.NamedArguments.FirstOrDefault(a => a.MemberName == name).TypedValue.ArgumentType == typeof(T)
+            ? (T)attr.NamedArguments.FirstOrDefault(a => a.MemberName == name).TypedValue.Value!
+            : default;
+
+    /// <summary>
     /// Load a specific named argument array from a custom attribute.
     /// Named arguments are in the property-notation:
     /// <c>[Test(Foo = new[]{"bar", "baz"})]</c>.
@@ -91,6 +108,23 @@ public static class Utilities
     public static T? GetCustomAttributeCtorArg<T>(this CustomAttributeData attr, MetadataLoadContext ctx, int index) =>
         attr.ConstructorArguments.Count >= index + 1 &&
         attr.ConstructorArguments[index].ArgumentType == ctx.GetContextType<T>()
+            ? (T)attr.ConstructorArguments[index].Value!
+            : default;
+
+    /// <summary>
+    /// Load a specific constructor argument from a custom attribute.
+    /// Without the metadata load context, this method is only usable for types in the same loaded assembly.
+    /// Constructor arguments are in the "new" format:
+    /// <c>[KubernetesEntity("foobar")]</c>.
+    /// </summary>
+    /// <param name="attr">The attribute in question.</param>
+    /// <param name="index">Index of the value in the constructor notation.</param>
+    /// <typeparam name="T">What target type the argument has.</typeparam>
+    /// <returns>The argument value if found.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the data did not match the target type.</exception>
+    public static T? GetCustomAttributeCtorArg<T>(this CustomAttributeData attr, int index) =>
+        attr.ConstructorArguments.Count >= index + 1 &&
+        attr.ConstructorArguments[index].ArgumentType == typeof(T)
             ? (T)attr.ConstructorArguments[index].Value!
             : default;
 
