@@ -42,7 +42,7 @@ public class OperatorBuilderTest
     [Fact]
     public void Should_Add_Entity_Resources()
     {
-        _builder.AddEntity<V1IntegrationTestEntity>(new EntityMetadata("test", "v1", "testentities"));
+        _builder.AddEntityClient<V1IntegrationTestEntity>(new EntityMetadata("test", "v1", "testentities"));
 
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(IKubernetesClient<V1IntegrationTestEntity>) &&

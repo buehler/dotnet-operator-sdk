@@ -9,6 +9,7 @@ using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.KubernetesClient;
+using KubeOps.Operator.Client;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
 
@@ -36,13 +37,12 @@ internal class ResourceWatcher<TEntity> : IHostedService
     public ResourceWatcher(
         ILogger<ResourceWatcher<TEntity>> logger,
         IServiceProvider provider,
-        IKubernetesClient<TEntity> client,
         TimedEntityQueue<TEntity> queue,
         OperatorSettings settings)
     {
         _logger = logger;
         _provider = provider;
-        _client = client;
+        _client = provider.GetService<IKubernetesClient<TEntity>>() ?? KubernetesClientFactory.Create<TEntity>();
         _queue = queue;
         _settings = settings;
         _finalizers = new(() => _provider.GetServices<FinalizerRegistration>().ToList());
@@ -237,7 +237,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
         var pendingFinalizer = entity.Finalizers();
         if (_finalizers.Value.Find(reg =>
                 reg.EntityType == entity.GetType() && pendingFinalizer.Contains(reg.Identifier)) is not
-                { Identifier: var identifier, FinalizerType: var type })
+            { Identifier: var identifier, FinalizerType: var type })
         {
             _logger.LogDebug(
                 """Entity "{kind}/{name}" is finalizing but this operator has no registered finalizers for it.""",

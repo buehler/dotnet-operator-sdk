@@ -59,7 +59,7 @@ public class NamespacedOperatorIntegrationTest : IntegrationTestBase, IAsyncLife
         await _hostBuilder.ConfigureAndStart(builder => builder.Services
             .AddSingleton(Mock)
             .AddKubernetesOperator(s => s.Namespace = "foobar")
-            .AddControllerWithEntity<TestController, V1IntegrationTestEntity>(meta));
+            .AddController<TestController, V1IntegrationTestEntity>());
     }
 
     public async Task DisposeAsync()
