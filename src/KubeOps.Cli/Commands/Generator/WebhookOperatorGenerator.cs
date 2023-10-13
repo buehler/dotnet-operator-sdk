@@ -183,10 +183,9 @@ internal static class WebhookOperatorGenerator
 
         foreach (var entity in validatedEntities)
         {
-            var (metadata, _) = parser.ToEntityMetadata(entity);
             validatorConfig.Webhooks.Add(new V1ValidatingWebhook
             {
-                Name = $"validate.{metadata.SingularName}.{metadata.Group}.{metadata.Version}",
+                Name = $"validate.{entity.Metadata.SingularName}.{entity.Metadata.Group}.{entity.Metadata.Version}",
                 MatchPolicy = "Exact",
                 AdmissionReviewVersions = new[] { "v1" },
                 SideEffects = "None",
@@ -194,19 +193,19 @@ internal static class WebhookOperatorGenerator
                 {
                     new V1RuleWithOperations
                     {
-                        Operations = new[] { "CREATE", "UPDATE", "DELETE" },
-                        Resources = new[] { metadata.PluralName },
-                        ApiGroups = new[] { metadata.Group },
-                        ApiVersions = new[] { metadata.Version },
+                        Operations = entity.GetOperations(),
+                        Resources = new[] { entity.Metadata.PluralName },
+                        ApiGroups = new[] { entity.Metadata.Group },
+                        ApiVersions = new[] { entity.Metadata.Version },
                     },
                 },
                 ClientConfig = new Admissionregistrationv1WebhookClientConfig
                 {
-                    CaBundle = Encoding.ASCII.GetBytes(Convert.ToBase64String(Encoding.ASCII.GetBytes(caCert.ToPem()))),
+                    CaBundle =
+                        Encoding.ASCII.GetBytes(Convert.ToBase64String(Encoding.ASCII.GetBytes(caCert.ToPem()))),
                     Service = new Admissionregistrationv1ServiceReference
                     {
-                        Name = "operator",
-                        Path = $"/validate/{entity.Name.ToLowerInvariant()}",
+                        Name = "operator", Path = entity.ValidatorPath,
                     },
                 },
             });
