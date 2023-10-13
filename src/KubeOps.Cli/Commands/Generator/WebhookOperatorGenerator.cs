@@ -176,16 +176,19 @@ internal static class WebhookOperatorGenerator
             { Exists: false } => throw new FileNotFoundException($"The file {file.Name} does not exist."),
             _ => throw new NotSupportedException("Only *.csproj and *.sln files are supported."),
         };
-        var validatedEntities = parser.GetValidatedEntities().ToList();
+
+        var caBundle = Encoding.ASCII.GetBytes(Convert.ToBase64String(Encoding.ASCII.GetBytes(caCert.ToPem())));
+
+        var validationWebhooks = parser.GetValidatedEntities().ToList();
         var validatorConfig = new V1ValidatingWebhookConfiguration(
             metadata: new V1ObjectMeta(name: "validators"),
             webhooks: new List<V1ValidatingWebhook>()).Initialize();
 
-        foreach (var entity in validatedEntities)
+        foreach (var hook in validationWebhooks)
         {
             validatorConfig.Webhooks.Add(new V1ValidatingWebhook
             {
-                Name = $"validate.{entity.Metadata.SingularName}.{entity.Metadata.Group}.{entity.Metadata.Version}",
+                Name = $"validate.{hook.Metadata.SingularName}.{hook.Metadata.Group}.{hook.Metadata.Version}",
                 MatchPolicy = "Exact",
                 AdmissionReviewVersions = new[] { "v1" },
                 SideEffects = "None",
@@ -193,28 +196,69 @@ internal static class WebhookOperatorGenerator
                 {
                     new V1RuleWithOperations
                     {
-                        Operations = entity.GetOperations(),
-                        Resources = new[] { entity.Metadata.PluralName },
-                        ApiGroups = new[] { entity.Metadata.Group },
-                        ApiVersions = new[] { entity.Metadata.Version },
+                        Operations = hook.GetOperations(),
+                        Resources = new[] { hook.Metadata.PluralName },
+                        ApiGroups = new[] { hook.Metadata.Group },
+                        ApiVersions = new[] { hook.Metadata.Version },
                     },
                 },
                 ClientConfig = new Admissionregistrationv1WebhookClientConfig
                 {
-                    CaBundle =
-                        Encoding.ASCII.GetBytes(Convert.ToBase64String(Encoding.ASCII.GetBytes(caCert.ToPem()))),
+                    CaBundle = caBundle,
                     Service = new Admissionregistrationv1ServiceReference
                     {
-                        Name = "operator", Path = entity.ValidatorPath,
+                        Name = "operator",
+                        Path = hook.WebhookPath,
                     },
                 },
             });
         }
 
-        if (validatedEntities.Any())
+        if (validationWebhooks.Any())
         {
             result.Add(
                 $"validators.{format.ToString().ToLowerInvariant()}", validatorConfig);
+        }
+
+        var mutationWebhooks = parser.GetMutatedEntities().ToList();
+        var mutatorConfig = new V1MutatingWebhookConfiguration(
+            metadata: new V1ObjectMeta(name: "mutators"),
+            webhooks: new List<V1MutatingWebhook>()).Initialize();
+
+        foreach (var hook in mutationWebhooks)
+        {
+            mutatorConfig.Webhooks.Add(new V1MutatingWebhook
+            {
+                Name = $"mutate.{hook.Metadata.SingularName}.{hook.Metadata.Group}.{hook.Metadata.Version}",
+                MatchPolicy = "Exact",
+                AdmissionReviewVersions = new[] { "v1" },
+                SideEffects = "None",
+                Rules = new[]
+                {
+                    new V1RuleWithOperations
+                    {
+                        Operations = hook.GetOperations(),
+                        Resources = new[] { hook.Metadata.PluralName },
+                        ApiGroups = new[] { hook.Metadata.Group },
+                        ApiVersions = new[] { hook.Metadata.Version },
+                    },
+                },
+                ClientConfig = new Admissionregistrationv1WebhookClientConfig
+                {
+                    CaBundle = caBundle,
+                    Service = new Admissionregistrationv1ServiceReference
+                    {
+                        Name = "operator",
+                        Path = hook.WebhookPath,
+                    },
+                },
+            });
+        }
+
+        if (mutationWebhooks.Any())
+        {
+            result.Add(
+                $"mutators.{format.ToString().ToLowerInvariant()}", mutatorConfig);
         }
 
         result.Add(
@@ -228,6 +272,9 @@ internal static class WebhookOperatorGenerator
                         $"service.{format.ToString().ToLowerInvariant()}",
                         validatorConfig.Webhooks.Any()
                             ? $"validators.{format.ToString().ToLowerInvariant()}"
+                            : string.Empty,
+                        mutatorConfig.Webhooks.Any()
+                            ? $"mutators.{format.ToString().ToLowerInvariant()}"
                             : string.Empty,
                     }.Where(s => !string.IsNullOrWhiteSpace(s)).ToList(),
                 CommonLabels = new Dictionary<string, string> { { "operator-element", "operator-instance" }, },
