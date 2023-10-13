@@ -165,12 +165,13 @@ internal static partial class AssemblyLoader
         }
     }
 
-    public static IEnumerable<Type> GetValidatedEntities(this MetadataLoadContext context) => context.GetAssemblies()
+    public static IEnumerable<ValidatedEntity> GetValidatedEntities(this MetadataLoadContext context) => context
+        .GetAssemblies()
         .SelectMany(a => a.DefinedTypes)
         .Where(t => t.BaseType?.Name == typeof(ValidationWebhook<>).Name &&
                     t.BaseType?.Namespace == typeof(ValidationWebhook<>).Namespace)
-        .Select(t => t.BaseType!.GenericTypeArguments[0])
-        .Distinct();
+        .Distinct()
+        .Select(t => new ValidatedEntity(t, context.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata));
 
     [GeneratedRegex(".*")]
     private static partial Regex DefaultRegex();
