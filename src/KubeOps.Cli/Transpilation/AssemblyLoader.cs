@@ -6,6 +6,7 @@ using k8s.Models;
 
 using KubeOps.Abstractions.Entities.Attributes;
 using KubeOps.Abstractions.Rbac;
+using KubeOps.Operator.Web.Webhooks.Mutation;
 using KubeOps.Operator.Web.Webhooks.Validation;
 using KubeOps.Transpiler;
 
@@ -165,13 +166,21 @@ internal static partial class AssemblyLoader
         }
     }
 
-    public static IEnumerable<ValidatedEntity> GetValidatedEntities(this MetadataLoadContext context) => context
+    public static IEnumerable<ValidationWebhook> GetValidatedEntities(this MetadataLoadContext context) => context
         .GetAssemblies()
         .SelectMany(a => a.DefinedTypes)
         .Where(t => t.BaseType?.Name == typeof(ValidationWebhook<>).Name &&
                     t.BaseType?.Namespace == typeof(ValidationWebhook<>).Namespace)
         .Distinct()
-        .Select(t => new ValidatedEntity(t, context.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata));
+        .Select(t => new ValidationWebhook(t, context.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata));
+
+    public static IEnumerable<MutationWebhook> GetMutatedEntities(this MetadataLoadContext context) => context
+        .GetAssemblies()
+        .SelectMany(a => a.DefinedTypes)
+        .Where(t => t.BaseType?.Name == typeof(MutationWebhook<>).Name &&
+                    t.BaseType?.Namespace == typeof(MutationWebhook<>).Namespace)
+        .Distinct()
+        .Select(t => new MutationWebhook(t, context.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata));
 
     [GeneratedRegex(".*")]
     private static partial Regex DefaultRegex();
