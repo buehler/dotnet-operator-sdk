@@ -1,9 +1,14 @@
 using KubeOps.Operator;
+using KubeOps.Operator.Web.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddKubernetesOperator()
-    .RegisterComponents();
+    .RegisterComponents()
+#if DEBUG
+    .AddDevelopmentTunnel(5000)
+#endif
+    ;
 
 builder.Services
     .AddControllers();
