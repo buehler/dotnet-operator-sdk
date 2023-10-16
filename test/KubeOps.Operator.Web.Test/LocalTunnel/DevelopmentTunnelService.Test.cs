@@ -3,17 +3,12 @@
 using k8s.Models;
 
 using KubeOps.Operator.Client;
-using KubeOps.Operator.Web.Test.TestApp;
 
 namespace KubeOps.Operator.Web.Test.LocalTunnel;
 
 public class DevelopmentTunnelServiceTest : IntegrationTestBase
 {
-    // public DevelopmentTunnelServiceTest(TestApplicationFactory factory) : base(factory)
-    // {
-    // }
-
-    [Fact]
+    [Fact(Skip = "This test is flakey since localtunnel is not always available. Need an alternative.")]
     public async Task Should_Install_Validation_Webhooks()
     {
         using var client = KubernetesClientFactory.Create<V1ValidatingWebhookConfiguration>();
@@ -24,7 +19,7 @@ public class DevelopmentTunnelServiceTest : IntegrationTestBase
         validators.Webhooks[0].ClientConfig.Url.Should().Contain("/validate/v1operatorwebintegrationtestentity");
     }
 
-    [Fact]
+    [Fact(Skip = "This test is flakey since localtunnel is not always available. Need an alternative.")]
     public async Task Should_Install_Mutation_Webhooks()
     {
         using var client = KubernetesClientFactory.Create<V1MutatingWebhookConfiguration>();

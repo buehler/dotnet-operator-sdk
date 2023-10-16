@@ -1,6 +1,5 @@
 ﻿using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Events;
-using KubeOps.Abstractions.Finalizer;
 using KubeOps.Abstractions.Queue;
 using KubeOps.Abstractions.Rbac;
 using KubeOps.KubernetesClient;
@@ -8,7 +7,6 @@ using KubeOps.KubernetesClient;
 using Microsoft.Extensions.Logging;
 
 using Operator.Entities;
-using Operator.Finalizer;
 
 namespace Operator.Controller;
 

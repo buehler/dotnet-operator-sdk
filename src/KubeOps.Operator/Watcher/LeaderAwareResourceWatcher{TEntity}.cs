@@ -3,7 +3,6 @@ using k8s.LeaderElection;
 using k8s.Models;
 
 using KubeOps.Abstractions.Builder;
-using KubeOps.KubernetesClient;
 using KubeOps.Operator.Queue;
 
 using Microsoft.Extensions.Logging;
