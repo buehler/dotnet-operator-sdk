@@ -23,7 +23,7 @@ public class DevelopmentTunnelServiceTest : IntegrationTestBase
         validators.Webhooks[0].Name.Should().Be("validate.integrationtest.integration.test.v1");
         validators.Webhooks[0].ClientConfig.Url.Should().Contain("/validate/v1integrationtestentity");
     }
-    
+
     [Fact]
     public async Task Should_Install_Mutation_Webhooks()
     {

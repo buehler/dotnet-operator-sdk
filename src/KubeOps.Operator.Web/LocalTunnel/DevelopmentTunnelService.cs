@@ -80,8 +80,11 @@ internal class DevelopmentTunnelService : IHostedService
             metadata: new V1ObjectMeta(name: "dev-validators"),
             webhooks: validationWebhooks.ToList()).Initialize();
 
-        using var validatorClient = KubernetesClientFactory.Create<V1ValidatingWebhookConfiguration>();
-        await validatorClient.SaveAsync(validatorConfig);
+        if (validatorConfig.Webhooks.Any())
+        {
+            using var validatorClient = KubernetesClientFactory.Create<V1ValidatingWebhookConfiguration>();
+            await validatorClient.SaveAsync(validatorConfig);
+        }
     }
 
     private async Task RegisterMutators(Uri uri)
@@ -116,7 +119,10 @@ internal class DevelopmentTunnelService : IHostedService
             metadata: new V1ObjectMeta(name: "dev-mutators"),
             webhooks: mutationWebhooks.ToList()).Initialize();
 
-        using var mutatorClient = KubernetesClientFactory.Create<V1MutatingWebhookConfiguration>();
-        await mutatorClient.SaveAsync(mutatorConfig);
+        if (mutatorConfig.Webhooks.Any())
+        {
+            using var mutatorClient = KubernetesClientFactory.Create<V1MutatingWebhookConfiguration>();
+            await mutatorClient.SaveAsync(mutatorConfig);
+        }
     }
 }

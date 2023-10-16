@@ -16,12 +16,13 @@ public class TestApplicationFactory : WebApplicationFactory<TestApplicationFacto
 {
     protected override IHostBuilder CreateHostBuilder() =>
         Host.CreateDefaultBuilder()
-            .ConfigureWebHostDefaults(w => w.UseStartup<TestStartup>().ConfigureKestrel(o => o.ListenAnyIP(5000)));
+            .ConfigureWebHostDefaults(w => w
+                .UseStartup<TestStartup>()
+                .UseUrls("http://+:5000"));
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);
-        builder.ConfigureKestrel(c => c.ListenAnyIP(5000));
         builder.UseSolutionRelativeContentRoot("test/KubeOps.Operator.Web.Test");
     }
 
@@ -47,7 +48,7 @@ public class TestApplicationFactory : WebApplicationFactory<TestApplicationFacto
             services.AddControllers();
             services
                 .AddKubernetesOperator()
-                .AddDevelopmentTunnel(5000);
+                .AddDevelopmentTunnel(5000, "127.0.0.1");
             services.RemoveAll<WebhookLoader>();
             services.AddSingleton(new WebhookLoader(typeof(TestApplicationFactory).Assembly));
         }
