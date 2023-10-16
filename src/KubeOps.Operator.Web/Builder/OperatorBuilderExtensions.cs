@@ -1,4 +1,6 @@
-﻿using KubeOps.Abstractions.Builder;
+﻿using System.Reflection;
+
+using KubeOps.Abstractions.Builder;
 using KubeOps.Operator.Web.LocalTunnel;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +44,7 @@ public static class OperatorBuilderExtensions
     {
         builder.Services.AddHostedService<DevelopmentTunnelService>();
         builder.Services.AddSingleton(new TunnelConfig(hostname, port));
+        builder.Services.AddSingleton(new WebhookLoader(Assembly.GetEntryAssembly()!));
         return builder;
     }
 }

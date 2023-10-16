@@ -86,7 +86,7 @@ public abstract class MutationWebhook<TEntity> : ControllerBase
     /// <param name="request">The incoming admission request for an entity.</param>
     /// <returns>The <see cref="MutationResult{TEntity}"/>.</returns>
     [HttpPost]
-    public async Task<IActionResult> Validate([FromBody] AdmissionRequest<TEntity> request)
+    public async Task<IActionResult> Mutate([FromBody] AdmissionRequest<TEntity> request)
     {
         var original = JsonDiffer.GetNode(request.Request.Operation switch
         {

@@ -1,11 +1,7 @@
-﻿using System.Reflection;
-
-using k8s;
+﻿using k8s;
 using k8s.Models;
 
 using KubeOps.Operator.Client;
-using KubeOps.Operator.Web.Webhooks.Mutation;
-using KubeOps.Operator.Web.Webhooks.Validation;
 using KubeOps.Transpiler;
 
 using Localtunnel;
@@ -22,12 +18,14 @@ namespace KubeOps.Operator.Web.LocalTunnel;
 internal class DevelopmentTunnelService : IHostedService
 {
     private readonly TunnelConfig _config;
+    private readonly WebhookLoader _loader;
     private readonly LocaltunnelClient _tunnelClient;
     private Tunnel? _tunnel;
 
-    public DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConfig config)
+    public DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConfig config, WebhookLoader loader)
     {
         _config = config;
+        _loader = loader;
         _tunnelClient = new(loggerFactory);
     }
 
@@ -50,13 +48,10 @@ internal class DevelopmentTunnelService : IHostedService
         return Task.CompletedTask;
     }
 
-    private static async Task RegisterValidators(Uri uri)
+    private async Task RegisterValidators(Uri uri)
     {
-        var validationWebhooks = Assembly
-            .GetEntryAssembly()!
-            .DefinedTypes
-            .Where(t => t.BaseType?.IsGenericType == true &&
-                        t.BaseType?.GetGenericTypeDefinition() == typeof(ValidationWebhook<>))
+        var validationWebhooks = _loader
+            .ValidationWebhooks
             .Select(t => (HookTypeName: t.BaseType!.GenericTypeArguments[0].Name.ToLowerInvariant(),
                 Entities.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata))
             .Select(hook => new V1ValidatingWebhook
@@ -85,22 +80,22 @@ internal class DevelopmentTunnelService : IHostedService
             metadata: new V1ObjectMeta(name: "dev-validators"),
             webhooks: validationWebhooks.ToList()).Initialize();
 
-        using var validatorClient = KubernetesClientFactory.Create<V1ValidatingWebhookConfiguration>();
-        await validatorClient.SaveAsync(validatorConfig);
+        if (validatorConfig.Webhooks.Any())
+        {
+            using var validatorClient = KubernetesClientFactory.Create<V1ValidatingWebhookConfiguration>();
+            await validatorClient.SaveAsync(validatorConfig);
+        }
     }
 
-    private static async Task RegisterMutators(Uri uri)
+    private async Task RegisterMutators(Uri uri)
     {
-        var mutationWebhooks = Assembly
-            .GetEntryAssembly()!
-            .DefinedTypes
-            .Where(t => t.BaseType?.IsGenericType == true &&
-                        t.BaseType?.GetGenericTypeDefinition() == typeof(MutationWebhook<>))
+        var mutationWebhooks = _loader
+            .MutationWebhooks
             .Select(t => (HookTypeName: t.BaseType!.GenericTypeArguments[0].Name.ToLowerInvariant(),
                 Entities.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata))
             .Select(hook => new V1MutatingWebhook
             {
-                Name = $"validate.{hook.Metadata.SingularName}.{hook.Metadata.Group}.{hook.Metadata.Version}",
+                Name = $"mutate.{hook.Metadata.SingularName}.{hook.Metadata.Group}.{hook.Metadata.Version}",
                 MatchPolicy = "Exact",
                 AdmissionReviewVersions = new[] { "v1" },
                 SideEffects = "None",
@@ -116,7 +111,7 @@ internal class DevelopmentTunnelService : IHostedService
                 },
                 ClientConfig = new Admissionregistrationv1WebhookClientConfig
                 {
-                    Url = $"{uri}validate/{hook.HookTypeName}",
+                    Url = $"{uri}mutate/{hook.HookTypeName}",
                 },
             });
 
@@ -124,7 +119,10 @@ internal class DevelopmentTunnelService : IHostedService
             metadata: new V1ObjectMeta(name: "dev-mutators"),
             webhooks: mutationWebhooks.ToList()).Initialize();
 
-        using var mutatorClient = KubernetesClientFactory.Create<V1MutatingWebhookConfiguration>();
-        await mutatorClient.SaveAsync(mutatorConfig);
+        if (mutatorConfig.Webhooks.Any())
+        {
+            using var mutatorClient = KubernetesClientFactory.Create<V1MutatingWebhookConfiguration>();
+            await mutatorClient.SaveAsync(mutatorConfig);
+        }
     }
 }
