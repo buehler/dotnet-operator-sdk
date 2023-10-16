@@ -14,8 +14,8 @@ namespace KubeOps.Operator.Test.Finalizer;
 
 public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetime
 {
-    private static readonly InvocationCounter<V1IntegrationTestEntity> Mock = new();
-    private IKubernetesClient<V1IntegrationTestEntity> _client = null!;
+    private static readonly InvocationCounter<V1OperatorIntegrationTestEntity> Mock = new();
+    private IKubernetesClient<V1OperatorIntegrationTestEntity> _client = null!;
 
     public EntityFinalizerIntegrationTest(HostBuilder hostBuilder, MlcProvider provider) : base(hostBuilder, provider)
     {
@@ -25,12 +25,12 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
     [Fact]
     public async Task Should_Not_Call_Controller_When_Attaching_Finalizer()
     {
-        var watcherCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 2 };
+        var watcherCounter = new InvocationCounter<V1OperatorIntegrationTestEntity> { TargetInvocationCount = 2 };
         using var watcher = _client.Watch((_, e) => watcherCounter.Invocation(e));
 
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.CreateAsync(new V1IntegrationTestEntity("first", "first", "default"));
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("first", "first", "default"));
         await Mock.WaitForInvocations;
         await watcherCounter.WaitForInvocations;
 
@@ -45,12 +45,12 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
     [Fact]
     public async Task Should_Not_Call_Controller_When_Attaching_Finalizers()
     {
-        var watcherCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 3 };
+        var watcherCounter = new InvocationCounter<V1OperatorIntegrationTestEntity> { TargetInvocationCount = 3 };
         using var watcher = _client.Watch((_, e) => watcherCounter.Invocation(e));
 
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.CreateAsync(new V1IntegrationTestEntity("first-second", "first-second", "default"));
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("first-second", "first-second", "default"));
         await Mock.WaitForInvocations;
         await watcherCounter.WaitForInvocations;
 
@@ -65,12 +65,12 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
     [Fact]
     public async Task Should_Attach_Finalizer_On_Entity()
     {
-        var watcherCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 2 };
+        var watcherCounter = new InvocationCounter<V1OperatorIntegrationTestEntity> { TargetInvocationCount = 2 };
         using var watcher = _client.Watch((_, e) => watcherCounter.Invocation(e));
 
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.CreateAsync(new V1IntegrationTestEntity("first", "first", "default"));
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("first", "first", "default"));
         await Mock.WaitForInvocations;
         await watcherCounter.WaitForInvocations;
 
@@ -81,12 +81,12 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
     [Fact]
     public async Task Should_Attach_Multiple_Finalizer_On_Entity()
     {
-        var watcherCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 3 };
+        var watcherCounter = new InvocationCounter<V1OperatorIntegrationTestEntity> { TargetInvocationCount = 3 };
         using var watcher = _client.Watch((_, e) => watcherCounter.Invocation(e));
 
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.CreateAsync(new V1IntegrationTestEntity("first-second", "first-second", "default"));
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("first-second", "first-second", "default"));
         await Mock.WaitForInvocations;
         await watcherCounter.WaitForInvocations;
 
@@ -98,12 +98,12 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
     [Fact]
     public async Task Should_Finalize_And_Delete_An_Entity()
     {
-        var attachCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 2 };
+        var attachCounter = new InvocationCounter<V1OperatorIntegrationTestEntity> { TargetInvocationCount = 2 };
         using (_client.Watch((_, e) => attachCounter.Invocation(e)))
         {
             (await _client.ListAsync("default")).Count.Should().Be(0);
 
-            await _client.CreateAsync(new V1IntegrationTestEntity("first", "first", "default"));
+            await _client.CreateAsync(new V1OperatorIntegrationTestEntity("first", "first", "default"));
 
             // 1 invocation for create
             await Mock.WaitForInvocations;
@@ -117,7 +117,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         Mock.Clear();
 
         // 3 invocations: 1 when the watcher is created and the entity already exists, 1 for finalize, 1 for delete.
-        var finalizeCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 3 };
+        var finalizeCounter = new InvocationCounter<V1OperatorIntegrationTestEntity> { TargetInvocationCount = 3 };
         using (_client.Watch((_, e) => finalizeCounter.Invocation(e)))
         {
             await _client.DeleteAsync("first", "default");
@@ -135,12 +135,12 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
     [Fact]
     public async Task Should_Finalize_And_Delete_An_Entity_With_Multiple_Finalizer()
     {
-        var attachCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 3 };
+        var attachCounter = new InvocationCounter<V1OperatorIntegrationTestEntity> { TargetInvocationCount = 3 };
         using (_client.Watch((_, e) => attachCounter.Invocation(e)))
         {
             (await _client.ListAsync("default")).Count.Should().Be(0);
 
-            await _client.CreateAsync(new V1IntegrationTestEntity("first-second", "first-second", "default"));
+            await _client.CreateAsync(new V1OperatorIntegrationTestEntity("first-second", "first-second", "default"));
 
             // 1 invocation for create
             await Mock.WaitForInvocations;
@@ -155,7 +155,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         Mock.TargetInvocationCount = 3;
 
         // 4 invocations: 1 when the watcher is created and the entity already exists, 2 for finalize, 1 for delete.
-        var finalizeCounter = new InvocationCounter<V1IntegrationTestEntity> { TargetInvocationCount = 4 };
+        var finalizeCounter = new InvocationCounter<V1OperatorIntegrationTestEntity> { TargetInvocationCount = 4 };
         using (_client.Watch((_, e) => finalizeCounter.Invocation(e)))
         {
             await _client.DeleteAsync("first-second", "default");
@@ -173,14 +173,14 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
 
     public async Task InitializeAsync()
     {
-        var meta = _mlc.ToEntityMetadata(typeof(V1IntegrationTestEntity)).Metadata;
-        _client = new KubernetesClient<V1IntegrationTestEntity>(meta);
+        var meta = _mlc.ToEntityMetadata(typeof(V1OperatorIntegrationTestEntity)).Metadata;
+        _client = new KubernetesClient<V1OperatorIntegrationTestEntity>(meta);
         await _hostBuilder.ConfigureAndStart(builder => builder.Services
             .AddSingleton(Mock)
             .AddKubernetesOperator()
-            .AddController<TestController, V1IntegrationTestEntity>()
-            .AddFinalizer<FirstFinalizer, V1IntegrationTestEntity>("first")
-            .AddFinalizer<SecondFinalizer, V1IntegrationTestEntity>("second"));
+            .AddController<TestController, V1OperatorIntegrationTestEntity>()
+            .AddFinalizer<FirstFinalizer, V1OperatorIntegrationTestEntity>("first")
+            .AddFinalizer<SecondFinalizer, V1OperatorIntegrationTestEntity>("second"));
     }
 
     public async Task DisposeAsync()
@@ -201,22 +201,22 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
         _client.Dispose();
     }
 
-    private class TestController : IEntityController<V1IntegrationTestEntity>
+    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>
     {
-        private readonly InvocationCounter<V1IntegrationTestEntity> _svc;
-        private readonly EntityFinalizerAttacher<FirstFinalizer, V1IntegrationTestEntity> _first;
-        private readonly EntityFinalizerAttacher<SecondFinalizer, V1IntegrationTestEntity> _second;
+        private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _svc;
+        private readonly EntityFinalizerAttacher<FirstFinalizer, V1OperatorIntegrationTestEntity> _first;
+        private readonly EntityFinalizerAttacher<SecondFinalizer, V1OperatorIntegrationTestEntity> _second;
 
-        public TestController(InvocationCounter<V1IntegrationTestEntity> svc,
-            EntityFinalizerAttacher<FirstFinalizer, V1IntegrationTestEntity> first,
-            EntityFinalizerAttacher<SecondFinalizer, V1IntegrationTestEntity> second)
+        public TestController(InvocationCounter<V1OperatorIntegrationTestEntity> svc,
+            EntityFinalizerAttacher<FirstFinalizer, V1OperatorIntegrationTestEntity> first,
+            EntityFinalizerAttacher<SecondFinalizer, V1OperatorIntegrationTestEntity> second)
         {
             _svc = svc;
             _first = first;
             _second = second;
         }
 
-        public async Task ReconcileAsync(V1IntegrationTestEntity entity)
+        public async Task ReconcileAsync(V1OperatorIntegrationTestEntity entity)
         {
             _svc.Invocation(entity);
             if (entity.Name().Contains("first"))
@@ -230,39 +230,39 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase, IAsyncLifetim
             }
         }
 
-        public Task DeletedAsync(V1IntegrationTestEntity entity)
+        public Task DeletedAsync(V1OperatorIntegrationTestEntity entity)
         {
             _svc.Invocation(entity);
             return Task.CompletedTask;
         }
     }
 
-    private class FirstFinalizer : IEntityFinalizer<V1IntegrationTestEntity>
+    private class FirstFinalizer : IEntityFinalizer<V1OperatorIntegrationTestEntity>
     {
-        private readonly InvocationCounter<V1IntegrationTestEntity> _svc;
+        private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _svc;
 
-        public FirstFinalizer(InvocationCounter<V1IntegrationTestEntity> svc)
+        public FirstFinalizer(InvocationCounter<V1OperatorIntegrationTestEntity> svc)
         {
             _svc = svc;
         }
 
-        public Task FinalizeAsync(V1IntegrationTestEntity entity)
+        public Task FinalizeAsync(V1OperatorIntegrationTestEntity entity)
         {
             _svc.Invocation(entity);
             return Task.CompletedTask;
         }
     }
 
-    private class SecondFinalizer : IEntityFinalizer<V1IntegrationTestEntity>
+    private class SecondFinalizer : IEntityFinalizer<V1OperatorIntegrationTestEntity>
     {
-        private readonly InvocationCounter<V1IntegrationTestEntity> _svc;
+        private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _svc;
 
-        public SecondFinalizer(InvocationCounter<V1IntegrationTestEntity> svc)
+        public SecondFinalizer(InvocationCounter<V1OperatorIntegrationTestEntity> svc)
         {
             _svc = svc;
         }
 
-        public Task FinalizeAsync(V1IntegrationTestEntity entity)
+        public Task FinalizeAsync(V1OperatorIntegrationTestEntity entity)
         {
             _svc.Invocation(entity);
             return Task.CompletedTask;
