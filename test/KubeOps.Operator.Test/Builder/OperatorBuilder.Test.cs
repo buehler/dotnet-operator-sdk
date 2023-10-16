@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 
-using k8s.LeaderElection;
 using k8s.Models;
 
 using KubeOps.Abstractions.Builder;
