@@ -13,4 +13,7 @@
         <ProjectReference Include="..\..\src\KubeOps.Operator.Web\KubeOps.Operator.Web.csproj"/>
         <ProjectReference Include="..\..\src\KubeOps.Transpiler\KubeOps.Transpiler.csproj"/>
     </ItemGroup>
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+    </ItemGroup>
 </Project>

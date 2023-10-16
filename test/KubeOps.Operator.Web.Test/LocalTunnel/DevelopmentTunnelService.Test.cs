@@ -9,9 +9,9 @@ namespace KubeOps.Operator.Web.Test.LocalTunnel;
 
 public class DevelopmentTunnelServiceTest : IntegrationTestBase
 {
-    public DevelopmentTunnelServiceTest(TestApplicationFactory factory) : base(factory)
-    {
-    }
+    // public DevelopmentTunnelServiceTest(TestApplicationFactory factory) : base(factory)
+    // {
+    // }
 
     [Fact]
     public async Task Should_Install_Validation_Webhooks()
@@ -20,8 +20,8 @@ public class DevelopmentTunnelServiceTest : IntegrationTestBase
         var validators = await client.GetAsync("dev-validators");
         validators.Should().NotBeNull();
         validators!.Webhooks.Should().HaveCount(1);
-        validators.Webhooks[0].Name.Should().Be("validate.integrationtest.integration.test.v1");
-        validators.Webhooks[0].ClientConfig.Url.Should().Contain("/validate/v1integrationtestentity");
+        validators.Webhooks[0].Name.Should().Be("validate.weboperatorintegrationtest.weboperator.test.v1");
+        validators.Webhooks[0].ClientConfig.Url.Should().Contain("/validate/v1operatorwebintegrationtestentity");
     }
 
     [Fact]
@@ -31,7 +31,7 @@ public class DevelopmentTunnelServiceTest : IntegrationTestBase
         var mutators = await client.GetAsync("dev-mutators");
         mutators.Should().NotBeNull();
         mutators!.Webhooks.Should().HaveCount(1);
-        mutators.Webhooks[0].Name.Should().Be("mutate.integrationtest.integration.test.v1");
-        mutators.Webhooks[0].ClientConfig.Url.Should().Contain("/mutate/v1integrationtestentity");
+        mutators.Webhooks[0].Name.Should().Be("mutate.weboperatorintegrationtest.weboperator.test.v1");
+        mutators.Webhooks[0].ClientConfig.Url.Should().Contain("/mutate/v1operatorwebintegrationtestentity");
     }
 }

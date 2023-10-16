@@ -13,8 +13,8 @@ namespace KubeOps.Operator.Test.Controller;
 
 public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifetime
 {
-    private static readonly InvocationCounter<V1IntegrationTestEntity> Mock = new();
-    private IKubernetesClient<V1IntegrationTestEntity> _client = null!;
+    private static readonly InvocationCounter<V1OperatorIntegrationTestEntity> Mock = new();
+    private IKubernetesClient<V1OperatorIntegrationTestEntity> _client = null!;
 
     public EntityControllerIntegrationTest(HostBuilder hostBuilder, MlcProvider provider) : base(hostBuilder, provider)
     {
@@ -26,13 +26,13 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
     {
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        await _client.CreateAsync(new V1IntegrationTestEntity("test-entity", "username", "default"));
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", "default"));
         await Mock.WaitForInvocations;
 
         Mock.Invocations.Count.Should().Be(1);
         var (method, entity) = Mock.Invocations[0];
         method.Should().Be("ReconcileAsync");
-        entity.Should().BeOfType<V1IntegrationTestEntity>();
+        entity.Should().BeOfType<V1OperatorIntegrationTestEntity>();
         entity.Name().Should().Be("test-entity");
         entity.Spec.Username.Should().Be("username");
     }
@@ -43,7 +43,7 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
         Mock.TargetInvocationCount = 2;
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        var result = await _client.CreateAsync(new V1IntegrationTestEntity("test-entity", "username", "default"));
+        var result = await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", "default"));
         result.Spec.Username = "changed";
         await _client.UpdateAsync(result);
         await Mock.WaitForInvocations;
@@ -58,7 +58,7 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
         {
             var (method, entity) = Mock.Invocations[idx];
             method.Should().Be("ReconcileAsync");
-            entity.Should().BeOfType<V1IntegrationTestEntity>();
+            entity.Should().BeOfType<V1OperatorIntegrationTestEntity>();
             entity.Spec.Username.Should().Be(username);
         }
     }
@@ -69,7 +69,7 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
         Mock.TargetInvocationCount = 2;
         (await _client.ListAsync("default")).Count.Should().Be(0);
 
-        var result = await _client.CreateAsync(new V1IntegrationTestEntity("test-entity", "username", "default"));
+        var result = await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", "default"));
         await _client.DeleteAsync(result);
         await Mock.WaitForInvocations;
 
@@ -80,12 +80,12 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
 
     public async Task InitializeAsync()
     {
-        var meta = _mlc.ToEntityMetadata(typeof(V1IntegrationTestEntity)).Metadata;
-        _client = new KubernetesClient<V1IntegrationTestEntity>(meta);
+        var meta = _mlc.ToEntityMetadata(typeof(V1OperatorIntegrationTestEntity)).Metadata;
+        _client = new KubernetesClient<V1OperatorIntegrationTestEntity>(meta);
         await _hostBuilder.ConfigureAndStart(builder => builder.Services
             .AddSingleton(Mock)
             .AddKubernetesOperator()
-            .AddController<TestController, V1IntegrationTestEntity>());
+            .AddController<TestController, V1OperatorIntegrationTestEntity>());
     }
 
     public async Task DisposeAsync()
@@ -95,22 +95,22 @@ public class EntityControllerIntegrationTest : IntegrationTestBase, IAsyncLifeti
         _client.Dispose();
     }
 
-    private class TestController : IEntityController<V1IntegrationTestEntity>
+    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>
     {
-        private readonly InvocationCounter<V1IntegrationTestEntity> _svc;
+        private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _svc;
 
-        public TestController(InvocationCounter<V1IntegrationTestEntity> svc)
+        public TestController(InvocationCounter<V1OperatorIntegrationTestEntity> svc)
         {
             _svc = svc;
         }
 
-        public Task ReconcileAsync(V1IntegrationTestEntity entity)
+        public Task ReconcileAsync(V1OperatorIntegrationTestEntity entity)
         {
             _svc.Invocation(entity);
             return Task.CompletedTask;
         }
 
-        public Task DeletedAsync(V1IntegrationTestEntity entity)
+        public Task DeletedAsync(V1OperatorIntegrationTestEntity entity)
         {
             _svc.Invocation(entity);
             return Task.CompletedTask;

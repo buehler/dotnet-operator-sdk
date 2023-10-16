@@ -4,16 +4,25 @@ using System.Runtime.InteropServices;
 using k8s;
 using k8s.Models;
 
+using KubeOps.Operator.Web.Builder;
+using KubeOps.Operator.Web.LocalTunnel;
 using KubeOps.Operator.Web.Test.TestApp;
 using KubeOps.Transpiler;
 
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Web.Test;
 
 [CollectionDefinition(Name, DisableParallelization = true)]
-public class IntegrationTestCollection : ICollectionFixture<CrdInstaller>, ICollectionFixture<TestApplicationFactory>
+public class IntegrationTestCollection : ICollectionFixture<CrdInstaller>, ICollectionFixture<ApplicationProvider>
 {
     public const string Name = "Integration Tests";
 }
@@ -21,13 +30,6 @@ public class IntegrationTestCollection : ICollectionFixture<CrdInstaller>, IColl
 [Collection(IntegrationTestCollection.Name)]
 public abstract class IntegrationTestBase
 {
-    protected readonly TestApplicationFactory _factory;
-
-    protected IntegrationTestBase(TestApplicationFactory factory)
-    {
-        _factory = factory;
-        _factory.CreateClient();
-    }
 }
 
 public sealed class CrdInstaller : IAsyncLifetime
@@ -38,7 +40,7 @@ public sealed class CrdInstaller : IAsyncLifetime
     {
         await using var p = new MlcProvider();
         await p.InitializeAsync();
-        _crds = p.Mlc.Transpile(new[] { typeof(V1IntegrationTestEntity) }).ToList();
+        _crds = p.Mlc.Transpile(new[] { typeof(V1OperatorWebIntegrationTestEntity) }).ToList();
 
         using var client = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
         foreach (var crd in _crds)
@@ -67,7 +69,7 @@ public sealed class CrdInstaller : IAsyncLifetime
     }
 }
 
-public class MlcProvider : IAsyncLifetime
+public sealed class MlcProvider : IAsyncLifetime
 {
     private static readonly SemaphoreSlim Semaphore = new(1, 1);
 
@@ -110,5 +112,48 @@ public class MlcProvider : IAsyncLifetime
     {
         Mlc.Dispose();
         return Task.CompletedTask;
+    }
+}
+
+public sealed class ApplicationProvider : IAsyncLifetime
+{
+    private WebApplication? _app;
+
+    public async Task InitializeAsync()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.ConfigureKestrel(c => c.ListenAnyIP(5000));
+        builder.Services
+            .AddKubernetesOperator()
+            .AddDevelopmentTunnel(5000);
+
+        builder.Services.AddControllers().AddApplicationPart(typeof(ApplicationProvider).Assembly);
+        builder.Services.AddHealthChecks();
+
+        builder.Services.AddLogging(c =>
+        {
+            c.AddSimpleConsole();
+#if DEBUG
+            c.SetMinimumLevel(LogLevel.Trace);
+#else
+                c.SetMinimumLevel(LogLevel.None);
+#endif
+        });
+
+        builder.Services.RemoveAll<WebhookLoader>();
+        builder.Services.AddSingleton(new WebhookLoader(typeof(ApplicationProvider).Assembly));
+
+        _app = builder.Build();
+
+        _app.UseRouting();
+        _app.UseDeveloperExceptionPage();
+        _app.MapControllers();
+
+        await _app.StartAsync();
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _app!.DisposeAsync();
     }
 }

@@ -1,27 +1,27 @@
 ﻿using FluentAssertions;
 
-using k8s.Autorest;
-
 using KubeOps.Operator.Client;
 using KubeOps.Operator.Web.Test.TestApp;
 
 namespace KubeOps.Operator.Web.Test.Webhooks;
 
-public class ValidationWebhookIntegrationTest : IntegrationTestBase
+public class MutationWebhookIntegrationTest : IntegrationTestBase
 {
     [Fact]
     public async Task Should_Allow_Creation_Of_Entity()
     {
         using var client = KubernetesClientFactory.Create<V1OperatorWebIntegrationTestEntity>();
         var e = await client.CreateAsync(new V1OperatorWebIntegrationTestEntity("test-entity", "foobar"));
+        e.Spec.Username.Should().Be("foobar");
         await client.DeleteAsync(e);
     }
 
     [Fact]
-    public async Task Should_Disallow_Creation_When_Validation_Fails()
+    public async Task Should_Mutate_Entity_According_To_Code()
     {
         using var client = KubernetesClientFactory.Create<V1OperatorWebIntegrationTestEntity>();
-        var ex = await Assert.ThrowsAsync<HttpOperationException>(async () => await client.CreateAsync(new V1OperatorWebIntegrationTestEntity("test-entity", "forbidden")));
-        ex.Message.Should().Contain("name may not be 'forbidden'");
+        var e = await client.CreateAsync(new V1OperatorWebIntegrationTestEntity("test-entity", "overwrite"));
+        e.Spec.Username.Should().Be("overwritten");
+        await client.DeleteAsync(e);
     }
 }

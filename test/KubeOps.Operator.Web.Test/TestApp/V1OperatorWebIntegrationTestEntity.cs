@@ -4,17 +4,17 @@ using KubeOps.Abstractions.Entities;
 
 namespace KubeOps.Operator.Web.Test.TestApp;
 
-[KubernetesEntity(Group = "integration.test", ApiVersion = "v1", Kind = "IntegrationTest")]
-public class V1IntegrationTestEntity : CustomKubernetesEntity<V1IntegrationTestEntity.EntitySpec,
-    V1IntegrationTestEntity.EntityStatus>
+[KubernetesEntity(Group = "weboperator.test", ApiVersion = "v1", Kind = "WebOperatorIntegrationTest")]
+public class V1OperatorWebIntegrationTestEntity : CustomKubernetesEntity<V1OperatorWebIntegrationTestEntity.EntitySpec,
+    V1OperatorWebIntegrationTestEntity.EntityStatus>
 {
-    public V1IntegrationTestEntity()
+    public V1OperatorWebIntegrationTestEntity()
     {
-        ApiVersion = "integration.test/v1";
-        Kind = "IntegrationTest";
+        ApiVersion = "weboperator.test/v1";
+        Kind = "WebOperatorIntegrationTest";
     }
 
-    public V1IntegrationTestEntity(string name, string username) : this()
+    public V1OperatorWebIntegrationTestEntity(string name, string username) : this()
     {
         Metadata.Name = name;
         Metadata.NamespaceProperty = "default";
