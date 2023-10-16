@@ -1,10 +1,6 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
 
-using k8s;
-using k8s.Models;
-
-using KubeOps.Abstractions.Kustomize;
 using KubeOps.Cli.Output;
 
 using Spectre.Console;

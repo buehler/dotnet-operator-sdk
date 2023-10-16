@@ -7,7 +7,7 @@ namespace KubeOps.Operator.Web.Test.Webhooks;
 
 public class MutationWebhookIntegrationTest : IntegrationTestBase
 {
-    [Fact]
+    [Fact(Skip = "This test is flakey since localtunnel is not always available. Need an alternative.")]
     public async Task Should_Allow_Creation_Of_Entity()
     {
         using var client = KubernetesClientFactory.Create<V1OperatorWebIntegrationTestEntity>();
@@ -16,7 +16,7 @@ public class MutationWebhookIntegrationTest : IntegrationTestBase
         await client.DeleteAsync(e);
     }
 
-    [Fact]
+    [Fact(Skip = "This test is flakey since localtunnel is not always available. Need an alternative.")]
     public async Task Should_Mutate_Entity_According_To_Code()
     {
         using var client = KubernetesClientFactory.Create<V1OperatorWebIntegrationTestEntity>();
