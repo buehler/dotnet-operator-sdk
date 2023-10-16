@@ -380,7 +380,8 @@ public static class Crds
         }
 
         if (type == context.GetContextType<string>() ||
-            type == context.GetContextType<string?>())
+            type == context.GetContextType<string?>() ||
+            type.FullName == "System.String")
         {
             return new V1JSONSchemaProps { Type = String };
         }

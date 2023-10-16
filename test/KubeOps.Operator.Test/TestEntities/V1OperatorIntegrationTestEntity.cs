@@ -4,17 +4,17 @@ using KubeOps.Abstractions.Entities;
 
 namespace KubeOps.Operator.Test.TestEntities;
 
-[KubernetesEntity(Group = "integration.test", ApiVersion = "v1", Kind = "IntegrationTest")]
-public class V1IntegrationTestEntity : CustomKubernetesEntity<V1IntegrationTestEntity.EntitySpec,
-    V1IntegrationTestEntity.EntityStatus>
+[KubernetesEntity(Group = "operator.test", ApiVersion = "v1", Kind = "OperatorIntegrationTest")]
+public class V1OperatorIntegrationTestEntity : CustomKubernetesEntity<V1OperatorIntegrationTestEntity.EntitySpec,
+    V1OperatorIntegrationTestEntity.EntityStatus>
 {
-    public V1IntegrationTestEntity()
+    public V1OperatorIntegrationTestEntity()
     {
-        ApiVersion = "integration.test/v1";
-        Kind = "IntegrationTest";
+        ApiVersion = "operator.test/v1";
+        Kind = "OperatorIntegrationTest";
     }
 
-    public V1IntegrationTestEntity(string name, string username, string ns) : this()
+    public V1OperatorIntegrationTestEntity(string name, string username, string ns) : this()
     {
         Metadata.Name = name;
         Spec.Username = username;

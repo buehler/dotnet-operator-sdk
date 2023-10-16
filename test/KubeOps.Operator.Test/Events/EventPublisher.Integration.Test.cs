@@ -18,8 +18,8 @@ namespace KubeOps.Operator.Test.Events;
 
 public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
 {
-    private static readonly InvocationCounter<V1IntegrationTestEntity> Mock = new();
-    private IKubernetesClient<V1IntegrationTestEntity> _client = null!;
+    private static readonly InvocationCounter<V1OperatorIntegrationTestEntity> Mock = new();
+    private IKubernetesClient<V1OperatorIntegrationTestEntity> _client = null!;
 
     public EventPublisherIntegrationTest(HostBuilder hostBuilder, MlcProvider provider) : base(hostBuilder, provider)
     {
@@ -35,7 +35,7 @@ public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
                 SHA512.HashData(
                     Encoding.UTF8.GetBytes(eventName)));
 
-        await _client.CreateAsync(new V1IntegrationTestEntity("single-entity", "username", "default"));
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("single-entity", "username", "default"));
         await Mock.WaitForInvocations;
 
         var eventClient = _hostBuilder.Services.GetRequiredService<IKubernetesClient<Corev1Event>>();
@@ -54,7 +54,7 @@ public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
                 SHA512.HashData(
                     Encoding.UTF8.GetBytes(eventName)));
 
-        await _client.CreateAsync(new V1IntegrationTestEntity("test-entity", "username", "default"));
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", "default"));
         await Mock.WaitForInvocations;
 
         var eventClient = _hostBuilder.Services.GetRequiredService<IKubernetesClient<Corev1Event>>();
@@ -65,12 +65,12 @@ public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var meta = _mlc.ToEntityMetadata(typeof(V1IntegrationTestEntity)).Metadata;
-        _client = new KubernetesClient<V1IntegrationTestEntity>(meta);
+        var meta = _mlc.ToEntityMetadata(typeof(V1OperatorIntegrationTestEntity)).Metadata;
+        _client = new KubernetesClient<V1OperatorIntegrationTestEntity>(meta);
         await _hostBuilder.ConfigureAndStart(builder => builder.Services
             .AddSingleton(Mock)
             .AddKubernetesOperator()
-            .AddController<TestController, V1IntegrationTestEntity>());
+            .AddController<TestController, V1OperatorIntegrationTestEntity>());
     }
 
     public async Task DisposeAsync()
@@ -81,15 +81,15 @@ public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
         _client.Dispose();
     }
 
-    private class TestController : IEntityController<V1IntegrationTestEntity>
+    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>
     {
-        private readonly InvocationCounter<V1IntegrationTestEntity> _svc;
-        private readonly EntityRequeue<V1IntegrationTestEntity> _requeue;
+        private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _svc;
+        private readonly EntityRequeue<V1OperatorIntegrationTestEntity> _requeue;
         private readonly EventPublisher _eventPublisher;
 
         public TestController(
-            InvocationCounter<V1IntegrationTestEntity> svc,
-            EntityRequeue<V1IntegrationTestEntity> requeue,
+            InvocationCounter<V1OperatorIntegrationTestEntity> svc,
+            EntityRequeue<V1OperatorIntegrationTestEntity> requeue,
             EventPublisher eventPublisher)
         {
             _svc = svc;
@@ -97,7 +97,7 @@ public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
             _eventPublisher = eventPublisher;
         }
 
-        public async Task ReconcileAsync(V1IntegrationTestEntity entity)
+        public async Task ReconcileAsync(V1OperatorIntegrationTestEntity entity)
         {
             await _eventPublisher(entity, "REASON", "message");
             _svc.Invocation(entity);
