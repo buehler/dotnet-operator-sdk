@@ -14,11 +14,11 @@ public class V1IntegrationTestEntity : CustomKubernetesEntity<V1IntegrationTestE
         Kind = "IntegrationTest";
     }
 
-    public V1IntegrationTestEntity(string name, string username, string ns) : this()
+    public V1IntegrationTestEntity(string name, string username) : this()
     {
         Metadata.Name = name;
+        Metadata.NamespaceProperty = "default";
         Spec.Username = username;
-        Metadata.NamespaceProperty = ns;
     }
 
     public override string ToString() => $"Test Entity ({Metadata.Name}): {Spec.Username}";

@@ -21,6 +21,7 @@ public class TestApplicationFactory : WebApplicationFactory<TestApplicationFacto
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);
+        builder.ConfigureKestrel(c => c.ListenAnyIP(5000));
         builder.UseSolutionRelativeContentRoot("test/KubeOps.Operator.Web.Test");
     }
 
