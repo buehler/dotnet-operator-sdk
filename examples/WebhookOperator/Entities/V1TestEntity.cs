@@ -7,7 +7,7 @@ namespace WebhookOperator.Entities;
 [KubernetesEntity(Group = "webhook.dev", ApiVersion = "v1", Kind = "TestEntity")]
 public partial class V1TestEntity : CustomKubernetesEntity<V1TestEntity.EntitySpec>
 {
-    public override string ToString() => $"Test Entity ({Metadata.Name}): {Spec.Name}";
+    public override string ToString() => $"Test Entity v1 ({Metadata.Name}): {Spec.Name}";
 
     public class EntitySpec
     {

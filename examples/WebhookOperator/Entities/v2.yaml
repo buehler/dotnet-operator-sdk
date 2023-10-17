@@ -1,7 +1,0 @@
-apiVersion: webhook.dev/v2
-kind: TestEntity
-metadata:
-  name: v2-entity
-spec:
-  firstname: Maximilian
-  lastname: Mustermann
