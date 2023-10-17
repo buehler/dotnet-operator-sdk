@@ -5,7 +5,7 @@ using System.Text.Json.Nodes;
 
 using k8s;
 
-namespace KubeOps.Operator.Web.Webhooks.Mutation;
+namespace KubeOps.Operator.Web.Webhooks.Admission.Mutation;
 
 internal static class JsonDiffer
 {

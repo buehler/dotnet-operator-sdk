@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace KubeOps.Operator.Web.Webhooks.Validation;
+namespace KubeOps.Operator.Web.Webhooks.Admission.Validation;
 
 /// <summary>
 /// Defines an MVC controller as "validation webhook". The route is automatically set to

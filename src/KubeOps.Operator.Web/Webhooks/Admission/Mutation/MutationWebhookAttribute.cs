@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace KubeOps.Operator.Web.Webhooks.Mutation;
+namespace KubeOps.Operator.Web.Webhooks.Admission.Mutation;
 
 /// <summary>
 /// Defines an MVC controller as "mutation webhook". The route is automatically set to

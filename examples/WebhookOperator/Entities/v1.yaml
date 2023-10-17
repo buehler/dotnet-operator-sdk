@@ -1,6 +1,6 @@
 apiVersion: webhook.dev/v1
 kind: TestEntity
 metadata:
-  name: test-webhook-entity
+  name: v1-entity
 spec:
-  username: overwrite
+  name: Max Muster

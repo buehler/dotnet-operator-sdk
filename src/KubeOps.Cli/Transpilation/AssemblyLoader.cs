@@ -6,8 +6,8 @@ using k8s.Models;
 
 using KubeOps.Abstractions.Entities.Attributes;
 using KubeOps.Abstractions.Rbac;
-using KubeOps.Operator.Web.Webhooks.Mutation;
-using KubeOps.Operator.Web.Webhooks.Validation;
+using KubeOps.Operator.Web.Webhooks.Admission.Mutation;
+using KubeOps.Operator.Web.Webhooks.Admission.Validation;
 using KubeOps.Transpiler;
 
 using Microsoft.Build.Locator;

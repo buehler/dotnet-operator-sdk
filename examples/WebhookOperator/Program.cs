@@ -6,7 +6,7 @@ builder.Services
     .AddKubernetesOperator()
     .RegisterComponents()
 #if DEBUG
-    .AddDevelopmentTunnel(5000)
+    //.AddDevelopmentTunnel(5000)
 #endif
     ;
 

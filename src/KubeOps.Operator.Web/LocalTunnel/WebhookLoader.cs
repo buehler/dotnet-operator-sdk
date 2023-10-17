@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 
-using KubeOps.Operator.Web.Webhooks.Mutation;
-using KubeOps.Operator.Web.Webhooks.Validation;
+using KubeOps.Operator.Web.Webhooks.Admission.Mutation;
+using KubeOps.Operator.Web.Webhooks.Admission.Validation;
 
 namespace KubeOps.Operator.Web.LocalTunnel;
 

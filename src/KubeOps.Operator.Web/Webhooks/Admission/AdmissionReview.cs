@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace KubeOps.Operator.Web.Webhooks;
+namespace KubeOps.Operator.Web.Webhooks.Admission;
 
 /// <summary>
 /// Base class for admission review requests.

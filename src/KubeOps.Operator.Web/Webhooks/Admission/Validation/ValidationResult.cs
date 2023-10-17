@@ -1,28 +1,15 @@
-using System.Text.Json.Nodes;
-
-using k8s;
-using k8s.Models;
-
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace KubeOps.Operator.Web.Webhooks.Mutation;
+namespace KubeOps.Operator.Web.Webhooks.Admission.Validation;
 
 /// <summary>
-/// The mutation result for the mutation (admission) request to a webhook.
+/// The validation result for the validation (admission) request to a webhook.
 /// </summary>
-/// <param name="ModifiedObject">The modified entity if any changes are requested.</param>
-/// <typeparam name="TEntity">The type of the entity.</typeparam>
-public record MutationResult<TEntity>(TEntity? ModifiedObject = default) : IActionResult
-    where TEntity : IKubernetesObject<V1ObjectMeta>
+/// <param name="Valid">Whether the validation / the entity is valid or not.</param>
+public record ValidationResult(bool Valid = true) : IActionResult
 {
-    private const string JsonPatch = "JSONPatch";
-
     internal string Uid { get; init; } = string.Empty;
-
-    internal JsonNode? OriginalObject { get; init; }
-
-    public bool Valid { get; init; } = true;
 
     /// <summary>
     /// Provides additional information to the validation result.
@@ -53,13 +40,6 @@ public record MutationResult<TEntity>(TEntity? ModifiedObject = default) : IActi
             return;
         }
 
-        if (ModifiedObject is not null && OriginalObject is null)
-        {
-            response.StatusCode = StatusCodes.Status500InternalServerError;
-            await response.WriteAsync("No original object was provided.");
-            return;
-        }
-
         await response.WriteAsJsonAsync(
             new AdmissionResponse
             {
@@ -69,10 +49,7 @@ public record MutationResult<TEntity>(TEntity? ModifiedObject = default) : IActi
                     Allowed = Valid,
                     Status = Status,
                     Warnings = Warnings.ToArray(),
-                    PatchType = ModifiedObject is null ? null : JsonPatch,
-                    Patch = ModifiedObject is null ? null : OriginalObject!.Base64Diff(ModifiedObject),
                 },
-            },
-            AdmissionResponse.SerializerOptions);
+            });
     }
 }

@@ -4,7 +4,7 @@ using k8s.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace KubeOps.Operator.Web.Webhooks.Mutation;
+namespace KubeOps.Operator.Web.Webhooks.Admission.Mutation;
 
 /// <summary>
 /// The abstract base for any mutation webhook. To use them, attach controllers in the
