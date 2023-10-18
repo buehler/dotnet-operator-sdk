@@ -20,7 +20,6 @@ public class OperatorBuilderGeneratorTest
                 {
                     public static IOperatorBuilder RegisterComponents(this IOperatorBuilder builder)
                     {
-                        builder.RegisterEntities();
                         builder.RegisterControllers();
                         builder.RegisterFinalizers();
                         return builder;

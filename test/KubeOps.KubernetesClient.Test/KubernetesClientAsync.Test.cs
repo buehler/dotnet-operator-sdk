@@ -6,8 +6,8 @@ namespace KubeOps.KubernetesClient.Test;
 
 public class KubernetesClientAsyncTest : IntegrationTestBase, IDisposable
 {
-    private readonly IKubernetesClient<V1ConfigMap> _client =
-        new KubernetesClient<V1ConfigMap>(new("ConfigMap", "v1", null, "configmaps"));
+    private readonly IKubernetesClient _client =
+        new KubernetesClient();
 
     private readonly IList<V1ConfigMap> _objects = new List<V1ConfigMap>();
 
@@ -66,7 +66,7 @@ public class KubernetesClientAsyncTest : IntegrationTestBase, IDisposable
                 Data = new Dictionary<string, string> { { "Hello", "World" } },
             }));
 
-        var fetched = await _client.GetAsync(config.Name(), config.Namespace());
+        var fetched = await _client.GetAsync<V1ConfigMap>(config.Name(), config.Namespace());
         fetched!.Name().Should().Be(config.Name());
     }
 
@@ -114,7 +114,7 @@ public class KubernetesClientAsyncTest : IntegrationTestBase, IDisposable
         _objects.Add(config1);
         _objects.Add(config2);
 
-        var configs = await _client.ListAsync("default");
+        var configs = await _client.ListAsync<V1ConfigMap>("default");
 
         // there are _at least_ 2 config maps (the two that were created)
         configs.Count.Should().BeGreaterOrEqualTo(2);
@@ -141,12 +141,12 @@ public class KubernetesClientAsyncTest : IntegrationTestBase, IDisposable
             });
         _objects.Add(config1);
 
-        var configs = await _client.ListAsync("default");
+        var configs = await _client.ListAsync<V1ConfigMap>("default");
         configs.Count.Should().BeGreaterOrEqualTo(2);
 
         await _client.DeleteAsync(config2);
 
-        configs = await _client.ListAsync("default");
+        configs = await _client.ListAsync<V1ConfigMap>("default");
         configs.Count.Should().BeGreaterOrEqualTo(1);
     }
 

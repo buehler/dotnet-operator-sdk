@@ -61,7 +61,7 @@ Otherwise, you can register resources manually:
 ```csharp
 builder.Services
     .AddKubernetesOperator()
-    .AddControllerWithEntity<TestController, V1TestEntity>(meta)
+    .AddController<TestController, V1TestEntity>()
     .AddFinalizer<FirstFinalizer, V1TestEntity>("first")
     .AddFinalizer<SecondFinalizer, V1TestEntity>("second")
 ```
@@ -109,11 +109,11 @@ A simple controller could look like this:
 [EntityRbac(typeof(V1TestEntity), Verbs = RbacVerb.All)]
 public class V1TestEntityController : IEntityController<V1TestEntity>
 {
-    private readonly IKubernetesClient<V1TestEntity> _client;
+    private readonly IKubernetesClient _client;
     private readonly EntityFinalizerAttacher<FinalizerOne, V1TestEntity> _finalizer1;
 
     public V1TestEntityController(
-        IKubernetesClient<V1TestEntity> client,
+        IKubernetesClient client,
         EntityFinalizerAttacher<FinalizerOne, V1TestEntity> finalizer1)
     {
         _client = client;

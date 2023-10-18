@@ -1,74 +1,59 @@
-﻿using System.Net;
+﻿using System.Collections.Concurrent;
+using System.Net;
 
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
 
 using KubeOps.Abstractions.Entities;
+using KubeOps.Transpiler;
 
 namespace KubeOps.KubernetesClient;
 
-/// <inheritdoc cref="IKubernetesClient{TEntity}"/>
-public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
-    where TEntity : IKubernetesObject<V1ObjectMeta>
+/// <inheritdoc cref="IKubernetesClient"/>
+public class KubernetesClient : IKubernetesClient
 {
     private const string DownwardApiNamespaceFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
     private const string DefaultNamespace = "default";
 
-    private readonly EntityMetadata _metadata;
+    private static readonly ConcurrentDictionary<Type, EntityMetadata> MetadataCache = new();
+
     private readonly KubernetesClientConfiguration _clientConfig;
     private readonly IKubernetes _client;
-    private readonly GenericClient _genericClient;
 
     /// <summary>
     /// Create a new Kubernetes client for the given entity.
     /// The client will use the default configuration.
     /// </summary>
-    /// <param name="metadata">The metadata of the entity.</param>
-    public KubernetesClient(EntityMetadata metadata)
-        : this(metadata, KubernetesClientConfiguration.BuildDefaultConfig())
+    public KubernetesClient()
+        : this(KubernetesClientConfiguration.BuildDefaultConfig())
     {
     }
 
     /// <summary>
     /// Create a new Kubernetes client for the given entity with a custom client configuration.
     /// </summary>
-    /// <param name="metadata">The metadata of the entity.</param>
     /// <param name="clientConfig">The config for the underlying Kubernetes client.</param>
-    public KubernetesClient(EntityMetadata metadata, KubernetesClientConfiguration clientConfig)
-        : this(metadata, clientConfig, new Kubernetes(clientConfig))
+    public KubernetesClient(KubernetesClientConfiguration clientConfig)
+        : this(clientConfig, new Kubernetes(clientConfig))
     {
     }
 
     /// <summary>
     /// Create a new Kubernetes client for the given entity with a custom client configuration and client.
     /// </summary>
-    /// <param name="metadata">The metadata of the entity.</param>
     /// <param name="clientConfig">The config for the underlying Kubernetes client.</param>
     /// <param name="client">The underlying client.</param>
-    public KubernetesClient(EntityMetadata metadata, KubernetesClientConfiguration clientConfig, IKubernetes client)
+    public KubernetesClient(KubernetesClientConfiguration clientConfig, IKubernetes client)
     {
-        _metadata = metadata;
         _clientConfig = clientConfig;
         _client = client;
-        _genericClient = metadata.Group switch
-        {
-            null => new GenericClient(
-                client,
-                metadata.Version,
-                metadata.PluralName,
-                false),
-            _ => new GenericClient(
-                client,
-                metadata.Group,
-                metadata.Version,
-                metadata.PluralName,
-                false),
-        };
     }
 
     /// <inheritdoc />
     public Uri BaseUri => _client.BaseUri;
+
+    public static void ClearMetadataCache() => MetadataCache.Clear();
 
     /// <inheritdoc />
     public async Task<string> GetCurrentNamespaceAsync(string downwardApiEnvName = "POD_NAMESPACE")
@@ -115,20 +100,22 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
     }
 
     /// <inheritdoc />
-    public async Task<TEntity?> GetAsync(string name, string? @namespace = null)
+    public async Task<TEntity?> GetAsync<TEntity>(string name, string? @namespace = null)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        var metadata = GetMetadata<TEntity>();
         var list = @namespace switch
         {
             null => await _client.CustomObjects.ListClusterCustomObjectAsync<EntityList<TEntity>>(
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
-                _metadata.PluralName,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
+                metadata.PluralName,
                 fieldSelector: $"metadata.name={name}"),
             _ => await _client.CustomObjects.ListNamespacedCustomObjectAsync<EntityList<TEntity>>(
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
                 @namespace,
-                _metadata.PluralName,
+                metadata.PluralName,
                 fieldSelector: $"metadata.name={name}"),
         };
 
@@ -140,20 +127,22 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
     }
 
     /// <inheritdoc />
-    public TEntity? Get(string name, string? @namespace = null)
+    public TEntity? Get<TEntity>(string name, string? @namespace = null)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        var metadata = GetMetadata<TEntity>();
         var list = @namespace switch
         {
             null => _client.CustomObjects.ListClusterCustomObject<EntityList<TEntity>>(
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
-                _metadata.PluralName,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
+                metadata.PluralName,
                 fieldSelector: $"metadata.name={name}"),
             _ => _client.CustomObjects.ListNamespacedCustomObject<EntityList<TEntity>>(
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
                 @namespace,
-                _metadata.PluralName,
+                metadata.PluralName,
                 fieldSelector: $"metadata.name={name}"),
         };
 
@@ -165,105 +154,131 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
     }
 
     /// <inheritdoc />
-    public async Task<IList<TEntity>> ListAsync(string? @namespace = null, string? labelSelector = null)
-        => (@namespace switch
+    public async Task<IList<TEntity>> ListAsync<TEntity>(string? @namespace = null, string? labelSelector = null)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        var metadata = GetMetadata<TEntity>();
+        return (@namespace switch
         {
             null => await _client.CustomObjects.ListClusterCustomObjectAsync<EntityList<TEntity>>(
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
-                _metadata.PluralName,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
+                metadata.PluralName,
                 labelSelector: labelSelector),
             _ => await _client.CustomObjects.ListNamespacedCustomObjectAsync<EntityList<TEntity>>(
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
                 @namespace,
-                _metadata.PluralName,
+                metadata.PluralName,
                 labelSelector: labelSelector),
         }).Items;
+    }
 
     /// <inheritdoc />
-    public IList<TEntity> List(string? @namespace = null, string? labelSelector = null)
-        => (@namespace switch
+    public IList<TEntity> List<TEntity>(string? @namespace = null, string? labelSelector = null)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        var metadata = GetMetadata<TEntity>();
+        return (@namespace switch
         {
             null => _client.CustomObjects.ListClusterCustomObject<EntityList<TEntity>>(
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
-                _metadata.PluralName,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
+                metadata.PluralName,
                 labelSelector: labelSelector),
             _ => _client.CustomObjects.ListNamespacedCustomObject<EntityList<TEntity>>(
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
                 @namespace,
-                _metadata.PluralName,
+                metadata.PluralName,
                 labelSelector: labelSelector),
         }).Items;
+    }
 
     /// <inheritdoc />
-    public Task<TEntity> CreateAsync(TEntity entity)
-        => entity.Namespace() switch
+    public async Task<TEntity> CreateAsync<TEntity>(TEntity entity)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        using var client = CreateGenericClient<TEntity>();
+        return await (entity.Namespace() switch
         {
-            { } ns => _genericClient.CreateNamespacedAsync(entity, ns),
-            null => _genericClient.CreateAsync(entity),
-        };
+            { } ns => client.CreateNamespacedAsync(entity, ns),
+            null => client.CreateAsync(entity),
+        });
+    }
 
     /// <inheritdoc />
-    public Task<TEntity> UpdateAsync(TEntity entity)
-        => entity.Namespace() switch
+    public async Task<TEntity> UpdateAsync<TEntity>(TEntity entity)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        using var client = CreateGenericClient<TEntity>();
+        return await (entity.Namespace() switch
         {
-            { } ns => _genericClient.ReplaceNamespacedAsync(entity, ns, entity.Name()),
-            null => _genericClient.ReplaceAsync(entity, entity.Name()),
-        };
+            { } ns => client.ReplaceNamespacedAsync(entity, ns, entity.Name()),
+            null => client.ReplaceAsync(entity, entity.Name()),
+        });
+    }
 
     /// <inheritdoc />
-    public Task<TEntity> UpdateStatusAsync(TEntity entity)
-        => entity.Namespace() switch
+    public Task<TEntity> UpdateStatusAsync<TEntity>(TEntity entity)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        var metadata = GetMetadata<TEntity>();
+        return entity.Namespace() switch
         {
             { } ns => _client.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync<TEntity>(
                 entity,
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
                 ns,
-                _metadata.PluralName,
+                metadata.PluralName,
                 entity.Name()),
             _ => _client.CustomObjects.ReplaceClusterCustomObjectStatusAsync<TEntity>(
                 entity,
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
-                _metadata.PluralName,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
+                metadata.PluralName,
                 entity.Name()),
         };
+    }
 
     /// <inheritdoc />
-    public TEntity UpdateStatus(TEntity entity)
-        => entity.Namespace() switch
+    public TEntity UpdateStatus<TEntity>(TEntity entity)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        var metadata = GetMetadata<TEntity>();
+        return entity.Namespace() switch
         {
             { } ns => _client.CustomObjects.ReplaceNamespacedCustomObjectStatus<TEntity>(
                 entity,
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
                 ns,
-                _metadata.PluralName,
+                metadata.PluralName,
                 entity.Name()),
             _ => _client.CustomObjects.ReplaceClusterCustomObjectStatus<TEntity>(
                 entity,
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
-                _metadata.PluralName,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
+                metadata.PluralName,
                 entity.Name()),
         };
+    }
 
     /// <inheritdoc />
-    public async Task DeleteAsync(string name, string? @namespace = null)
+    public async Task DeleteAsync<TEntity>(string name, string? @namespace = null)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         try
         {
+            using var client = CreateGenericClient<TEntity>();
             switch (@namespace)
             {
                 case not null:
-                    await _genericClient.DeleteNamespacedAsync<V1Status>(@namespace, name);
+                    await client.DeleteNamespacedAsync<V1Status>(@namespace, name);
                     break;
                 default:
-                    await _genericClient.DeleteAsync<V1Status>(name);
+                    await client.DeleteAsync<V1Status>(name);
                     break;
             }
         }
@@ -274,7 +289,7 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
     }
 
     /// <inheritdoc />
-    public Watcher<TEntity> Watch(
+    public Watcher<TEntity> Watch<TEntity>(
         Action<WatchEventType, TEntity> onEvent,
         Action<Exception>? onError = null,
         Action? onClose = null,
@@ -282,13 +297,16 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
         TimeSpan? timeout = null,
         string? labelSelector = null,
         CancellationToken cancellationToken = default)
-        => (@namespace switch
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        var metadata = GetMetadata<TEntity>();
+        return (@namespace switch
         {
             not null => _client.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
                 @namespace,
-                _metadata.PluralName,
+                metadata.PluralName,
                 labelSelector: labelSelector,
                 timeoutSeconds: timeout switch
                 {
@@ -298,9 +316,9 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
                 watch: true,
                 cancellationToken: cancellationToken),
             _ => _client.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(
-                _metadata.Group ?? string.Empty,
-                _metadata.Version,
-                _metadata.PluralName,
+                metadata.Group ?? string.Empty,
+                metadata.Version,
+                metadata.PluralName,
                 labelSelector: labelSelector,
                 timeoutSeconds: timeout switch
                 {
@@ -310,6 +328,7 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
                 watch: true,
                 cancellationToken: cancellationToken),
         }).Watch(onEvent, onError, onClose);
+    }
 
     public void Dispose()
     {
@@ -325,6 +344,30 @@ public class KubernetesClient<TEntity> : IKubernetesClient<TEntity>
         }
 
         _client.Dispose();
-        _genericClient.Dispose();
+    }
+
+    private static EntityMetadata GetMetadata<TEntity>()
+    {
+        var type = typeof(TEntity);
+        return MetadataCache.GetOrAdd(type, t => Entities.ToEntityMetadata(t).Metadata);
+    }
+
+    private GenericClient CreateGenericClient<TEntity>()
+    {
+        var metadata = GetMetadata<TEntity>();
+        return metadata.Group switch
+        {
+            null => new GenericClient(
+                _client,
+                metadata.Version,
+                metadata.PluralName,
+                false),
+            _ => new GenericClient(
+                _client,
+                metadata.Group,
+                metadata.Version,
+                metadata.PluralName,
+                false),
+        };
     }
 }
