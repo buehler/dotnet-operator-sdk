@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using System.Text.Json.Serialization;
 
 using k8s;
@@ -9,6 +10,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KubeOps.Operator.Web.Webhooks.Conversion;
 
+[RequiresPreviewFeatures(
+    "Conversion webhooks API is not yet stable, the way that conversion " +
+    "webhooks are implemented may change in the future based on user feedback.")]
 internal sealed class ConversionResponse : ConversionReview, IActionResult
 {
     public ConversionResponse(string uid, string errorMessage)
@@ -42,18 +46,12 @@ internal sealed class ConversionResponse : ConversionReview, IActionResult
 
     internal sealed class ConversionRequestData
     {
-        /// <summary>
-        /// The unique ID of the conversion request.
-        /// </summary>
         [JsonPropertyName("uid")]
         public string Uid { get; set; } = string.Empty;
 
         [JsonPropertyName("result")]
         public ConversionStatus Result { get; set; } = new();
 
-        /// <summary>
-        /// TODO
-        /// </summary>
         [JsonPropertyName("convertedObjects")]
         public object[] ConvertedObjects { get; set; } = Array.Empty<object>();
     }

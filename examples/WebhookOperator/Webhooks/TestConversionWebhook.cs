@@ -5,31 +5,12 @@ using WebhookOperator.Entities;
 namespace WebhookOperator.Webhooks;
 
 [ConversionWebhook(typeof(V3TestEntity))]
-public class TestConversionWebhook : ConversionWebhook
+public class TestConversionWebhook : ConversionWebhook<V3TestEntity>
 {
-    protected override IEntityConverter[] Converters => new IEntityConverter[]
+    protected override IEnumerable<IEntityConverter<V3TestEntity>> Converters => new IEntityConverter<V3TestEntity>[]
     {
-        new V1ToV2(), new V1ToV3(), new V2ToV3(),
+        new V1ToV3(), new V2ToV3(),
     };
-
-    private class V1ToV2 : IEntityConverter<V1TestEntity, V2TestEntity>
-    {
-        public V2TestEntity Convert(V1TestEntity from)
-        {
-            var nameSplit = from.Spec.Name.Split(' ');
-            var result = new V2TestEntity { Metadata = from.Metadata };
-            result.Spec.Firstname = nameSplit[0];
-            result.Spec.Lastname = string.Join(' ', nameSplit[1..]);
-            return result;
-        }
-
-        public V1TestEntity Revert(V2TestEntity to)
-        {
-            var result = new V1TestEntity { Metadata = to.Metadata };
-            result.Spec.Name = $"{to.Spec.Firstname} {to.Spec.Lastname}";
-            return result;
-        }
-    }
 
     private class V1ToV3 : IEntityConverter<V1TestEntity, V3TestEntity>
     {

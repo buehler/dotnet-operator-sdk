@@ -3,6 +3,8 @@
 using k8s;
 using k8s.Models;
 
+#pragma warning disable CS0693
+
 namespace KubeOps.Operator.Web.Webhooks.Admission;
 
 /// <summary>

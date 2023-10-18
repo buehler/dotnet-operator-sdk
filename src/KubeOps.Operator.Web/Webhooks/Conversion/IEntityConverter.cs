@@ -1,3 +1,5 @@
+using System.Runtime.Versioning;
+
 using k8s;
 using k8s.Models;
 
@@ -5,40 +7,43 @@ using KubeOps.Transpiler;
 
 namespace KubeOps.Operator.Web.Webhooks.Conversion;
 
-public interface IEntityConverter
+[RequiresPreviewFeatures(
+    "Conversion webhooks API is not yet stable, the way that conversion " +
+    "webhooks are implemented may change in the future based on user feedback.")]
+public interface IEntityConverter<TTarget>
+    where TTarget : IKubernetesObject<V1ObjectMeta>
 {
     Type FromType { get; }
 
-    Type ToType { get; }
+    Type ToType => typeof(TTarget);
 
     string FromGroupVersion { get; }
 
-    string ToGroupVersion { get; }
+    string ToGroupVersion => Entities.ToEntityMetadata<TTarget>().Metadata.GroupWithVersion;
 
-    object Convert(object from);
+    TTarget Convert(object from);
 
-    object Revert(object to);
+    object Revert(TTarget to);
 }
 
-public interface IEntityConverter<TFrom, TTo> : IEntityConverter
+[RequiresPreviewFeatures(
+    "Conversion webhooks API is not yet stable, the way that conversion " +
+    "webhooks are implemented may change in the future based on user feedback.")]
+public interface IEntityConverter<TFrom, TTo> : IEntityConverter<TTo>
     where TFrom : IKubernetesObject<V1ObjectMeta>
     where TTo : IKubernetesObject<V1ObjectMeta>
 {
-    Type IEntityConverter.FromType => typeof(TFrom);
+    Type IEntityConverter<TTo>.FromType => typeof(TFrom);
 
-    Type IEntityConverter.ToType => typeof(TTo);
-
-    string IEntityConverter.FromGroupVersion => Entities.ToEntityMetadata<TFrom>().Metadata.GroupWithVersion;
-
-    string IEntityConverter.ToGroupVersion => Entities.ToEntityMetadata<TTo>().Metadata.GroupWithVersion;
+    string IEntityConverter<TTo>.FromGroupVersion => Entities.ToEntityMetadata<TFrom>().Metadata.GroupWithVersion;
 
     TTo Convert(TFrom from);
 
-    TFrom Revert(TTo to);
+    new TFrom Revert(TTo from);
 
-    object IEntityConverter.Convert(object from)
+    TTo IEntityConverter<TTo>.Convert(object from)
         => Convert((TFrom)from);
 
-    object IEntityConverter.Revert(object to)
-        => Revert((TTo)to);
+    object IEntityConverter<TTo>.Revert(TTo to)
+        => Revert(to);
 }
