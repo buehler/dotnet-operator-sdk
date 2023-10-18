@@ -200,9 +200,9 @@ Each converter has a "convert" (from -> to) and a "revert" (to -> from) method.
 
 ```csharp
 [ConversionWebhook(typeof(V2TestEntity))]
-public class TestConversionWebhook : ConversionWebhook
+public class TestConversionWebhook : ConversionWebhook<V2TestEntity>
 {
-    protected override IEnumerable<IEntityConverter> Converters => new IEntityConverter[]
+    protected override IEnumerable<IEntityConverter<V2TestEntity>> Converters => new IEntityConverter<V2TestEntity>[]
     {
         new V1ToV2(), // other versions...
     };

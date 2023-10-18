@@ -3,6 +3,11 @@ using System.Text.Json.Serialization;
 
 namespace KubeOps.Operator.Web.Webhooks.Conversion;
 
+/// <summary>
+/// Status object for the conversion. Reports the success / failure of the conversion
+/// to the Kubernetes API.
+/// </summary>
+/// <param name="Message">If set, reports the reason for the failure. Otherwise, the conversion is a success.</param>
 [RequiresPreviewFeatures(
     "Conversion webhooks API is not yet stable, the way that conversion " +
     "webhooks are implemented may change in the future based on user feedback.")]

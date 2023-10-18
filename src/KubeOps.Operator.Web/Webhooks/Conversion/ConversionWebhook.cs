@@ -8,6 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KubeOps.Operator.Web.Webhooks.Conversion;
 
+/// <summary>
+/// Base class for conversion webhooks. This class handles the conversion of
+/// entities in their versions. Must be annotated with the <see cref="ConversionWebhookAttribute"/>.
+/// </summary>
+/// <typeparam name="TEntity">The target type (version) of the entity.</typeparam>
 [RequiresPreviewFeatures(
     "Conversion webhooks API is not yet stable, the way that conversion " +
     "webhooks are implemented may change in the future based on user feedback.")]
@@ -22,6 +27,9 @@ public abstract class ConversionWebhook<TEntity> : ControllerBase
         KubernetesJson.AddJsonOptions(c => _serializerOptions = c);
     }
 
+    /// <summary>
+    /// The list of converters that are available for this webhook.
+    /// </summary>
     protected abstract IEnumerable<IEntityConverter<TEntity>> Converters { get; }
 
     private IEnumerable<(string To, string From, Func<object, object> Converter, Type FromType)> AvailableConversions =>
