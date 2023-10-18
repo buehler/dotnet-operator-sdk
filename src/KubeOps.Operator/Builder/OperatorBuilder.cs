@@ -13,7 +13,6 @@ using KubeOps.Abstractions.Events;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.Abstractions.Queue;
 using KubeOps.KubernetesClient;
-using KubeOps.Operator.Client;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
 using KubeOps.Operator.Watcher;
@@ -35,20 +34,6 @@ internal class OperatorBuilder : IOperatorBuilder
     }
 
     public IServiceCollection Services { get; }
-
-    public IOperatorBuilder AddEntityClient<TEntity>(EntityMetadata metadata)
-        where TEntity : IKubernetesObject<V1ObjectMeta>
-    {
-        Services.AddTransient<IKubernetesClient<TEntity>>(_ => KubernetesClientFactory.Create<TEntity>(metadata));
-        return this;
-    }
-
-    public IOperatorBuilder AddEntityClient<TEntity>()
-        where TEntity : IKubernetesObject<V1ObjectMeta>
-    {
-        Services.AddTransient<IKubernetesClient<TEntity>>(_ => KubernetesClientFactory.Create<TEntity>());
-        return this;
-    }
 
     public IOperatorBuilder AddController<TImplementation, TEntity>()
         where TImplementation : class, IEntityController<TEntity>
@@ -89,8 +74,7 @@ internal class OperatorBuilder : IOperatorBuilder
         => services => async entity =>
         {
             var logger = services.GetService<ILogger<EntityFinalizerAttacher<TImplementation, TEntity>>>();
-            using var client = services.GetService<IKubernetesClient<TEntity>>() ??
-                               KubernetesClientFactory.Create<TEntity>();
+            using var client = new KubernetesClient.KubernetesClient();
 
             logger?.LogTrace(
                 """Try to add finalizer "{finalizer}" on entity "{kind}/{name}".""",
@@ -132,7 +116,7 @@ internal class OperatorBuilder : IOperatorBuilder
             async (entity, reason, message, type) =>
             {
                 var logger = services.GetService<ILogger<EventPublisher>>();
-                using var client = services.GetRequiredService<IKubernetesClient<Corev1Event>>();
+                using var client = new KubernetesClient.KubernetesClient() as IKubernetesClient;
                 var settings = services.GetRequiredService<OperatorSettings>();
 
                 var @namespace = entity.Namespace() ?? "default";
@@ -152,7 +136,7 @@ internal class OperatorBuilder : IOperatorBuilder
 
                 logger?.LogTrace("""Search or create event with name "{name}".""", encodedEventName);
 
-                var @event = await client.GetAsync(encodedEventName, @namespace) ??
+                var @event = await client.GetAsync<Corev1Event>(encodedEventName, @namespace) ??
                              new Corev1Event
                              {
                                  Metadata = new()
@@ -210,13 +194,12 @@ internal class OperatorBuilder : IOperatorBuilder
     private void AddOperatorBase()
     {
         Services.AddSingleton(_settings);
-
-        Services.AddTransient(_ => KubernetesClientFactory.Create<Corev1Event>());
+        Services.AddTransient<IKubernetesClient>(_ => new KubernetesClient.KubernetesClient());
         Services.AddTransient(CreateEventPublisher());
 
         if (_settings.EnableLeaderElection)
         {
-            using var client = KubernetesClientFactory.Create<Corev1Event>();
+            using var client = new KubernetesClient.KubernetesClient();
 
             var elector = new LeaderElector(
                 new LeaderElectionConfig(

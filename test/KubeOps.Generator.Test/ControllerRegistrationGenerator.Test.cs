@@ -11,7 +11,7 @@ public class ControllerRegistrationGeneratorTest
     [Theory]
     [InlineData("", """
                     using KubeOps.Abstractions.Builder;
-                    
+
                     public static class ControllerRegistrations
                     {
                         public static IOperatorBuilder RegisterControllers(this IOperatorBuilder builder)
@@ -25,13 +25,13 @@ public class ControllerRegistrationGeneratorTest
                 public class V1TestEntity : IKubernetesObject<V1ObjectMeta>
                 {
                 }
-                
+
                 public class V1TestEntityController : IEntityController<V1TestEntity>
                 {
                 }
                 """, """
                      using KubeOps.Abstractions.Builder;
-                     
+
                      public static class ControllerRegistrations
                      {
                          public static IOperatorBuilder RegisterControllers(this IOperatorBuilder builder)

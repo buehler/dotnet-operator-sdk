@@ -10,36 +10,31 @@ using KubeOps.Abstractions.Events;
 using KubeOps.Abstractions.Queue;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Test.TestEntities;
-using KubeOps.Transpiler;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace KubeOps.Operator.Test.Events;
 
-public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
+public class EventPublisherIntegrationTest : IntegrationTestBase
 {
-    private static readonly InvocationCounter<V1OperatorIntegrationTestEntity> Mock = new();
-    private IKubernetesClient<V1OperatorIntegrationTestEntity> _client = null!;
-
-    public EventPublisherIntegrationTest(HostBuilder hostBuilder, MlcProvider provider) : base(hostBuilder, provider)
-    {
-        Mock.Clear();
-    }
+    private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _mock = new();
+    private readonly IKubernetesClient _client = new KubernetesClient.KubernetesClient();
+    private readonly TestNamespaceProvider _ns = new();
 
     [Fact]
     public async Task Should_Create_New_Event()
     {
-        const string eventName = "single-entity.default.REASON.message.Normal";
+        var eventName = $"single-entity.{_ns.Namespace}.REASON.message.Normal";
         var encodedEventName =
             Convert.ToHexString(
                 SHA512.HashData(
                     Encoding.UTF8.GetBytes(eventName)));
 
-        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("single-entity", "username", "default"));
-        await Mock.WaitForInvocations;
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("single-entity", "username", _ns.Namespace));
+        await _mock.WaitForInvocations;
 
-        var eventClient = _hostBuilder.Services.GetRequiredService<IKubernetesClient<Corev1Event>>();
-        var e = await eventClient.GetAsync(encodedEventName, "default");
+        var e = await _client.GetAsync<Corev1Event>(encodedEventName, _ns.Namespace);
         e!.Count.Should().Be(1);
         e.Metadata.Annotations.Should().Contain(a => a.Key == "originalName" && a.Value == eventName);
     }
@@ -47,38 +42,40 @@ public class EventPublisherIntegrationTest : IntegrationTestBase, IAsyncLifetime
     [Fact]
     public async Task Should_Increase_Count_On_Existing_Event()
     {
-        Mock.TargetInvocationCount = 5;
-        const string eventName = "test-entity.default.REASON.message.Normal";
+        _mock.TargetInvocationCount = 5;
+        var eventName = $"test-entity.{_ns.Namespace}.REASON.message.Normal";
         var encodedEventName =
             Convert.ToHexString(
                 SHA512.HashData(
                     Encoding.UTF8.GetBytes(eventName)));
 
-        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", "default"));
-        await Mock.WaitForInvocations;
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", _ns.Namespace));
+        await _mock.WaitForInvocations;
 
-        var eventClient = _hostBuilder.Services.GetRequiredService<IKubernetesClient<Corev1Event>>();
-        var e = await eventClient.GetAsync(encodedEventName, "default");
+        var e = await _client.GetAsync<Corev1Event>(encodedEventName, _ns.Namespace);
         e!.Count.Should().Be(5);
         e.Metadata.Annotations.Should().Contain(a => a.Key == "originalName" && a.Value == eventName);
     }
 
-    public async Task InitializeAsync()
+    public override async Task InitializeAsync()
     {
-        var meta = _mlc.ToEntityMetadata(typeof(V1OperatorIntegrationTestEntity)).Metadata;
-        _client = new KubernetesClient<V1OperatorIntegrationTestEntity>(meta);
-        await _hostBuilder.ConfigureAndStart(builder => builder.Services
-            .AddSingleton(Mock)
-            .AddKubernetesOperator()
-            .AddController<TestController, V1OperatorIntegrationTestEntity>());
+        await base.InitializeAsync();
+        await _ns.InitializeAsync();
     }
 
-    public async Task DisposeAsync()
+    public override async Task DisposeAsync()
     {
-        await _client.DeleteAsync(await _client.ListAsync("default"));
-        using var eventClient = _hostBuilder.Services.GetRequiredService<IKubernetesClient<Corev1Event>>();
-        await eventClient.DeleteAsync(await eventClient.ListAsync("default"));
+        await base.DisposeAsync();
+        await _ns.DisposeAsync();
         _client.Dispose();
+    }
+
+    protected override void ConfigureHost(HostApplicationBuilder builder)
+    {
+        builder.Services
+            .AddSingleton(_mock)
+            .AddKubernetesOperator(s => s.Namespace = _ns.Namespace)
+            .AddController<TestController, V1OperatorIntegrationTestEntity>();
     }
 
     private class TestController : IEntityController<V1OperatorIntegrationTestEntity>

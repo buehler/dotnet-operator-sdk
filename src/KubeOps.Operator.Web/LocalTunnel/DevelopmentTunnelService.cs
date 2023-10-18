@@ -1,7 +1,7 @@
 ﻿using k8s;
 using k8s.Models;
 
-using KubeOps.Operator.Client;
+using KubeOps.KubernetesClient;
 using KubeOps.Transpiler;
 
 using Localtunnel;
@@ -82,7 +82,7 @@ internal class DevelopmentTunnelService : IHostedService
 
         if (validatorConfig.Webhooks.Any())
         {
-            using var validatorClient = KubernetesClientFactory.Create<V1ValidatingWebhookConfiguration>();
+            using var validatorClient = new KubernetesClient.KubernetesClient() as IKubernetesClient;
             await validatorClient.SaveAsync(validatorConfig);
         }
     }
@@ -121,7 +121,7 @@ internal class DevelopmentTunnelService : IHostedService
 
         if (mutatorConfig.Webhooks.Any())
         {
-            using var mutatorClient = KubernetesClientFactory.Create<V1MutatingWebhookConfiguration>();
+            using var mutatorClient = new KubernetesClient.KubernetesClient() as IKubernetesClient;
             await mutatorClient.SaveAsync(mutatorConfig);
         }
     }

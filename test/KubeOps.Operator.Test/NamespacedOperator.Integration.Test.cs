@@ -6,72 +6,73 @@ using k8s.Models;
 using KubeOps.Abstractions.Controller;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Test.TestEntities;
-using KubeOps.Transpiler;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace KubeOps.Operator.Test;
 
-public class NamespacedOperatorIntegrationTest : IntegrationTestBase, IAsyncLifetime
+public class NamespacedOperatorIntegrationTest : IntegrationTestBase
 {
-    private static readonly InvocationCounter<V1OperatorIntegrationTestEntity> Mock = new();
-    private IKubernetesClient<V1OperatorIntegrationTestEntity> _client = null!;
-    private IKubernetesClient<V1Namespace> _nsClient = null!;
-
-    public NamespacedOperatorIntegrationTest(HostBuilder hostBuilder, MlcProvider provider) : base(hostBuilder, provider)
-    {
-        Mock.Clear();
-    }
+    private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _mock = new();
+    private readonly IKubernetesClient _client = new KubernetesClient.KubernetesClient();
+    private readonly TestNamespaceProvider _ns = new();
+    private V1Namespace _otherNamespace = null!;
 
     [Fact]
     public async Task Should_Call_Reconcile_On_Entity_In_Namespace()
     {
-        var watcherCounter = new InvocationCounter<V1OperatorIntegrationTestEntity> { TargetInvocationCount = 2 };
-        using var watcher = _client.Watch((_, e) => watcherCounter.Invocation(e));
+        var otherNsWatchCounter = new InvocationCounter<V1OperatorIntegrationTestEntity> { TargetInvocationCount = 1 };
+        using var otherNsWatcher =
+            _client.Watch<V1OperatorIntegrationTestEntity>((_, e) => otherNsWatchCounter.Invocation(e),
+                @namespace: _otherNamespace.Name());
 
-        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", "foobar"));
-        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", "default"));
-        await Mock.WaitForInvocations;
-        await watcherCounter.WaitForInvocations;
-        Mock.Invocations.Count.Should().Be(1);
-        watcherCounter.Invocations.Count.Should().Be(2);
+        await _client.CreateAsync(
+            new V1OperatorIntegrationTestEntity("test-entity", "username", _otherNamespace.Name()));
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", _ns.Namespace));
+        await _mock.WaitForInvocations;
+        await otherNsWatchCounter.WaitForInvocations;
+        _mock.Invocations.Count.Should().Be(1);
+        otherNsWatchCounter.Invocations.Count.Should().Be(1);
     }
 
     [Fact]
     public async Task Should_Not_Call_Reconcile_On_Entity_In_Other_Namespace()
     {
         var watcherCounter = new InvocationCounter<V1OperatorIntegrationTestEntity> { TargetInvocationCount = 1 };
-        using var watcher = _client.Watch((_, e) => watcherCounter.Invocation(e));
+        using var watcher = _client.Watch<V1OperatorIntegrationTestEntity>((_, e) => watcherCounter.Invocation(e),
+            @namespace: _otherNamespace.Name());
 
-        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity2", "username", "default"));
+        await _client.CreateAsync(
+            new V1OperatorIntegrationTestEntity("test-entity2", "username", _otherNamespace.Name()));
         await watcherCounter.WaitForInvocations;
-        Mock.Invocations.Count.Should().Be(0);
+        _mock.Invocations.Count.Should().Be(0);
         watcherCounter.Invocations.Count.Should().Be(1);
     }
 
-    public async Task InitializeAsync()
+    public override async Task InitializeAsync()
     {
-        var meta = _mlc.ToEntityMetadata(typeof(V1OperatorIntegrationTestEntity)).Metadata;
-        _client = new KubernetesClient<V1OperatorIntegrationTestEntity>(meta);
-        _nsClient = new KubernetesClient<V1Namespace>(new(V1Namespace.KubeKind, V1Namespace.KubeApiVersion,
-            V1Namespace.KubeGroup, V1Namespace.KubePluralName));
-        await _nsClient.SaveAsync(new V1Namespace(metadata: new(name: "foobar")).Initialize());
-        await _hostBuilder.ConfigureAndStart(builder => builder.Services
-            .AddSingleton(Mock)
-            .AddKubernetesOperator(s => s.Namespace = "foobar")
-            .AddController<TestController, V1OperatorIntegrationTestEntity>());
+        await base.InitializeAsync();
+        _otherNamespace =
+            await _client.CreateAsync(new V1Namespace(metadata: new(name: Guid.NewGuid().ToString().ToLower()))
+                .Initialize());
+        await _ns.InitializeAsync();
     }
 
-    public async Task DisposeAsync()
+    public override async Task DisposeAsync()
     {
-        var entities = await _client.ListAsync("default");
-        await _nsClient.DeleteAsync("foobar");
-        while (await _nsClient.GetAsync("foobar") is not null)
-        {
-            await Task.Delay(100);
-        }
-        await _client.DeleteAsync(entities);
+        await base.DisposeAsync();
+        await _client.DeleteAsync(_otherNamespace);
+        await _ns.DisposeAsync();
         _client.Dispose();
+    }
+
+    protected override void ConfigureHost(HostApplicationBuilder builder)
+    {
+        builder.Services
+            .AddSingleton(_mock)
+            .AddKubernetesOperator(s => s.Namespace = _ns.Namespace)
+            .AddController<TestController, V1OperatorIntegrationTestEntity>();
     }
 
     private class TestController : IEntityController<V1OperatorIntegrationTestEntity>

@@ -1,29 +1,72 @@
-﻿using System.Reflection;
-
-using k8s;
+﻿using k8s;
 using k8s.Models;
 
+using KubeOps.KubernetesClient;
 using KubeOps.Operator.Test.TestEntities;
 using KubeOps.Transpiler;
+
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Test;
 
 [CollectionDefinition(Name, DisableParallelization = true)]
-public class IntegrationTestCollection : ICollectionFixture<CrdInstaller>, ICollectionFixture<MlcProvider>
+public class IntegrationTestCollection : ICollectionFixture<CrdInstaller>
 {
     public const string Name = "Integration Tests";
 }
 
 [Collection(IntegrationTestCollection.Name)]
-public abstract class IntegrationTestBase : IClassFixture<HostBuilder>
+public abstract class IntegrationTestBase : IAsyncLifetime
 {
-    protected readonly HostBuilder _hostBuilder;
-    protected readonly MetadataLoadContext _mlc;
+    private IHost? _host;
 
-    protected IntegrationTestBase(HostBuilder hostBuilder, MlcProvider provider)
+    protected IServiceProvider Services => _host?.Services ?? throw new InvalidOperationException();
+
+    public virtual async Task InitializeAsync()
     {
-        _hostBuilder = hostBuilder;
-        _mlc = provider.Mlc;
+        var builder = Host.CreateApplicationBuilder();
+#if DEBUG
+        builder.Logging.AddSystemdConsole();
+        builder.Logging.SetMinimumLevel(LogLevel.Trace);
+#else
+        builder.Logging.SetMinimumLevel(LogLevel.None);
+#endif
+        ConfigureHost(builder);
+        _host = builder.Build();
+        await _host.StartAsync();
+    }
+
+    public virtual async Task DisposeAsync()
+    {
+        if (_host is null)
+        {
+            return;
+        }
+
+        await _host.StopAsync();
+    }
+
+    protected abstract void ConfigureHost(HostApplicationBuilder builder);
+}
+
+public sealed class TestNamespaceProvider : IAsyncLifetime
+{
+    private readonly IKubernetesClient _client = new KubernetesClient.KubernetesClient();
+    private V1Namespace _namespace = null!;
+
+    public string Namespace { get; } = Guid.NewGuid().ToString().ToLower();
+
+    public async Task InitializeAsync()
+    {
+        _namespace =
+            await _client.CreateAsync(new V1Namespace(metadata: new V1ObjectMeta(name: Namespace)).Initialize());
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _client.DeleteAsync(_namespace);
+        _client.Dispose();
     }
 }
 

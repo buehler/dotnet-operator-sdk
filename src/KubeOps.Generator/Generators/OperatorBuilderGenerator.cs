@@ -40,22 +40,22 @@ internal class OperatorBuilderGenerator : ISourceGenerator
                     .WithBody(Block(
                         ExpressionStatement(
                             InvocationExpression(
-                                    MemberAccessExpression(
-                                        SyntaxKind.SimpleMemberAccessExpression,
-                                        IdentifierName("builder"),
-                                        IdentifierName("RegisterEntities")))),
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    IdentifierName("builder"),
+                                    IdentifierName("RegisterEntities")))),
                         ExpressionStatement(
                             InvocationExpression(
-                                    MemberAccessExpression(
-                                        SyntaxKind.SimpleMemberAccessExpression,
-                                        IdentifierName("builder"),
-                                        IdentifierName("RegisterControllers")))),
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    IdentifierName("builder"),
+                                    IdentifierName("RegisterControllers")))),
                         ExpressionStatement(
                             InvocationExpression(
-                                    MemberAccessExpression(
-                                        SyntaxKind.SimpleMemberAccessExpression,
-                                        IdentifierName("builder"),
-                                        IdentifierName("RegisterFinalizers")))),
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    IdentifierName("builder"),
+                                    IdentifierName("RegisterFinalizers")))),
                         ReturnStatement(IdentifierName("builder")))))))
             .NormalizeWhitespace();
 

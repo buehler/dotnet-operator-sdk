@@ -1,14 +1,10 @@
 ﻿using FluentAssertions;
 
-using k8s.Models;
-
 using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
-using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Events;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.Abstractions.Queue;
-using KubeOps.KubernetesClient;
 using KubeOps.Operator.Builder;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
@@ -31,20 +27,7 @@ public class OperatorBuilderTest
             s.ServiceType == typeof(OperatorSettings) &&
             s.Lifetime == ServiceLifetime.Singleton);
         _builder.Services.Should().Contain(s =>
-            s.ServiceType == typeof(IKubernetesClient<Corev1Event>) &&
-            s.Lifetime == ServiceLifetime.Transient);
-        _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(EventPublisher) &&
-            s.Lifetime == ServiceLifetime.Transient);
-    }
-
-    [Fact]
-    public void Should_Add_Entity_Resources()
-    {
-        _builder.AddEntityClient<V1OperatorIntegrationTestEntity>(new EntityMetadata("test", "v1", "testentities"));
-
-        _builder.Services.Should().Contain(s =>
-            s.ServiceType == typeof(IKubernetesClient<V1OperatorIntegrationTestEntity>) &&
             s.Lifetime == ServiceLifetime.Transient);
     }
 
