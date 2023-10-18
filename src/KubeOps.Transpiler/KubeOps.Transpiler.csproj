@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+        <TargetFramework>net7.0</TargetFramework>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -15,7 +15,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.Reflection.MetadataLoadContext" Version="7.0.0" />
+        <PackageReference Include="System.Reflection.MetadataLoadContext" Version="[7.0.0,)" />
     </ItemGroup>
 
     <ItemGroup>
