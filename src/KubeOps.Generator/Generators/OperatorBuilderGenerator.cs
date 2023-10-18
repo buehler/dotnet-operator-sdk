@@ -43,12 +43,6 @@ internal class OperatorBuilderGenerator : ISourceGenerator
                                 MemberAccessExpression(
                                     SyntaxKind.SimpleMemberAccessExpression,
                                     IdentifierName("builder"),
-                                    IdentifierName("RegisterEntities")))),
-                        ExpressionStatement(
-                            InvocationExpression(
-                                MemberAccessExpression(
-                                    SyntaxKind.SimpleMemberAccessExpression,
-                                    IdentifierName("builder"),
                                     IdentifierName("RegisterControllers")))),
                         ExpressionStatement(
                             InvocationExpression(
