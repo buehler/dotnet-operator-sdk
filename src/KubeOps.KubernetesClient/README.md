@@ -12,12 +12,8 @@ with group and kind information as well.
 An example of the client that lists all namespaces in the cluster:
 
 ```csharp
-// Create the entity metadata
-var meta = Entities.ToEntityMetadata(typeof(V1Namespace));
-
-// Creates the client with the default config.
-var client = new KubernetesClient<V1Namespace>(meta);
+var client = new KubernetesClient() as IKubernetesClient;
 
 // Get all namespaces in the cluster.
-var namespaces = await client.List();
+var namespaces = await client.List<V1Namespace>();
 ```

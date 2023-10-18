@@ -78,41 +78,7 @@ internal class EntityDefinitionGenerator : ISourceGenerator
                             TokenList(
                                 Token(SyntaxKind.PublicKeyword),
                                 Token(SyntaxKind.StaticKeyword),
-                                Token(SyntaxKind.ReadOnlyKeyword))))))
-                .AddMembers(MethodDeclaration(IdentifierName("IOperatorBuilder"), "RegisterEntities")
-                    .WithModifiers(
-                        TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword)))
-                    .WithParameterList(ParameterList(
-                        SingletonSeparatedList(
-                            Parameter(
-                                    Identifier("builder"))
-                                .WithModifiers(
-                                    TokenList(
-                                        Token(SyntaxKind.ThisKeyword)))
-                                .WithType(
-                                    IdentifierName("IOperatorBuilder")))))
-                    .WithBody(Block(
-                        receiver.Entities
-                            .Select(e => ExpressionStatement(
-                                InvocationExpression(
-                                        MemberAccessExpression(
-                                            SyntaxKind.SimpleMemberAccessExpression,
-                                            IdentifierName("builder"),
-                                            GenericName(Identifier("AddEntityClient"))
-                                                .WithTypeArgumentList(
-                                                    TypeArgumentList(
-                                                        SingletonSeparatedList<TypeSyntax>(
-                                                            IdentifierName(context.Compilation
-                                                                .GetSemanticModel(e.Class.SyntaxTree)
-                                                                .GetDeclaredSymbol(e.Class)!
-                                                                .ToDisplayString(SymbolDisplayFormat
-                                                                    .FullyQualifiedFormat)))))))
-                                    .WithArgumentList(
-                                        ArgumentList(
-                                            SingletonSeparatedList(
-                                                Argument(
-                                                    IdentifierName(e.Class.Identifier)))))))
-                            .Append<StatementSyntax>(ReturnStatement(IdentifierName("builder"))))))))
+                                Token(SyntaxKind.ReadOnlyKeyword))))))))
             .NormalizeWhitespace();
 
         context.AddSource(
