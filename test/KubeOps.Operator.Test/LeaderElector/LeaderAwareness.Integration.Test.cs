@@ -5,51 +5,48 @@ using k8s.Models;
 using KubeOps.Abstractions.Controller;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Test.TestEntities;
-using KubeOps.Transpiler;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace KubeOps.Operator.Test.LeaderElector;
 
-public class LeaderAwarenessIntegrationTest : IntegrationTestBase, IAsyncLifetime
+public class LeaderAwarenessIntegrationTest : IntegrationTestBase
 {
-    private static readonly InvocationCounter<V1OperatorIntegrationTestEntity> Mock = new();
-    private IKubernetesClient<V1OperatorIntegrationTestEntity> _client = null!;
-
-    private readonly IKubernetesClient<V1Lease> _leaseClient = new KubernetesClient<V1Lease>(new(V1Lease.KubeKind,
-        V1Lease.KubeApiVersion, V1Lease.KubeGroup, V1Lease.KubePluralName));
-
-    public LeaderAwarenessIntegrationTest(HostBuilder hostBuilder, MlcProvider provider) : base(hostBuilder, provider)
-    {
-        Mock.Clear();
-    }
+    private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _mock = new();
+    private readonly IKubernetesClient _client = new KubernetesClient.KubernetesClient();
+    private readonly TestNamespaceProvider _ns = new();
 
     [Fact]
     public async Task Should_Create_V1Lease_And_Start_Watcher()
     {
-        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", "default"));
-        await Mock.WaitForInvocations;
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", _ns.Namespace));
+        await _mock.WaitForInvocations;
 
-        var lease = await _leaseClient.GetAsync("kubernetesoperator-leader", "default");
+        var lease = await _client.GetAsync<V1Lease>("kubernetesoperator-leader", "default");
         lease!.Spec.HolderIdentity.Should().Be(Environment.MachineName);
     }
 
-    public async Task InitializeAsync()
+    public override async Task InitializeAsync()
     {
-        var meta = _mlc.ToEntityMetadata(typeof(V1OperatorIntegrationTestEntity)).Metadata;
-        _client = new KubernetesClient<V1OperatorIntegrationTestEntity>(meta);
-        await _hostBuilder.ConfigureAndStart(builder => builder.Services
-            .AddSingleton(Mock)
-            .AddKubernetesOperator(s => s.EnableLeaderElection = true)
-            .AddController<TestController, V1OperatorIntegrationTestEntity>());
+        await base.InitializeAsync();
+        await _ns.InitializeAsync();
     }
 
-    public async Task DisposeAsync()
+    public override async Task DisposeAsync()
     {
-        var entities = await _client.ListAsync("default");
-        await _client.DeleteAsync(entities);
-        await _leaseClient.DeleteAsync(await _leaseClient.ListAsync("default"));
+        await base.DisposeAsync();
+        await _ns.DisposeAsync();
+        await _client.DeleteAsync(await _client.ListAsync<V1Lease>("default"));
         _client.Dispose();
+    }
+
+    protected override void ConfigureHost(HostApplicationBuilder builder)
+    {
+        builder.Services
+            .AddSingleton(_mock)
+            .AddKubernetesOperator(s => s.EnableLeaderElection = true)
+            .AddController<TestController, V1OperatorIntegrationTestEntity>();
     }
 
     private class TestController : IEntityController<V1OperatorIntegrationTestEntity>

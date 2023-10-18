@@ -19,7 +19,8 @@ return await new CommandLineBuilder(new RootCommand(
     .UseParseErrorReporting(ExitCodes.UsageError)
     .UseExceptionHandler((ex, ctx) =>
     {
-        AnsiConsole.MarkupLineInterpolated($"[red]An error occurred whiled executing {ctx.ParseResult.CommandResult.Command}[/]");
+        AnsiConsole.MarkupLineInterpolated(
+            $"[red]An error occurred whiled executing {ctx.ParseResult.CommandResult.Command}[/]");
         AnsiConsole.MarkupLineInterpolated($"[red]{ex.Message}[/]");
         ctx.ExitCode = ExitCodes.Error;
     })

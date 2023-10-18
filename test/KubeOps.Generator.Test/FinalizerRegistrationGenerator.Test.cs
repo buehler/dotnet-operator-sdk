@@ -57,7 +57,7 @@ public class FinalizerRegistrationGeneratorTest
                 }
                 """, """
                      using KubeOps.Abstractions.Builder;
-                     
+
                      public static class FinalizerRegistrations
                      {
                          public const string V1TestEntityCleanupDeploymentIdentifier = "testing.dev/v1testentitycleanupdeploymentfinalizer";

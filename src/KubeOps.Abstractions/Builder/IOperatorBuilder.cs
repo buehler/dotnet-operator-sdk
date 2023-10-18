@@ -2,7 +2,6 @@ using k8s;
 using k8s.Models;
 
 using KubeOps.Abstractions.Controller;
-using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Finalizer;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -18,34 +17,6 @@ public interface IOperatorBuilder
     /// The original service collection.
     /// </summary>
     IServiceCollection Services { get; }
-
-    /// <summary>
-    /// <para>
-    /// Register an entity Kubernetes client within the operator.
-    /// This is used to register IKubernetesClient{TEntity} for the entity.
-    /// An alternative way to create any Kubernetes client is to use the
-    /// KubernetesClientFactory or instantiate the client by yourself.
-    /// </para>
-    /// </summary>
-    /// <param name="metadata">The metadata of the entity.</param>
-    /// <typeparam name="TEntity">The type of the entity.</typeparam>
-    /// <returns>The builder for chaining.</returns>
-    IOperatorBuilder AddEntityClient<TEntity>(EntityMetadata metadata)
-        where TEntity : IKubernetesObject<V1ObjectMeta>;
-
-    /// <summary>
-    /// <para>
-    /// Register an entity Kubernetes client within the operator.
-    /// This is used to register IKubernetesClient{TEntity} for the entity.
-    /// An alternative way to create any Kubernetes client is to use the
-    /// KubernetesClientFactory or instantiate the client by yourself.
-    /// This method uses reflection to get the metadata from the entity.
-    /// </para>
-    /// </summary>
-    /// <typeparam name="TEntity">The type of the entity.</typeparam>
-    /// <returns>The builder for chaining.</returns>
-    IOperatorBuilder AddEntityClient<TEntity>()
-        where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <summary>
     /// Add a controller implementation for a specific entity to the operator.

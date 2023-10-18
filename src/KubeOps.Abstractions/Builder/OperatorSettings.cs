@@ -42,7 +42,7 @@ public sealed class OperatorSettings
     /// Defaults to `false`.
     /// </para>
     /// </summary>
-    public bool EnableLeaderElection { get; set; }
+    public bool EnableLeaderElection { get; set; } = false;
 
     /// <summary>
     /// Defines how long one lease is valid for any leader.

@@ -9,7 +9,6 @@ using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.KubernetesClient;
-using KubeOps.Operator.Client;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
 
@@ -24,7 +23,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
 {
     private readonly ILogger<ResourceWatcher<TEntity>> _logger;
     private readonly IServiceProvider _provider;
-    private readonly IKubernetesClient<TEntity> _client;
+    private readonly IKubernetesClient _client;
     private readonly TimedEntityQueue<TEntity> _queue;
     private readonly OperatorSettings _settings;
     private readonly ConcurrentDictionary<string, long> _entityCache = new();
@@ -42,7 +41,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
     {
         _logger = logger;
         _provider = provider;
-        _client = provider.GetService<IKubernetesClient<TEntity>>() ?? KubernetesClientFactory.Create<TEntity>();
+        _client = provider.GetService<IKubernetesClient>() ?? new KubernetesClient.KubernetesClient();
         _queue = queue;
         _settings = settings;
         _finalizers = new(() => _provider.GetServices<FinalizerRegistration>().ToList());
@@ -83,7 +82,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
         }
 
         _logger.LogDebug("""Create watcher for entity of type "{type}".""", typeof(TEntity));
-        _watcher = _client.Watch(OnEvent, OnError, OnClosed, @namespace: _settings.Namespace);
+        _watcher = _client.Watch<TEntity>(OnEvent, OnError, OnClosed, @namespace: _settings.Namespace);
     }
 
     private void StopWatching()
@@ -98,7 +97,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
             """Execute requested requeued reconciliation for "{name}".""",
             queued.Name);
 
-        if (await _client.GetAsync(queued.Name, queued.Namespace) is not { } entity)
+        if (await _client.GetAsync<TEntity>(queued.Name, queued.Namespace) is not { } entity)
         {
             _logger.LogWarning(
                 """Requeued entity "{name}" was not found. Skip reconciliation.""",

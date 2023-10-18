@@ -196,7 +196,7 @@ public class EntityInitializerGeneratorTest
         var inputCompilation = """
                                namespace Foo.Bar
                                {
-                                   namespace Baz 
+                                   namespace Baz
                                    {
                                        [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
                                        public partial class V1TestEntity : IKubernetesObject<V1ObjectMeta>
