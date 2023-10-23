@@ -7,10 +7,7 @@ namespace KubeOps.Cli.Transpilation;
 /// </summary>
 internal sealed partial class TfmComparer : IComparer<string>
 {
-    [GeneratedRegex(
-        "[(]?(?<tfm>(?<name>(netcoreapp|net|netstandard){1})(?<major>[0-9]+)[.](?<minor>[0-9]+))[)]?",
-        RegexOptions.Compiled)]
-    public static partial Regex TfmRegex();
+    public static readonly Regex TfmRegex = new("[(]?(?<tfm>(?<name>(netcoreapp|net|netstandard){1})(?<major>[0-9]+)[.](?<minor>[0-9]+))[)]?");
 
     public int Compare(string? x, string? y)
     {
@@ -19,7 +16,7 @@ internal sealed partial class TfmComparer : IComparer<string>
             return StringComparer.CurrentCulture.Compare(x, y);
         }
 
-        switch (TfmRegex().Match(x), TfmRegex().Match(y))
+        switch (TfmRegex.Match(x), TfmRegex.Match(y))
         {
             case ({ Success: false }, _) or (_, { Success: false }):
                 return StringComparer.CurrentCulture.Compare(x, y);

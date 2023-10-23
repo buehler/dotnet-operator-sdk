@@ -22,6 +22,8 @@ namespace KubeOps.Cli.Transpilation;
 /// </summary>
 internal static partial class AssemblyLoader
 {
+    private static readonly Regex DefaultRegex = new(".*");
+
     static AssemblyLoader()
     {
         MSBuildLocator.RegisterDefaults();
@@ -73,7 +75,7 @@ internal static partial class AssemblyLoader
         string? tfm = null)
         => console.Status().StartAsync($"Compiling {slnFile.Name}...", async _ =>
         {
-            projectFilter ??= DefaultRegex();
+            projectFilter ??= DefaultRegex;
             tfm ??= "latest";
 
             console.MarkupLineInterpolated($"Compile solution [aqua]{slnFile.FullName}[/].");
@@ -92,8 +94,8 @@ internal static partial class AssemblyLoader
             var assemblies = await Task.WhenAll(solution.Projects
                 .Select(p =>
                 {
-                    var name = TfmComparer.TfmRegex().Replace(p.Name, string.Empty);
-                    var tfm = TfmComparer.TfmRegex().Match(p.Name).Groups["tfm"].Value;
+                    var name = TfmComparer.TfmRegex.Replace(p.Name, string.Empty);
+                    var tfm = TfmComparer.TfmRegex.Match(p.Name).Groups["tfm"].Value;
                     return (name, tfm, project: p);
                 })
                 .Where(p => projectFilter.IsMatch(p.name))
@@ -181,7 +183,4 @@ internal static partial class AssemblyLoader
                     t.BaseType?.Namespace == typeof(MutationWebhook<>).Namespace)
         .Distinct()
         .Select(t => new MutationWebhook(t, context.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata));
-
-    [GeneratedRegex(".*")]
-    private static partial Regex DefaultRegex();
 }
