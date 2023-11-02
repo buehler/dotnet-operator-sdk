@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
         <PackageReference Include="KubernetesClient" Version="12.1.1"/>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.12"/>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.13"/>
         <PackageReference Include="Microsoft.Build.Locator" Version="1.6.10"/>
         <PackageReference Include="Microsoft.CodeAnalysis" Version="4.7.0"/>
         <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.7.0"/>
