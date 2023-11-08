@@ -8,5 +8,5 @@ public static class Extensions
     /// <param name="selectors">The list of selectors.</param>
     /// <returns>A comma-joined string with all selectors converted to their expressions.</returns>
     public static string ToExpression(this IEnumerable<LabelSelector> selectors) =>
-        string.Join(",", selectors);
+        string.Join(",", selectors.Select(x => (string)x));
 }
