@@ -4,21 +4,15 @@
 /// Defines that the property has an external documentation.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class ExternalDocsAttribute : Attribute
+public class ExternalDocsAttribute(string url, string? description = null) : Attribute
 {
-    public ExternalDocsAttribute(string url, string? description = null)
-    {
-        Description = description;
-        Url = url;
-    }
-
     /// <summary>
     /// Additional description.
     /// </summary>
-    public string? Description { get; }
+    public string? Description { get; } = description;
 
     /// <summary>
     /// Url where to find the documentation.
     /// </summary>
-    public string Url { get; }
+    public string Url { get; } = url;
 }

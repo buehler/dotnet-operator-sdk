@@ -6,19 +6,11 @@ using Spectre.Console;
 
 namespace KubeOps.Cli.Output;
 
-internal class ResultOutput
+internal class ResultOutput(IAnsiConsole console, OutputFormat defaultFormat)
 {
-    private readonly IAnsiConsole _console;
-    private readonly OutputFormat _defaultFormat;
     private readonly Dictionary<string, (object, OutputFormat)> _files = new();
 
-    public ResultOutput(IAnsiConsole console, OutputFormat defaultFormat)
-    {
-        _console = console;
-        _defaultFormat = defaultFormat;
-    }
-
-    public void Add(string filename, object content) => _files.Add(filename, (content, _defaultFormat));
+    public void Add(string filename, object content) => _files.Add(filename, (content, _defaultFormat: defaultFormat));
 
     public void Add(string filename, object content, OutputFormat format) => _files.Add(filename, (content, format));
 
@@ -38,12 +30,12 @@ internal class ResultOutput
 
     public void Write()
     {
-        _console.Write(new Rule());
+        console.Write(new Rule());
         foreach (var (filename, content) in _files)
         {
-            _console.MarkupLineInterpolated($"[bold]File:[/] [underline]{filename}[/]");
-            _console.WriteLine(Serialize(content));
-            _console.Write(new Rule());
+            console.MarkupLineInterpolated($"[bold]File:[/] [underline]{filename}[/]");
+            console.WriteLine(Serialize(content));
+            console.Write(new Rule());
         }
     }
 

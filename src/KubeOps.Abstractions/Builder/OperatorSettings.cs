@@ -5,7 +5,7 @@ namespace KubeOps.Abstractions.Builder;
 /// <summary>
 /// Operator settings.
 /// </summary>
-public sealed class OperatorSettings
+public sealed partial class OperatorSettings
 {
     private const string DefaultOperatorName = "KubernetesOperator";
     private const string NonCharReplacement = "-";
@@ -15,7 +15,7 @@ public sealed class OperatorSettings
     /// Defaults to "kubernetesoperator" when not set.
     /// </summary>
     public string Name { get; set; } =
-        new Regex(@"(\W|_)", RegexOptions.CultureInvariant).Replace(
+        NameRegex().Replace(
                 DefaultOperatorName,
                 NonCharReplacement)
             .ToLowerInvariant();
@@ -59,4 +59,7 @@ public sealed class OperatorSettings
     /// The wait timeout if the lease cannot be acquired.
     /// </summary>
     public TimeSpan LeaderElectionRetryPeriod { get; set; } = TimeSpan.FromSeconds(2);
+
+    [GeneratedRegex(@"(\W|_)", RegexOptions.CultureInvariant)]
+    private static partial Regex NameRegex();
 }

@@ -5,12 +5,10 @@
 /// XML documentation file.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class)]
-public class DescriptionAttribute : Attribute
+public class DescriptionAttribute(string description) : Attribute
 {
-    public DescriptionAttribute(string description) => Description = description;
-
     /// <summary>
     /// The given description for the property.
     /// </summary>
-    public string Description { get; }
+    public string Description { get; } = description;
 }

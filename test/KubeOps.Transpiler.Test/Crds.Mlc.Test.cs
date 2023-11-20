@@ -595,9 +595,7 @@ public class CrdsMlcTest : TranspilerTestBase
     {
         public IntegerList Property { get; set; } = null!;
 
-        public class IntegerList : Collection<int>
-        {
-        }
+        public class IntegerList : Collection<int>;
     }
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
@@ -662,58 +660,44 @@ public class CrdsMlcTest : TranspilerTestBase
 
     [Ignore]
     [KubernetesEntity]
-    private class IgnoredEntity : CustomKubernetesEntity
-    {
-    }
+    private class IgnoredEntity : CustomKubernetesEntity;
 
-    public class NonEntity
-    {
-    }
+    public class NonEntity;
 
     [KubernetesEntity(
         ApiVersion = "v1alpha1",
         Kind = "VersionedEntity",
         Group = "kubeops.test.dev",
         PluralName = "versionedentities")]
-    public class V1Alpha1VersionedEntity : CustomKubernetesEntity
-    {
-    }
+    public class V1Alpha1VersionedEntity : CustomKubernetesEntity;
 
     [KubernetesEntity(
         ApiVersion = "v1beta1",
         Kind = "VersionedEntity",
         Group = "kubeops.test.dev",
         PluralName = "versionedentities")]
-    public class V1Beta1VersionedEntity : CustomKubernetesEntity
-    {
-    }
+    public class V1Beta1VersionedEntity : CustomKubernetesEntity;
 
     [KubernetesEntity(
         ApiVersion = "v2beta2",
         Kind = "VersionedEntity",
         Group = "kubeops.test.dev",
         PluralName = "versionedentities")]
-    public class V2Beta2VersionedEntity : CustomKubernetesEntity
-    {
-    }
+    public class V2Beta2VersionedEntity : CustomKubernetesEntity;
 
     [KubernetesEntity(
         ApiVersion = "v2",
         Kind = "VersionedEntity",
         Group = "kubeops.test.dev",
         PluralName = "versionedentities")]
-    public class V2VersionedEntity : CustomKubernetesEntity
-    {
-    }
+    public class V2VersionedEntity : CustomKubernetesEntity;
 
     [KubernetesEntity(
         ApiVersion = "v1",
         Kind = "VersionedEntity",
         Group = "kubeops.test.dev",
         PluralName = "versionedentities")]
-    public class V1VersionedEntity : CustomKubernetesEntity
-    {
-    }
+    public class V1VersionedEntity : CustomKubernetesEntity;
 
     [KubernetesEntity(
         ApiVersion = "v1",
@@ -721,45 +705,33 @@ public class CrdsMlcTest : TranspilerTestBase
         Group = "kubeops.test.dev",
         PluralName = "attributeversionedentities")]
     [StorageVersion]
-    public class V1AttributeVersionedEntity : CustomKubernetesEntity
-    {
-    }
+    public class V1AttributeVersionedEntity : CustomKubernetesEntity;
 
     [KubernetesEntity(
         ApiVersion = "v2",
         Kind = "AttributeVersionedEntity",
         Group = "kubeops.test.dev",
         PluralName = "attributeversionedentities")]
-    public class V2AttributeVersionedEntity : CustomKubernetesEntity
-    {
-    }
+    public class V2AttributeVersionedEntity : CustomKubernetesEntity;
 
     [KubernetesEntity(
         ApiVersion = "v1337",
         Kind = "Kind",
         Group = "Group",
         PluralName = "Plural")]
-    public class Entity : CustomKubernetesEntity
-    {
-    }
+    public class Entity : CustomKubernetesEntity;
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     public class EntityWithStatus : CustomKubernetesEntity<EntityWithStatus.EntitySpec, EntityWithStatus.EntityStatus>
     {
-        public class EntitySpec
-        {
-        }
+        public class EntitySpec;
 
-        public class EntityStatus
-        {
-        }
+        public class EntityStatus;
     }
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     [KubernetesEntityShortNames("foo", "bar", "baz")]
-    public class ShortnamesEntity : CustomKubernetesEntity
-    {
-    }
+    public class ShortnamesEntity : CustomKubernetesEntity;
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     public class DescriptionAttrEntity : CustomKubernetesEntity
@@ -883,9 +855,7 @@ public class CrdsMlcTest : TranspilerTestBase
     public class ClassDescriptionAttrEntity : CustomKubernetesEntity<ClassDescriptionAttrEntity.EntitySpec>
     {
         [Description("Description")]
-        public class EntitySpec
-        {
-        }
+        public class EntitySpec;
     }
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]

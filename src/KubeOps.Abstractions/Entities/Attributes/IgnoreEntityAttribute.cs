@@ -5,6 +5,4 @@
 /// ignored during CRD generation.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property)]
-public class IgnoreAttribute : Attribute
-{
-}
+public class IgnoreAttribute : Attribute;

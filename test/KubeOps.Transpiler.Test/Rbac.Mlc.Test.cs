@@ -83,24 +83,18 @@ public class RbacMlcTest : TranspilerTestBase
     [EntityRbac(typeof(RbacTest1), Verbs = RbacVerb.Get)]
     [EntityRbac(typeof(RbacTest1), Verbs = RbacVerb.Update)]
     [EntityRbac(typeof(RbacTest1), Verbs = RbacVerb.Delete)]
-    public class RbacTest1 : CustomKubernetesEntity
-    {
-    }
+    public class RbacTest1 : CustomKubernetesEntity;
 
     [KubernetesEntity(Group = "test", ApiVersion = "v1")]
     [EntityRbac(typeof(RbacTest2), Verbs = RbacVerb.All)]
     [EntityRbac(typeof(RbacTest2), Verbs = RbacVerb.Delete)]
-    public class RbacTest2 : CustomKubernetesEntity
-    {
-    }
+    public class RbacTest2 : CustomKubernetesEntity;
 
     [KubernetesEntity(Group = "test", ApiVersion = "v1")]
     [EntityRbac(typeof(RbacTest1), Verbs = RbacVerb.Get)]
     [EntityRbac(typeof(RbacTest1), Verbs = RbacVerb.Update)]
     [EntityRbac(typeof(RbacTest2), Verbs = RbacVerb.Delete)]
-    public class RbacTest3 : CustomKubernetesEntity
-    {
-    }
+    public class RbacTest3 : CustomKubernetesEntity;
 
     [KubernetesEntity(Group = "test", ApiVersion = "v1")]
     [EntityRbac(typeof(RbacTest1), Verbs = RbacVerb.Get)]
@@ -109,14 +103,10 @@ public class RbacMlcTest : TranspilerTestBase
     [EntityRbac(typeof(RbacTest2), Verbs = RbacVerb.Delete)]
     [EntityRbac(typeof(RbacTest3), Verbs = RbacVerb.Delete)]
     [EntityRbac(typeof(RbacTest4), Verbs = RbacVerb.Get | RbacVerb.Update)]
-    public class RbacTest4 : CustomKubernetesEntity
-    {
-    }
+    public class RbacTest4 : CustomKubernetesEntity;
 
     [KubernetesEntity(Group = "test", ApiVersion = "v1")]
     [GenericRbac(Urls = new[] { "url", "foobar" }, Resources = new[] { "configmaps" }, Groups = new[] { "group" },
         Verbs = RbacVerb.Delete | RbacVerb.Get)]
-    public class GenericRbacTest : CustomKubernetesEntity
-    {
-    }
+    public class GenericRbacTest : CustomKubernetesEntity;
 }

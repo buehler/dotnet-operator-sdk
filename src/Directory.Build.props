@@ -3,7 +3,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>true</IsPackable>
-        <LangVersion>11</LangVersion>
+        <LangVersion>12</LangVersion>
         <Authors>Christoph Bühler</Authors>
         <Owner>cbuehler</Owner>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
