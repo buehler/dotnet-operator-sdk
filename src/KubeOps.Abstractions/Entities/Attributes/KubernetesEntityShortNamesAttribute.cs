@@ -4,15 +4,10 @@
 /// Define "shortNames" for CRDs.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-public class KubernetesEntityShortNamesAttribute : Attribute
+public class KubernetesEntityShortNamesAttribute(params string[] shortNames) : Attribute
 {
-    public KubernetesEntityShortNamesAttribute(params string[] shortNames)
-    {
-        ShortNames = shortNames;
-    }
-
     /// <summary>
     /// Array of shortnames that should be attached to CRDs.
     /// </summary>
-    public string[] ShortNames { get; }
+    public string[] ShortNames => shortNames;
 }

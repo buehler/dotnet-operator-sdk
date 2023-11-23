@@ -75,24 +75,17 @@ public class NamespacedOperatorIntegrationTest : IntegrationTestBase
             .AddController<TestController, V1OperatorIntegrationTestEntity>();
     }
 
-    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>
+    private class TestController(InvocationCounter<V1OperatorIntegrationTestEntity> svc) : IEntityController<V1OperatorIntegrationTestEntity>
     {
-        private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _svc;
-
-        public TestController(InvocationCounter<V1OperatorIntegrationTestEntity> svc)
-        {
-            _svc = svc;
-        }
-
         public Task ReconcileAsync(V1OperatorIntegrationTestEntity entity)
         {
-            _svc.Invocation(entity);
+            svc.Invocation(entity);
             return Task.CompletedTask;
         }
 
         public Task DeletedAsync(V1OperatorIntegrationTestEntity entity)
         {
-            _svc.Invocation(entity);
+            svc.Invocation(entity);
             return Task.CompletedTask;
         }
     }

@@ -78,30 +78,19 @@ public class EventPublisherIntegrationTest : IntegrationTestBase
             .AddController<TestController, V1OperatorIntegrationTestEntity>();
     }
 
-    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>
-    {
-        private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _svc;
-        private readonly EntityRequeue<V1OperatorIntegrationTestEntity> _requeue;
-        private readonly EventPublisher _eventPublisher;
-
-        public TestController(
-            InvocationCounter<V1OperatorIntegrationTestEntity> svc,
+    private class TestController(InvocationCounter<V1OperatorIntegrationTestEntity> svc,
             EntityRequeue<V1OperatorIntegrationTestEntity> requeue,
             EventPublisher eventPublisher)
-        {
-            _svc = svc;
-            _requeue = requeue;
-            _eventPublisher = eventPublisher;
-        }
-
+        : IEntityController<V1OperatorIntegrationTestEntity>
+    {
         public async Task ReconcileAsync(V1OperatorIntegrationTestEntity entity)
         {
-            await _eventPublisher(entity, "REASON", "message");
-            _svc.Invocation(entity);
+            await eventPublisher(entity, "REASON", "message");
+            svc.Invocation(entity);
 
-            if (_svc.Invocations.Count < _svc.TargetInvocationCount)
+            if (svc.Invocations.Count < svc.TargetInvocationCount)
             {
-                _requeue(entity, TimeSpan.FromMilliseconds(10));
+                requeue(entity, TimeSpan.FromMilliseconds(10));
             }
         }
     }

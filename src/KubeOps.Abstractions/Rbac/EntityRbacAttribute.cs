@@ -12,17 +12,12 @@
 /// </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-public class EntityRbacAttribute : RbacAttribute
+public class EntityRbacAttribute(params Type[] entities) : RbacAttribute
 {
-    public EntityRbacAttribute(params Type[] entities)
-    {
-        Entities = entities;
-    }
-
     /// <summary>
     /// List of types that this rbac verbs are valid.
     /// </summary>
-    public IEnumerable<Type> Entities { get; }
+    public IEnumerable<Type> Entities => entities;
 
     /// <summary>
     /// <para>Flags ("list") of allowed verbs.</para>
