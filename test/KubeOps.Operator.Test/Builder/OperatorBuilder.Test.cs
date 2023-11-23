@@ -93,11 +93,7 @@ public class OperatorBuilderTest
             s.Lifetime == ServiceLifetime.Singleton);
     }
 
-    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>
-    {
-    }
+    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>;
 
-    private class TestFinalizer : IEntityFinalizer<V1OperatorIntegrationTestEntity>
-    {
-    }
+    private class TestFinalizer : IEntityFinalizer<V1OperatorIntegrationTestEntity>;
 }

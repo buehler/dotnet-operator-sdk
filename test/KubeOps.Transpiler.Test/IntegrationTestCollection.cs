@@ -9,12 +9,7 @@ public class TranspilerTestCollection : ICollectionFixture<MlcProvider>
 }
 
 [Collection(TranspilerTestCollection.Name)]
-public abstract class TranspilerTestBase
+public abstract class TranspilerTestBase(MlcProvider provider)
 {
-    protected readonly MetadataLoadContext _mlc;
-
-    protected TranspilerTestBase(MlcProvider provider)
-    {
-        _mlc = provider.Mlc;
-    }
+    protected readonly MetadataLoadContext _mlc = provider.Mlc;
 }

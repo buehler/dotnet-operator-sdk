@@ -31,16 +31,12 @@ public class EntitiesTest
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "NamespaceEntity",
         PluralName = "NamespaceEntities")]
-    public class NamespaceEntity : CustomKubernetesEntity
-    {
-    }
+    public class NamespaceEntity : CustomKubernetesEntity;
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "ClusterEntity",
         PluralName = "clusterentities")]
     [EntityScope(EntityScope.Cluster)]
-    public class ClusterEntity : CustomKubernetesEntity
-    {
-    }
+    public class ClusterEntity : CustomKubernetesEntity;
 
     #endregion
 }

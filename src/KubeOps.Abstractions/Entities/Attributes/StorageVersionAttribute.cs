@@ -8,6 +8,4 @@
 /// GA > Beta > Alpha > non versions.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class StorageVersionAttribute : Attribute
-{
-}
+public class StorageVersionAttribute : Attribute;

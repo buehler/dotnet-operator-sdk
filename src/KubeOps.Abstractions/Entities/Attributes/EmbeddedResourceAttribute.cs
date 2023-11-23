@@ -9,6 +9,4 @@ namespace KubeOps.Abstractions.Entities.Attributes;
 /// This implicitly sets the <see cref="PreserveUnknownFieldsAttribute"/>.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class EmbeddedResourceAttribute : Attribute
-{
-}
+public class EmbeddedResourceAttribute : Attribute;

@@ -23,6 +23,8 @@ end_of_line = crlf
 insert_final_newline = true
 
 #### Custom Analyzer Rules ####
+# Until https://github.com/SonarSource/sonar-dotnet/issues/7624 is shipped.
+dotnet_diagnostic.S3604.severity = none
 
 dotnet_diagnostic.SA0001.severity = none
 dotnet_diagnostic.SA1600.severity = none

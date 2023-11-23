@@ -15,27 +15,19 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Web.LocalTunnel;
 
-internal class DevelopmentTunnelService : IHostedService
+internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConfig config, WebhookLoader loader)
+    : IHostedService
 {
-    private readonly TunnelConfig _config;
-    private readonly WebhookLoader _loader;
-    private readonly LocaltunnelClient _tunnelClient;
+    private readonly LocaltunnelClient _tunnelClient = new(loggerFactory);
     private Tunnel? _tunnel;
-
-    public DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConfig config, WebhookLoader loader)
-    {
-        _config = config;
-        _loader = loader;
-        _tunnelClient = new(loggerFactory);
-    }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _tunnel = await _tunnelClient.OpenAsync(
             new KestrelTunnelConnectionHandler(
                 new HttpRequestProcessingPipelineBuilder()
-                    .Append(new HttpHostHeaderRewritingRequestProcessor(_config.Hostname)).Build(),
-                new HttpTunnelEndpointFactory(_config.Hostname, _config.Port)),
+                    .Append(new HttpHostHeaderRewritingRequestProcessor(config.Hostname)).Build(),
+                new HttpTunnelEndpointFactory(config.Hostname, config.Port)),
             cancellationToken: cancellationToken);
         await _tunnel.StartAsync(cancellationToken: cancellationToken);
         await RegisterValidators(_tunnel.Information.Url);
@@ -50,7 +42,7 @@ internal class DevelopmentTunnelService : IHostedService
 
     private async Task RegisterValidators(Uri uri)
     {
-        var validationWebhooks = _loader
+        var validationWebhooks = loader
             .ValidationWebhooks
             .Select(t => (HookTypeName: t.BaseType!.GenericTypeArguments[0].Name.ToLowerInvariant(),
                 Entities.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata))
@@ -89,7 +81,7 @@ internal class DevelopmentTunnelService : IHostedService
 
     private async Task RegisterMutators(Uri uri)
     {
-        var mutationWebhooks = _loader
+        var mutationWebhooks = loader
             .MutationWebhooks
             .Select(t => (HookTypeName: t.BaseType!.GenericTypeArguments[0].Name.ToLowerInvariant(),
                 Entities.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata))

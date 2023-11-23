@@ -8,10 +8,4 @@ namespace KubeOps.Operator.Web.Webhooks.Validation;
 /// This must be used in conjunction with the <see cref="ValidationWebhook{TEntity}"/> class.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class ValidationWebhookAttribute : RouteAttribute
-{
-    public ValidationWebhookAttribute(Type entityType)
-        : base($"/validate/{entityType.Name.ToLowerInvariant()}")
-    {
-    }
-}
+public class ValidationWebhookAttribute(Type entityType) : RouteAttribute($"/validate/{entityType.Name.ToLowerInvariant()}");
