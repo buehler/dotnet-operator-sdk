@@ -97,7 +97,5 @@ internal static class RbacGenerator
 
     [EntityRbac(typeof(Corev1Event), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Create | RbacVerb.Update)]
     [EntityRbac(typeof(V1Lease), Verbs = RbacVerb.All)]
-    private sealed class DefaultRbacAttributes
-    {
-    }
+    private sealed class DefaultRbacAttributes;
 }

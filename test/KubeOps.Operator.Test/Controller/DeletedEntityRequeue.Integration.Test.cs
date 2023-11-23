@@ -51,29 +51,20 @@ public class DeletedEntityRequeueIntegrationTest : IntegrationTestBase
             .AddController<TestController, V1OperatorIntegrationTestEntity>();
     }
 
-    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>
-    {
-        private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _svc;
-        private readonly EntityRequeue<V1OperatorIntegrationTestEntity> _requeue;
-
-        public TestController(
-            InvocationCounter<V1OperatorIntegrationTestEntity> svc,
+    private class TestController(InvocationCounter<V1OperatorIntegrationTestEntity> svc,
             EntityRequeue<V1OperatorIntegrationTestEntity> requeue)
-        {
-            _svc = svc;
-            _requeue = requeue;
-        }
-
+        : IEntityController<V1OperatorIntegrationTestEntity>
+    {
         public Task ReconcileAsync(V1OperatorIntegrationTestEntity entity)
         {
-            _svc.Invocation(entity);
-            _requeue(entity, TimeSpan.FromMilliseconds(1000));
+            svc.Invocation(entity);
+            requeue(entity, TimeSpan.FromMilliseconds(1000));
             return Task.CompletedTask;
         }
 
         public Task DeletedAsync(V1OperatorIntegrationTestEntity entity)
         {
-            _svc.Invocation(entity);
+            svc.Invocation(entity);
             return Task.CompletedTask;
         }
     }

@@ -7,6 +7,4 @@ public class IntegrationTestCollection
 }
 
 [Collection(IntegrationTestCollection.Name)]
-public abstract class IntegrationTestBase
-{
-}
+public abstract class IntegrationTestBase;

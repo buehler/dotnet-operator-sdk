@@ -5,6 +5,4 @@
 /// so that kubernetes does not purge additional structures.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class PreserveUnknownFieldsAttribute : Attribute
-{
-}
+public class PreserveUnknownFieldsAttribute : Attribute;

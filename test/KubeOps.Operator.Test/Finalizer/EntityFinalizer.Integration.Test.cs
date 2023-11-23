@@ -203,70 +203,46 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase
             .AddFinalizer<SecondFinalizer, V1OperatorIntegrationTestEntity>("second");
     }
 
-    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>
-    {
-        private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _svc;
-        private readonly EntityFinalizerAttacher<FirstFinalizer, V1OperatorIntegrationTestEntity> _first;
-        private readonly EntityFinalizerAttacher<SecondFinalizer, V1OperatorIntegrationTestEntity> _second;
-
-        public TestController(InvocationCounter<V1OperatorIntegrationTestEntity> svc,
+    private class TestController(InvocationCounter<V1OperatorIntegrationTestEntity> svc,
             EntityFinalizerAttacher<FirstFinalizer, V1OperatorIntegrationTestEntity> first,
             EntityFinalizerAttacher<SecondFinalizer, V1OperatorIntegrationTestEntity> second)
-        {
-            _svc = svc;
-            _first = first;
-            _second = second;
-        }
-
+        : IEntityController<V1OperatorIntegrationTestEntity>
+    {
         public async Task ReconcileAsync(V1OperatorIntegrationTestEntity entity)
         {
-            _svc.Invocation(entity);
+            svc.Invocation(entity);
             if (entity.Name().Contains("first"))
             {
-                entity = await _first(entity);
+                entity = await first(entity);
             }
 
             if (entity.Name().Contains("second"))
             {
-                await _second(entity);
+                await second(entity);
             }
         }
 
         public Task DeletedAsync(V1OperatorIntegrationTestEntity entity)
         {
-            _svc.Invocation(entity);
+            svc.Invocation(entity);
             return Task.CompletedTask;
         }
     }
 
-    private class FirstFinalizer : IEntityFinalizer<V1OperatorIntegrationTestEntity>
+    private class FirstFinalizer(InvocationCounter<V1OperatorIntegrationTestEntity> svc) : IEntityFinalizer<V1OperatorIntegrationTestEntity>
     {
-        private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _svc;
-
-        public FirstFinalizer(InvocationCounter<V1OperatorIntegrationTestEntity> svc)
-        {
-            _svc = svc;
-        }
-
         public Task FinalizeAsync(V1OperatorIntegrationTestEntity entity)
         {
-            _svc.Invocation(entity);
+            svc.Invocation(entity);
             return Task.CompletedTask;
         }
     }
 
-    private class SecondFinalizer : IEntityFinalizer<V1OperatorIntegrationTestEntity>
+    private class SecondFinalizer(InvocationCounter<V1OperatorIntegrationTestEntity> svc) : IEntityFinalizer<V1OperatorIntegrationTestEntity>
     {
-        private readonly InvocationCounter<V1OperatorIntegrationTestEntity> _svc;
-
-        public SecondFinalizer(InvocationCounter<V1OperatorIntegrationTestEntity> svc)
-        {
-            _svc = svc;
-        }
-
         public Task FinalizeAsync(V1OperatorIntegrationTestEntity entity)
         {
-            _svc.Invocation(entity);
+            svc.Invocation(entity);
             return Task.CompletedTask;
         }
     }
