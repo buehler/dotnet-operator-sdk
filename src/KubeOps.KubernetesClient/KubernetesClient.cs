@@ -104,26 +104,26 @@ public class KubernetesClient : IKubernetesClient
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         var metadata = GetMetadata<TEntity>();
-        var list = @namespace switch
-        {
-            null => await _client.CustomObjects.ListClusterCustomObjectAsync<EntityList<TEntity>>(
-                metadata.Group ?? string.Empty,
-                metadata.Version,
-                metadata.PluralName,
-                fieldSelector: $"metadata.name={name}"),
-            _ => await _client.CustomObjects.ListNamespacedCustomObjectAsync<EntityList<TEntity>>(
-                metadata.Group ?? string.Empty,
-                metadata.Version,
-                @namespace,
-                metadata.PluralName,
-                fieldSelector: $"metadata.name={name}"),
-        };
 
-        return list switch
+        try
         {
-            { Items: [var existing] } => existing,
-            _ => default,
-        };
+            return await (string.IsNullOrWhiteSpace(@namespace)
+                ? _client.CustomObjects.GetClusterCustomObjectAsync<TEntity>(
+                    metadata.Group ?? string.Empty,
+                    metadata.Version,
+                    metadata.PluralName,
+                    name)
+                : _client.CustomObjects.GetNamespacedCustomObjectAsync<TEntity>(
+                    metadata.Group ?? string.Empty,
+                    metadata.Version,
+                    @namespace,
+                    metadata.PluralName,
+                    name));
+        }
+        catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return default;
+        }
     }
 
     /// <inheritdoc />
@@ -131,26 +131,26 @@ public class KubernetesClient : IKubernetesClient
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         var metadata = GetMetadata<TEntity>();
-        var list = @namespace switch
-        {
-            null => _client.CustomObjects.ListClusterCustomObject<EntityList<TEntity>>(
-                metadata.Group ?? string.Empty,
-                metadata.Version,
-                metadata.PluralName,
-                fieldSelector: $"metadata.name={name}"),
-            _ => _client.CustomObjects.ListNamespacedCustomObject<EntityList<TEntity>>(
-                metadata.Group ?? string.Empty,
-                metadata.Version,
-                @namespace,
-                metadata.PluralName,
-                fieldSelector: $"metadata.name={name}"),
-        };
 
-        return list switch
+        try
         {
-            { Items: [var existing] } => existing,
-            _ => default,
-        };
+            return string.IsNullOrWhiteSpace(@namespace)
+                ? _client.CustomObjects.GetClusterCustomObject<TEntity>(
+                    metadata.Group ?? string.Empty,
+                    metadata.Version,
+                    metadata.PluralName,
+                    name)
+                : _client.CustomObjects.GetNamespacedCustomObject<TEntity>(
+                    metadata.Group ?? string.Empty,
+                    metadata.Version,
+                    @namespace,
+                    metadata.PluralName,
+                    name);
+        }
+        catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return default;
+        }
     }
 
     /// <inheritdoc />
