@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Web.LocalTunnel;
 
-internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConfig config, WebhookLoader loader)
+internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, IKubernetesClient client, TunnelConfig config, WebhookLoader loader)
     : IHostedService
 {
     private readonly LocaltunnelClient _tunnelClient = new(loggerFactory);
@@ -75,7 +75,7 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConf
 
         if (validatorConfig.Webhooks.Any())
         {
-            await _client.SaveAsync(validatorConfig);
+            await client.SaveAsync(validatorConfig);
         }
     }
 
@@ -113,13 +113,13 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConf
 
         if (mutatorConfig.Webhooks.Any())
         {
-            await _client.SaveAsync(mutatorConfig);
+            await client.SaveAsync(mutatorConfig);
         }
     }
 
     private async Task RegisterConverters(Uri uri)
     {
-        var conversionWebhooks = _loader.ConversionWebhooks.ToList();
+        var conversionWebhooks = loader.ConversionWebhooks.ToList();
         if (conversionWebhooks.Count == 0)
         {
             return;
@@ -130,7 +130,7 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConf
             var metadata = Entities.ToEntityMetadata(wh.BaseType!.GenericTypeArguments[0]).Metadata;
             var crdName = $"{metadata.PluralName}.{metadata.Group}";
 
-            if (await _client.GetAsync<V1CustomResourceDefinition>(crdName) is not { } crd)
+            if (await client.GetAsync<V1CustomResourceDefinition>(crdName) is not { } crd)
             {
                 continue;
             }
@@ -145,7 +145,7 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConf
                 },
             };
 
-            await _client.UpdateAsync(crd);
+            await client.UpdateAsync(crd);
         }
     }
 }
