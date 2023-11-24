@@ -4,7 +4,7 @@ using KubeOps.Abstractions.Entities;
 
 namespace ConversionWebhookOperator.Entities;
 
-[KubernetesEntity(Group = "conversion-webhook.dev", ApiVersion = "v1", Kind = "TestEntity")]
+[KubernetesEntity(Group = "conversionwebhook.dev", ApiVersion = "v1", Kind = "TestEntity")]
 public partial class V1TestEntity : CustomKubernetesEntity<V1TestEntity.EntitySpec>
 {
     public override string ToString() => $"Test Entity v1 ({Metadata.Name}): {Spec.Name}";
