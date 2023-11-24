@@ -1,0 +1,6 @@
+apiVersion: conversion-webhook.dev/v1
+kind: TestEntity
+metadata:
+  name: v1-entity
+spec:
+  name: Max Muster

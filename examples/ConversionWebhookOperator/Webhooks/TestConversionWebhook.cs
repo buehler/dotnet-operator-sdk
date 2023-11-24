@@ -1,8 +1,8 @@
 using KubeOps.Operator.Web.Webhooks.Conversion;
 
-using WebhookOperator.Entities;
+using ConversionWebhookOperator.Entities;
 
-namespace WebhookOperator.Webhooks;
+namespace ConversionWebhookOperator.Webhooks;
 
 [ConversionWebhook(typeof(V3TestEntity))]
 public class TestConversionWebhook : ConversionWebhook<V3TestEntity>
