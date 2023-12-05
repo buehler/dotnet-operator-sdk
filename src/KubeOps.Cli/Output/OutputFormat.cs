@@ -17,3 +17,13 @@ internal enum OutputFormat
     /// </summary>
     Plain,
 }
+
+internal static class OutputFormatExtensions
+{
+    public static string GetFileExtension(this OutputFormat format) => format switch
+    {
+        OutputFormat.Yaml => "yaml",
+        OutputFormat.Json => "json",
+        _ => string.Empty,
+    };
+}

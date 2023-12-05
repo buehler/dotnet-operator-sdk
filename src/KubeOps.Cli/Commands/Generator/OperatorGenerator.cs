@@ -1,11 +1,14 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Text;
 
 using k8s;
 using k8s.Models;
 
 using KubeOps.Abstractions.Kustomize;
+using KubeOps.Cli.Generators;
 using KubeOps.Cli.Output;
+using KubeOps.Cli.Transpilation;
 
 using Spectre.Console;
 
@@ -17,92 +20,150 @@ internal static class OperatorGenerator
     {
         get
         {
-            var cmd = new Command("operator", "Generates deployments and other resources for the operator to run.")
-            {
-                Options.OutputFormat, Options.OutputPath,
-            };
+            var cmd =
+                new Command("operator",
+                    "Generates all required resources and configs for the operator to be built and run.")
+                {
+                    Options.ClearOutputPath,
+                    Options.OutputFormat,
+                    Options.OutputPath,
+                    Options.SolutionProjectRegex,
+                    Options.TargetFramework,
+                    Arguments.OperatorName,
+                    Arguments.SolutionOrProjectFile,
+                };
             cmd.AddAlias("op");
-            cmd.SetHandler(ctx => Handler(AnsiConsole.Console, ctx));
+            cmd.SetHandler(Handler);
 
             return cmd;
         }
     }
 
-    internal static async Task Handler(IAnsiConsole console, InvocationContext ctx)
+    private static async Task Handler(InvocationContext ctx)
     {
+        var name = ctx.ParseResult.GetValueForArgument(Arguments.OperatorName);
+        var file = ctx.ParseResult.GetValueForArgument(Arguments.SolutionOrProjectFile);
         var outPath = ctx.ParseResult.GetValueForOption(Options.OutputPath);
         var format = ctx.ParseResult.GetValueForOption(Options.OutputFormat);
 
-        var result = new ResultOutput(console, format);
-        console.WriteLine("Generate operator resources.");
+        var result = new ResultOutput(AnsiConsole.Console, format);
+        AnsiConsole.Console.WriteLine("Generate operator resources.");
 
-        var deployment = new V1Deployment(metadata: new V1ObjectMeta(
-            labels: new Dictionary<string, string> { { "operator-deployment", "kubernetes-operator" } },
-            name: "operator")).Initialize();
-        deployment.Spec = new V1DeploymentSpec
+        AnsiConsole.Console.MarkupLine("[green]Load Project/Solution file.[/]");
+        var parser = file switch
         {
-            Replicas = 1,
-            RevisionHistoryLimit = 0,
-            Selector = new V1LabelSelector(
-                matchLabels: new Dictionary<string, string> { { "operator-deployment", "kubernetes-operator" } }),
-            Template = new V1PodTemplateSpec
+            { Extension: ".csproj", Exists: true } => await AssemblyLoader.ForProject(AnsiConsole.Console, file),
+            { Extension: ".sln", Exists: true } => await AssemblyLoader.ForSolution(
+                AnsiConsole.Console,
+                file,
+                ctx.ParseResult.GetValueForOption(Options.SolutionProjectRegex),
+                ctx.ParseResult.GetValueForOption(Options.TargetFramework)),
+            { Exists: false } => throw new FileNotFoundException($"The file {file.Name} does not exist."),
+            _ => throw new NotSupportedException("Only *.csproj and *.sln files are supported."),
+        };
+
+        var mutators = parser.GetMutatedEntities().ToList();
+        var validators = parser.GetValidatedEntities().ToList();
+        var hasWebhooks = mutators.Count > 0 || validators.Count > 0;
+
+        AnsiConsole.Console.MarkupLine("[green]Generate CRDs.[/]");
+        new CrdGenerator(parser, format).Generate(result);
+
+        AnsiConsole.Console.MarkupLine("[green]Generate RBAC rules.[/]");
+        new RbacGenerator(parser, format).Generate(result);
+
+        AnsiConsole.Console.MarkupLine("[green]Generate Dockerfile.[/]");
+        new DockerfileGenerator(hasWebhooks).Generate(result);
+
+        if (hasWebhooks)
+        {
+            AnsiConsole.Console.MarkupLine(
+                "[yellow]The operator contains webhooks of some sort, generating webhook operator specific resources.[/]");
+
+            AnsiConsole.Console.MarkupLine("[green]Generate CA and Server certificates.[/]");
+            new CertificateGenerator(name, $"{name}-system").Generate(result);
+
+            AnsiConsole.Console.MarkupLine("[green]Generate Deployment and Service.[/]");
+            new WebhookDeploymentGenerator(format).Generate(result);
+
+            var caBundle =
+                Encoding.ASCII.GetBytes(
+                    Convert.ToBase64String(Encoding.ASCII.GetBytes(result["ca.pem"].ToString() ?? string.Empty)));
+
+            AnsiConsole.Console.MarkupLine("[green]Generate Validation Webhooks.[/]");
+            new ValidationWebhookGenerator(validators, caBundle, format).Generate(result);
+
+            AnsiConsole.Console.MarkupLine("[green]Generate Mutation Webhooks.[/]");
+            new MutationWebhookGenerator(mutators, caBundle, format).Generate(result);
+        }
+        else
+        {
+            AnsiConsole.Console.MarkupLine("[green]Generate Deployment.[/]");
+            new DeploymentGenerator(format).Generate(result);
+        }
+
+        result.Add(
+            $"namespace.{format.GetFileExtension()}",
+            new V1Namespace(metadata: new(name: "system")).Initialize());
+
+        result.Add(
+            $"kustomization.{format.GetFileExtension()}",
+            new KustomizationConfig
             {
-                Metadata = new V1ObjectMeta(
-                    labels: new Dictionary<string, string> { { "operator-deployment", "kubernetes-operator" } }),
-                Spec = new V1PodSpec
-                {
-                    TerminationGracePeriodSeconds = 10,
-                    Containers = new List<V1Container>
+                NamePrefix = $"{name}-",
+                Namespace = $"{name}-system",
+                CommonLabels = new Dictionary<string, string> { { "operator", name }, },
+                Resources = result.DefaultFormatFiles.ToList(),
+                Images =
+                    new List<KustomizationImage>
+                    {
+                        new() { Name = "operator", NewName = "accessible-docker-image", NewTag = "latest", },
+                    },
+                ConfigMapGenerator = hasWebhooks
+                    ? new List<KustomizationConfigMapGenerator>
                     {
                         new()
                         {
-                            Image = "operator",
-                            Name = "operator",
-                            Env = new List<V1EnvVar>
+                            Name = "webhook-config",
+                            Literals = new List<string>
                             {
-                                new()
-                                {
-                                    Name = "POD_NAMESPACE",
-                                    ValueFrom =
-                                        new V1EnvVarSource
-                                        {
-                                            FieldRef = new V1ObjectFieldSelector
-                                            {
-                                                FieldPath = "metadata.namespace",
-                                            },
-                                        },
-                                },
-                            },
-                            Resources = new V1ResourceRequirements
-                            {
-                                Requests = new Dictionary<string, ResourceQuantity>
-                                {
-                                    { "cpu", new ResourceQuantity("100m") },
-                                    { "memory", new ResourceQuantity("64Mi") },
-                                },
-                                Limits = new Dictionary<string, ResourceQuantity>
-                                {
-                                    { "cpu", new ResourceQuantity("100m") },
-                                    { "memory", new ResourceQuantity("128Mi") },
-                                },
+                                "KESTREL__ENDPOINTS__HTTP__URL=http://0.0.0.0:5000",
+                                "KESTREL__ENDPOINTS__HTTPS__URL=https://0.0.0.0:5001",
+                                "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__PATH=/certs/svc.pem",
+                                "KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__KEYPATH=/certs/svc-key.pem",
                             },
                         },
-                    },
-                },
-            },
-        };
-        result.Add($"deployment.{format.ToString().ToLowerInvariant()}", deployment);
-
-        result.Add(
-            $"kustomization.{format.ToString().ToLowerInvariant()}",
-            new KustomizationConfig
-            {
-                Resources = new List<string> { $"deployment.{format.ToString().ToLowerInvariant()}", },
-                CommonLabels = new Dictionary<string, string> { { "operator-element", "operator-instance" }, },
+                    }
+                    : null,
+                SecretGenerator = hasWebhooks
+                    ? new List<KustomizationSecretGenerator>
+                    {
+                        new() { Name = "webhook-ca", Files = new List<string> { "ca.pem", "ca-key.pem", }, },
+                        new() { Name = "webhook-cert", Files = new List<string> { "svc.pem", "svc-key.pem", }, },
+                    }
+                    : null,
             });
 
         if (outPath is not null)
         {
+            if (ctx.ParseResult.GetValueForOption(Options.ClearOutputPath))
+            {
+                AnsiConsole.Console.MarkupLine("[yellow]Clear output path.[/]");
+                try
+                {
+                    Directory.Delete(outPath, true);
+                }
+                catch (DirectoryNotFoundException)
+                {
+                    // the dir is not present, so we don't need to delete it.
+                }
+                catch (Exception e)
+                {
+                    AnsiConsole.Console.MarkupLine($"[red]Could not clear output path: {e.Message}[/]");
+                }
+            }
+
+            AnsiConsole.Console.MarkupLine($"[green]Write output to {outPath}.[/]");
             await result.Write(outPath);
         }
         else
