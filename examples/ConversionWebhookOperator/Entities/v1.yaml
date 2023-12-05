@@ -1,4 +1,4 @@
-apiVersion: conversion-webhook.dev/v1
+apiVersion: conversionwebhook.dev/v1
 kind: TestEntity
 metadata:
   name: v1-entity

@@ -15,4 +15,9 @@
         <ProjectReference Include="..\..\src\KubeOps.Operator.Web\KubeOps.Operator.Web.csproj" />
     </ItemGroup>
 
+<!--    <PropertyGroup>-->
+<!--        <KubeOpsCli>dotnet run &#45;&#45;project ../../src/KubeOps.Cli/ &#45;&#45; </KubeOpsCli>-->
+<!--    </PropertyGroup>-->
+<!--    <Import Project="..\..\src\KubeOps.Operator\Build\KubeOps.Operator.targets" />-->
+
 </Project>

@@ -65,10 +65,7 @@ internal static class OperatorGenerator
 
         var mutators = parser.GetMutatedEntities().ToList();
         var validators = parser.GetValidatedEntities().ToList();
-        var hasWebhooks = mutators.Count > 0 || validators.Count > 0;
-
-        AnsiConsole.Console.MarkupLine("[green]Generate CRDs.[/]");
-        new CrdGenerator(parser, format).Generate(result);
+        var hasWebhooks = mutators.Count > 0 || validators.Count > 0 || parser.GetConvertedEntities().Any();
 
         AnsiConsole.Console.MarkupLine("[green]Generate RBAC rules.[/]");
         new RbacGenerator(parser, format).Generate(result);
@@ -96,11 +93,17 @@ internal static class OperatorGenerator
 
             AnsiConsole.Console.MarkupLine("[green]Generate Mutation Webhooks.[/]");
             new MutationWebhookGenerator(mutators, caBundle, format).Generate(result);
+
+            AnsiConsole.Console.MarkupLine("[green]Generate CRDs.[/]");
+            new CrdGenerator(parser, caBundle, format).Generate(result);
         }
         else
         {
             AnsiConsole.Console.MarkupLine("[green]Generate Deployment.[/]");
             new DeploymentGenerator(format).Generate(result);
+
+            AnsiConsole.Console.MarkupLine("[green]Generate CRDs.[/]");
+            new CrdGenerator(parser, Array.Empty<byte>(), format).Generate(result);
         }
 
         result.Add(

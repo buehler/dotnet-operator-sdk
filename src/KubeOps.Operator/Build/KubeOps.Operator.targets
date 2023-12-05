@@ -3,7 +3,7 @@
         <PropertyGroup>
             <OperatorName Condition="'$(OperatorName)' == ''">$(AssemblyName.ToLowerInvariant())</OperatorName>
             <KubeOpsCli Condition="'$(KubeOpsCli)' == ''">dotnet kubeops</KubeOpsCli>
-            <KubeOpsGenRoot Condition="'$(KubeOpsGenRoot)' == ''">$(MSBuildProjectDirectory)\config</KubeOpsGenRoot>
+            <KubeOpsConfigOut Condition="'$(KubeOpsConfigOut)' == ''">$(MSBuildProjectDirectory)\config</KubeOpsConfigOut>
         </PropertyGroup>
     </Target>
 
@@ -23,8 +23,8 @@
 
     <Target Name="GenerateKustomizationConfig" DependsOnTargets="BaseConfig">
         <Message Text="Generating Kustomization Configuration" Importance="high" />
-        <Message Text="Configuration path: $(KubeOpsGenRoot)" Importance="normal" />
-        <Exec Command="$(KubeOpsCli) generate operator --out $(KubeOpsGenOperatorOut) $(OperatorName) $(MSBuildProjectFullPath)" />
+        <Message Text="Configuration path: $(KubeOpsConfigOut)" Importance="normal" />
+        <Exec Command="$(KubeOpsCli) generate operator --out $(KubeOpsConfigOut) $(OperatorName) $(MSBuildProjectFullPath)" />
     </Target>
 
     <Target Name="GenerateOperatorResources"
