@@ -29,10 +29,4 @@
         <PackageReference Include="SystemTextJson.JsonDiffPatch" Version="1.3.1" />
     </ItemGroup>
 
-    <ItemGroup>
-        <Content Include="Build\KubeOps.Operator.Web.targets">
-            <PackagePath>build/</PackagePath>
-        </Content>
-    </ItemGroup>
-
 </Project>

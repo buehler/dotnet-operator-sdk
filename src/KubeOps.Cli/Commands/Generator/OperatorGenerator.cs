@@ -21,7 +21,8 @@ internal static class OperatorGenerator
         get
         {
             var cmd =
-                new Command("operator",
+                new Command(
+                    "operator",
                     "Generates all required resources and configs for the operator to be built and run.")
                 {
                     Options.ClearOutputPath,
