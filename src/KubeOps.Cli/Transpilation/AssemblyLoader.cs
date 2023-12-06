@@ -4,10 +4,12 @@ using System.Text.RegularExpressions;
 
 using k8s.Models;
 
+using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Entities.Attributes;
 using KubeOps.Abstractions.Rbac;
-using KubeOps.Operator.Web.Webhooks.Mutation;
-using KubeOps.Operator.Web.Webhooks.Validation;
+using KubeOps.Operator.Web.Webhooks.Admission.Mutation;
+using KubeOps.Operator.Web.Webhooks.Admission.Validation;
+using KubeOps.Operator.Web.Webhooks.Conversion;
 using KubeOps.Transpiler;
 
 using Microsoft.Build.Locator;
@@ -181,6 +183,14 @@ internal static partial class AssemblyLoader
                     t.BaseType?.Namespace == typeof(MutationWebhook<>).Namespace)
         .Distinct()
         .Select(t => new MutationWebhook(t, context.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata));
+
+    public static IEnumerable<EntityMetadata> GetConvertedEntities(this MetadataLoadContext context) => context
+        .GetAssemblies()
+        .SelectMany(a => a.DefinedTypes)
+        .Where(t => t.BaseType?.Name == typeof(ConversionWebhook<>).Name &&
+                    t.BaseType?.Namespace == typeof(ConversionWebhook<>).Namespace)
+        .Distinct()
+        .Select(t => context.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata);
 
     [GeneratedRegex(".*")]
     private static partial Regex DefaultRegex();

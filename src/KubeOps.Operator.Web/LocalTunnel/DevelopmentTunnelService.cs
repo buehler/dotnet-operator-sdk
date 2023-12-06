@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Web.LocalTunnel;
 
-internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConfig config, WebhookLoader loader)
+internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, IKubernetesClient client, TunnelConfig config, WebhookLoader loader)
     : IHostedService
 {
     private readonly LocaltunnelClient _tunnelClient = new(loggerFactory);
@@ -32,6 +32,7 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConf
         await _tunnel.StartAsync(cancellationToken: cancellationToken);
         await RegisterValidators(_tunnel.Information.Url);
         await RegisterMutators(_tunnel.Information.Url);
+        await RegisterConverters(_tunnel.Information.Url);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -74,8 +75,7 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConf
 
         if (validatorConfig.Webhooks.Any())
         {
-            using var validatorClient = new KubernetesClient.KubernetesClient() as IKubernetesClient;
-            await validatorClient.SaveAsync(validatorConfig);
+            await client.SaveAsync(validatorConfig);
         }
     }
 
@@ -113,8 +113,39 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, TunnelConf
 
         if (mutatorConfig.Webhooks.Any())
         {
-            using var mutatorClient = new KubernetesClient.KubernetesClient() as IKubernetesClient;
-            await mutatorClient.SaveAsync(mutatorConfig);
+            await client.SaveAsync(mutatorConfig);
+        }
+    }
+
+    private async Task RegisterConverters(Uri uri)
+    {
+        var conversionWebhooks = loader.ConversionWebhooks.ToList();
+        if (conversionWebhooks.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var wh in conversionWebhooks)
+        {
+            var metadata = Entities.ToEntityMetadata(wh.BaseType!.GenericTypeArguments[0]).Metadata;
+            var crdName = $"{metadata.PluralName}.{metadata.Group}";
+
+            if (await client.GetAsync<V1CustomResourceDefinition>(crdName) is not { } crd)
+            {
+                continue;
+            }
+
+            var whUrl = $"{uri}convert/{metadata.Group}/{metadata.PluralName}";
+            crd.Spec.Conversion = new V1CustomResourceConversion("Webhook")
+            {
+                Webhook = new V1WebhookConversion
+                {
+                    ConversionReviewVersions = new[] { "v1" },
+                    ClientConfig = new Apiextensionsv1WebhookClientConfig { Url = whUrl },
+                },
+            };
+
+            await client.UpdateAsync(crd);
         }
     }
 }

@@ -33,15 +33,6 @@ internal static class Arguments
         "If an *.sln file is used, all projects in the solution (with the newest framework) will be searched for entities. " +
         "This behaviour can be filtered by using the --project and --target-framework option.");
 
-    public static readonly Argument<string> CertificateServerName = new(
-        "name",
-        "The server name for the certificate (name of the service/deployment).");
-
-    public static readonly Argument<string> CertificateServerNamespace = new(
-        "namespace",
-        () => "default",
-        "The Kubernetes namespace that the operator will be run.");
-
     public static readonly Argument<string> OperatorName = new(
         "name",
         "Name of the operator.");
