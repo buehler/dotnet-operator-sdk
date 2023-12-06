@@ -1,4 +1,4 @@
-﻿using KubeOps.Operator.Web.Webhooks.Validation;
+﻿using KubeOps.Operator.Web.Webhooks.Admission.Validation;
 
 namespace KubeOps.Operator.Web.Test.TestApp;
 

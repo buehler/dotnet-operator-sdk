@@ -10,6 +10,18 @@ internal class ResultOutput(IAnsiConsole console, OutputFormat defaultFormat)
 {
     private readonly Dictionary<string, (object, OutputFormat)> _files = new();
 
+    public IEnumerable<string> Files => _files.Keys;
+
+    public IEnumerable<string> DefaultFormatFiles =>
+        _files
+            .Where(f => f.Value.Item2 == defaultFormat)
+            .Select(f => f.Key);
+
+    public object this[string filename]
+    {
+        get => _files[filename].Item1;
+    }
+
     public void Add(string filename, object content) => _files.Add(filename, (content, defaultFormat));
 
     public void Add(string filename, object content, OutputFormat format) => _files.Add(filename, (content, format));

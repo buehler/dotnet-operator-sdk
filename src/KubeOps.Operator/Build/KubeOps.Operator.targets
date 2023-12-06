@@ -3,12 +3,7 @@
         <PropertyGroup>
             <OperatorName Condition="'$(OperatorName)' == ''">$(AssemblyName.ToLowerInvariant())</OperatorName>
             <KubeOpsCli Condition="'$(KubeOpsCli)' == ''">dotnet kubeops</KubeOpsCli>
-            <KubeOpsGenRoot Condition="'$(KubeOpsGenRoot)' == ''">$(MSBuildProjectDirectory)\config</KubeOpsGenRoot>
-            <KubeOpsGenDockerOut Condition="'$(KubeOpsGenDockerOut)' == ''">$(MSBuildProjectDirectory)</KubeOpsGenDockerOut>
-            <KubeOpsGenCrdOut Condition="'$(KubeOpsGenCrdOut)' == ''">$(KubeOpsGenRoot)\crds</KubeOpsGenCrdOut>
-            <KubeOpsGenRbacOut Condition="'$(KubeOpsGenRbacOut)' == ''">$(KubeOpsGenRoot)\rbac</KubeOpsGenRbacOut>
-            <KubeOpsGenOperatorOut Condition="'$(KubeOpsGenOperatorOut)' == ''">$(KubeOpsGenRoot)\operator</KubeOpsGenOperatorOut>
-            <KubeOpsGenInstallerOut Condition="'$(KubeOpsGenInstallerOut)' == ''">$(KubeOpsGenRoot)</KubeOpsGenInstallerOut>
+            <KubeOpsConfigOut Condition="'$(KubeOpsConfigOut)' == ''">$(MSBuildProjectDirectory)\config</KubeOpsConfigOut>
         </PropertyGroup>
     </Target>
 
@@ -26,44 +21,10 @@
         <Message Text="Fetched intermediate assembly before compile timestamp: %(IntermediateAssembly.ModifiedTime)" />
     </Target>
 
-    <Target Name="GenerateCrds" DependsOnTargets="BaseConfig">
-        <Message Text="Generating CRDs" Importance="high" />
-        <Message Text="Configuration path: $(KubeOpsGenCrdOut)" Importance="normal" />
-        <Exec Command="$(KubeOpsCli) generate crds --out $(KubeOpsGenCrdOut) $(MSBuildProjectFullPath)" />
-    </Target>
-
-    <Target Name="GenerateRbac" DependsOnTargets="BaseConfig">
-        <Message Text="Generating RBAC roles" Importance="high" />
-        <Message Text="Configuration path: $(KubeOpsGenRbacOut)" Importance="normal" />
-        <Exec Command="$(KubeOpsCli) generate rbac --out $(KubeOpsGenRbacOut) $(MSBuildProjectFullPath)" />
-    </Target>
-
-    <Target Name="GenerateOperator" DependsOnTargets="BaseConfig">
-        <Message Text="Generating Operator resources" Importance="high" />
-        <Message Text="Configuration path: $(KubeOpsGenOperatorOut)" Importance="normal" />
-        <Exec Command="$(KubeOpsCli) generate operator --out $(KubeOpsGenOperatorOut)" />
-    </Target>
-
-    <Target Name="GenerateDockerfile" DependsOnTargets="BaseConfig">
-        <Message Text="Generating Dockerfile" Importance="high" />
-        <Message Text="Dockerfile path: $(KubeOpsGenDockerOut)\Dockerfile" Importance="normal" />
-
-        <Message Condition="Exists('$(KubeOpsGenDockerOut)\Dockerfile')"
-                 Text="Dockerfile already exists, do not overwrite in case of custom config."
-                 Importance="high" />
-        <Exec Condition="!Exists('$(KubeOpsGenDockerOut)\Dockerfile')"
-              Command="$(KubeOpsCli) generate docker --out $(KubeOpsGenDockerOut)" />
-    </Target>
-
-    <Target Name="GenerateInstaller" DependsOnTargets="BaseConfig">
-        <Message Text="Generating Operator Installer" Importance="high" />
-        <Message Text="Dockerfile path: $(KubeOpsGenInstallerOut)" Importance="normal" />
-
-        <Message Condition="Exists('$(KubeOpsGenInstallerOut)\kustomization.yaml')"
-                 Text="Installer already exists, do not overwrite in case of custom config."
-                 Importance="high" />
-        <Exec Condition="!Exists('$(KubeOpsGenInstallerOut)\kustomization.yaml')"
-              Command="$(KubeOpsCli) generate installer --out $(KubeOpsGenInstallerOut) $(OperatorName)" />
+    <Target Name="GenerateKustomizationConfig" DependsOnTargets="BaseConfig">
+        <Message Text="Generating Kustomization Configuration" Importance="high" />
+        <Message Text="Configuration path: $(KubeOpsConfigOut)" Importance="normal" />
+        <Exec Command="$(KubeOpsCli) generate operator --out $(KubeOpsConfigOut) $(OperatorName) $(MSBuildProjectFullPath)" />
     </Target>
 
     <Target Name="GenerateOperatorResources"
@@ -76,15 +37,8 @@
         </Exec>
         <Message Importance="high" Condition="$(CliInstalled) == 1"
                  Text="KubeOps CLI is not installed as tool, cannot generate stuff for projects. Please install it with 'dotnet tool install KubeOps.Cli' to use automatic build generation." />
-        <CallTarget ContinueOnError="true" Targets="GenerateCrds"
-                    Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipCrds)' == ''" />
-        <CallTarget ContinueOnError="true" Targets="GenerateRbac"
-                    Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipRbac)' == ''" />
-        <CallTarget ContinueOnError="true" Targets="GenerateOperator"
-                    Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipOperator)' == ''" />
-        <CallTarget ContinueOnError="true" Targets="GenerateDockerfile"
-                    Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipDocker)' == ''" />
-        <CallTarget ContinueOnError="true" Targets="GenerateInstaller"
-                    Condition="$(CliInstalled) == 0 And '$(KubeOpsSkipInstaller)' == ''" />
+        <CallTarget ContinueOnError="true"
+                    Targets="GenerateKustomizationConfig"
+                    Condition="$(CliInstalled) == 0" />
     </Target>
 </Project>

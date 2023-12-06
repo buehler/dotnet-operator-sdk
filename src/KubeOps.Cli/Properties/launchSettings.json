@@ -1,45 +1,20 @@
 ﻿{
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "CLI Generate RBAC": {
-      "commandName": "Project",
-      "workingDirectory": "$(ProjectDir)",
-      "commandLineArgs": "g rbac ../../examples/Operator/Operator.csproj"
-    },
-    "CLI Generate Cert": {
-      "commandName": "Project",
-      "workingDirectory": "$(ProjectDir)",
-      "commandLineArgs": "g cert test-operator"
-    },
-    "CLI Generate CRDs": {
-      "commandName": "Project",
-      "workingDirectory": "$(ProjectDir)",
-      "commandLineArgs": "g crds ../../examples/Operator/Operator.csproj"
-    },
-    "CLI Generate Webhook CRDs": {
-      "commandName": "Project",
-      "workingDirectory": "$(ProjectDir)",
-      "commandLineArgs": "g crds ../../examples/WebhookOperator/WebhookOperator.csproj"
-    },
     "CLI Generate Operator": {
       "commandName": "Project",
       "workingDirectory": "$(ProjectDir)",
-      "commandLineArgs": "g op"
+      "commandLineArgs": "g op kub-op ../../examples/Operator/Operator.csproj"
     },
     "CLI Generate Webhook Operator": {
       "commandName": "Project",
       "workingDirectory": "$(ProjectDir)",
-      "commandLineArgs": "g wh-op kub-wh-op ../../examples/WebhookOperator/WebhookOperator.csproj"
+      "commandLineArgs": "g op kub-wh-op ../../examples/WebhookOperator/WebhookOperator.csproj"
     },
-    "CLI Generate Docker": {
+    "CLI Generate Conversion Operator": {
       "commandName": "Project",
       "workingDirectory": "$(ProjectDir)",
-      "commandLineArgs": "g docker"
-    },
-    "CLI Generate Installer": {
-      "commandName": "Project",
-      "workingDirectory": "$(ProjectDir)",
-      "commandLineArgs": "g installer demo-operator"
+      "commandLineArgs": "g op kub-conv-op ../../examples/ConversionWebhookOperator/ConversionWebhookOperator.csproj"
     },
     "CLI Install": {
       "commandName": "Project",

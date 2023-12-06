@@ -29,4 +29,4 @@ jobs:
         uses: helm/kind-action@v1.8.0
 
       - name: Execute Tests
-        run: dotnet test --configuration Release
+        run: dotnet test --configuration ${{ runner.debug == '1' && 'Debug' || 'Release' }}

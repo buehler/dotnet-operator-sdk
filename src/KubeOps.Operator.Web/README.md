@@ -126,7 +126,98 @@ like "normal" `IActionResult` creation methods.
 
 ## Conversion Hooks
 
-TODO.
+> [!CAUTION]
+> Conversion webhooks are not stable yet. The API may change in the future without
+> a new major version. All code related to conversion webhooks are attributed
+> with the `RequiresPreviewFeatures` attribute.
+> To use the features, you need to enable the preview features in your project file
+> with the `<EnablePreviewFeatures>true</EnablePreviewFeatures>` property.
+
+A conversion webhook is a special kind of webhook that allows you to convert
+Kubernetes resources between versions. The webhooks are installed in CRDs
+and are called for all objects that need conversion (i.e. to achieve the stored
+version state).
+
+A conversion webhook is separated to the webhook itself (the MVC controller
+that registers its route within ASP.NET) and the conversion logic.
+
+The following example has two versions of the "TestEntity" (v1 and v2) and
+implements a conversion webhook to convert from v1 to v2 and vice versa.
+
+```csharp
+// The Kubernetes resources
+[KubernetesEntity(Group = "webhook.dev", ApiVersion = "v1", Kind = "TestEntity")]
+public partial class V1TestEntity : CustomKubernetesEntity<V1TestEntity.EntitySpec>
+{
+    public override string ToString() => $"Test Entity v1 ({Metadata.Name}): {Spec.Name}";
+
+    public class EntitySpec
+    {
+        public string Name { get; set; } = string.Empty;
+    }
+}
+
+[KubernetesEntity(Group = "webhook.dev", ApiVersion = "v2", Kind = "TestEntity")]
+public partial class V2TestEntity : CustomKubernetesEntity<V2TestEntity.EntitySpec>
+{
+    public override string ToString() => $"Test Entity v2 ({Metadata.Name}): {Spec.Firstname} {Spec.Lastname}";
+
+    public class EntitySpec
+    {
+        public string Firstname { get; set; } = string.Empty;
+
+        public string Lastname { get; set; } = string.Empty;
+    }
+}
+```
+
+The v1 of the resource has first and lastname in the same field, while the v2
+has them separated.
+
+```csharp
+public class V1ToV2 : IEntityConverter<V1TestEntity, V2TestEntity>
+{
+    public V2TestEntity Convert(V1TestEntity from)
+    {
+        var nameSplit = from.Spec.Name.Split(' ');
+        var result = new V2TestEntity { Metadata = from.Metadata };
+        result.Spec.Firstname = nameSplit[0];
+        result.Spec.Lastname = string.Join(' ', nameSplit[1..]);
+        return result;
+    }
+
+    public V1TestEntity Revert(V2TestEntity to)
+    {
+        var result = new V1TestEntity { Metadata = to.Metadata };
+        result.Spec.Name = $"{to.Spec.Firstname} {to.Spec.Lastname}";
+        return result;
+    }
+}
+```
+
+The conversion logic is implemented in the `IEntityConverter` interface.
+Each converter has a "convert" (from -> to) and a "revert" (to -> from) method.
+
+```csharp
+[ConversionWebhook(typeof(V2TestEntity))]
+public class TestConversionWebhook : ConversionWebhook<V2TestEntity>
+{
+    protected override IEnumerable<IEntityConverter<V2TestEntity>> Converters => new IEntityConverter<V2TestEntity>[]
+    {
+        new V1ToV2(), // other versions...
+    };
+}
+```
+
+The webhook the registers the list of possible converters and
+calls the converter upon request.
+
+> [!NOTE]
+> There needs to be a conversion between ALL versions to the
+> stored version (newest version). If there is no conversion,
+> the webhook will fail and the resource is not stored.
+> So if there exist a v1, v2, and v3, there needs to be a
+> converter for v1 -> v3 and v2 -> v3 (when v3 is the stored version).
 
 ## Installing In The Cluster
 
