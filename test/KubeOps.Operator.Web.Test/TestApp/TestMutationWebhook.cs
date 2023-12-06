@@ -1,4 +1,4 @@
-﻿using KubeOps.Operator.Web.Webhooks.Mutation;
+﻿using KubeOps.Operator.Web.Webhooks.Admission.Mutation;
 
 namespace KubeOps.Operator.Web.Test.TestApp;
 

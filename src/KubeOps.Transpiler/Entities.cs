@@ -24,26 +24,26 @@ public static class Entities
         Type entityType)
         => (context.GetContextType(entityType).GetCustomAttributeData<KubernetesEntityAttribute>(),
                 context.GetContextType(entityType).GetCustomAttributeData<EntityScopeAttribute>()) switch
-        {
-            (null, _) => throw new ArgumentException("The given type is not a valid Kubernetes entity."),
-            ({ } attr, var scope) => (new(
-                    Defaulted(
-                        attr.GetCustomAttributeNamedArg<string>(context, nameof(KubernetesEntityAttribute.Kind)),
-                        entityType.Name),
-                    Defaulted(
-                        attr.GetCustomAttributeNamedArg<string>(
-                            context,
-                            nameof(KubernetesEntityAttribute.ApiVersion)),
-                        "v1"),
-                    attr.GetCustomAttributeNamedArg<string>(context, nameof(KubernetesEntityAttribute.Group)),
-                    attr.GetCustomAttributeNamedArg<string>(context, nameof(KubernetesEntityAttribute.PluralName))),
-                scope switch
-                {
-                    null => Enum.GetName(EntityScope.Namespaced) ?? "Namespaced",
-                    _ => Enum.GetName(
-                        scope.GetCustomAttributeCtorArg<EntityScope>(context, 0)) ?? "Namespaced",
-                }),
-        };
+            {
+                (null, _) => throw new ArgumentException("The given type is not a valid Kubernetes entity."),
+                ({ } attr, var scope) => (new(
+                        Defaulted(
+                            attr.GetCustomAttributeNamedArg<string>(context, nameof(KubernetesEntityAttribute.Kind)),
+                            entityType.Name),
+                        Defaulted(
+                            attr.GetCustomAttributeNamedArg<string>(
+                                context,
+                                nameof(KubernetesEntityAttribute.ApiVersion)),
+                            "v1"),
+                        attr.GetCustomAttributeNamedArg<string>(context, nameof(KubernetesEntityAttribute.Group)),
+                        attr.GetCustomAttributeNamedArg<string>(context, nameof(KubernetesEntityAttribute.PluralName))),
+                    scope switch
+                    {
+                        null => Enum.GetName(EntityScope.Namespaced) ?? "Namespaced",
+                        _ => Enum.GetName(
+                            scope.GetCustomAttributeCtorArg<EntityScope>(context, 0)) ?? "Namespaced",
+                    }),
+            };
 
     /// <summary>
     /// Create a metadata / scope tuple out of a given entity type via reflection in the same loaded assembly.
@@ -54,24 +54,52 @@ public static class Entities
     public static (EntityMetadata Metadata, string Scope) ToEntityMetadata(Type entityType)
         => (entityType.GetCustomAttributeData<KubernetesEntityAttribute>(),
                 entityType.GetCustomAttributeData<EntityScopeAttribute>()) switch
-        {
-            (null, _) => throw new ArgumentException("The given type is not a valid Kubernetes entity."),
-            ({ } attr, var scope) => (new(
-                    Defaulted(
-                        attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.Kind)),
-                        entityType.Name),
-                    Defaulted(
-                        attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.ApiVersion)),
-                        "v1"),
-                    attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.Group)),
-                    attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.PluralName))),
-                scope switch
-                {
-                    null => Enum.GetName(EntityScope.Namespaced) ?? "Namespaced",
-                    _ => Enum.GetName(
-                        scope.GetCustomAttributeCtorArg<EntityScope>(0)) ?? "Namespaced",
-                }),
-        };
+            {
+                (null, _) => throw new ArgumentException("The given type is not a valid Kubernetes entity."),
+                ({ } attr, var scope) => (new(
+                        Defaulted(
+                            attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.Kind)),
+                            entityType.Name),
+                        Defaulted(
+                            attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.ApiVersion)),
+                            "v1"),
+                        attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.Group)),
+                        attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.PluralName))),
+                    scope switch
+                    {
+                        null => Enum.GetName(EntityScope.Namespaced) ?? "Namespaced",
+                        _ => Enum.GetName(
+                            scope.GetCustomAttributeCtorArg<EntityScope>(0)) ?? "Namespaced",
+                    }),
+            };
+
+    /// <summary>
+    /// Create a metadata / scope tuple out of a given entity type via reflection in the same loaded assembly.
+    /// </summary>
+    /// <typeparam name="TEntity">The type to convert.</typeparam>
+    /// <returns>A tuple that contains <see cref="EntityMetadata"/> and a scope.</returns>
+    /// <exception cref="ArgumentException">Thrown when the type contains no <see cref="KubernetesEntityAttribute"/>.</exception>
+    public static (EntityMetadata Metadata, string Scope) ToEntityMetadata<TEntity>()
+        => (typeof(TEntity).GetCustomAttributeData<KubernetesEntityAttribute>(),
+                typeof(TEntity).GetCustomAttributeData<EntityScopeAttribute>()) switch
+            {
+                (null, _) => throw new ArgumentException("The given type is not a valid Kubernetes entity."),
+                ({ } attr, var scope) => (new(
+                        Defaulted(
+                            attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.Kind)),
+                            typeof(TEntity).Name),
+                        Defaulted(
+                            attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.ApiVersion)),
+                            "v1"),
+                        attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.Group)),
+                        attr.GetCustomAttributeNamedArg<string>(nameof(KubernetesEntityAttribute.PluralName))),
+                    scope switch
+                    {
+                        null => Enum.GetName(EntityScope.Namespaced) ?? "Namespaced",
+                        _ => Enum.GetName(
+                            scope.GetCustomAttributeCtorArg<EntityScope>(0)) ?? "Namespaced",
+                    }),
+            };
 
     private static string Defaulted(string? value, string defaultValue) =>
         string.IsNullOrWhiteSpace(value) ? defaultValue : value;

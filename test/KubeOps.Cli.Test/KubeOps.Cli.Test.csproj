@@ -1,4 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\src\KubeOps.Cli\KubeOps.Cli.csproj" />
     </ItemGroup>

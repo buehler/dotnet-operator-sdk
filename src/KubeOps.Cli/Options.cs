@@ -36,8 +36,8 @@ internal static class Options
         () => false,
         description: "Do not bother the user with questions and just do it.");
 
-    public static readonly Option<bool> IsWebhookOperator = new(
-        new[] { "--webhooks" },
+    public static readonly Option<bool> ClearOutputPath = new(
+        new[] { "--clear-out" },
         () => false,
-        description: "Whether the operator contains webhooks (changes some resources).");
+        description: "Clear the output path before generating resources.");
 }
