@@ -11,7 +11,7 @@ internal static class JsonDiffer
 {
     public static string Base64Diff(this JsonNode from, object? to)
     {
-        JsonPatchDeltaFormatter formatter = new();
+        var formatter = new JsonPatchDeltaFormatter();
 
         var toToken = GetNode(to);
         var patch = from.Diff(toToken, formatter)!;
