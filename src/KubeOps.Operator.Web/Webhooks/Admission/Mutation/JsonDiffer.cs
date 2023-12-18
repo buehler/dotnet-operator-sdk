@@ -9,12 +9,12 @@ namespace KubeOps.Operator.Web.Webhooks.Admission.Mutation;
 
 internal static class JsonDiffer
 {
-    private static readonly JsonPatchDeltaFormatter Formatter = new();
-
     public static string Base64Diff(this JsonNode from, object? to)
     {
+        JsonPatchDeltaFormatter formatter = new();
+
         var toToken = GetNode(to);
-        var patch = from.Diff(toToken, Formatter)!;
+        var patch = from.Diff(toToken, formatter)!;
 
         return Convert.ToBase64String(Encoding.UTF8.GetBytes(patch.ToString()));
     }
