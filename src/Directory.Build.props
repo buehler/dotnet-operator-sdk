@@ -41,7 +41,7 @@
             Condition="$(MSBuildProjectExtension) == '.csproj'" />
         <PackageReference
             Include="SonarAnalyzer.CSharp"
-            Version="9.15.0.81779"
+            Version="9.16.0.82469"
             PrivateAssets="all"
             Condition="$(MSBuildProjectExtension) == '.csproj'" />
         <PackageReference Include="Roslynator.Analyzers" Version="4.7.0" PrivateAssets="All" />
