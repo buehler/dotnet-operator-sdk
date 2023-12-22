@@ -3,6 +3,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+.idea
 
 # Ci things
 node_modules/
