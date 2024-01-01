@@ -306,7 +306,7 @@ public static class Crds
                 .First(i => i.IsGenericType
                          && i.GetGenericTypeDefinition().FullName == typeof(IDictionary<,>).FullName);
 
-            var addlProps = context.Map(dictionaryImpl.GenericTypeArguments[1]); 
+            var addlProps = context.Map(dictionaryImpl.GenericTypeArguments[1]);
             return new V1JSONSchemaProps
             {
                 Type = Object,
