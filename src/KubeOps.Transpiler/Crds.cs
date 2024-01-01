@@ -302,10 +302,15 @@ public static class Crds
 
         if (interfaceNames.Contains(typeof(IDictionary<,>).FullName))
         {
+            var dictionaryImpl = interfaces
+                .First(i => i.IsGenericType
+                         && i.GetGenericTypeDefinition().FullName == typeof(IDictionary<,>).FullName);
+
+            var addlProps = context.Map(dictionaryImpl.GenericTypeArguments[1]); 
             return new V1JSONSchemaProps
             {
                 Type = Object,
-                AdditionalProperties = new object() { },
+                AdditionalProperties = addlProps,
                 Nullable = false,
             };
         }
@@ -315,7 +320,6 @@ public static class Crds
             return new V1JSONSchemaProps
             {
                 Type = Object,
-                AdditionalProperties = new object() { },
                 XKubernetesPreserveUnknownFields = true,
                 Nullable = false,
             };
@@ -400,8 +404,8 @@ public static class Crds
         Type listType = enumerableType.GenericTypeArguments[0];
         if (listType.IsGenericType && listType.GetGenericTypeDefinition().FullName == typeof(KeyValuePair<,>).FullName)
         {
-            // XKubernetesPreserveUnknownFields = true ??
-            return new V1JSONSchemaProps { Type = Object, AdditionalProperties = new object() { }, Nullable = false };
+            var addlProps = context.Map(listType.GenericTypeArguments[1]);
+            return new V1JSONSchemaProps { Type = Object, AdditionalProperties = addlProps, Nullable = false };
         }
 
         var items = context.Map(listType);

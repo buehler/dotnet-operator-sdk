@@ -73,6 +73,16 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
         prop.Nullable.Should().Be(isNullable);
     }
 
+    [Theory]
+    [InlineData(typeof(DictionaryEntity), "string", false)]
+    [InlineData(typeof(EnumerableKeyPairsEntity), "string", false)]
+    public void Should_Set_Correct_Dictionary_Additional_Properties_Type(Type type, string expectedType, bool isNullable) {
+        var crd = _mlc.Transpile(type);
+        var prop = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"].AdditionalProperties as V1JSONSchemaProps;
+        prop!.Type.Should().Be(expectedType);
+        prop.Nullable.Should().Be(isNullable);
+    }
+
     [Fact]
     public void Should_Ignore_Entity()
     {

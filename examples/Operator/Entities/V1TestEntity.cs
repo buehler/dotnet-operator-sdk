@@ -14,5 +14,6 @@ public partial class V1TestEntity : CustomKubernetesEntity<V1TestEntity.EntitySp
         public string Username { get; set; } = string.Empty;
 
         public string Email { get; set; } = string.Empty;
+        public V1JobSpec? Test { get; set; }
     }
 }
