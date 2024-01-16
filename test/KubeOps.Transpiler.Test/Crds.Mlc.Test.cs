@@ -76,7 +76,8 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     [Theory]
     [InlineData(typeof(DictionaryEntity), "string", false)]
     [InlineData(typeof(EnumerableKeyPairsEntity), "string", false)]
-    public void Should_Set_Correct_Dictionary_Additional_Properties_Type(Type type, string expectedType, bool isNullable) {
+    public void Should_Set_Correct_Dictionary_Additional_Properties_Type(Type type, string expectedType, bool isNullable)
+    {
         var crd = _mlc.Transpile(type);
         var prop = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"].AdditionalProperties as V1JSONSchemaProps;
         prop!.Type.Should().Be(expectedType);
