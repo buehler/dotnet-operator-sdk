@@ -22,12 +22,16 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     [InlineData(typeof(NullableLongTestEntity), "integer", "int64", true)]
     [InlineData(typeof(FloatTestEntity), "number", "float", false)]
     [InlineData(typeof(NullableFloatTestEntity), "number", "float", true)]
+    [InlineData(typeof(DecimalTestEntity), "number", "decimal", false)]
+    [InlineData(typeof(NullableDecimalTestEntity), "number", "decimal", true)]
     [InlineData(typeof(DoubleTestEntity), "number", "double", false)]
     [InlineData(typeof(NullableDoubleTestEntity), "number", "double", true)]
     [InlineData(typeof(BoolTestEntity), "boolean", null, false)]
     [InlineData(typeof(NullableBoolTestEntity), "boolean", null, true)]
     [InlineData(typeof(DateTimeTestEntity), "string", "date-time", false)]
     [InlineData(typeof(NullableDateTimeTestEntity), "string", "date-time", true)]
+    [InlineData(typeof(DateTimeOffsetTestEntity), "string", "date-time", false)]
+    [InlineData(typeof(NullableDateTimeOffsetTestEntity), "string", "date-time", true)]
     [InlineData(typeof(V1ObjectMetaTestEntity), "object", null, false)]
     [InlineData(typeof(StringArrayEntity), "array", null, false)]
     [InlineData(typeof(NullableStringArrayEntity), "array", null, true)]
@@ -65,6 +69,16 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     {
         var crd = _mlc.Transpile(type);
         var prop = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"].Items as V1JSONSchemaProps;
+        prop!.Type.Should().Be(expectedType);
+        prop.Nullable.Should().Be(isNullable);
+    }
+
+    [Theory]
+    [InlineData(typeof(DictionaryEntity), "string", false)]
+    [InlineData(typeof(EnumerableKeyPairsEntity), "string", false)]
+    public void Should_Set_Correct_Dictionary_Additional_Properties_Type(Type type, string expectedType, bool isNullable) {
+        var crd = _mlc.Transpile(type);
+        var prop = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"].AdditionalProperties as V1JSONSchemaProps;
         prop!.Type.Should().Be(expectedType);
         prop.Nullable.Should().Be(isNullable);
     }
@@ -509,6 +523,18 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     }
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class DecimalTestEntity : CustomKubernetesEntity
+    {
+        public decimal Property { get; set; }
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class NullableDecimalTestEntity : CustomKubernetesEntity
+    {
+        public decimal? Property { get; set; }
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     private class DoubleTestEntity : CustomKubernetesEntity
     {
         public double Property { get; set; }
@@ -542,6 +568,18 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     private class NullableDateTimeTestEntity : CustomKubernetesEntity
     {
         public DateTime? Property { get; set; }
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class DateTimeOffsetTestEntity : CustomKubernetesEntity
+    {
+        public DateTimeOffset Property { get; set; }
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class NullableDateTimeOffsetTestEntity : CustomKubernetesEntity
+    {
+        public DateTimeOffset? Property { get; set; }
     }
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
