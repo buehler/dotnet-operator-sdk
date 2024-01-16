@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -22,6 +23,10 @@ namespace KubeOps.Cli.Transpilation;
 /// <summary>
 /// AssemblyLoader.
 /// </summary>
+[SuppressMessage(
+    "Usage",
+    "CA2252:This API requires opting into preview features",
+    Justification = "It is the CLI that uses the libraries.")]
 internal static partial class AssemblyLoader
 {
     static AssemblyLoader()
@@ -192,6 +197,10 @@ internal static partial class AssemblyLoader
         .Distinct()
         .Select(t => context.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata);
 
+#if NET7_0_OR_GREATER
     [GeneratedRegex(".*")]
     private static partial Regex DefaultRegex();
+#else
+    private static Regex DefaultRegex() => new(".*");
+#endif
 }
