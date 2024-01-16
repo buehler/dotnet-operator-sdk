@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -79,7 +78,7 @@ public static class Crds
                 type.GetCustomAttributeData<DescriptionAttribute>()?.GetCustomAttributeCtorArg<string>(context, 0),
             Properties = type.GetProperties()
                 .Where(p => !IgnoredToplevelProperties.Contains(p.Name.ToLowerInvariant())
-                         && p.GetCustomAttributeData<IgnoreAttribute>() == null)
+                            && p.GetCustomAttributeData<IgnoreAttribute>() == null)
                 .Select(p => (Name: p.GetPropertyName(context), Schema: context.Map(p)))
                 .ToDictionary(t => t.Name, t => t.Schema),
         });
@@ -107,8 +106,8 @@ public static class Crds
         => types
             .Select(context.GetContextType)
             .Where(type => type.Assembly != context.GetContextType<KubernetesEntityAttribute>().Assembly
-                        && type.GetCustomAttributesData<KubernetesEntityAttribute>().Any()
-                        && !type.GetCustomAttributesData<IgnoreAttribute>().Any())
+                           && type.GetCustomAttributesData<KubernetesEntityAttribute>().Any()
+                           && !type.GetCustomAttributesData<IgnoreAttribute>().Any())
             .Select(type => (Props: context.Transpile(type),
                 IsStorage: type.GetCustomAttributesData<StorageVersionAttribute>().Any()))
             .GroupBy(grp => grp.Props.Metadata.Name)
@@ -291,38 +290,33 @@ public static class Crds
             return props;
         }
 
-        var interfaces = type.IsInterface
+        var interfaces = (type.IsInterface
             ? type.GetInterfaces().Append(type)
-            : type.GetInterfaces();
+            : type.GetInterfaces()).ToList();
 
         var interfaceNames = interfaces.Select(i =>
             i.IsGenericType
                 ? i.GetGenericTypeDefinition().FullName
-                : i.FullName);
+                : i.FullName).ToList();
 
         if (interfaceNames.Contains(typeof(IDictionary<,>).FullName))
         {
             var dictionaryImpl = interfaces
                 .First(i => i.IsGenericType
-                         && i.GetGenericTypeDefinition().FullName == typeof(IDictionary<,>).FullName);
+                            && i.GetGenericTypeDefinition().FullName == typeof(IDictionary<,>).FullName);
 
-            var addlProps = context.Map(dictionaryImpl.GenericTypeArguments[1]);
+            var additionalProperties = context.Map(dictionaryImpl.GenericTypeArguments[1]);
             return new V1JSONSchemaProps
             {
                 Type = Object,
-                AdditionalProperties = addlProps,
+                AdditionalProperties = additionalProperties,
                 Nullable = false,
             };
         }
 
         if (interfaceNames.Contains(typeof(IDictionary).FullName))
         {
-            return new V1JSONSchemaProps
-            {
-                Type = Object,
-                XKubernetesPreserveUnknownFields = true,
-                Nullable = false,
-            };
+            return new V1JSONSchemaProps { Type = Object, XKubernetesPreserveUnknownFields = true, Nullable = false, };
         }
 
         if (interfaceNames.Contains(typeof(IEnumerable<>).FullName))
@@ -330,17 +324,16 @@ public static class Crds
             return context.MapEnumerationType(type, interfaces);
         }
 
-        switch (type.BaseType?.FullName)
+        return type.BaseType?.FullName switch
         {
-            case "System.Object":
-                return context.MapObjectType(type);
-            case "System.ValueType":
-                return context.MapValueType(type);
-            case "System.Enum":
-                return new V1JSONSchemaProps { Type = String, EnumProperty = Enum.GetNames(type).Cast<object>().ToList() };
-            default:
-                throw InvalidType(type);
-        }
+            "System.Object" => context.MapObjectType(type),
+            "System.ValueType" => context.MapValueType(type),
+            "System.Enum" => new V1JSONSchemaProps
+            {
+                Type = String, EnumProperty = Enum.GetNames(type).Cast<object>().ToList(),
+            },
+            _ => throw InvalidType(type),
+        };
     }
 
     private static V1JSONSchemaProps MapObjectType(this MetadataLoadContext context, Type type)
@@ -367,34 +360,38 @@ public static class Crds
                 }
 
                 return new V1JSONSchemaProps
-                    {
-                        Type = Object,
-                        Description =
-                            type.GetCustomAttributeData<DescriptionAttribute>()?.GetCustomAttributeCtorArg<string>(context, 0),
-                        Properties = type
-                            .GetProperties()
-                            .Where(p => p.GetCustomAttributeData<IgnoreAttribute>() == null)
-                            .Select(p => (Name: p.GetPropertyName(context), Schema: context.Map(p)))
-                            .ToDictionary(t => t.Name, t => t.Schema),
-                        Required = type.GetProperties()
-                                .Where(p => p.GetCustomAttributeData<RequiredAttribute>() != null
+                {
+                    Type = Object,
+                    Description =
+                        type.GetCustomAttributeData<DescriptionAttribute>()
+                            ?.GetCustomAttributeCtorArg<string>(context, 0),
+                    Properties = type
+                        .GetProperties()
+                        .Where(p => p.GetCustomAttributeData<IgnoreAttribute>() == null)
+                        .Select(p => (Name: p.GetPropertyName(context), Schema: context.Map(p)))
+                        .ToDictionary(t => t.Name, t => t.Schema),
+                    Required = type.GetProperties()
+                            .Where(p => p.GetCustomAttributeData<RequiredAttribute>() != null
                                         && p.GetCustomAttributeData<IgnoreAttribute>() == null)
-                                .Select(p => p.GetPropertyName(context))
-                                .ToList() switch
-                        {
-                            { Count: > 0 } p => p,
-                            _ => null,
-                        },
-                    };
+                            .Select(p => p.GetPropertyName(context))
+                            .ToList() switch
+                    {
+                        { Count: > 0 } p => p,
+                        _ => null,
+                    },
+                };
         }
     }
 
-    private static V1JSONSchemaProps MapEnumerationType(this MetadataLoadContext context, Type type, IEnumerable<Type> interfaces)
+    private static V1JSONSchemaProps MapEnumerationType(
+        this MetadataLoadContext context,
+        Type type,
+        IEnumerable<Type> interfaces)
     {
         Type? enumerableType = interfaces
             .FirstOrDefault(i => i.IsGenericType
-                     && i.GetGenericTypeDefinition().FullName == typeof(IEnumerable<>).FullName
-                     && i.GenericTypeArguments.Length == 1);
+                                 && i.GetGenericTypeDefinition().FullName == typeof(IEnumerable<>).FullName
+                                 && i.GenericTypeArguments.Length == 1);
 
         if (enumerableType == null)
         {
@@ -404,40 +401,33 @@ public static class Crds
         Type listType = enumerableType.GenericTypeArguments[0];
         if (listType.IsGenericType && listType.GetGenericTypeDefinition().FullName == typeof(KeyValuePair<,>).FullName)
         {
-            var addlProps = context.Map(listType.GenericTypeArguments[1]);
-            return new V1JSONSchemaProps { Type = Object, AdditionalProperties = addlProps, Nullable = false };
+            var additionalProperties = context.Map(listType.GenericTypeArguments[1]);
+            return new V1JSONSchemaProps
+            {
+                Type = Object,
+                AdditionalProperties = additionalProperties,
+                Nullable = false,
+            };
         }
 
         var items = context.Map(listType);
         return new V1JSONSchemaProps { Type = Array, Items = items, Nullable = false };
     }
 
-    private static V1JSONSchemaProps MapValueType(this MetadataLoadContext context, Type type)
-    {
-        switch (type.FullName)
+    private static V1JSONSchemaProps MapValueType(this MetadataLoadContext _, Type type) =>
+        type.FullName switch
         {
-            case "System.Int32":
-                return new V1JSONSchemaProps { Type = Integer, Format = Int32, Nullable = false };
-            case "System.Int64":
-                return new V1JSONSchemaProps { Type = Integer, Format = Int64, Nullable = false };
-            case "System.Single":
-                return new V1JSONSchemaProps { Type = Number, Format = Float, Nullable = false };
-            case "System.Double":
-                return new V1JSONSchemaProps { Type = Number, Format = Double, Nullable = false };
-            case "System.Decimal":
-                return new V1JSONSchemaProps { Type = Number, Format = Decimal, Nullable = false };
-            case "System.Boolean":
-                return new V1JSONSchemaProps { Type = Boolean, Nullable = false };
-            case "System.DateTime":
-            case "System.DateTimeOffset":
-                return new V1JSONSchemaProps { Type = String, Format = DateTime, Nullable = false };
-            default:
-                throw InvalidType(type);
-        }
-    }
+            "System.Int32" => new V1JSONSchemaProps { Type = Integer, Format = Int32, Nullable = false },
+            "System.Int64" => new V1JSONSchemaProps { Type = Integer, Format = Int64, Nullable = false },
+            "System.Single" => new V1JSONSchemaProps { Type = Number, Format = Float, Nullable = false },
+            "System.Double" => new V1JSONSchemaProps { Type = Number, Format = Double, Nullable = false },
+            "System.Decimal" => new V1JSONSchemaProps { Type = Number, Format = Decimal, Nullable = false },
+            "System.Boolean" => new V1JSONSchemaProps { Type = Boolean, Nullable = false },
+            "System.DateTime" => new V1JSONSchemaProps { Type = String, Format = DateTime, Nullable = false },
+            "System.DateTimeOffset" => new V1JSONSchemaProps { Type = String, Format = DateTime, Nullable = false },
+            _ => throw InvalidType(type),
+        };
 
-    private static ArgumentException InvalidType(Type type)
-    {
-        return new ArgumentException($"The given type {type.FullName} is not a valid Kubernetes entity.");
-    }
+    private static ArgumentException InvalidType(Type type) =>
+        new($"The given type {type.FullName} is not a valid Kubernetes entity.");
 }

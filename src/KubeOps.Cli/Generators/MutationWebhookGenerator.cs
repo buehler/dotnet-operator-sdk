@@ -43,7 +43,8 @@ internal class MutationWebhookGenerator
                     CaBundle = caBundle,
                     Service = new Admissionregistrationv1ServiceReference
                     {
-                        Name = "operator", Path = hook.WebhookPath,
+                        Name = "operator",
+                        Path = hook.WebhookPath,
                     },
                 },
             });
