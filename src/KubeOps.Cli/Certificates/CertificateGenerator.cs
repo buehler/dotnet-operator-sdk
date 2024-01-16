@@ -107,12 +107,11 @@ internal static class CertificateGenerator
         certificateGenerator.AddExtension(
             X509Extensions.SubjectAlternativeName,
             false,
-            new GeneralNames(new[]
-            {
+            new GeneralNames([
                 new GeneralName(GeneralName.DnsName, $"{serverName}.{serverNamespace}.svc"),
                 new GeneralName(GeneralName.DnsName, $"*.{serverNamespace}.svc"),
                 new GeneralName(GeneralName.DnsName, "*.svc"),
-            }));
+            ]));
 
         // Subject Public Key
         const int keyStrength = 256;

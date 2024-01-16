@@ -17,7 +17,7 @@ internal static class Options
         "The path the command will write the files to. If omitted, prints output to console.");
 
     public static readonly Option<string?> TargetFramework = new(
-        new[] { "--target-framework", "--tfm" },
+        ["--target-framework", "--tfm"],
         description: "Target framework of projects in the solution to search for entities. " +
                      "If omitted, the newest framework is used.");
 
@@ -32,12 +32,12 @@ internal static class Options
                      "If omitted, all projects are searched.");
 
     public static readonly Option<bool> Force = new(
-        new[] { "--force", "-f" },
+        ["--force", "-f"],
         () => false,
         description: "Do not bother the user with questions and just do it.");
 
     public static readonly Option<bool> ClearOutputPath = new(
-        new[] { "--clear-out" },
+        ["--clear-out"],
         () => false,
         description: "Clear the output path before generating resources.");
 }
