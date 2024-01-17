@@ -3,11 +3,7 @@ name: .NET Testing
 on:
   pull_request:
     branches:
-      - '**'
-
-concurrency:
-  group: testing-${{ github.ref }}
-  cancel-in-progress: true
+      - "**"
 
 concurrency:
   group: testing-${{ github.ref }}
