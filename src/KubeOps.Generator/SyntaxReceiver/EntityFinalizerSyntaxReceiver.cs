@@ -5,7 +5,7 @@ namespace KubeOps.Generator.SyntaxReceiver;
 
 internal class EntityFinalizerSyntaxReceiver : ISyntaxContextReceiver
 {
-    public List<(ClassDeclarationSyntax Finalizer, string EntityName)> Finalizer { get; } = new();
+    public List<(ClassDeclarationSyntax Finalizer, string EntityName)> Finalizer { get; } = [];
 
     public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
     {
