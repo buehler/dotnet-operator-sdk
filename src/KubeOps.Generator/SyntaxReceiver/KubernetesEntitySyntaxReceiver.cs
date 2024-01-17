@@ -11,7 +11,7 @@ internal class KubernetesEntitySyntaxReceiver : ISyntaxContextReceiver
     private const string VersionName = "ApiVersion";
     private const string DefaultVersion = "v1";
 
-    public List<AttributedEntity> Entities { get; } = new();
+    public List<AttributedEntity> Entities { get; } = [];
 
     public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
     {

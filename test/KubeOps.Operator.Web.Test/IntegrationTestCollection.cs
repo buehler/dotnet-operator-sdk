@@ -30,7 +30,7 @@ public abstract class IntegrationTestBase;
 
 public sealed class CrdInstaller : IAsyncLifetime
 {
-    private List<V1CustomResourceDefinition> _crds = new();
+    private List<V1CustomResourceDefinition> _crds = [];
 
     public async Task InitializeAsync()
     {

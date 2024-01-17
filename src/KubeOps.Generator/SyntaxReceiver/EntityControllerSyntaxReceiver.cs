@@ -5,7 +5,7 @@ namespace KubeOps.Generator.SyntaxReceiver;
 
 internal class EntityControllerSyntaxReceiver : ISyntaxContextReceiver
 {
-    public List<(ClassDeclarationSyntax Controller, string EntityName)> Controllers { get; } = new();
+    public List<(ClassDeclarationSyntax Controller, string EntityName)> Controllers { get; } = [];
 
     public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
     {

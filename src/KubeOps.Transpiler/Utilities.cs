@@ -92,7 +92,7 @@ public static class Utilities
         attr.NamedArguments.FirstOrDefault(a => a.MemberName == name).TypedValue.Value is
             ReadOnlyCollection<CustomAttributeTypedArgument> value
             ? value.Select(v => (T)v.Value!).ToList()
-            : new List<T>();
+            : [];
 
     /// <summary>
     /// Load a specific constructor argument from a custom attribute.
@@ -145,7 +145,7 @@ public static class Utilities
         attr.ConstructorArguments[index].Value is
             ReadOnlyCollection<CustomAttributeTypedArgument> value
             ? value.Select(v => (T)v.Value!).ToList()
-            : new List<T>();
+            : [];
 
     /// <summary>
     /// Load a type from a metadata load context.

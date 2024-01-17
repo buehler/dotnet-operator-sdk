@@ -75,6 +75,14 @@ public class RbacMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
         roles.Should().HaveCount(2);
     }
 
+    [Fact]
+    public void Should_Not_Mix_ApiGroups()
+    {
+        var roles = _mlc
+            .Transpile(_mlc.GetContextType<RbacTest5>().GetCustomAttributesData<EntityRbacAttribute>()).ToList();
+        roles.Should().HaveCount(5);
+    }
+
     [KubernetesEntity(Group = "test", ApiVersion = "v1")]
     [EntityRbac(typeof(RbacTest1), Verbs = RbacVerb.Get)]
     [EntityRbac(typeof(RbacTest1), Verbs = RbacVerb.Update)]
@@ -102,7 +110,13 @@ public class RbacMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     public class RbacTest4 : CustomKubernetesEntity;
 
     [KubernetesEntity(Group = "test", ApiVersion = "v1")]
-    [GenericRbac(Urls = new[] { "url", "foobar" }, Resources = new[] { "configmaps" }, Groups = new[] { "group" },
+    [EntityRbac(typeof(V1Deployment), Verbs = RbacVerb.All)]
+    [EntityRbac(typeof(V1Service), Verbs = RbacVerb.All)]
+    [EntityRbac(typeof(V1Lease), Verbs = RbacVerb.All)]
+    public class RbacTest5 : CustomKubernetesEntity;
+
+    [KubernetesEntity(Group = "test", ApiVersion = "v1")]
+    [GenericRbac(Urls = ["url", "foobar"], Resources = ["configmaps"], Groups = ["group"],
         Verbs = RbacVerb.Delete | RbacVerb.Get)]
     public class GenericRbacTest : CustomKubernetesEntity;
 }

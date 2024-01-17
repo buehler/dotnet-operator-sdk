@@ -31,7 +31,7 @@ public static class Crds
     private const string Decimal = "decimal";
     private const string DateTime = "date-time";
 
-    private static readonly string[] IgnoredToplevelProperties = { "metadata", "apiversion", "kind" };
+    private static readonly string[] IgnoredToplevelProperties = ["metadata", "apiversion", "kind"];
 
     /// <summary>
     /// Transpile a single type to a CRD.
