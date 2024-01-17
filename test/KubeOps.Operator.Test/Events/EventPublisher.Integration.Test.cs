@@ -25,14 +25,15 @@ public class EventPublisherIntegrationTest : IntegrationTestBase
     [Fact]
     public async Task Should_Create_New_Event()
     {
-        var eventName = $"single-entity.{_ns.Namespace}.REASON.message.Normal";
+        var entity =
+            await _client.CreateAsync(new V1OperatorIntegrationTestEntity("single-entity", "username", _ns.Namespace));
+        await _mock.WaitForInvocations;
+
+        var eventName = $"{entity.Uid()}.single-entity.{_ns.Namespace}.REASON.message.Normal";
         var encodedEventName =
             Convert.ToHexString(
                 SHA512.HashData(
                     Encoding.UTF8.GetBytes(eventName)));
-
-        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("single-entity", "username", _ns.Namespace));
-        await _mock.WaitForInvocations;
 
         var e = await _client.GetAsync<Corev1Event>(encodedEventName, _ns.Namespace);
         e!.Count.Should().Be(1);
@@ -43,14 +44,15 @@ public class EventPublisherIntegrationTest : IntegrationTestBase
     public async Task Should_Increase_Count_On_Existing_Event()
     {
         _mock.TargetInvocationCount = 5;
-        var eventName = $"test-entity.{_ns.Namespace}.REASON.message.Normal";
+        var entity =
+            await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", _ns.Namespace));
+        await _mock.WaitForInvocations;
+
+        var eventName = $"{entity.Uid()}.test-entity.{_ns.Namespace}.REASON.message.Normal";
         var encodedEventName =
             Convert.ToHexString(
                 SHA512.HashData(
                     Encoding.UTF8.GetBytes(eventName)));
-
-        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", _ns.Namespace));
-        await _mock.WaitForInvocations;
 
         var e = await _client.GetAsync<Corev1Event>(encodedEventName, _ns.Namespace);
         e!.Count.Should().Be(5);
@@ -78,9 +80,10 @@ public class EventPublisherIntegrationTest : IntegrationTestBase
             .AddController<TestController, V1OperatorIntegrationTestEntity>();
     }
 
-    private class TestController(InvocationCounter<V1OperatorIntegrationTestEntity> svc,
-            EntityRequeue<V1OperatorIntegrationTestEntity> requeue,
-            EventPublisher eventPublisher)
+    private class TestController(
+        InvocationCounter<V1OperatorIntegrationTestEntity> svc,
+        EntityRequeue<V1OperatorIntegrationTestEntity> requeue,
+        EventPublisher eventPublisher)
         : IEntityController<V1OperatorIntegrationTestEntity>
     {
         public async Task ReconcileAsync(V1OperatorIntegrationTestEntity entity)

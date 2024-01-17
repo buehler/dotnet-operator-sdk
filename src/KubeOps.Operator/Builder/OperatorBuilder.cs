@@ -128,7 +128,7 @@ internal class OperatorBuilder : IOperatorBuilder
                     message,
                     type);
 
-                var eventName = $"{entity.Name()}.{@namespace}.{reason}.{message}.{type}";
+                var eventName = $"{entity.Uid()}.{entity.Name()}.{@namespace}.{reason}.{message}.{type}";
                 var encodedEventName =
                     Convert.ToHexString(
                         SHA512.HashData(
