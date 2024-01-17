@@ -330,7 +330,8 @@ public static class Crds
             "System.ValueType" => context.MapValueType(type),
             "System.Enum" => new V1JSONSchemaProps
             {
-                Type = String, EnumProperty = Enum.GetNames(type).Cast<object>().ToList(),
+                Type = String,
+                EnumProperty = Enum.GetNames(type).Cast<object>().ToList(),
             },
             _ => throw InvalidType(type),
         };
