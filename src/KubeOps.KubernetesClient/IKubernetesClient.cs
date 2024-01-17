@@ -353,6 +353,10 @@ public interface IKubernetesClient : IDisposable
     /// If the namespace is omitted, all entities on the cluster are watched.
     /// </param>
     /// <param name="timeout">The timeout which the watcher has (after this timeout, the server will close the connection).</param>
+    /// <param name="resourceVersion">
+    /// When specified with a watch call, shows changes that occur after that particular version of a resource.
+    /// Defaults to changes from the beginning of history.
+    /// </param>
     /// <param name="cancellationToken">Cancellation-Token.</param>
     /// <param name="labelSelectors">A list of label-selectors to apply to the search.</param>
     /// <returns>A entity watcher for the given entity.</returns>
@@ -362,6 +366,7 @@ public interface IKubernetesClient : IDisposable
         Action? onClose = null,
         string? @namespace = null,
         TimeSpan? timeout = null,
+        string? resourceVersion = null,
         CancellationToken cancellationToken = default,
         params LabelSelector[] labelSelectors)
         where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -371,6 +376,7 @@ public interface IKubernetesClient : IDisposable
             onClose,
             @namespace,
             timeout,
+            resourceVersion,
             labelSelectors.ToExpression(),
             cancellationToken);
 
@@ -388,6 +394,10 @@ public interface IKubernetesClient : IDisposable
     /// If the namespace is omitted, all entities on the cluster are watched.
     /// </param>
     /// <param name="timeout">The timeout which the watcher has (after this timeout, the server will close the connection).</param>
+    /// <param name="resourceVersion">
+    /// When specified with a watch call, shows changes that occur after that particular version of a resource.
+    /// Defaults to changes from the beginning of history.
+    /// </param>
     /// <param name="labelSelector">A string, representing an optional label selector for filtering watched objects.</param>
     /// <param name="cancellationToken">Cancellation-Token.</param>
     /// <returns>A entity watcher for the given entity.</returns>
@@ -397,6 +407,7 @@ public interface IKubernetesClient : IDisposable
         Action? onClose = null,
         string? @namespace = null,
         TimeSpan? timeout = null,
+        string? resourceVersion = null,
         string? labelSelector = null,
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>;

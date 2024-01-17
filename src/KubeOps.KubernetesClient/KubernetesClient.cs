@@ -295,6 +295,7 @@ public class KubernetesClient : IKubernetesClient
         Action? onClose = null,
         string? @namespace = null,
         TimeSpan? timeout = null,
+        string? resourceVersion = null,
         string? labelSelector = null,
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -308,6 +309,7 @@ public class KubernetesClient : IKubernetesClient
                 @namespace,
                 metadata.PluralName,
                 labelSelector: labelSelector,
+                resourceVersion: resourceVersion,
                 timeoutSeconds: timeout switch
                 {
                     null => null,
@@ -320,6 +322,7 @@ public class KubernetesClient : IKubernetesClient
                 metadata.Version,
                 metadata.PluralName,
                 labelSelector: labelSelector,
+                resourceVersion: resourceVersion,
                 timeoutSeconds: timeout switch
                 {
                     null => null,
