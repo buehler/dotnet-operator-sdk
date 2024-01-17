@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.Versioning;
 
 using KubeOps.Abstractions.Builder;
 using KubeOps.Operator.Web.LocalTunnel;
@@ -37,6 +38,9 @@ public static class OperatorBuilderExtensions
     ///     ;
     /// </code>
     /// </example>
+    [RequiresPreviewFeatures(
+        "Localtunnel is sometimes unstable, use with caution. " +
+        "This API is in preview and may be removed in future versions if no stable alternative is found.")]
     public static IOperatorBuilder AddDevelopmentTunnel(
         this IOperatorBuilder builder,
         ushort port,
