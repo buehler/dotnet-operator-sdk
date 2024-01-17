@@ -32,6 +32,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
     private uint _watcherReconnectRetries;
 
     private Watcher<TEntity>? _watcher;
+    private string? _lastResourceVersion;
 
     public ResourceWatcher(
         ILogger<ResourceWatcher<TEntity>> logger,
@@ -82,7 +83,12 @@ internal class ResourceWatcher<TEntity> : IHostedService
         }
 
         _logger.LogDebug("""Create watcher for entity of type "{type}".""", typeof(TEntity));
-        _watcher = _client.Watch<TEntity>(OnEvent, OnError, OnClosed, @namespace: _settings.Namespace);
+        _watcher = _client.Watch<TEntity>(
+            OnEvent,
+            OnError,
+            OnClosed,
+            @namespace: _settings.Namespace,
+            resourceVersion: _lastResourceVersion);
     }
 
     private void StopWatching()
@@ -158,12 +164,14 @@ internal class ResourceWatcher<TEntity> : IHostedService
     private async void OnEvent(WatchEventType type, TEntity entity)
     {
         _watcherReconnectRetries = 0;
+        _lastResourceVersion = entity.ResourceVersion();
 
         _logger.LogTrace(
-            """Received watch event "{eventType}" for "{kind}/{name}".""",
+            """Received watch event "{eventType}" for "{kind}/{name}", last observed resource version: {resourceVersion}.""",
             type,
             entity.Kind,
-            entity.Name());
+            entity.Name(),
+            _lastResourceVersion);
 
         _queue.RemoveIfQueued(entity);
 
