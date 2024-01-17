@@ -9,7 +9,7 @@ public class InvocationCounter<TEntity>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private TaskCompletionSource _task = new();
-    public readonly List<(string Method, TEntity Entity)> Invocations = new();
+    public readonly List<(string Method, TEntity Entity)> Invocations = [];
 
     public Task WaitForInvocations => _task.Task;
 

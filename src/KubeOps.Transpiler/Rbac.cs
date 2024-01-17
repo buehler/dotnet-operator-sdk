@@ -48,17 +48,13 @@ public static class Rbac
                 group => (
                     Crd: context.ToEntityMetadata(group.Key),
                     Verbs: group.Aggregate(RbacVerb.None, (accumulator, element) => accumulator | element.Verbs)))
-            .GroupBy(group => group.Verbs)
-            .Select(
-                group => (
-                    Verbs: group.Key,
-                    Crds: group.Select(element => element.Crd).ToList()))
+            .GroupBy(group => (group.Crd.Metadata.Group, group.Verbs))
             .Select(
                 group => new V1PolicyRule
                 {
-                    ApiGroups = group.Crds.Select(crd => crd.Metadata.Group).Distinct().ToList(),
-                    Resources = group.Crds.Select(crd => crd.Metadata.PluralName).Distinct().ToList(),
-                    Verbs = ConvertToStrings(group.Verbs),
+                    ApiGroups = [group.Key.Group],
+                    Resources = group.Select(crd => crd.Crd.Metadata.PluralName).Distinct().ToList(),
+                    Verbs = ConvertToStrings(group.Key.Verbs),
                 });
 
         var entityStatus = list
@@ -75,8 +71,8 @@ public static class Rbac
             .Select(
                 crd => new V1PolicyRule
                 {
-                    ApiGroups = new[] { crd.Metadata.Group },
-                    Resources = new[] { $"{crd.Metadata.PluralName}/status" },
+                    ApiGroups = [crd.Metadata.Group],
+                    Resources = [$"{crd.Metadata.PluralName}/status"],
                     Verbs = ConvertToStrings(RbacVerb.Get | RbacVerb.Patch | RbacVerb.Update),
                 });
 
@@ -86,7 +82,7 @@ public static class Rbac
     private static string[] ConvertToStrings(RbacVerb verbs) => verbs switch
     {
         RbacVerb.None => Array.Empty<string>(),
-        _ when verbs.HasFlag(RbacVerb.All) => new[] { "*" },
+        _ when verbs.HasFlag(RbacVerb.All) => ["*"],
         _ =>
             Enum.GetValues<RbacVerb>()
                 .Where(v => verbs.HasFlag(v) && v != RbacVerb.All && v != RbacVerb.None)
