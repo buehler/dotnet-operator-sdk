@@ -21,6 +21,9 @@ jobs:
         with:
           dotnet-version: 8.x
 
+      - name: Linting
+        run: dotnet format --verify-no-changes
+
       - name: Create Kubernetes Cluster
         uses: helm/kind-action@v1.8.0
 
