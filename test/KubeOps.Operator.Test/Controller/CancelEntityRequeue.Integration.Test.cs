@@ -34,6 +34,20 @@ public class CancelEntityRequeueIntegrationTest : IntegrationTestBase
         Services.GetRequiredService<TimedEntityQueue<V1OperatorIntegrationTestEntity>>().Count.Should().Be(0);
     }
 
+    [Fact]
+    public async Task Should_Not_Affect_Queues_If_Only_Status_Updated()
+    {
+        _mock.TargetInvocationCount = 1;
+        var result = await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", _ns.Namespace));
+        result.Status.Status = "changed";
+        await _client.UpdateStatusAsync(result);
+        await _mock.WaitForInvocations;
+
+        _mock.Invocations.Count.Should().Be(1);
+        Services.GetRequiredService<TimedEntityQueue<V1OperatorIntegrationTestEntity>>().Count.Should().Be(1);
+
+    }
+
     public override async Task InitializeAsync()
     {
         await base.InitializeAsync();

@@ -111,7 +111,6 @@ internal class ResourceWatcher<TEntity> : IHostedService
             return;
         }
 
-        _entityCache.TryRemove(entity.Uid(), out _);
         await ReconcileModification(entity);
     }
 
@@ -173,16 +172,32 @@ internal class ResourceWatcher<TEntity> : IHostedService
             entity.Name(),
             _lastResourceVersion);
 
-        _queue.RemoveIfQueued(entity);
-
         try
         {
             switch (type)
             {
-                case WatchEventType.Added or WatchEventType.Modified:
+                case WatchEventType.Added:
+                    _entityCache.TryAdd(entity.Uid(), entity.Generation() ?? 0);
+                    await ReconcileModification(entity);
+                    break;
+                case WatchEventType.Modified:
                     switch (entity)
                     {
                         case { Metadata.DeletionTimestamp: null }:
+                            _entityCache.TryGetValue(entity.Uid(), out var cachedGeneration);
+
+                            // Check if entity spec has changed through "Generation" value increment. Skip reconcile if not changed.
+                            if (entity.Generation() <= cachedGeneration)
+                            {
+                                _logger.LogDebug(
+                                    """Entity "{kind}/{name}" modification did not modify generation. Skip event.""",
+                                    entity.Kind,
+                                    entity.Name());
+                                return;
+                            }
+
+                            // update cached generation since generation now changed
+                            _entityCache.TryUpdate(entity.Uid(), entity.Generation() ?? 1, cachedGeneration);
                             await ReconcileModification(entity);
                             break;
                         case { Metadata: { DeletionTimestamp: not null, Finalizers.Count: > 0 } }:
@@ -216,17 +231,8 @@ internal class ResourceWatcher<TEntity> : IHostedService
 
     private async Task ReconcileModification(TEntity entity)
     {
-        var latestGeneration = _entityCache.GetOrAdd(entity.Uid(), 0);
-        if (entity.Generation() <= latestGeneration)
-        {
-            _logger.LogDebug(
-                """Entity "{kind}/{name}" modification did not modify generation. Skip event.""",
-                entity.Kind,
-                entity.Name());
-            return;
-        }
-
-        _entityCache.TryUpdate(entity.Uid(), entity.Generation() ?? 1, latestGeneration);
+        // Re-queue should requested in the controller reconcile method. Invalidate any existing queues.
+        _queue.RemoveIfQueued(entity);
         await using var scope = _provider.CreateAsyncScope();
         var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity>>();
         await controller.ReconcileAsync(entity);
@@ -234,6 +240,8 @@ internal class ResourceWatcher<TEntity> : IHostedService
 
     private async Task ReconcileDeletion(TEntity entity)
     {
+        _queue.RemoveIfQueued(entity);
+        _entityCache.TryRemove(entity.Uid(), out _);
         await using var scope = _provider.CreateAsyncScope();
         var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity>>();
         await controller.DeletedAsync(entity);
@@ -241,6 +249,7 @@ internal class ResourceWatcher<TEntity> : IHostedService
 
     private async Task ReconcileFinalizer(TEntity entity)
     {
+        _queue.RemoveIfQueued(entity);
         var pendingFinalizer = entity.Finalizers();
         if (_finalizers.Value.Find(reg =>
                 reg.EntityType == entity.GetType() && pendingFinalizer.Contains(reg.Identifier)) is not
