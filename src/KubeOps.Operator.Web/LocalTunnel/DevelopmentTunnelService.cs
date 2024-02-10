@@ -43,13 +43,18 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, IKubernete
 
     private async Task RegisterValidators(Uri uri)
     {
+        var hookName = string.Join(".", 
+            new List<string> {
+                hook.Metadata.SingularName, hook.Metadata.Group, hook.Metadata.Version
+            }.Where(name => !string.IsNullOrWhiteSpace(name))
+        );
         var validationWebhooks = loader
             .ValidationWebhooks
             .Select(t => (HookTypeName: t.BaseType!.GenericTypeArguments[0].Name.ToLowerInvariant(),
                 Entities.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata))
             .Select(hook => new V1ValidatingWebhook
             {
-                Name = $"validate.{hook.Metadata.SingularName}.{hook.Metadata.Group}.{hook.Metadata.Version}",
+                Name = $"validate.{hookName}",
                 MatchPolicy = "Exact",
                 AdmissionReviewVersions = new[] { "v1" },
                 SideEffects = "None",
@@ -81,13 +86,18 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, IKubernete
 
     private async Task RegisterMutators(Uri uri)
     {
+        var hookName = string.Join(".", 
+            new List<string> {
+                hook.Metadata.SingularName, hook.Metadata.Group, hook.Metadata.Version
+            }.Where(name => !string.IsNullOrWhiteSpace(name))
+        );
         var mutationWebhooks = loader
             .MutationWebhooks
             .Select(t => (HookTypeName: t.BaseType!.GenericTypeArguments[0].Name.ToLowerInvariant(),
                 Entities.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata))
             .Select(hook => new V1MutatingWebhook
             {
-                Name = $"mutate.{hook.Metadata.SingularName}.{hook.Metadata.Group}.{hook.Metadata.Version}",
+                Name = $"mutate.{hookName}",
                 MatchPolicy = "Exact",
                 AdmissionReviewVersions = new[] { "v1" },
                 SideEffects = "None",
