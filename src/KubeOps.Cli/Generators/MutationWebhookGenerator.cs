@@ -26,7 +26,7 @@ internal class MutationWebhookGenerator
                 ".",
                 new List<string>
                 {
-                    hook.Metadata.SingularName, hook.Metadata.Group, hook.Metadata.Version,
+                    hook.Metadata.SingularName, hook.Metadata.Group ?? string.Empty, hook.Metadata.Version,
                 }.Where(name => !string.IsNullOrWhiteSpace(name)));
             mutatorConfig.Webhooks.Add(new V1MutatingWebhook
             {

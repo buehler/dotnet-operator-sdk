@@ -1,4 +1,4 @@
-using k8s;
+﻿using k8s;
 using k8s.Models;
 
 using KubeOps.KubernetesClient;
@@ -20,6 +20,8 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, IKubernete
 {
     private readonly LocaltunnelClient _tunnelClient = new(loggerFactory);
     private Tunnel? _tunnel;
+    internal static readonly string[] StringArray = ["v1"];
+    internal static readonly string[] stringArray = new[] { "*" };
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -43,36 +45,39 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, IKubernete
 
     private async Task RegisterValidators(Uri uri)
     {
-        var hookName = string.Join(
-            ".",
-            new List<string>
-            {
-                hook.Metadata.SingularName, hook.Metadata.Group, hook.Metadata.Version,
-            }.Where(name => !string.IsNullOrWhiteSpace(name)));
         var validationWebhooks = loader
             .ValidationWebhooks
             .Select(t => (HookTypeName: t.BaseType!.GenericTypeArguments[0].Name.ToLowerInvariant(),
                 Entities.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata))
-            .Select(hook => new V1ValidatingWebhook
+            .Select(hook =>
             {
-                Name = $"validate.{hookName}",
-                MatchPolicy = "Exact",
-                AdmissionReviewVersions = new[] { "v1" },
-                SideEffects = "None",
-                Rules = new[]
+                var hookName = string.Join(
+    ".",
+    new List<string>
+    {
+                                hook.Metadata.SingularName, hook.Metadata.Group ?? string.Empty, hook.Metadata.Version,
+    }.Where(name => !string.IsNullOrWhiteSpace(name)));
+                                return new V1ValidatingWebhook
                 {
+                    Name = $"validate.{hookName}",
+                    MatchPolicy = "Exact",
+                    AdmissionReviewVersions = StringArray,
+                    SideEffects = "None",
+                    Rules = new[]
+                                {
                     new V1RuleWithOperations
                     {
-                        Operations = new[] { "*" },
+                        Operations = stringArray,
                         Resources = new[] { hook.Metadata.PluralName },
                         ApiGroups = new[] { hook.Metadata.Group },
                         ApiVersions = new[] { hook.Metadata.Version },
                     },
-                },
-                ClientConfig = new Admissionregistrationv1WebhookClientConfig
-                {
-                    Url = $"{uri}validate/{hook.HookTypeName}",
-                },
+                                },
+                    ClientConfig = new Admissionregistrationv1WebhookClientConfig
+                    {
+                        Url = $"{uri}validate/{hook.HookTypeName}",
+                    },
+                };
             });
 
         var validatorConfig = new V1ValidatingWebhookConfiguration(
@@ -87,36 +92,39 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, IKubernete
 
     private async Task RegisterMutators(Uri uri)
     {
-        var hookName = string.Join(
-            ".",
-            new List<string>
-            {
-                hook.Metadata.SingularName, hook.Metadata.Group, hook.Metadata.Version,
-            }.Where(name => !string.IsNullOrWhiteSpace(name)));
         var mutationWebhooks = loader
             .MutationWebhooks
             .Select(t => (HookTypeName: t.BaseType!.GenericTypeArguments[0].Name.ToLowerInvariant(),
                 Entities.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata))
-            .Select(hook => new V1MutatingWebhook
+            .Select(hook =>
             {
-                Name = $"mutate.{hookName}",
-                MatchPolicy = "Exact",
-                AdmissionReviewVersions = new[] { "v1" },
-                SideEffects = "None",
-                Rules = new[]
+                var hookName = string.Join(
+                    ".",
+                    new List<string>
+                    {
+                                hook.Metadata.SingularName, hook.Metadata.Group ?? string.Empty, hook.Metadata.Version,
+                    }.Where(name => !string.IsNullOrWhiteSpace(name)));
+                return new V1MutatingWebhook
                 {
+                    Name = $"mutate.{hookName}",
+                    MatchPolicy = "Exact",
+                    AdmissionReviewVersions = StringArray,
+                    SideEffects = "None",
+                    Rules = new[]
+                                {
                     new V1RuleWithOperations
                     {
-                        Operations = new[] { "*" },
+                        Operations = stringArray,
                         Resources = new[] { hook.Metadata.PluralName },
                         ApiGroups = new[] { hook.Metadata.Group },
                         ApiVersions = new[] { hook.Metadata.Version },
                     },
-                },
-                ClientConfig = new Admissionregistrationv1WebhookClientConfig
-                {
-                    Url = $"{uri}mutate/{hook.HookTypeName}",
-                },
+                                },
+                    ClientConfig = new Admissionregistrationv1WebhookClientConfig
+                    {
+                        Url = $"{uri}mutate/{hook.HookTypeName}",
+                    },
+                };
             });
 
         var mutatorConfig = new V1MutatingWebhookConfiguration(
