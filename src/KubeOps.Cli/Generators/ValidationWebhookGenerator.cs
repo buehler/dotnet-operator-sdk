@@ -22,12 +22,8 @@ internal class ValidationWebhookGenerator
 
         foreach (var hook in webhooks)
         {
-            var hookName = string.Join(
-                ".",
-                new List<string>
-                {
-                    hook.Metadata.SingularName, hook.Metadata.Group ?? string.Empty, hook.Metadata.Version,
-                }.Where(name => !string.IsNullOrWhiteSpace(name)));
+            var names = new List<string> { hook.Metadata.SingularName, hook.Metadata.Group ?? string.Empty, hook.Metadata.Version };
+            var hookName = string.Join(".", names.Where(name => !string.IsNullOrWhiteSpace(name)));
             validatorConfig.Webhooks.Add(new V1ValidatingWebhook
             {
                 Name = $"validate.{hookName}",
