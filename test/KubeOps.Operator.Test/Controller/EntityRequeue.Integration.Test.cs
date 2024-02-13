@@ -35,6 +35,30 @@ public class EntityRequeueIntegrationTest : IntegrationTestBase
         _mock.Invocations.Count.Should().Be(5);
     }
 
+    [Fact]
+    public async Task Should_Separately_And_Reliably_Requeue_And_Reconcile_Multiple_Entities_In_Parallel()
+    {
+        _mock.TargetInvocationCount = 100;
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity1", "username", _ns.Namespace));
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity2", "username", _ns.Namespace));
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity3", "username", _ns.Namespace));
+        await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity4", "username", _ns.Namespace));
+        await _mock.WaitForInvocations;
+
+        // Expecting invocations, but since in parallel, there is a possibility to for target hit while other are in flight.
+        _mock.Invocations.Count.Should().BeGreaterOrEqualTo(100).And.BeLessThan(105);
+        var invocationsGroupedById = _mock.Invocations.GroupBy(item => item.Entity.Metadata.Uid).ToList();
+        invocationsGroupedById.Count.Should().Be(4);
+        var invocationDistributions = invocationsGroupedById
+            .Select(g => (double)g.Count() / _mock.Invocations.Count * 100)
+            .ToList();
+        invocationDistributions
+            .All(p => p is >= 15 and <= 35) // Check that invocations are reasonably distributed
+            .Should()
+            .BeTrue($"each entity invocation proportion should be within the specified range of total invocations, " +
+                    $"but instead the distributions were: '{string.Join(", ", invocationDistributions)}'");
+    }
+
     public override async Task InitializeAsync()
     {
         await base.InitializeAsync();

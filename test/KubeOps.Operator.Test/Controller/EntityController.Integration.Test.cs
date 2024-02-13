@@ -58,6 +58,27 @@ public class EntityControllerIntegrationTest : IntegrationTestBase
     }
 
     [Fact]
+    public async Task Should_Not_Call_Reconcile_When_Only_Entity_Status_Changed()
+    {
+        _mock.TargetInvocationCount = 1;
+
+        var result =
+            await _client.CreateAsync(new V1OperatorIntegrationTestEntity("test-entity", "username", _ns.Namespace));
+        result.Status.Status = "changed";
+        // Update or UpdateStatus do not call Reconcile
+        await _client.UpdateAsync(result);
+        await _client.UpdateStatusAsync(result);
+        await _mock.WaitForInvocations;
+
+        _mock.Invocations.Count.Should().Be(1);
+
+        (string method, V1OperatorIntegrationTestEntity entity) = _mock.Invocations.Single();
+        method.Should().Be("ReconcileAsync");
+        entity.Should().BeOfType<V1OperatorIntegrationTestEntity>();
+        entity.Spec.Username.Should().Be("username");
+    }
+
+    [Fact]
     public async Task Should_Call_Delete_For_Deleted_Entity()
     {
         _mock.TargetInvocationCount = 2;
