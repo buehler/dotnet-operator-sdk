@@ -22,9 +22,11 @@ internal class MutationWebhookGenerator
 
         foreach (var hook in webhooks)
         {
+            var names = new List<string> { hook.Metadata.SingularName, hook.Metadata.Group ?? string.Empty, hook.Metadata.Version };
+            var hookName = string.Join(".", names.Where(name => !string.IsNullOrWhiteSpace(name)));
             mutatorConfig.Webhooks.Add(new V1MutatingWebhook
             {
-                Name = $"mutate.{hook.Metadata.SingularName}.{hook.Metadata.Group}.{hook.Metadata.Version}",
+                Name = $"mutate.{hookName}",
                 MatchPolicy = "Exact",
                 AdmissionReviewVersions = new[] { "v1" },
                 SideEffects = "None",

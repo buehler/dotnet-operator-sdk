@@ -22,9 +22,11 @@ internal class ValidationWebhookGenerator
 
         foreach (var hook in webhooks)
         {
+            var names = new List<string> { hook.Metadata.SingularName, hook.Metadata.Group ?? string.Empty, hook.Metadata.Version };
+            var hookName = string.Join(".", names.Where(name => !string.IsNullOrWhiteSpace(name)));
             validatorConfig.Webhooks.Add(new V1ValidatingWebhook
             {
-                Name = $"validate.{hook.Metadata.SingularName}.{hook.Metadata.Group}.{hook.Metadata.Version}",
+                Name = $"validate.{hookName}",
                 MatchPolicy = "Exact",
                 AdmissionReviewVersions = new[] { "v1" },
                 SideEffects = "None",

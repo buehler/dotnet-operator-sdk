@@ -47,26 +47,31 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, IKubernete
             .ValidationWebhooks
             .Select(t => (HookTypeName: t.BaseType!.GenericTypeArguments[0].Name.ToLowerInvariant(),
                 Entities.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata))
-            .Select(hook => new V1ValidatingWebhook
+            .Select(hook =>
             {
-                Name = $"validate.{hook.Metadata.SingularName}.{hook.Metadata.Group}.{hook.Metadata.Version}",
-                MatchPolicy = "Exact",
-                AdmissionReviewVersions = new[] { "v1" },
-                SideEffects = "None",
-                Rules = new[]
+                var names = new List<string> { hook.Metadata.SingularName, hook.Metadata.Group ?? string.Empty, hook.Metadata.Version };
+                var hookName = string.Join(".", names.Where(name => !string.IsNullOrWhiteSpace(name)));
+                return new V1ValidatingWebhook
                 {
-                    new V1RuleWithOperations
+                    Name = $"validate.{hookName}",
+                    MatchPolicy = "Exact",
+                    AdmissionReviewVersions = new[] { "v1" },
+                    SideEffects = "None",
+                    Rules = new[]
                     {
-                        Operations = new[] { "*" },
-                        Resources = new[] { hook.Metadata.PluralName },
-                        ApiGroups = new[] { hook.Metadata.Group },
-                        ApiVersions = new[] { hook.Metadata.Version },
+                        new V1RuleWithOperations
+                        {
+                            Operations = new[] { "*" },
+                            Resources = new[] { hook.Metadata.PluralName },
+                            ApiGroups = new[] { hook.Metadata.Group },
+                            ApiVersions = new[] { hook.Metadata.Version },
+                        },
                     },
-                },
-                ClientConfig = new Admissionregistrationv1WebhookClientConfig
-                {
-                    Url = $"{uri}validate/{hook.HookTypeName}",
-                },
+                    ClientConfig = new Admissionregistrationv1WebhookClientConfig
+                    {
+                        Url = $"{uri}validate/{hook.HookTypeName}",
+                    },
+                };
             });
 
         var validatorConfig = new V1ValidatingWebhookConfiguration(
@@ -85,26 +90,31 @@ internal class DevelopmentTunnelService(ILoggerFactory loggerFactory, IKubernete
             .MutationWebhooks
             .Select(t => (HookTypeName: t.BaseType!.GenericTypeArguments[0].Name.ToLowerInvariant(),
                 Entities.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata))
-            .Select(hook => new V1MutatingWebhook
+            .Select(hook =>
             {
-                Name = $"mutate.{hook.Metadata.SingularName}.{hook.Metadata.Group}.{hook.Metadata.Version}",
-                MatchPolicy = "Exact",
-                AdmissionReviewVersions = new[] { "v1" },
-                SideEffects = "None",
-                Rules = new[]
+                var names = new List<string> { hook.Metadata.SingularName, hook.Metadata.Group ?? string.Empty, hook.Metadata.Version };
+                var hookName = string.Join(".", names.Where(name => !string.IsNullOrWhiteSpace(name)));
+                return new V1MutatingWebhook
                 {
-                    new V1RuleWithOperations
+                    Name = $"mutate.{hookName}",
+                    MatchPolicy = "Exact",
+                    AdmissionReviewVersions = new[] { "v1" },
+                    SideEffects = "None",
+                    Rules = new[]
                     {
-                        Operations = new[] { "*" },
-                        Resources = new[] { hook.Metadata.PluralName },
-                        ApiGroups = new[] { hook.Metadata.Group },
-                        ApiVersions = new[] { hook.Metadata.Version },
+                        new V1RuleWithOperations
+                        {
+                            Operations = new[] { "*" },
+                            Resources = new[] { hook.Metadata.PluralName },
+                            ApiGroups = new[] { hook.Metadata.Group },
+                            ApiVersions = new[] { hook.Metadata.Version },
+                        },
                     },
-                },
-                ClientConfig = new Admissionregistrationv1WebhookClientConfig
-                {
-                    Url = $"{uri}mutate/{hook.HookTypeName}",
-                },
+                    ClientConfig = new Admissionregistrationv1WebhookClientConfig
+                    {
+                        Url = $"{uri}mutate/{hook.HookTypeName}",
+                    },
+                };
             });
 
         var mutatorConfig = new V1MutatingWebhookConfiguration(
