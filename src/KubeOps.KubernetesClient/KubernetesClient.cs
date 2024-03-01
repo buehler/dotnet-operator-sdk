@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
+using System.Runtime.CompilerServices;
 
 using k8s;
 using k8s.Autorest;
@@ -348,6 +349,41 @@ public class KubernetesClient : IKubernetesClient
                 watch: true,
                 cancellationToken: cancellationToken),
         }).Watch(onEvent, onError, onClose);
+    }
+
+    public async IAsyncEnumerable<(WatchEventType Type, TEntity? Entity)> WatchAsync<TEntity>(
+        string? @namespace = null,
+        string? resourceVersion = null,
+        string? labelSelector = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        var metadata = GetMetadata<TEntity>();
+        var watcher = (@namespace switch
+        {
+            not null => _client.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(
+                metadata.Group ?? string.Empty,
+                metadata.Version,
+                @namespace,
+                metadata.PluralName,
+                labelSelector: labelSelector,
+                resourceVersion: resourceVersion,
+                watch: true,
+                cancellationToken: cancellationToken),
+            _ => _client.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(
+                metadata.Group ?? string.Empty,
+                metadata.Version,
+                metadata.PluralName,
+                labelSelector: labelSelector,
+                resourceVersion: resourceVersion,
+                watch: true,
+                cancellationToken: cancellationToken),
+        }).WatchAsync<TEntity, object>(
+            onError: ex => throw ex,
+            cancellationToken: cancellationToken);
+
+        await foreach ((WatchEventType watchEventType, TEntity? entity) in watcher)
+            yield return (watchEventType, entity);
     }
 
     public void Dispose()
