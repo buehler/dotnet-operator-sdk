@@ -108,8 +108,9 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase
 
         var oldInvocs = _mock.Invocations.ToList();
 
-        // reset to catch 1 invocation: deleted
+        // reset to catch 2 invocations: finalized and deleted
         _mock.Clear();
+        _mock.TargetInvocationCount = 2;
 
         // 3 invocations: 1 when the watcher is created and the entity already exists, 1 for finalize, 1 for delete.
         var finalizeCounter = new InvocationCounter<V1OperatorIntegrationTestEntity> { TargetInvocationCount = 3 };
@@ -119,7 +120,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase
             await _client.DeleteAsync<V1OperatorIntegrationTestEntity>("first", _ns.Namespace);
             // 2 invocations: call to delete, update after finalize
             await finalizeCounter.WaitForInvocations;
-            // 1 invocation for delete
+            // 2 invocations for reconciliation and deletion
             await _mock.WaitForInvocations;
         }
 

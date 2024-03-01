@@ -58,11 +58,9 @@ public class OperatorBuilderTest
         _builder.AddFinalizer<TestFinalizer, V1OperatorIntegrationTestEntity>(string.Empty);
 
         _builder.Services.Should().Contain(s =>
-            s.ServiceType == typeof(TestFinalizer) &&
+            s.IsKeyedService &&
+            s.KeyedImplementationType == typeof(TestFinalizer) &&
             s.Lifetime == ServiceLifetime.Transient);
-        _builder.Services.Should().Contain(s =>
-            s.ServiceType == typeof(FinalizerRegistration) &&
-            s.Lifetime == ServiceLifetime.Singleton);
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(EntityFinalizerAttacher<TestFinalizer, V1OperatorIntegrationTestEntity>) &&
             s.Lifetime == ServiceLifetime.Transient);

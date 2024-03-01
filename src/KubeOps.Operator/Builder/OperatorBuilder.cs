@@ -35,6 +35,7 @@ internal class OperatorBuilder : IOperatorBuilder
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        Services.AddHostedService<EntityRequeueBackgroundService<TEntity>>();
         Services.TryAddScoped<IEntityController<TEntity>, TImplementation>();
         Services.TryAddSingleton(new TimedEntityQueue<TEntity>());
         Services.TryAddTransient<IEntityRequeueFactory, KubeOpsEntityRequeueFactory>();
@@ -57,8 +58,7 @@ internal class OperatorBuilder : IOperatorBuilder
         where TImplementation : class, IEntityFinalizer<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        Services.TryAddTransient<TImplementation>();
-        Services.TryAddSingleton(new FinalizerRegistration(identifier, typeof(TImplementation), typeof(TEntity)));
+        Services.TryAddKeyedTransient<IEntityFinalizer<TEntity>, TImplementation>(identifier);
         Services.TryAddTransient<IEventFinalizerAttacherFactory, KubeOpsEventFinalizerAttacherFactory>();
         Services.TryAddTransient<EntityFinalizerAttacher<TImplementation, TEntity>>(services =>
             services.GetRequiredService<IEventFinalizerAttacherFactory>()

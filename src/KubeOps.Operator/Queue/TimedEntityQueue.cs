@@ -1,63 +1,95 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 
 using k8s;
 using k8s.Models;
 
-using Timer = System.Timers.Timer;
-
 namespace KubeOps.Operator.Queue;
 
-internal class TimedEntityQueue<TEntity>
+/// <summary>
+/// Represents a queue that's used to inspect a Kubernetes entity again after a given time.
+/// The given enumerable only contains items that should be considered for reconciliations.
+/// </summary>
+/// <typeparam name="TEntity">The type of the inner entity.</typeparam>
+internal sealed class TimedEntityQueue<TEntity> : IDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
-    private readonly ConcurrentDictionary<string, (string Name, string? Namespace, Timer Timer)> _queue = new();
+    // A shared task factory for all the created tasks. Used to
+    private readonly TaskFactory _scheduledEntries = new(TaskScheduler.Current);
 
-    public event EventHandler<(string Name, string? Namespace)>? RequeueRequested;
+    // Used for managing all the tasks that should add something to the queue.
+    private readonly ConcurrentDictionary<string, TimedQueueEntry<TEntity>> _management = new();
 
-    internal int Count => _queue.Count;
+    // The actual queue containing all the entries that have to be reconciled.
+    private readonly BlockingCollection<TEntity> _queue = new(new ConcurrentQueue<TEntity>());
 
-    public void Clear()
-    {
-        foreach (var (_, _, timer) in _queue.Values)
-        {
-            timer.Stop();
-        }
+    internal int Count => _management.Count;
 
-        _queue.Clear();
-    }
-
+    /// <summary>
+    /// Enqueues the given <paramref name="entity"/> to happen in <paramref name="requeueIn"/>.
+    /// If the item already exists, the existing entry is updated.
+    /// </summary>
+    /// <param name="entity">The entity.</param>
+    /// <param name="requeueIn">The time after <see cref="DateTimeOffset.Now"/>, where the item is reevaluated again.</param>
     public void Enqueue(TEntity entity, TimeSpan requeueIn)
     {
-        var (_, _, timer) =
-            _queue.AddOrUpdate(
-                entity.Uid(),
-                (entity.Name(), entity.Namespace(), new Timer(requeueIn.TotalMilliseconds)),
-                (_, e) =>
-                {
-                    e.Timer.Stop();
-                    e.Timer.Dispose();
-                    return (e.Name, e.Namespace, new Timer(requeueIn.TotalMilliseconds));
-                });
-
-        timer.Elapsed += (_, _) =>
-        {
-            if (!_queue.TryRemove(entity.Metadata.Uid, out var e))
+        _management.AddOrUpdate(
+            entity.Name() ?? throw new InvalidOperationException("Cannot enqueue entities without name."),
+            key =>
             {
-                return;
-            }
-
-            e.Timer.Stop();
-            e.Timer.Dispose();
-            RequeueRequested?.Invoke(this, (e.Name, e.Namespace));
-        };
-        timer.Start();
+                var entry = new TimedQueueEntry<TEntity>(entity, requeueIn);
+                _scheduledEntries.StartNew(
+                    async () =>
+                    {
+                        await entry.AddAfterDelay(_queue);
+                        _management.TryRemove(key, out _);
+                    },
+                    entry.Token);
+                return entry;
+            },
+            (key, oldEntry) =>
+            {
+                oldEntry.Cancel();
+                var entry = new TimedQueueEntry<TEntity>(entity, requeueIn);
+                _scheduledEntries.StartNew(
+                    async () =>
+                    {
+                        await entry.AddAfterDelay(_queue);
+                        _management.TryRemove(key, out _);
+                    },
+                    entry.Token);
+                return entry;
+            });
     }
 
-    public void RemoveIfQueued(TEntity entity)
+    public void Dispose()
     {
-        if (_queue.TryRemove(entity.Uid(), out var entry))
+        _queue.Dispose();
+        foreach (var entry in _management.Values)
         {
-            entry.Timer.Stop();
+            entry.Dispose();
+        }
+    }
+
+    public async IAsyncEnumerator<TEntity> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    {
+        await Task.Yield();
+        foreach (var entry in _queue.GetConsumingEnumerable(cancellationToken))
+        {
+            yield return entry;
+        }
+    }
+
+    public void Remove(TEntity entity)
+    {
+        var name = entity.Name();
+        if (name is null)
+        {
+            return;
+        }
+
+        if (_management.Remove(name, out var task))
+        {
+            task.Cancel();
         }
     }
 }
