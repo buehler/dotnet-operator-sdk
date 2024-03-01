@@ -43,8 +43,11 @@ public interface IKubernetesClient : IDisposable
     /// </list>
     /// </summary>
     /// <param name="downwardApiEnvName">Customizable name of the env var to check for the namespace.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A string containing the current namespace (or a fallback of it).</returns>
-    Task<string> GetCurrentNamespaceAsync(string downwardApiEnvName = "POD_NAMESPACE");
+    Task<string> GetCurrentNamespaceAsync(
+        string downwardApiEnvName = "POD_NAMESPACE",
+        CancellationToken cancellationToken = default);
 
     /// <inheritdoc cref="GetCurrentNamespaceAsync" />
     string GetCurrentNamespace(string downwardApiEnvName = "POD_NAMESPACE");
@@ -58,8 +61,12 @@ public interface IKubernetesClient : IDisposable
     /// Optional namespace. If this is set, the entity must be a namespaced entity.
     /// If it is omitted, the entity must be a cluster wide entity.
     /// </param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The found entity of the given type, or null otherwise.</returns>
-    Task<TEntity?> GetAsync<TEntity>(string name, string? @namespace = null)
+    Task<TEntity?> GetAsync<TEntity>(
+        string name,
+        string? @namespace = null,
+        CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <inheritdoc cref="GetAsync{TEntity}"/>
@@ -72,15 +79,21 @@ public interface IKubernetesClient : IDisposable
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="namespace">If the entities are namespaced, provide the name of the namespace.</param>
     /// <param name="labelSelector">A string, representing an optional label selector for filtering fetched objects.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A list of Kubernetes entities.</returns>
     Task<IList<TEntity>> ListAsync<TEntity>(
         string? @namespace = null,
-        string? labelSelector = null)
+        string? labelSelector = null,
+        CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <summary>
     /// Fetch and return a list of entities from the Kubernetes API.
     /// </summary>
+    /// <remarks>
+    /// This is invoking the API without any cancellation support. In order to pass a <see cref="CancellationToken"/>,
+    /// you need to use the <see cref="CreateAsync{TEntity}(IEnumerable{TEntity},CancellationToken)"/> overload.
+    /// </remarks>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="namespace">
     /// If only entities in a given namespace should be listed, provide the namespace here.
@@ -93,7 +106,7 @@ public interface IKubernetesClient : IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>
         => ListAsync<TEntity>(@namespace, labelSelectors.ToExpression());
 
-    /// <inheritdoc cref="ListAsync{TEntity}(string?,string?)"/>
+    /// <inheritdoc cref="ListAsync{TEntity}(string?,string?,CancellationToken)"/>
     IList<TEntity> List<TEntity>(
         string? @namespace = null,
         string? labelSelector = null)
@@ -112,14 +125,15 @@ public interface IKubernetesClient : IDisposable
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="entity">The entity in question.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The saved instance of the entity.</returns>
-    async Task<TEntity> SaveAsync<TEntity>(TEntity entity)
+    async Task<TEntity> SaveAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
         =>
-            await GetAsync<TEntity>(entity.Name(), entity.Namespace()) switch
+            await GetAsync<TEntity>(entity.Name(), entity.Namespace(), cancellationToken) switch
             {
-                { } e => await UpdateAsync(entity.WithResourceVersion(e)),
-                _ => await CreateAsync(entity),
+                { } e => await UpdateAsync(entity.WithResourceVersion(e), cancellationToken),
+                _ => await CreateAsync(entity, cancellationToken),
             };
 
     /// <summary>
@@ -128,23 +142,30 @@ public interface IKubernetesClient : IDisposable
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="entities">The entity list.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The saved instances of the entities.</returns>
-    async Task<IEnumerable<TEntity>> SaveAsync<TEntity>(IEnumerable<TEntity> entities)
+    async Task<IEnumerable<TEntity>> SaveAsync<TEntity>(
+        IEnumerable<TEntity> entities,
+        CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta> =>
-        await Task.WhenAll(entities.Select(SaveAsync));
+        await Task.WhenAll(entities.Select(entity => SaveAsync(entity, cancellationToken)));
 
     /// <summary>
     /// Create or Update a list of entities. This first fetches each entity from the Kubernetes API
     /// and if it does exist, updates the entity. Otherwise, the entity is created.
     /// </summary>
+    /// <remarks>
+    /// This is invoking the API without any cancellation support. In order to pass a <see cref="CancellationToken"/>,
+    /// you need to use the <see cref="SaveAsync{TEntity}(IEnumerable{TEntity},CancellationToken)"/> overload.
+    /// </remarks>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="entities">The entity list.</param>
     /// <returns>The saved instances of the entities.</returns>
-    async Task<IEnumerable<TEntity>> SaveAsync<TEntity>(params TEntity[] entities)
+    Task<IEnumerable<TEntity>> SaveAsync<TEntity>(params TEntity[] entities)
         where TEntity : IKubernetesObject<V1ObjectMeta> =>
-        await Task.WhenAll(entities.Select(SaveAsync));
+        SaveAsync(entities, CancellationToken.None);
 
-    /// <inheritdoc cref="SaveAsync{TEntity}(TEntity)"/>
+    /// <inheritdoc cref="SaveAsync{TEntity}(TEntity,CancellationToken)"/>
     TEntity Save<TEntity>(TEntity entity)
         where TEntity : IKubernetesObject<V1ObjectMeta>
         =>
@@ -154,13 +175,13 @@ public interface IKubernetesClient : IDisposable
                 _ => Create(entity),
             };
 
-    /// <inheritdoc cref="SaveAsync{TEntity}(IEnumerable{TEntity})"/>
+    /// <inheritdoc cref="SaveAsync{TEntity}(IEnumerable{TEntity},CancellationToken)"/>
     IEnumerable<TEntity> Save<TEntity>(IEnumerable<TEntity> entities)
         where TEntity : IKubernetesObject<V1ObjectMeta>
         =>
             entities.Select(Save);
 
-    /// <inheritdoc cref="SaveAsync{TEntity}(IEnumerable{TEntity})"/>
+    /// <inheritdoc cref="SaveAsync{TEntity}(IEnumerable{TEntity},CancellationToken)"/>
     IEnumerable<TEntity> Save<TEntity>(params TEntity[] entities)
         where TEntity : IKubernetesObject<V1ObjectMeta>
         =>
@@ -171,8 +192,9 @@ public interface IKubernetesClient : IDisposable
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="entity">The entity instance.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The created instance of the entity.</returns>
-    Task<TEntity> CreateAsync<TEntity>(TEntity entity)
+    Task<TEntity> CreateAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <summary>
@@ -180,27 +202,34 @@ public interface IKubernetesClient : IDisposable
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="entities">The entity list.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The created instances of the entities.</returns>
-    async Task<IEnumerable<TEntity>> CreateAsync<TEntity>(IEnumerable<TEntity> entities)
+    async Task<IEnumerable<TEntity>> CreateAsync<TEntity>(
+        IEnumerable<TEntity> entities,
+        CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        => await Task.WhenAll(entities.Select(CreateAsync));
+        => await Task.WhenAll(entities.Select(entity => CreateAsync(entity, cancellationToken)));
 
     /// <summary>
     /// Create a list of entities on the Kubernetes API.
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="entities">The entity list.</param>
+    /// <remarks>
+    /// This is invoking the API without any cancellation support. In order to pass a <see cref="CancellationToken"/>,
+    /// you need to use the <see cref="CreateAsync{TEntity}(IEnumerable{TEntity},CancellationToken)"/> overload.
+    /// </remarks>
     /// <returns>The created instances of the entities.</returns>
     async Task<IEnumerable<TEntity>> CreateAsync<TEntity>(params TEntity[] entities)
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        => await Task.WhenAll(entities.Select(CreateAsync));
+        => await Task.WhenAll(entities.Select(entity => CreateAsync(entity)));
 
-    /// <inheritdoc cref="CreateAsync{TEntity}(TEntity)"/>
+    /// <inheritdoc cref="CreateAsync{TEntity}(TEntity,CancellationToken)"/>
     TEntity Create<TEntity>(TEntity entity)
         where TEntity : IKubernetesObject<V1ObjectMeta>
         => CreateAsync(entity).GetAwaiter().GetResult();
 
-    /// <inheritdoc cref="CreateAsync{TEntity}(IEnumerable{TEntity})"/>
+    /// <inheritdoc cref="CreateAsync{TEntity}(IEnumerable{TEntity},CancellationToken)"/>
     IEnumerable<TEntity> Create<TEntity>(IEnumerable<TEntity> entities)
         where TEntity : IKubernetesObject<V1ObjectMeta>
         => entities.Select(Create);
@@ -215,8 +244,9 @@ public interface IKubernetesClient : IDisposable
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="entity">The entity instance.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The updated instance of the entity.</returns>
-    Task<TEntity> UpdateAsync<TEntity>(TEntity entity)
+    Task<TEntity> UpdateAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <summary>
@@ -224,27 +254,34 @@ public interface IKubernetesClient : IDisposable
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="entities">An enumerable of entities.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The updated instances of the entities.</returns>
-    async Task<IEnumerable<TEntity>> UpdateAsync<TEntity>(IEnumerable<TEntity> entities)
+    async Task<IEnumerable<TEntity>> UpdateAsync<TEntity>(
+        IEnumerable<TEntity> entities,
+        CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        => await Task.WhenAll(entities.Select(UpdateAsync));
+        => await Task.WhenAll(entities.Select(entity => UpdateAsync(entity, cancellationToken)));
 
     /// <summary>
     /// Update a list of entities on the Kubernetes API.
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="entities">An enumerable of entities.</param>
+    /// <remarks>
+    /// This is invoking the API without any cancellation support. In order to pass a <see cref="CancellationToken"/>,
+    /// you need to use the <see cref="UpdateAsync{TEntity}(IEnumerable{TEntity},CancellationToken)"/> overload.
+    /// </remarks>
     /// <returns>The updated instances of the entities.</returns>
-    async Task<IEnumerable<TEntity>> UpdateAsync<TEntity>(params TEntity[] entities)
+    Task<IEnumerable<TEntity>> UpdateAsync<TEntity>(params TEntity[] entities)
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        => await Task.WhenAll(entities.Select(UpdateAsync));
+        => UpdateAsync(entities, CancellationToken.None);
 
-    /// <inheritdoc cref="UpdateAsync{TEntity}(TEntity)"/>
+    /// <inheritdoc cref="UpdateAsync{TEntity}(TEntity,CancellationToken)"/>
     TEntity Update<TEntity>(TEntity entity)
         where TEntity : IKubernetesObject<V1ObjectMeta>
         => UpdateAsync(entity).GetAwaiter().GetResult();
 
-    /// <inheritdoc cref="UpdateAsync{TEntity}(IEnumerable{TEntity})"/>
+    /// <inheritdoc cref="UpdateAsync{TEntity}(IEnumerable{TEntity},CancellationToken)"/>
     IEnumerable<TEntity> Update<TEntity>(IEnumerable<TEntity> entities)
         where TEntity : IKubernetesObject<V1ObjectMeta>
         => entities.Select(Update);
@@ -259,8 +296,9 @@ public interface IKubernetesClient : IDisposable
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="entity">The entity that contains a status object.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The entity with the updated status.</returns>
-    Task<TEntity> UpdateStatusAsync<TEntity>(TEntity entity)
+    Task<TEntity> UpdateStatusAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <inheritdoc cref="UpdateStatusAsync{TEntity}"/>
@@ -269,26 +307,29 @@ public interface IKubernetesClient : IDisposable
 
     /// <inheritdoc cref="Delete{TEntity}(TEntity)"/>
     /// <returns>A task that completes when the call was made.</returns>
-    Task DeleteAsync<TEntity>(TEntity entity)
+    Task DeleteAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        =>
-            DeleteAsync<TEntity>(entity.Name(), entity.Namespace());
+        => DeleteAsync<TEntity>(entity.Name(), entity.Namespace(), cancellationToken);
 
     /// <inheritdoc cref="Delete{TEntity}(IEnumerable{TEntity})"/>
     /// <returns>A task that completes when the call was made.</returns>
-    Task DeleteAsync<TEntity>(IEnumerable<TEntity> entities)
+    Task DeleteAsync<TEntity>(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        => Task.WhenAll(entities.Select(DeleteAsync));
+        => Task.WhenAll(entities.Select(entity => DeleteAsync(entity, cancellationToken)));
 
     /// <inheritdoc cref="Delete{TEntity}(TEntity[])"/>
+    /// <remarks>
+    /// This is invoking the API without any cancellation support. In order to pass a <see cref="CancellationToken"/>,
+    /// you need to use the <see cref="DeleteAsync{TEntity}(IEnumerable{TEntity},CancellationToken)"/> overload.
+    /// </remarks>
     /// <returns>A task that completes when the call was made.</returns>
     Task DeleteAsync<TEntity>(params TEntity[] entities)
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        => Task.WhenAll(entities.Select(DeleteAsync));
+        => DeleteAsync(entities, CancellationToken.None);
 
     /// <inheritdoc cref="Delete{TEntity}(string,string?)"/>
     /// <returns>A task that completes when the call was made.</returns>
-    Task DeleteAsync<TEntity>(string name, string? @namespace = null)
+    Task DeleteAsync<TEntity>(string name, string? @namespace = null, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <summary>
