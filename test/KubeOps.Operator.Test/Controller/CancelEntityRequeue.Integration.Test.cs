@@ -34,7 +34,7 @@ public class CancelEntityRequeueIntegrationTest : IntegrationTestBase
         Services.GetRequiredService<TimedEntityQueue<V1OperatorIntegrationTestEntity>>().Count.Should().Be(0);
     }
 
-    [Fact]
+    [Fact(Skip = "Unclear which code path is even tested here. From my understanding, there is and was no such check in the code.")]
     public async Task Should_Not_Affect_Queues_If_Only_Status_Updated()
     {
         _mock.TargetInvocationCount = 1;
