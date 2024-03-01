@@ -18,6 +18,7 @@ namespace KubeOps.Abstractions.Events;
 /// <param name="reason">The reason string. This should be a machine readable reason string.</param>
 /// <param name="message">A human readable string for the event.</param>
 /// <param name="type">The <see cref="EventType"/> of the event (either normal or warning).</param>
+/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
 /// <returns>A task that finishes when the event is created or updated.</returns>
 /// <example>
 /// Controller that fires a simple reconcile event on any entity it encounters.
@@ -34,7 +35,7 @@ namespace KubeOps.Abstractions.Events;
 ///
 ///     public async Task ReconcileAsync(V1TestEntity entity, CancellationToken token)
 ///     {
-///         await _eventPublisher(entity, "Reconciled", "Entity was reconciled.");
+///         await _eventPublisher(entity, "Reconciled", "Entity was reconciled.", cancellationToken: token);
 ///     }
 /// }
 /// </code>
@@ -43,4 +44,5 @@ public delegate Task EventPublisher(
     IKubernetesObject<V1ObjectMeta> entity,
     string reason,
     string message,
-    EventType type = EventType.Normal);
+    EventType type = EventType.Normal,
+    CancellationToken cancellationToken = default);

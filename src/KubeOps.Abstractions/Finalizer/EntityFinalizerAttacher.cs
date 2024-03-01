@@ -22,6 +22,7 @@ namespace KubeOps.Abstractions.Finalizer;
 /// <typeparam name="TImplementation">The type of the entity finalizer.</typeparam>
 /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
 /// <param name="entity">The instance of the entity, that the finalizer is attached if needed.</param>
+/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
 /// <returns>A <see cref="Task"/> that resolves when the finalizer was attached.</returns>
 /// <example>
 /// Use the finalizer delegate to attach the "FinalizerOne" to the entity as soon
@@ -37,11 +38,13 @@ namespace KubeOps.Abstractions.Finalizer;
 ///
 ///     public async Task ReconcileAsync(V1TestEntity entity, CancellationToken token)
 ///     {
-///         entity = await _finalizer1(entity);
+///         entity = await _finalizer1(entity, token);
 ///     }
 /// }
 /// </code>
 /// </example>
-public delegate Task<TEntity> EntityFinalizerAttacher<TImplementation, TEntity>(TEntity entity)
+public delegate Task<TEntity> EntityFinalizerAttacher<TImplementation, TEntity>(
+    TEntity entity,
+    CancellationToken cancellationToken = default)
     where TImplementation : IEntityFinalizer<TEntity>
     where TEntity : IKubernetesObject<V1ObjectMeta>;
