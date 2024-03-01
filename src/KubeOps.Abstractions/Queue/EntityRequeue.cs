@@ -36,7 +36,7 @@ namespace KubeOps.Abstractions.Queue;
 ///         _requeue = requeue;
 ///     }
 ///
-///     public async Task ReconcileAsync(V1TestEntity entity)
+///     public async Task ReconcileAsync(V1TestEntity entity, CancellationToken token)
 ///     {
 ///         _requeue(entity, TimeSpan.FromSeconds(5));
 ///     }

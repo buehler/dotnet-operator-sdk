@@ -93,7 +93,18 @@ public class OperatorBuilderTest
             s.Lifetime == ServiceLifetime.Singleton);
     }
 
-    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>;
+    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>
+    {
+        public Task ReconcileAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
 
-    private class TestFinalizer : IEntityFinalizer<V1OperatorIntegrationTestEntity>;
+        public Task DeletedAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+    }
+
+    private class TestFinalizer : IEntityFinalizer<V1OperatorIntegrationTestEntity>
+    {
+        public Task FinalizeAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+    }
 }

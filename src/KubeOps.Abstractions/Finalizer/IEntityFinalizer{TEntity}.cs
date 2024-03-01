@@ -14,7 +14,7 @@ public interface IEntityFinalizer<in TEntity>
     /// Finalize an entity that is pending for deletion.
     /// </summary>
     /// <param name="entity">The kubernetes entity that needs to be finalized.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A task that resolves when the operation is done.</returns>
-    Task FinalizeAsync(TEntity entity) =>
-        Task.CompletedTask;
+    Task FinalizeAsync(TEntity entity, CancellationToken cancellationToken);
 }

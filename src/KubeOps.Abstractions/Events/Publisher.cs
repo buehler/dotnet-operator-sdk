@@ -32,7 +32,7 @@ namespace KubeOps.Abstractions.Events;
 ///         _eventPublisher = eventPublisher;
 ///     }
 ///
-///     public async Task ReconcileAsync(V1TestEntity entity)
+///     public async Task ReconcileAsync(V1TestEntity entity, CancellationToken token)
 ///     {
 ///         await _eventPublisher(entity, "Reconciled", "Entity was reconciled.");
 ///     }

@@ -35,7 +35,7 @@ namespace KubeOps.Abstractions.Finalizer;
 ///     public V1TestEntityController(
 ///         EntityFinalizerAttacher&lt;FinalizerOne, V1TestEntity&gt; finalizer1) => _finalizer1 = finalizer1;
 ///
-///     public async Task ReconcileAsync(V1TestEntity entity)
+///     public async Task ReconcileAsync(V1TestEntity entity, CancellationToken token)
 ///     {
 ///         entity = await _finalizer1(entity);
 ///     }
