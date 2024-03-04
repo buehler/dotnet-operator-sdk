@@ -104,7 +104,10 @@ public interface IKubernetesClient : IDisposable
         string? @namespace = null,
         params LabelSelector[] labelSelectors)
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        => ListAsync<TEntity>(@namespace, labelSelectors.ToExpression());
+    {
+        using var cts = new CancellationTokenSource();
+        return ListAsync<TEntity>(@namespace, labelSelectors.ToExpression(), cts.Token);
+    }
 
     /// <inheritdoc cref="ListAsync{TEntity}(string?,string?,CancellationToken)"/>
     IList<TEntity> List<TEntity>(
@@ -162,8 +165,11 @@ public interface IKubernetesClient : IDisposable
     /// <param name="entities">The entity list.</param>
     /// <returns>The saved instances of the entities.</returns>
     Task<IEnumerable<TEntity>> SaveAsync<TEntity>(params TEntity[] entities)
-        where TEntity : IKubernetesObject<V1ObjectMeta> =>
-        SaveAsync(entities, CancellationToken.None);
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        using var cts = new CancellationTokenSource();
+        return SaveAsync(entities, cts.Token);
+    }
 
     /// <inheritdoc cref="SaveAsync{TEntity}(TEntity,CancellationToken)"/>
     TEntity Save<TEntity>(TEntity entity)
@@ -274,7 +280,10 @@ public interface IKubernetesClient : IDisposable
     /// <returns>The updated instances of the entities.</returns>
     Task<IEnumerable<TEntity>> UpdateAsync<TEntity>(params TEntity[] entities)
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        => UpdateAsync(entities, CancellationToken.None);
+    {
+        using var cts = new CancellationTokenSource();
+        return UpdateAsync(entities, cts.Token);
+    }
 
     /// <inheritdoc cref="UpdateAsync{TEntity}(TEntity,CancellationToken)"/>
     TEntity Update<TEntity>(TEntity entity)
