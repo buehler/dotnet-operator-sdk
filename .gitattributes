@@ -1,0 +1,3 @@
+# Normalize line endings in Git: https://www.aleksandrhovhannisyan.com/blog/crlf-vs-lf-normalizing-line-endings-in-git/
+* text=auto
+*.cs text eol=crlf
