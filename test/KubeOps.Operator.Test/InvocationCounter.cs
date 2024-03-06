@@ -11,7 +11,11 @@ public class InvocationCounter<TEntity>
     private TaskCompletionSource _task = new();
     public readonly List<(string Method, TEntity Entity)> Invocations = [];
 
+#if DEBUG
     public Task WaitForInvocations => _task.Task;
+#else
+    public Task WaitForInvocations => _task.Task.WaitAsync(TimeSpan.FromSeconds(30));
+#endif
 
     public int TargetInvocationCount { get; set; } = 1;
 
