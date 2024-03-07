@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net;
 using System.Runtime.CompilerServices;
 
@@ -21,6 +22,7 @@ public class KubernetesClient : IKubernetesClient
 
     private readonly KubernetesClientConfiguration _clientConfig;
     private readonly IKubernetes _client;
+    private bool _disposed;
 
     /// <summary>
     /// Create a new Kubernetes client for the given entity.
@@ -43,6 +45,9 @@ public class KubernetesClient : IKubernetesClient
     /// <summary>
     /// Create a new Kubernetes client for the given entity with a custom client configuration and client.
     /// </summary>
+    /// <remarks>
+    /// <paramref name="client"/> is automatically disposed if this <see cref="KubernetesClient"/> is also being disposed.
+    /// </remarks>
     /// <param name="clientConfig">The config for the underlying Kubernetes client.</param>
     /// <param name="client">The underlying client.</param>
     public KubernetesClient(KubernetesClientConfiguration clientConfig, IKubernetes client)
@@ -54,6 +59,17 @@ public class KubernetesClient : IKubernetesClient
     /// <inheritdoc />
     public Uri BaseUri => _client.BaseUri;
 
+    [DebuggerHidden]
+    private void ThrowIfDisposed()
+    {
+        if (!_disposed)
+        {
+            return;
+        }
+
+        throw new ObjectDisposedException(nameof(KubernetesClient));
+    }
+
     public static void ClearMetadataCache() => MetadataCache.Clear();
 
     /// <inheritdoc />
@@ -61,6 +77,7 @@ public class KubernetesClient : IKubernetesClient
         string downwardApiEnvName = "POD_NAMESPACE",
         CancellationToken cancellationToken = default)
     {
+        ThrowIfDisposed();
         if (_clientConfig.Namespace is { } configValue)
         {
             return configValue;
@@ -83,6 +100,8 @@ public class KubernetesClient : IKubernetesClient
     /// <inheritdoc />
     public string GetCurrentNamespace(string downwardApiEnvName = "POD_NAMESPACE")
     {
+        ThrowIfDisposed();
+
         if (_clientConfig.Namespace is { } configValue)
         {
             return configValue;
@@ -109,6 +128,8 @@ public class KubernetesClient : IKubernetesClient
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         var metadata = GetMetadata<TEntity>();
 
         try
@@ -138,6 +159,8 @@ public class KubernetesClient : IKubernetesClient
     public TEntity? Get<TEntity>(string name, string? @namespace = null)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         var metadata = GetMetadata<TEntity>();
 
         try
@@ -168,6 +191,8 @@ public class KubernetesClient : IKubernetesClient
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         var metadata = GetMetadata<TEntity>();
         return (@namespace switch
         {
@@ -191,6 +216,8 @@ public class KubernetesClient : IKubernetesClient
     public IList<TEntity> List<TEntity>(string? @namespace = null, string? labelSelector = null)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         var metadata = GetMetadata<TEntity>();
         return (@namespace switch
         {
@@ -212,6 +239,8 @@ public class KubernetesClient : IKubernetesClient
     public async Task<TEntity> CreateAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         using var client = CreateGenericClient<TEntity>();
         return await (entity.Namespace() switch
         {
@@ -224,6 +253,8 @@ public class KubernetesClient : IKubernetesClient
     public async Task<TEntity> UpdateAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         using var client = CreateGenericClient<TEntity>();
         return await (entity.Namespace() switch
         {
@@ -236,6 +267,8 @@ public class KubernetesClient : IKubernetesClient
     public Task<TEntity> UpdateStatusAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         var metadata = GetMetadata<TEntity>();
         return entity.Namespace() switch
         {
@@ -261,6 +294,8 @@ public class KubernetesClient : IKubernetesClient
     public TEntity UpdateStatus<TEntity>(TEntity entity)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         var metadata = GetMetadata<TEntity>();
         return entity.Namespace() switch
         {
@@ -287,6 +322,8 @@ public class KubernetesClient : IKubernetesClient
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         try
         {
             using var client = CreateGenericClient<TEntity>();
@@ -318,6 +355,7 @@ public class KubernetesClient : IKubernetesClient
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
         var metadata = GetMetadata<TEntity>();
         return (@namespace switch
         {
@@ -358,6 +396,7 @@ public class KubernetesClient : IKubernetesClient
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
         var metadata = GetMetadata<TEntity>();
         var watcher = (@namespace switch
         {
@@ -399,6 +438,12 @@ public class KubernetesClient : IKubernetesClient
             return;
         }
 
+        ThrowIfDisposed();
+
+        // The property is intentionally set before the underlying _client is disposed.
+        // This ensures that even if the disposal of the client is not finished yet, that all calls to the client
+        // are instantly failing.
+        _disposed = true;
         _client.Dispose();
     }
 
@@ -410,6 +455,7 @@ public class KubernetesClient : IKubernetesClient
 
     private GenericClient CreateGenericClient<TEntity>()
     {
+        ThrowIfDisposed();
         var metadata = GetMetadata<TEntity>();
         return metadata.Group switch
         {
