@@ -477,7 +477,7 @@ public interface IKubernetesClient : IDisposable
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <returns>An asynchronous enumerable that finishes once <paramref name="cancellationToken"/> is cancelled.</returns>
-    IAsyncEnumerable<(WatchEventType Type, TEntity? Entity)> WatchAsync<TEntity>(
+    IAsyncEnumerable<(WatchEventType Type, TEntity Entity)> WatchAsync<TEntity>(
         string? @namespace = null,
         string? resourceVersion = null,
         string? labelSelector = null,

@@ -382,14 +382,14 @@ public class KubernetesClient : IKubernetesClient
                 timeoutSeconds: timeout switch
                 {
                     null => null,
-                    _ => (int?)timeout.Value.TotalSeconds,
+                    _    => (int?)timeout.Value.TotalSeconds,
                 },
                 watch: true,
                 cancellationToken: cancellationToken),
         }).Watch(onEvent, onError, onClose);
     }
 
-    public async IAsyncEnumerable<(WatchEventType Type, TEntity? Entity)> WatchAsync<TEntity>(
+    public async IAsyncEnumerable<(WatchEventType Type, TEntity Entity)> WatchAsync<TEntity>(
         string? @namespace = null,
         string? resourceVersion = null,
         string? labelSelector = null,
@@ -422,7 +422,10 @@ public class KubernetesClient : IKubernetesClient
             cancellationToken: cancellationToken);
 
         await foreach ((WatchEventType watchEventType, TEntity? entity) in watcher)
+        {
+            Debug.Assert(entity is not null, "Received null entity during watch");
             yield return (watchEventType, entity);
+        }
     }
 
     public void Dispose()
