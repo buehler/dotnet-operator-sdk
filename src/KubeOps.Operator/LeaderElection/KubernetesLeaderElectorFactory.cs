@@ -13,10 +13,6 @@ internal sealed class KubernetesLeaderElectorFactory(
     OperatorSettings settings)
     : ILeaderElectorFactory
 {
-    public void Dispose()
-    {
-    }
-
     public LeaderElector CreateElector() => new(new LeaderElectionConfig(new LeaseLock(
         kubernetes,
         client.GetCurrentNamespace(),

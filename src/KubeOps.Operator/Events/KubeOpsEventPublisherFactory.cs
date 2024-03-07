@@ -18,8 +18,6 @@ internal sealed class KubeOpsEventPublisherFactory(
     OperatorSettings settings,
     ILogger<EventPublisher> logger) : IEventPublisherFactory
 {
-    public void Dispose() => client.Dispose();
-
     public EventPublisher Create() => async (entity, reason, message, type, token) =>
     {
         var @namespace = entity.Namespace() ?? "default";

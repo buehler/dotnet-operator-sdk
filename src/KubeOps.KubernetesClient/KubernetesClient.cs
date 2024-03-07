@@ -59,17 +59,9 @@ public class KubernetesClient : IKubernetesClient
     /// <inheritdoc />
     public Uri BaseUri => _client.BaseUri;
 
-    [DebuggerHidden]
-    private void ThrowIfDisposed()
-    {
-        if (!_disposed)
-        {
-            return;
-        }
-
-        throw new ObjectDisposedException(nameof(KubernetesClient));
-    }
-
+    /// <summary>
+    /// Clears the metadata cache.
+    /// </summary>
     public static void ClearMetadataCache() => MetadataCache.Clear();
 
     /// <inheritdoc />
@@ -382,7 +374,7 @@ public class KubernetesClient : IKubernetesClient
                 timeoutSeconds: timeout switch
                 {
                     null => null,
-                    _    => (int?)timeout.Value.TotalSeconds,
+                    _ => (int?)timeout.Value.TotalSeconds,
                 },
                 watch: true,
                 cancellationToken: cancellationToken),
@@ -454,6 +446,17 @@ public class KubernetesClient : IKubernetesClient
     {
         var type = typeof(TEntity);
         return MetadataCache.GetOrAdd(type, t => Entities.ToEntityMetadata(t).Metadata);
+    }
+
+    [DebuggerHidden]
+    private void ThrowIfDisposed()
+    {
+        if (!_disposed)
+        {
+            return;
+        }
+
+        throw new ObjectDisposedException(nameof(KubernetesClient));
     }
 
     private GenericClient CreateGenericClient<TEntity>()

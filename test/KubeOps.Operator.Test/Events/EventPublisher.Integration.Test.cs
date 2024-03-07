@@ -88,7 +88,7 @@ public class EventPublisherIntegrationTest : IntegrationTestBase
     {
         public async Task ReconcileAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken)
         {
-            await eventPublisher(entity, "REASON", "message");
+            await eventPublisher(entity, "REASON", "message", cancellationToken: cancellationToken);
             svc.Invocation(entity);
 
             if (svc.Invocations.Count < svc.TargetInvocationCount)
