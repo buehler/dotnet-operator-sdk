@@ -40,7 +40,7 @@ public class EventPublisherIntegrationTest : IntegrationTestBase
         e.Metadata.Annotations.Should().Contain(a => a.Key == "originalName" && a.Value == eventName);
     }
 
-    [Fact(Skip = "Does not work for some reason")]
+    [Fact]
     public async Task Should_Increase_Count_On_Existing_Event()
     {
         _mock.TargetInvocationCount = 5;
