@@ -16,7 +16,7 @@ namespace KubeOps.Operator.Events;
 internal sealed class KubeOpsEventPublisherFactory(
     IKubernetesClient client,
     OperatorSettings settings,
-    ILogger<EventPublisher> logger) : IEventPublisherFactory
+    ILogger<EventPublisher> logger) : IEventPublisherFactory, IDisposable
 {
     public void Dispose() => client.Dispose();
 
