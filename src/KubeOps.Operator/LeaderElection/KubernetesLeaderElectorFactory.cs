@@ -11,13 +11,8 @@ internal sealed class KubernetesLeaderElectorFactory(
     IKubernetes kubernetes,
     IKubernetesClient client,
     OperatorSettings settings)
-    : ILeaderElectorFactory, IDisposable
+    : ILeaderElectorFactory
 {
-    public void Dispose()
-    {
-        // Method intentionally left empty.
-    }
-
     public LeaderElector CreateElector() => new(new LeaderElectionConfig(new LeaseLock(
         kubernetes,
         client.GetCurrentNamespace(),
