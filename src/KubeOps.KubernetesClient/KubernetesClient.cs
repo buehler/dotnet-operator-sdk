@@ -1,5 +1,7 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net;
+using System.Runtime.CompilerServices;
 
 using k8s;
 using k8s.Autorest;
@@ -20,6 +22,7 @@ public class KubernetesClient : IKubernetesClient
 
     private readonly KubernetesClientConfiguration _clientConfig;
     private readonly IKubernetes _client;
+    private bool _disposed;
 
     /// <summary>
     /// Create a new Kubernetes client for the given entity.
@@ -42,6 +45,9 @@ public class KubernetesClient : IKubernetesClient
     /// <summary>
     /// Create a new Kubernetes client for the given entity with a custom client configuration and client.
     /// </summary>
+    /// <remarks>
+    /// <paramref name="client"/> is automatically disposed if this <see cref="KubernetesClient"/> is also being disposed.
+    /// </remarks>
     /// <param name="clientConfig">The config for the underlying Kubernetes client.</param>
     /// <param name="client">The underlying client.</param>
     public KubernetesClient(KubernetesClientConfiguration clientConfig, IKubernetes client)
@@ -53,11 +59,25 @@ public class KubernetesClient : IKubernetesClient
     /// <inheritdoc />
     public Uri BaseUri => _client.BaseUri;
 
+    [DebuggerHidden]
+    private void ThrowIfDisposed()
+    {
+        if (!_disposed)
+        {
+            return;
+        }
+
+        throw new ObjectDisposedException(nameof(KubernetesClient));
+    }
+
     public static void ClearMetadataCache() => MetadataCache.Clear();
 
     /// <inheritdoc />
-    public async Task<string> GetCurrentNamespaceAsync(string downwardApiEnvName = "POD_NAMESPACE")
+    public async Task<string> GetCurrentNamespaceAsync(
+        string downwardApiEnvName = "POD_NAMESPACE",
+        CancellationToken cancellationToken = default)
     {
+        ThrowIfDisposed();
         if (_clientConfig.Namespace is { } configValue)
         {
             return configValue;
@@ -70,7 +90,7 @@ public class KubernetesClient : IKubernetesClient
 
         if (File.Exists(DownwardApiNamespaceFile))
         {
-            var ns = await File.ReadAllTextAsync(DownwardApiNamespaceFile);
+            var ns = await File.ReadAllTextAsync(DownwardApiNamespaceFile, cancellationToken);
             return ns.Trim();
         }
 
@@ -80,6 +100,8 @@ public class KubernetesClient : IKubernetesClient
     /// <inheritdoc />
     public string GetCurrentNamespace(string downwardApiEnvName = "POD_NAMESPACE")
     {
+        ThrowIfDisposed();
+
         if (_clientConfig.Namespace is { } configValue)
         {
             return configValue;
@@ -100,9 +122,14 @@ public class KubernetesClient : IKubernetesClient
     }
 
     /// <inheritdoc />
-    public async Task<TEntity?> GetAsync<TEntity>(string name, string? @namespace = null)
+    public async Task<TEntity?> GetAsync<TEntity>(
+        string name,
+        string? @namespace = null,
+        CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         var metadata = GetMetadata<TEntity>();
 
         try
@@ -112,13 +139,15 @@ public class KubernetesClient : IKubernetesClient
                     metadata.Group ?? string.Empty,
                     metadata.Version,
                     metadata.PluralName,
-                    name)
+                    name,
+                    cancellationToken: cancellationToken)
                 : _client.CustomObjects.GetNamespacedCustomObjectAsync<TEntity>(
                     metadata.Group ?? string.Empty,
                     metadata.Version,
                     @namespace,
                     metadata.PluralName,
-                    name));
+                    name,
+                    cancellationToken: cancellationToken));
         }
         catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
         {
@@ -130,6 +159,8 @@ public class KubernetesClient : IKubernetesClient
     public TEntity? Get<TEntity>(string name, string? @namespace = null)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         var metadata = GetMetadata<TEntity>();
 
         try
@@ -154,9 +185,14 @@ public class KubernetesClient : IKubernetesClient
     }
 
     /// <inheritdoc />
-    public async Task<IList<TEntity>> ListAsync<TEntity>(string? @namespace = null, string? labelSelector = null)
+    public async Task<IList<TEntity>> ListAsync<TEntity>(
+        string? @namespace = null,
+        string? labelSelector = null,
+        CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         var metadata = GetMetadata<TEntity>();
         return (@namespace switch
         {
@@ -164,13 +200,15 @@ public class KubernetesClient : IKubernetesClient
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 metadata.PluralName,
-                labelSelector: labelSelector),
+                labelSelector: labelSelector,
+                cancellationToken: cancellationToken),
             _ => await _client.CustomObjects.ListNamespacedCustomObjectAsync<EntityList<TEntity>>(
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 @namespace,
                 metadata.PluralName,
-                labelSelector: labelSelector),
+                labelSelector: labelSelector,
+                cancellationToken: cancellationToken),
         }).Items;
     }
 
@@ -178,6 +216,8 @@ public class KubernetesClient : IKubernetesClient
     public IList<TEntity> List<TEntity>(string? @namespace = null, string? labelSelector = null)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         var metadata = GetMetadata<TEntity>();
         return (@namespace switch
         {
@@ -196,33 +236,39 @@ public class KubernetesClient : IKubernetesClient
     }
 
     /// <inheritdoc />
-    public async Task<TEntity> CreateAsync<TEntity>(TEntity entity)
+    public async Task<TEntity> CreateAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         using var client = CreateGenericClient<TEntity>();
         return await (entity.Namespace() switch
         {
-            { } ns => client.CreateNamespacedAsync(entity, ns),
-            null => client.CreateAsync(entity),
+            { } ns => client.CreateNamespacedAsync(entity, ns, cancellationToken),
+            null => client.CreateAsync(entity, cancellationToken),
         });
     }
 
     /// <inheritdoc />
-    public async Task<TEntity> UpdateAsync<TEntity>(TEntity entity)
+    public async Task<TEntity> UpdateAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         using var client = CreateGenericClient<TEntity>();
         return await (entity.Namespace() switch
         {
-            { } ns => client.ReplaceNamespacedAsync(entity, ns, entity.Name()),
-            null => client.ReplaceAsync(entity, entity.Name()),
+            { } ns => client.ReplaceNamespacedAsync(entity, ns, entity.Name(), cancellationToken),
+            null => client.ReplaceAsync(entity, entity.Name(), cancellationToken),
         });
     }
 
     /// <inheritdoc />
-    public Task<TEntity> UpdateStatusAsync<TEntity>(TEntity entity)
+    public Task<TEntity> UpdateStatusAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         var metadata = GetMetadata<TEntity>();
         return entity.Namespace() switch
         {
@@ -232,13 +278,15 @@ public class KubernetesClient : IKubernetesClient
                 metadata.Version,
                 ns,
                 metadata.PluralName,
-                entity.Name()),
+                entity.Name(),
+                cancellationToken: cancellationToken),
             _ => _client.CustomObjects.ReplaceClusterCustomObjectStatusAsync<TEntity>(
                 entity,
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 metadata.PluralName,
-                entity.Name()),
+                entity.Name(),
+                cancellationToken: cancellationToken),
         };
     }
 
@@ -246,6 +294,8 @@ public class KubernetesClient : IKubernetesClient
     public TEntity UpdateStatus<TEntity>(TEntity entity)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         var metadata = GetMetadata<TEntity>();
         return entity.Namespace() switch
         {
@@ -266,19 +316,24 @@ public class KubernetesClient : IKubernetesClient
     }
 
     /// <inheritdoc />
-    public async Task DeleteAsync<TEntity>(string name, string? @namespace = null)
+    public async Task DeleteAsync<TEntity>(
+        string name,
+        string? @namespace = null,
+        CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
+
         try
         {
             using var client = CreateGenericClient<TEntity>();
             switch (@namespace)
             {
                 case not null:
-                    await client.DeleteNamespacedAsync<V1Status>(@namespace, name);
+                    await client.DeleteNamespacedAsync<V1Status>(@namespace, name, cancellationToken);
                     break;
                 default:
-                    await client.DeleteAsync<V1Status>(name);
+                    await client.DeleteAsync<V1Status>(name, cancellationToken);
                     break;
             }
         }
@@ -300,6 +355,7 @@ public class KubernetesClient : IKubernetesClient
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        ThrowIfDisposed();
         var metadata = GetMetadata<TEntity>();
         return (@namespace switch
         {
@@ -326,11 +382,50 @@ public class KubernetesClient : IKubernetesClient
                 timeoutSeconds: timeout switch
                 {
                     null => null,
-                    _ => (int?)timeout.Value.TotalSeconds,
+                    _    => (int?)timeout.Value.TotalSeconds,
                 },
                 watch: true,
                 cancellationToken: cancellationToken),
         }).Watch(onEvent, onError, onClose);
+    }
+
+    public async IAsyncEnumerable<(WatchEventType Type, TEntity Entity)> WatchAsync<TEntity>(
+        string? @namespace = null,
+        string? resourceVersion = null,
+        string? labelSelector = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        ThrowIfDisposed();
+        var metadata = GetMetadata<TEntity>();
+        var watcher = (@namespace switch
+        {
+            not null => _client.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(
+                metadata.Group ?? string.Empty,
+                metadata.Version,
+                @namespace,
+                metadata.PluralName,
+                labelSelector: labelSelector,
+                resourceVersion: resourceVersion,
+                watch: true,
+                cancellationToken: cancellationToken),
+            _ => _client.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(
+                metadata.Group ?? string.Empty,
+                metadata.Version,
+                metadata.PluralName,
+                labelSelector: labelSelector,
+                resourceVersion: resourceVersion,
+                watch: true,
+                cancellationToken: cancellationToken),
+        }).WatchAsync<TEntity, object>(
+            onError: ex => throw ex,
+            cancellationToken: cancellationToken);
+
+        await foreach ((WatchEventType watchEventType, TEntity? entity) in watcher)
+        {
+            Debug.Assert(entity is not null, "Received null entity during watch");
+            yield return (watchEventType, entity);
+        }
     }
 
     public void Dispose()
@@ -346,6 +441,12 @@ public class KubernetesClient : IKubernetesClient
             return;
         }
 
+        ThrowIfDisposed();
+
+        // The property is intentionally set before the underlying _client is disposed.
+        // This ensures that even if the disposal of the client is not finished yet, that all calls to the client
+        // are instantly failing.
+        _disposed = true;
         _client.Dispose();
     }
 
@@ -357,6 +458,7 @@ public class KubernetesClient : IKubernetesClient
 
     private GenericClient CreateGenericClient<TEntity>()
     {
+        ThrowIfDisposed();
         var metadata = GetMetadata<TEntity>();
         return metadata.Group switch
         {

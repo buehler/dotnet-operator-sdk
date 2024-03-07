@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 using k8s;
 using k8s.Models;
@@ -9,15 +10,20 @@ public class InvocationCounter<TEntity>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private TaskCompletionSource _task = new();
-    public readonly List<(string Method, TEntity Entity)> Invocations = [];
+    private readonly ConcurrentQueue<(string Method, TEntity Entity)> _invocations = new();
+    public IReadOnlyList<(string Method, TEntity Entity)> Invocations => _invocations.ToList();
 
+#if DEBUG
     public Task WaitForInvocations => _task.Task;
+#else
+    public Task WaitForInvocations => _task.Task.WaitAsync(TimeSpan.FromSeconds(30));
+#endif
 
     public int TargetInvocationCount { get; set; } = 1;
 
     public void Invocation(TEntity entity, [CallerMemberName] string name = "Invocation")
     {
-        Invocations.Add((name, entity));
+        _invocations.Enqueue((name, entity));
         if (Invocations.Count >= TargetInvocationCount)
         {
             _task.TrySetResult();
@@ -26,7 +32,7 @@ public class InvocationCounter<TEntity>
 
     public void Clear()
     {
-        Invocations.Clear();
+        _invocations.Clear();
         _task = new TaskCompletionSource();
         TargetInvocationCount = 1;
     }

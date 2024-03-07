@@ -58,11 +58,9 @@ public class OperatorBuilderTest
         _builder.AddFinalizer<TestFinalizer, V1OperatorIntegrationTestEntity>(string.Empty);
 
         _builder.Services.Should().Contain(s =>
-            s.ServiceType == typeof(TestFinalizer) &&
+            s.IsKeyedService &&
+            s.KeyedImplementationType == typeof(TestFinalizer) &&
             s.Lifetime == ServiceLifetime.Transient);
-        _builder.Services.Should().Contain(s =>
-            s.ServiceType == typeof(FinalizerRegistration) &&
-            s.Lifetime == ServiceLifetime.Singleton);
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(EntityFinalizerAttacher<TestFinalizer, V1OperatorIntegrationTestEntity>) &&
             s.Lifetime == ServiceLifetime.Transient);
@@ -93,7 +91,18 @@ public class OperatorBuilderTest
             s.Lifetime == ServiceLifetime.Singleton);
     }
 
-    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>;
+    private class TestController : IEntityController<V1OperatorIntegrationTestEntity>
+    {
+        public Task ReconcileAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
 
-    private class TestFinalizer : IEntityFinalizer<V1OperatorIntegrationTestEntity>;
+        public Task DeletedAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+    }
+
+    private class TestFinalizer : IEntityFinalizer<V1OperatorIntegrationTestEntity>
+    {
+        public Task FinalizeAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+    }
 }

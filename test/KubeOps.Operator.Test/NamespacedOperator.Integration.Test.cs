@@ -77,13 +77,13 @@ public class NamespacedOperatorIntegrationTest : IntegrationTestBase
 
     private class TestController(InvocationCounter<V1OperatorIntegrationTestEntity> svc) : IEntityController<V1OperatorIntegrationTestEntity>
     {
-        public Task ReconcileAsync(V1OperatorIntegrationTestEntity entity)
+        public Task ReconcileAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken)
         {
             svc.Invocation(entity);
             return Task.CompletedTask;
         }
 
-        public Task DeletedAsync(V1OperatorIntegrationTestEntity entity)
+        public Task DeletedAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken)
         {
             svc.Invocation(entity);
             return Task.CompletedTask;

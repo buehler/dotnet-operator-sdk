@@ -7,7 +7,7 @@ namespace KubeOps.Abstractions.Queue;
 /// <para>Injectable delegate for requeueing entities.</para>
 /// <para>
 /// Use this delegate when you need to pro-actively reconcile an entity after a
-/// certain amount of time. This is useful if you want to check your entities
+/// certain amount of time. This is useful, if you want to check your entities
 /// periodically.
 /// </para>
 /// <para>
@@ -36,7 +36,7 @@ namespace KubeOps.Abstractions.Queue;
 ///         _requeue = requeue;
 ///     }
 ///
-///     public async Task ReconcileAsync(V1TestEntity entity)
+///     public async Task ReconcileAsync(V1TestEntity entity, CancellationToken token)
 ///     {
 ///         _requeue(entity, TimeSpan.FromSeconds(5));
 ///     }

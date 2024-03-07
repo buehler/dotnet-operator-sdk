@@ -21,12 +21,12 @@ namespace KubeOps.Abstractions.Controller;
 ///         _logger = logger;
 ///     }
 ///
-///     public async Task ReconcileAsync(V1TestEntity entity)
+///     public async Task ReconcileAsync(V1TestEntity entity, CancellationToken token)
 ///     {
 ///         _logger.LogInformation("Reconciling entity {Entity}.", entity);
 ///     }
 ///
-///     public async Task DeletedAsync(V1TestEntity entity)
+///     public async Task DeletedAsync(V1TestEntity entity, CancellationToken token)
 ///     {
 ///         _logger.LogInformation("Deleting entity {Entity}.", entity);
 ///     }
@@ -40,17 +40,17 @@ public interface IEntityController<in TEntity>
     /// Called for `added` and `modified` events from the watcher.
     /// </summary>
     /// <param name="entity">The entity that fired the reconcile event.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A task that completes when the reconciliation is done.</returns>
-    Task ReconcileAsync(TEntity entity) =>
-        Task.CompletedTask;
+    Task ReconcileAsync(TEntity entity, CancellationToken cancellationToken);
 
     /// <summary>
     /// Called for `delete` events for a given entity.
     /// </summary>
     /// <param name="entity">The entity that fired the deleted event.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>
     /// A task that completes, when the reconciliation is done.
     /// </returns>
-    Task DeletedAsync(TEntity entity) =>
-        Task.CompletedTask;
+    Task DeletedAsync(TEntity entity, CancellationToken cancellationToken);
 }
