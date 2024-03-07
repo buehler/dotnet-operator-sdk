@@ -13,7 +13,7 @@ namespace KubeOps.Operator.Queue;
 internal sealed class TimedEntityQueue<TEntity> : IDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
-    // A shared task factory for all the created tasks. Used to
+    // A shared task factory for all the created tasks.
     private readonly TaskFactory _scheduledEntries = new(TaskScheduler.Current);
 
     // Used for managing all the tasks that should add something to the queue.
