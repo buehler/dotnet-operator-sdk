@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Net;
 using System.Runtime.Serialization;
 using System.Text.Json;
 
@@ -59,39 +60,58 @@ internal class ResourceWatcher<TEntity>(
     {
         try
         {
-            await foreach ((WatchEventType type, TEntity? entity) in client.WatchAsync<TEntity>(
-                               settings.Namespace,
-                               cancellationToken: stoppingToken))
+            while (!stoppingToken.IsCancellationRequested)
             {
+                await foreach ((WatchEventType type, TEntity? entity) in client.WatchAsync<TEntity>(
+                                   settings.Namespace,
+                                   cancellationToken: stoppingToken))
+                {
 #pragma warning disable SA1312
-                using var _ = logger.BeginScope(new
+                    using var _ = logger.BeginScope(new
 #pragma warning restore SA1312
-                {
-                    EventType = type,
+                    {
+                        EventType = type,
 
-                    // ReSharper disable once RedundantAnonymousTypePropertyName
-                    Kind = entity?.Kind,
-                    Name = entity?.Name(),
-                    ResourceVersion = entity?.ResourceVersion(),
-                });
-                logger.LogInformation(
-                    """Received watch event "{EventType}" for "{Kind}/{Name}", last observed resource version: {ResourceVersion}.""",
-                    type,
-                    entity?.Kind,
-                    entity?.Name(),
-                    entity?.ResourceVersion());
-                try
-                {
-                    await OnEventAsync(type, entity, stoppingToken);
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(
-                        e,
-                        "Reconciliation of {EventType} for {Kind}/{Name} failed.",
+                        // ReSharper disable once RedundantAnonymousTypePropertyName
+                        Kind = entity?.Kind,
+                        Name = entity?.Name(),
+                        ResourceVersion = entity?.ResourceVersion(),
+                    });
+                    logger.LogInformation(
+                        """Received watch event "{EventType}" for "{Kind}/{Name}", last observed resource version: {ResourceVersion}.""",
                         type,
                         entity?.Kind,
-                        entity.Name());
+                        entity?.Name(),
+                        entity?.ResourceVersion());
+                    try
+                    {
+                        await OnEventAsync(type, entity, stoppingToken);
+                    }
+                    catch (KubernetesException e)
+                    {
+                        if (e.Status.Code == (int)HttpStatusCode.Gone)
+                        {
+                            logger.LogDebug("Watch restarting due to 410 HTTP Gone");
+
+                            break;
+                        }
+
+                        LogReconciliationFailed(e);
+                    }
+                    catch (Exception e)
+                    {
+                        LogReconciliationFailed(e);
+                    }
+
+                    void LogReconciliationFailed(Exception exception)
+                    {
+                        logger.LogError(
+                            exception,
+                            "Reconciliation of {EventType} for {Kind}/{Name} failed.",
+                            type,
+                            entity?.Kind,
+                            entity.Name());
+                    }
                 }
             }
         }
