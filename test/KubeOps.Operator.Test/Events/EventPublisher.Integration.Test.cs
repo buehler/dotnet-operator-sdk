@@ -86,15 +86,20 @@ public class EventPublisherIntegrationTest : IntegrationTestBase
         EventPublisher eventPublisher)
         : IEntityController<V1OperatorIntegrationTestEntity>
     {
-        public async Task ReconcileAsync(V1OperatorIntegrationTestEntity entity)
+        public async Task ReconcileAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken)
         {
-            await eventPublisher(entity, "REASON", "message");
+            await eventPublisher(entity, "REASON", "message", cancellationToken: cancellationToken);
             svc.Invocation(entity);
 
             if (svc.Invocations.Count < svc.TargetInvocationCount)
             {
                 requeue(entity, TimeSpan.FromMilliseconds(10));
             }
+        }
+
+        public Task DeletedAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
         }
     }
 }

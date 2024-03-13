@@ -84,7 +84,7 @@ public class EntityRequeueIntegrationTest : IntegrationTestBase
             EntityRequeue<V1OperatorIntegrationTestEntity> requeue)
         : IEntityController<V1OperatorIntegrationTestEntity>
     {
-        public Task ReconcileAsync(V1OperatorIntegrationTestEntity entity)
+        public Task ReconcileAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken)
         {
             svc.Invocation(entity);
             if (svc.Invocations.Count <= svc.TargetInvocationCount)
@@ -94,5 +94,8 @@ public class EntityRequeueIntegrationTest : IntegrationTestBase
 
             return Task.CompletedTask;
         }
+
+        public Task DeletedAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

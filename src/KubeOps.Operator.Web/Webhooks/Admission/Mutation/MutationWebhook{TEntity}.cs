@@ -41,9 +41,13 @@ public abstract class MutationWebhook<TEntity> : ControllerBase
     /// </summary>
     /// <param name="entity">The (soon to be) new entity.</param>
     /// <param name="dryRun">Flag that indicates if the webhook was called in a dry-run.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="MutationResult{TEntity}"/>.</returns>
     [NonAction]
-    public virtual Task<MutationResult<TEntity>> CreateAsync(TEntity entity, bool dryRun) =>
+    public virtual Task<MutationResult<TEntity>> CreateAsync(
+        TEntity entity,
+        bool dryRun,
+        CancellationToken cancellationToken) =>
         Task.FromResult(Create(entity, dryRun));
 
     /// <inheritdoc cref="CreateAsync"/>
@@ -56,9 +60,14 @@ public abstract class MutationWebhook<TEntity> : ControllerBase
     /// <param name="oldEntity">The currently stored entity in the Kubernetes API.</param>
     /// <param name="newEntity">The new entity that should be stored.</param>
     /// <param name="dryRun">Flag that indicates if the webhook was called in a dry-run.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="MutationResult{TEntity}"/>.</returns>
     [NonAction]
-    public virtual Task<MutationResult<TEntity>> UpdateAsync(TEntity oldEntity, TEntity newEntity, bool dryRun) =>
+    public virtual Task<MutationResult<TEntity>> UpdateAsync(
+        TEntity oldEntity,
+        TEntity newEntity,
+        bool dryRun,
+        CancellationToken cancellationToken) =>
         Task.FromResult(Update(oldEntity, newEntity, dryRun));
 
     /// <inheritdoc cref="UpdateAsync"/>
@@ -70,9 +79,13 @@ public abstract class MutationWebhook<TEntity> : ControllerBase
     /// </summary>
     /// <param name="entity">The (soon to be removed) entity.</param>
     /// <param name="dryRun">Flag that indicates if the webhook was called in a dry-run.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="MutationResult{TEntity}"/>.</returns>
     [NonAction]
-    public virtual Task<MutationResult<TEntity>> DeleteAsync(TEntity entity, bool dryRun) =>
+    public virtual Task<MutationResult<TEntity>> DeleteAsync(
+        TEntity entity,
+        bool dryRun,
+        CancellationToken cancellationToken) =>
         Task.FromResult(Delete(entity, dryRun));
 
     /// <inheritdoc cref="DeleteAsync"/>
@@ -84,9 +97,12 @@ public abstract class MutationWebhook<TEntity> : ControllerBase
     /// This method will call the correct method based on the operation.
     /// </summary>
     /// <param name="request">The incoming admission request for an entity.</param>
+    /// <param name="cancellationToken">The incoming cancellation token that's cancelled if the request gets aborted.</param>
     /// <returns>The <see cref="MutationResult{TEntity}"/>.</returns>
     [HttpPost]
-    public async Task<IActionResult> Mutate([FromBody] AdmissionRequest<TEntity> request)
+    public async Task<IActionResult> Mutate(
+        [FromBody] AdmissionRequest<TEntity> request,
+        CancellationToken cancellationToken)
     {
         var original = JsonDiffer.GetNode(request.Request.Operation switch
         {
@@ -96,12 +112,13 @@ public abstract class MutationWebhook<TEntity> : ControllerBase
 
         var result = request.Request.Operation switch
         {
-            CreateOperation => await CreateAsync(request.Request.Object!, request.Request.DryRun),
+            CreateOperation => await CreateAsync(request.Request.Object!, request.Request.DryRun, cancellationToken),
             UpdateOperation => await UpdateAsync(
                 request.Request.OldObject!,
                 request.Request.Object!,
-                request.Request.DryRun),
-            DeleteOperation => await DeleteAsync(request.Request.OldObject!, request.Request.DryRun),
+                request.Request.DryRun,
+                cancellationToken),
+            DeleteOperation => await DeleteAsync(request.Request.OldObject!, request.Request.DryRun, cancellationToken),
             _ => Fail(
                 $"Operation {request.Request.Operation} is not supported.",
                 StatusCodes.Status422UnprocessableEntity),

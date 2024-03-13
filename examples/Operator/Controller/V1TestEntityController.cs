@@ -15,7 +15,7 @@ public class V1TestEntityController(ILogger<V1TestEntityController> logger,
         EventPublisher eventPublisher)
     : IEntityController<V1TestEntity>
 {
-    public async Task ReconcileAsync(V1TestEntity entity)
+    public async Task ReconcileAsync(V1TestEntity entity, CancellationToken cancellationToken)
     {
         logger.LogInformation("Reconciling entity {Entity}.", entity);
 
@@ -24,7 +24,7 @@ public class V1TestEntityController(ILogger<V1TestEntityController> logger,
         requeue(entity, TimeSpan.FromSeconds(5));
     }
 
-    public Task DeletedAsync(V1TestEntity entity)
+    public Task DeletedAsync(V1TestEntity entity, CancellationToken cancellationToken)
     {
         logger.LogInformation("Deleting entity {Entity}.", entity);
         return Task.CompletedTask;
