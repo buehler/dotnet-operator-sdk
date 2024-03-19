@@ -14,10 +14,11 @@ internal sealed class EntityRequeueBackgroundService<TEntity>(
     IKubernetesClient client,
     TimedEntityQueue<TEntity> queue,
     IServiceProvider provider,
-    ILogger<EntityRequeueBackgroundService<TEntity>> logger) : IHostedService, IDisposable
+    ILogger<EntityRequeueBackgroundService<TEntity>> logger) : IHostedService, IDisposable, IAsyncDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private readonly CancellationTokenSource _cts = new();
+    private bool _disposed;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -36,17 +37,50 @@ internal sealed class EntityRequeueBackgroundService<TEntity>(
         return Task.CompletedTask;
     }
 
-#if NET8_0_OR_GREATER
-    public Task StopAsync(CancellationToken cancellationToken) => _cts.CancelAsync();
-#else
     public Task StopAsync(CancellationToken cancellationToken)
     {
+        if (_disposed)
+        {
+            return Task.CompletedTask;
+        }
+
+#if NET8_0_OR_GREATER
+        return _cts.CancelAsync();
+#else
         _cts.Cancel();
         return Task.CompletedTask;
-    }
 #endif
+    }
 
-    public void Dispose() => _cts.Dispose();
+    public void Dispose()
+    {
+        _cts.Dispose();
+        client.Dispose();
+        queue.Dispose();
+
+        _disposed = true;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await CastAndDispose(_cts);
+        await CastAndDispose(client);
+        await CastAndDispose(queue);
+
+        _disposed = true;
+
+        static async ValueTask CastAndDispose(IDisposable resource)
+        {
+            if (resource is IAsyncDisposable resourceAsyncDisposable)
+            {
+                await resourceAsyncDisposable.DisposeAsync();
+            }
+            else
+            {
+                resource.Dispose();
+            }
+        }
+    }
 
     private async Task WatchAsync(CancellationToken cancellationToken)
     {

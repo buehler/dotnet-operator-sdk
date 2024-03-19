@@ -21,6 +21,7 @@ internal sealed class LeaderAwareResourceWatcher<TEntity>(
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private readonly CancellationTokenSource _cts = new();
+    private bool _disposed;
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
@@ -35,12 +36,28 @@ internal sealed class LeaderAwareResourceWatcher<TEntity>(
     public override Task StopAsync(CancellationToken cancellationToken)
     {
         logger.LogDebug("Unsubscribe from leadership updates.");
-        _cts.Cancel();
-        _cts.Dispose();
+        if (_disposed)
+        {
+            return Task.CompletedTask;
+        }
 
         elector.OnStartedLeading -= StartedLeading;
         elector.OnStoppedLeading -= StoppedLeading;
         return Task.CompletedTask;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (!disposing)
+        {
+            return;
+        }
+
+        _cts.Dispose();
+        elector.Dispose();
+        _disposed = true;
+
+        base.Dispose(disposing);
     }
 
     private void StartedLeading()

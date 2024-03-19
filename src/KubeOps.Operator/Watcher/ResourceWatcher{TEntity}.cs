@@ -24,14 +24,20 @@ internal class ResourceWatcher<TEntity>(
     TimedEntityQueue<TEntity> requeue,
     OperatorSettings settings,
     IKubernetesClient client)
-    : IHostedService
+    : IHostedService, IAsyncDisposable, IDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private readonly ConcurrentDictionary<string, long> _entityCache = new();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     private uint _watcherReconnectRetries;
-    private Task _eventWatcher = Task.CompletedTask;
+    private Task? _eventWatcher;
+    private bool _disposed;
+
+    ~ResourceWatcher()
+    {
+        Dispose(false);
+    }
 
     public virtual Task StartAsync(CancellationToken cancellationToken)
     {
@@ -46,14 +52,78 @@ internal class ResourceWatcher<TEntity>(
     public virtual async Task StopAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Stopping resource watcher for {ResourceType}.", typeof(TEntity).Name);
+        if (_disposed)
+        {
+            return;
+        }
+
 #if NET8_0_OR_GREATER
         await _cancellationTokenSource.CancelAsync();
 #else
         _cancellationTokenSource.Cancel();
 #endif
-        await _eventWatcher.WaitAsync(cancellationToken);
-        _cancellationTokenSource.Dispose();
+        if (_eventWatcher is not null)
+        {
+            await _eventWatcher.WaitAsync(cancellationToken);
+        }
+
         logger.LogInformation("Stopped resource watcher for {ResourceType}.", typeof(TEntity).Name);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await StopAsync(CancellationToken.None);
+        await DisposeAsyncCore();
+        GC.SuppressFinalize(this);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposing)
+        {
+            return;
+        }
+
+        _cancellationTokenSource.Dispose();
+        _eventWatcher?.Dispose();
+        requeue.Dispose();
+        client.Dispose();
+
+        _disposed = true;
+    }
+
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        if (_eventWatcher is not null)
+        {
+            await CastAndDispose(_eventWatcher);
+        }
+
+        await CastAndDispose(_cancellationTokenSource);
+        await CastAndDispose(requeue);
+        await CastAndDispose(client);
+
+        _disposed = true;
+
+        return;
+
+        static async ValueTask CastAndDispose(IDisposable resource)
+        {
+            if (resource is IAsyncDisposable resourceAsyncDisposable)
+            {
+                await resourceAsyncDisposable.DisposeAsync();
+            }
+            else
+            {
+                resource.Dispose();
+            }
+        }
     }
 
     private async Task WatchClientEventsAsync(CancellationToken stoppingToken)
