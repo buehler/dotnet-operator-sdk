@@ -428,12 +428,10 @@ public class KubernetesClient : IKubernetesClient
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!disposing)
+        if (!disposing || _disposed)
         {
             return;
         }
-
-        ThrowIfDisposed();
 
         // The property is intentionally set before the underlying _client is disposed.
         // This ensures that even if the disposal of the client is not finished yet, that all calls to the client
