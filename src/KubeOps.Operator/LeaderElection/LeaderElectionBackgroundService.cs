@@ -8,9 +8,11 @@ namespace KubeOps.Operator.LeaderElection;
 /// This background service connects to the API and continuously watches the leader election.
 /// </summary>
 /// <param name="elector">The elector.</param>
-internal sealed class LeaderElectionBackgroundService(LeaderElector elector) : IHostedService, IDisposable
+internal sealed class LeaderElectionBackgroundService(LeaderElector elector)
+    : IHostedService, IDisposable, IAsyncDisposable
 {
     private readonly CancellationTokenSource _cts = new();
+    private bool _disposed;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -29,15 +31,45 @@ internal sealed class LeaderElectionBackgroundService(LeaderElector elector) : I
         return Task.CompletedTask;
     }
 
-    public void Dispose() => _cts.Dispose();
+    public void Dispose()
+    {
+        _cts.Dispose();
+        elector.Dispose();
+        _disposed = true;
+    }
 
-#if NET8_0_OR_GREATER
-    public Task StopAsync(CancellationToken cancellationToken) => _cts.CancelAsync();
-#else
     public Task StopAsync(CancellationToken cancellationToken)
     {
+        if (_disposed)
+        {
+            return Task.CompletedTask;
+        }
+
+#if NET8_0_OR_GREATER
+        return _cts.CancelAsync();
+#else
         _cts.Cancel();
         return Task.CompletedTask;
-    }
 #endif
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await CastAndDispose(_cts);
+        await CastAndDispose(elector);
+
+        _disposed = true;
+
+        static async ValueTask CastAndDispose(IDisposable resource)
+        {
+            if (resource is IAsyncDisposable resourceAsyncDisposable)
+            {
+                await resourceAsyncDisposable.DisposeAsync();
+            }
+            else
+            {
+                resource.Dispose();
+            }
+        }
+    }
 }
