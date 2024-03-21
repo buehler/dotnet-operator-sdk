@@ -3,7 +3,7 @@
         <ProjectReference Include="..\..\src\KubeOps.Generator\KubeOps.Generator.csproj"/>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.8.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.9.2" />
         <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.SourceGenerators.Testing.XUnit" Version="1.1.1"/>
