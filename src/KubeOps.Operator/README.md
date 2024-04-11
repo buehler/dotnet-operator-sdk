@@ -28,7 +28,7 @@ However, for a plain operator without webhooks, no ASP.net
 is required (in contrast to v7).
 
 ```csharp
-using KubeOps.Operator.Extensions;
+using KubeOps.Operator;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
