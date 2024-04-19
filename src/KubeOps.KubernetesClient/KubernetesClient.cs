@@ -57,6 +57,9 @@ public class KubernetesClient : IKubernetesClient
     }
 
     /// <inheritdoc />
+    public IKubernetes ApiClient => _client;
+
+    /// <inheritdoc />
     public Uri BaseUri => _client.BaseUri;
 
     /// <summary>
@@ -324,6 +327,7 @@ public class KubernetesClient : IKubernetesClient
                 case not null:
                     await client.DeleteNamespacedAsync<V1Status>(@namespace, name, cancellationToken);
                     break;
+
                 default:
                     await client.DeleteAsync<V1Status>(name, cancellationToken);
                     break;

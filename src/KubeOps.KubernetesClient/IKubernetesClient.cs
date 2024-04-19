@@ -14,6 +14,12 @@ namespace KubeOps.KubernetesClient;
 public interface IKubernetesClient : IDisposable
 {
     /// <summary>
+    /// Represents the "original" kubernetes client from the
+    /// "KubernetesClient" package.
+    /// </summary>
+    IKubernetes ApiClient { get; }
+
+    /// <summary>
     /// Return the base URI of the currently used KubernetesClient.
     /// </summary>
     Uri BaseUri { get; }
