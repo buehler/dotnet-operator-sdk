@@ -11,6 +11,6 @@
         <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" />
-        <PackageReference Include="Spectre.Console.Testing" Version="0.49.0" />
+        <PackageReference Include="Spectre.Console.Testing" Version="0.49.1" />
     </ItemGroup>
 </Project>
