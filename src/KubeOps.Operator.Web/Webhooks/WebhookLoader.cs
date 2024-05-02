@@ -1,11 +1,10 @@
 ﻿using System.Reflection;
-using System.Runtime.Versioning;
 
 using KubeOps.Operator.Web.Webhooks.Admission.Mutation;
 using KubeOps.Operator.Web.Webhooks.Admission.Validation;
 using KubeOps.Operator.Web.Webhooks.Conversion;
 
-namespace KubeOps.Operator.Web.LocalTunnel;
+namespace KubeOps.Operator.Web.Webhooks;
 
 internal record WebhookLoader(Assembly Entry)
 {

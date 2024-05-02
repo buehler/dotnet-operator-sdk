@@ -4,6 +4,7 @@ using KubeOps.Abstractions.Builder;
 using KubeOps.Operator.Builder;
 using KubeOps.Operator.Web.Builder;
 using KubeOps.Operator.Web.LocalTunnel;
+using KubeOps.Operator.Web.Webhooks;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -21,7 +22,7 @@ public class OperatorBuilderExtensionsTest
 
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(IHostedService) &&
-            s.ImplementationType == typeof(DevelopmentTunnelService) &&
+            s.ImplementationType == typeof(TunnelWebhookService) &&
             s.Lifetime == ServiceLifetime.Singleton);
     }
 
@@ -31,7 +32,7 @@ public class OperatorBuilderExtensionsTest
         _builder.AddDevelopmentTunnel(1337, "my-host");
 
         _builder.Services.Should().Contain(s =>
-            s.ServiceType == typeof(TunnelConfig) &&
+            s.ServiceType == typeof(WebhookConfig) &&
             s.Lifetime == ServiceLifetime.Singleton);
     }
 }
