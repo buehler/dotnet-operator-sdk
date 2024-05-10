@@ -147,7 +147,7 @@ namespace KubeOps.Operator.Web
                 request.CertificateExtensions.Add(
                     new X509EnhancedKeyUsageExtension(
                         [new Oid("1.3.6.1.5.5.7.3.1"), new Oid("1.3.6.1.5.5.7.3.2")],
-                        true));
+                        false));
                 request.CertificateExtensions.Add(
                     new X509SubjectKeyIdentifierExtension(
                         Root.Certificate.PublicKey,
