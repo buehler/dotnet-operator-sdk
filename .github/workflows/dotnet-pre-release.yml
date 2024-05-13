@@ -1,7 +1,9 @@
-name: .NET Release
+name: .NET Pre Release
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   semantic-release:
@@ -24,18 +26,9 @@ jobs:
             semantic-release-net
           branches: |
             [
-              "main",
               {
-                "name": "maintenance/7.x",
-                "range": "7.x"
-              },
-              {
-                "name": "maintenance/8.x",
-                "range": "8.x"
-              },
-              {
-                "name": "maintenance/9.x",
-                "range": "9.x"
+                "name": "main",
+                "prerelease": true
               }
             ]
         env:
