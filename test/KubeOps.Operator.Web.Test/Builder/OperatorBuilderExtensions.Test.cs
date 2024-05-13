@@ -55,7 +55,7 @@ public class OperatorBuilderExtensionsTest : IDisposable
     public void Should_Add_Certificate_Provider()
     {
         _builder.UseCertificateProvider(54321, Environment.MachineName, _certProvider);
-        
+
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(ICertificateProvider) &&
             s.Lifetime == ServiceLifetime.Singleton);

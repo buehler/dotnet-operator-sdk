@@ -43,9 +43,11 @@ public static class OperatorBuilderExtensions
     /// </example>
     [RequiresPreviewFeatures(
         "LocalTunnel is sometimes unstable, use with caution.")]
+#pragma warning disable S1133 // Deprecated code should be removed
     [Obsolete(
         "LocalTunnel features are deprecated and will be removed in a future version. " +
         $"Instead, use the {nameof(UseCertificateProvider)} method for development webhooks.")]
+#pragma warning restore S1133 // Deprecated code should be removed
     public static IOperatorBuilder AddDevelopmentTunnel(
         this IOperatorBuilder builder,
         ushort port,
