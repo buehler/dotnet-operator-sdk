@@ -79,7 +79,7 @@ internal class ControllerRegistrationGenerator : ISourceGenerator
             .NormalizeWhitespace();
 
         context.AddSource(
-            "ControllerRegistrations.g.cs",
+            $"ControllerRegistrations.{Guid.NewGuid()}.g.cs",
             SourceText.From(declaration.ToString(), Encoding.UTF8, SourceHashAlgorithm.Sha256));
     }
 }

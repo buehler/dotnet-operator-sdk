@@ -54,7 +54,7 @@ internal class OperatorBuilderGenerator : ISourceGenerator
             .NormalizeWhitespace();
 
         context.AddSource(
-            "OperatorBuilder.g.cs",
+            $"OperatorBuilder.{Guid.NewGuid()}.g.cs",
             SourceText.From(declaration.ToString(), Encoding.UTF8, SourceHashAlgorithm.Sha256));
     }
 }

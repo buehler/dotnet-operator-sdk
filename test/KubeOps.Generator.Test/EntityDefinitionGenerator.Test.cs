@@ -60,7 +60,7 @@ public class EntityDefinitionGeneratorTest
         driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var output, out var diag);
 
         var result = output.SyntaxTrees
-            .First(s => s.FilePath.Contains("EntityDefinitions.g.cs"))
+            .First(s => s.FilePath.Contains("EntityDefinitions."))
             .ToString().ReplaceLineEndings();
         result.Should().Be(expectedResult);
     }

@@ -79,7 +79,7 @@ public class FinalizerRegistrationGeneratorTest
         driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var output, out var diag);
 
         var result = output.SyntaxTrees
-            .First(s => s.FilePath.Contains("FinalizerRegistrations.g.cs"))
+            .First(s => s.FilePath.Contains("FinalizerRegistrations."))
             .ToString().ReplaceLineEndings();
         result.Should().Be(expectedResult);
     }

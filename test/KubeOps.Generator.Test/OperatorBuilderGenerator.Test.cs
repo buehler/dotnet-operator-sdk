@@ -31,7 +31,7 @@ public class OperatorBuilderGeneratorTest
         driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var output, out var diag);
 
         var result = output.SyntaxTrees
-            .First(s => s.FilePath.Contains("OperatorBuilder.g.cs"))
+            .First(s => s.FilePath.Contains("OperatorBuilder."))
             .ToString().ReplaceLineEndings();
         result.Should().Be(expectedResult);
     }

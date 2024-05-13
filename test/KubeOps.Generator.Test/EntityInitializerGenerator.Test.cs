@@ -22,7 +22,7 @@ public class EntityInitializerGeneratorTest
         driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var output, out var diag);
 
         var result = output.SyntaxTrees
-            .First(s => s.FilePath.Contains("EntityInitializer.g.cs"))
+            .First(s => s.FilePath.Contains("EntityInitializer."))
             .ToString().ReplaceLineEndings();
         result.Should().Be(expectedResult);
     }
@@ -66,7 +66,7 @@ public class EntityInitializerGeneratorTest
         output.SyntaxTrees.Any(s => s.FilePath.Contains("V1TestEntity")).Should().BeFalse();
         output.SyntaxTrees.Any(s => s.FilePath.Contains("V2TestEntity")).Should().BeFalse();
         var result = output.SyntaxTrees
-            .First(s => s.FilePath.Contains("EntityInitializer.g.cs"))
+            .First(s => s.FilePath.Contains("EntityInitializer."))
             .ToString().ReplaceLineEndings();
         result.Should().Be(expectedResult);
     }

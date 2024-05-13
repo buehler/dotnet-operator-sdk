@@ -82,7 +82,7 @@ internal class EntityDefinitionGenerator : ISourceGenerator
             .NormalizeWhitespace();
 
         context.AddSource(
-            "EntityDefinitions.g.cs",
+            $"EntityDefinitions.{Guid.NewGuid()}.g.cs",
             SourceText.From(declaration.ToString(), Encoding.UTF8, SourceHashAlgorithm.Sha256));
     }
 }

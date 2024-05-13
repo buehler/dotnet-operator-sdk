@@ -50,7 +50,7 @@ public class ControllerRegistrationGeneratorTest
         driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var output, out var diag);
 
         var result = output.SyntaxTrees
-            .First(s => s.FilePath.Contains("ControllerRegistrations.g.cs"))
+            .First(s => s.FilePath.Contains("ControllerRegistrations."))
             .ToString().ReplaceLineEndings();
         result.Should().Be(expectedResult);
     }

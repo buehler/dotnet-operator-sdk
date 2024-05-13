@@ -102,7 +102,7 @@ internal class FinalizerRegistrationGenerator : ISourceGenerator
             .NormalizeWhitespace();
 
         context.AddSource(
-            "FinalizerRegistrations.g.cs",
+            $"FinalizerRegistrations.{Guid.NewGuid()}.g.cs",
             SourceText.From(declaration.ToString(), Encoding.UTF8, SourceHashAlgorithm.Sha256));
     }
 
