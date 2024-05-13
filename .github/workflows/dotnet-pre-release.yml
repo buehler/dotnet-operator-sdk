@@ -29,7 +29,8 @@ jobs:
               {
                 "name": "main",
                 "prerelease": true
-              }
+              },
+              "release"
             ]
         env:
           DEBUG: semantic-release:*
