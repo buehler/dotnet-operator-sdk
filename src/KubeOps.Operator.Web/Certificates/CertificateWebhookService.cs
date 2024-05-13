@@ -1,4 +1,5 @@
-﻿using KubeOps.KubernetesClient;
+﻿using KubeOps.Abstractions.Certificates;
+using KubeOps.KubernetesClient;
 using KubeOps.Operator.Web.Webhooks;
 
 using Microsoft.Extensions.Hosting;

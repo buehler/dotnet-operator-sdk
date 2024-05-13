@@ -3,7 +3,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
-using KubeOps.Operator.Web.Certificates;
+using KubeOps.Abstractions.Certificates;
 
 namespace KubeOps.Operator.Web
 {

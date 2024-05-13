@@ -12,7 +12,7 @@ namespace KubeOps.Operator.Web.Certificates
         /// </summary>
         /// <param name="certificate">The certificate to encode.</param>
         /// <returns>The byte representation of the PEM-encoded certificate.</returns>
-        public static byte[] EncodeToPemBytes(this X509Certificate2 certificate) => Encoding.ASCII.GetBytes(certificate.EncodeToPem());
+        public static byte[] EncodeToPemBytes(this X509Certificate2 certificate) => Encoding.UTF8.GetBytes(certificate.EncodeToPem());
 
         /// <summary>
         /// Encodes the certificate in PEM format.

@@ -2,6 +2,7 @@
 using System.Runtime.Versioning;
 
 using KubeOps.Abstractions.Builder;
+using KubeOps.Abstractions.Certificates;
 using KubeOps.Operator.Web.Certificates;
 using KubeOps.Operator.Web.LocalTunnel;
 using KubeOps.Operator.Web.Webhooks;
@@ -41,8 +42,10 @@ public static class OperatorBuilderExtensions
     /// </code>
     /// </example>
     [RequiresPreviewFeatures(
-        "Localtunnel is sometimes unstable, use with caution. " +
-        "This API is in preview and may be removed in future versions if no stable alternative is found.")]
+        "LocalTunnel is sometimes unstable, use with caution.")]
+    [Obsolete(
+        "LocalTunnel features are deprecated and will be removed in a future version. " +
+        $"Instead, use the {nameof(UseCertificateProvider)} method for development webhooks.")]
     public static IOperatorBuilder AddDevelopmentTunnel(
         this IOperatorBuilder builder,
         ushort port,
@@ -58,7 +61,7 @@ public static class OperatorBuilderExtensions
 
     /// <summary>
     /// Adds a hosted service to the system that uses the server certificate from an <see cref="ICertificateProvider"/>
-    /// implementation to configure development webhooks without tunnels. The webhooks will be configured to use the hostname and port.
+    /// implementation to configure development webhooks. The webhooks will be configured to use the hostname and port.
     /// </summary>
     /// <param name="builder">The operator builder.</param>
     /// <param name="port">The port that the webhooks will use to connect to the operator.</param>

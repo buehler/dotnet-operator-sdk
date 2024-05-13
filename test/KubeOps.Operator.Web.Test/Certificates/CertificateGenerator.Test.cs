@@ -12,7 +12,7 @@ namespace KubeOps.Operator.Web.Test.Certificates
         public void Root_Should_Be_Valid()
         {
             var (certificate, key) = _certificateGenerator.Root;
-            
+
             certificate.Should().NotBeNull();
             DateTime.Parse(certificate.GetEffectiveDateString()).Should().BeOnOrBefore(DateTime.UtcNow);
             certificate.Extensions.Any(e => e is X509BasicConstraintsExtension basic && basic.CertificateAuthority).Should().BeTrue();
