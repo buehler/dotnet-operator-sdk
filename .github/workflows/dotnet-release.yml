@@ -17,7 +17,7 @@ jobs:
           dotnet-version: 8.x
 
       - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v3
+        uses: cycjimmy/semantic-release-action@v4
         with:
           semantic_version: 21
           extra_plugins: |
