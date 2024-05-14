@@ -238,3 +238,35 @@ a service, and the webhook registrations required for you.
 > The generated certificate has a validity of 5 years. After that time,
 > the certificate needs to be renewed. For now, there is no automatic
 > renewal process.
+
+## Webhook Development
+
+The Operator Web package can be configured to generate self-signed certificates on startup,
+and create/update your webhooks in the Kubernetes cluster to point to your development
+machine. To use this feature, use the `CertificateGenerator` class and `UseCertificateProvider()`
+operator builder extension method. An example of what this might look like in Main:
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+string ip = "192.168.1.100";
+ushort port = 443;
+
+using CertificateGenerator generator = new CertificateGenerator(ip);
+using X509Certificate2 cert = generator.Server.CopyServerCertWithPrivateKey();
+// Configure Kestrel to listen on IPv4, use port 443, and use the server certificate
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Listen(System.Net.IPAddress.Any, port, listenOptions =>
+    {
+        listenOptions.UseHttps(cert);
+    });
+});
+ builder.Services
+     .AddKubernetesOperator()
+     // Create the development webhook service using the cert provider
+     .UseCertificateProvider(port, ip, generator)
+     // More code for generation, controllers, etc.
+```
+
+The `UseCertificateProvider` method takes an `ICertificateProvider` interface, so it can be used
+to implement your own certificate generator/loader for development if necessary.
