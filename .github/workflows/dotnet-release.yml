@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-      - release
-      - "maintenance/**"
 
 jobs:
   semantic-release:
@@ -21,11 +19,27 @@ jobs:
           dotnet-version: 8.x
 
       - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v3
+        uses: cycjimmy/semantic-release-action@v4
         with:
-          semantic_version: 19
+          semantic_version: 21
           extra_plugins: |
             semantic-release-net
+          branches: |
+            [
+              "main",
+              {
+                "name": "maintenance/7.x",
+                "range": "7.x"
+              },
+              {
+                "name": "maintenance/8.x",
+                "range": "8.x"
+              },
+              {
+                "name": "maintenance/9.x",
+                "range": "9.x"
+              }
+            ]
         env:
           DEBUG: semantic-release:*
           NUGET_API_KEY: ${{ secrets.NUGET_KEY }}
