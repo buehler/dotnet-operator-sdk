@@ -16,8 +16,8 @@ namespace KubeOps.Operator.Web
         private readonly string? _serverNamespace;
         private readonly DateTime _startDate;
         private readonly DateTime _endDate;
-        private (X509Certificate2 Certificate, AsymmetricAlgorithm Key) _root;
-        private (X509Certificate2 Certificate, AsymmetricAlgorithm Key) _server;
+        private readonly Lazy<CertificatePair> _root;
+        private readonly Lazy<CertificatePair> _server;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CertificateGenerator"/> class.
@@ -29,6 +29,8 @@ namespace KubeOps.Operator.Web
             _serverNamespace = null;
             _startDate = DateTime.UtcNow.Date;
             _endDate = _startDate.AddYears(5);
+            _root = new(GenerateRootCertificate);
+            _server = new(GenerateServerCertificate);
         }
 
         /// <summary>
@@ -42,31 +44,9 @@ namespace KubeOps.Operator.Web
             _serverNamespace = serverNamespace;
         }
 
-        public (X509Certificate2 Certificate, AsymmetricAlgorithm Key) Server
-        {
-            get
-            {
-                if (_server == default)
-                {
-                    _server = GenerateServerCertificate();
-                }
+        public CertificatePair Root => _root.Value;
 
-                return _server;
-            }
-        }
-
-        public (X509Certificate2 Certificate, AsymmetricAlgorithm Key) Root
-        {
-            get
-            {
-                if (_root == default)
-                {
-                    _root = GenerateRootCertificate();
-                }
-
-                return _root;
-            }
-        }
+        public CertificatePair Server => _server.Value;
 
         public void Dispose()
         {
@@ -76,22 +56,20 @@ namespace KubeOps.Operator.Web
 
         protected virtual void Dispose(bool disposing)
         {
-            // These tuple values are not supposed to be null. However, if one of the methods throws,
-            // there is a chance one or both (especially the key) could be null
-            if (_root != default)
+            if (_root.IsValueCreated)
             {
-                _root.Certificate?.Dispose();
-                _root.Key?.Dispose();
+                _root.Value.Certificate.Dispose();
+                _root.Value.Key.Dispose();
             }
 
-            if (_server != default)
+            if (_server.IsValueCreated)
             {
-                _server.Certificate?.Dispose();
-                _server.Key?.Dispose();
+                _server.Value.Certificate.Dispose();
+                _server.Value.Key.Dispose();
             }
         }
 
-        private (X509Certificate2 Certificate, AsymmetricAlgorithm Key) GenerateRootCertificate()
+        private CertificatePair GenerateRootCertificate()
         {
             ECDsa? key = null;
             X509Certificate2? cert = null;
@@ -114,7 +92,7 @@ namespace KubeOps.Operator.Web
 
                 // Create the self-signed cert
                 cert = request.CreateSelfSigned(_startDate, _endDate);
-                return (cert, key);
+                return new(cert, key);
             }
             catch
             {
@@ -124,7 +102,7 @@ namespace KubeOps.Operator.Web
             }
         }
 
-        private (X509Certificate2 Certificate, AsymmetricAlgorithm Key) GenerateServerCertificate()
+        private CertificatePair GenerateServerCertificate()
         {
             ECDsa? key = null;
             X509Certificate2? cert = null;
@@ -189,7 +167,7 @@ namespace KubeOps.Operator.Web
                     _endDate,
                     Guid.NewGuid().ToByteArray());
 
-                return (cert, key);
+                return new(cert, key);
             }
             catch
             {
