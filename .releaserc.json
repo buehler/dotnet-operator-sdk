@@ -23,6 +23,7 @@
       {
         "successComment": false,
         "failComment": true,
+        "releasedLabels": false,
         "assets": [
           {
             "path": "src/**/bin/Release/**/*.nupkg"
