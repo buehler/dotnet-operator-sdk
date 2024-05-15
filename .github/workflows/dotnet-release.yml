@@ -1,9 +1,7 @@
 name: .NET Release
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   semantic-release:
