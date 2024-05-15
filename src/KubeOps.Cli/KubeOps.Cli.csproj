@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -18,7 +18,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BouncyCastle.Cryptography" Version="2.3.0" />
         <PackageReference Include="Microsoft.Build.Locator" Version="1.7.1" />
         <PackageReference Include="Microsoft.CodeAnalysis" Version="4.8.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
@@ -34,7 +33,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj"/>
+        <ProjectReference Include="..\KubeOps.Abstractions\KubeOps.Abstractions.csproj" />
         <ProjectReference Include="..\KubeOps.Operator.Web\KubeOps.Operator.Web.csproj" />
         <ProjectReference Include="..\KubeOps.Transpiler\KubeOps.Transpiler.csproj" />
     </ItemGroup>

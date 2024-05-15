@@ -7,6 +7,7 @@ using k8s.Models;
 using KubeOps.Operator.Web.Builder;
 using KubeOps.Operator.Web.LocalTunnel;
 using KubeOps.Operator.Web.Test.TestApp;
+using KubeOps.Operator.Web.Webhooks;
 using KubeOps.Transpiler;
 
 using Microsoft.AspNetCore.Builder;
