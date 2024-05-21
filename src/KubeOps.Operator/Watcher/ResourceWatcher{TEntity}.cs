@@ -161,7 +161,7 @@ internal class ResourceWatcher<TEntity>(
                     {
                         if (e.Status.Code == (int)HttpStatusCode.Gone)
                         {
-                            logger.LogDebug("Watch restarting due to 410 HTTP Gone");
+                            logger.LogDebug(e, "Watch restarting due to 410 HTTP Gone");
 
                             break;
                         }
@@ -213,7 +213,7 @@ internal class ResourceWatcher<TEntity>(
                         if (entity.Generation() <= cachedGeneration)
                         {
                             logger.LogDebug(
-                                """Entity "{kind}/{name}" modification did not modify generation. Skip event.""",
+                                """Entity "{Kind}/{Name}" modification did not modify generation. Skip event.""",
                                 entity.Kind,
                                 entity.Name());
                             return;
@@ -234,7 +234,7 @@ internal class ResourceWatcher<TEntity>(
                 break;
             default:
                 logger.LogWarning(
-                    """Received unsupported event "{eventType}" for "{kind}/{name}".""",
+                    """Received unsupported event "{EventType}" for "{Kind}/{Name}".""",
                     type,
                     entity?.Kind,
                     entity.Name());
@@ -250,7 +250,7 @@ internal class ResourceWatcher<TEntity>(
                 e.InnerException is JsonException &&
                 e.InnerException.Message.Contains("The input does not contain any JSON tokens"):
                 logger.LogDebug(
-                    """The watcher received an empty response for resource "{resource}".""",
+                    """The watcher received an empty response for resource "{Resource}".""",
                     typeof(TEntity));
                 return;
 
@@ -258,19 +258,19 @@ internal class ResourceWatcher<TEntity>(
                 e.InnerException is EndOfStreamException &&
                 e.InnerException.Message.Contains("Attempted to read past the end of the stream."):
                 logger.LogDebug(
-                    """The watcher received a known error from the watched resource "{resource}". This indicates that there are no instances of this resource.""",
+                    """The watcher received a known error from the watched resource "{Resource}". This indicates that there are no instances of this resource.""",
                     typeof(TEntity));
                 return;
         }
 
-        logger.LogError(e, """There was an error while watching the resource "{resource}".""", typeof(TEntity));
+        logger.LogError(e, """There was an error while watching the resource "{Resource}".""", typeof(TEntity));
         _watcherReconnectRetries++;
 
         var delay = TimeSpan
             .FromSeconds(Math.Pow(2, Math.Clamp(_watcherReconnectRetries, 0, 5)))
             .Add(TimeSpan.FromMilliseconds(new Random().Next(0, 1000)));
         logger.LogWarning(
-            "There were {retries} errors / retries in the watcher. Wait {seconds}s before next attempt to connect.",
+            "There were {Retries} errors / retries in the watcher. Wait {Seconds}s before next attempt to connect.",
             _watcherReconnectRetries,
             delay.TotalSeconds);
         await Task.Delay(delay);
@@ -301,7 +301,7 @@ internal class ResourceWatcher<TEntity>(
             { } finalizer)
         {
             logger.LogDebug(
-                """Entity "{kind}/{name}" is finalizing but this operator has no registered finalizers for the identifier {finalizerIdentifier}.""",
+                """Entity "{Kind}/{Name}" is finalizing but this operator has no registered finalizers for the identifier {FinalizerIdentifier}.""",
                 entity.Kind,
                 entity.Name(),
                 identifier);
@@ -312,7 +312,7 @@ internal class ResourceWatcher<TEntity>(
         entity.RemoveFinalizer(identifier);
         await client.UpdateAsync(entity, cancellationToken);
         logger.LogInformation(
-            """Entity "{kind}/{name}" finalized with "{finalizer}".""",
+            """Entity "{Kind}/{Name}" finalized with "{Finalizer}".""",
             entity.Kind,
             entity.Name(),
             identifier);

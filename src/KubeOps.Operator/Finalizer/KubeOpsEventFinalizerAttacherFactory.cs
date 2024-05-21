@@ -19,7 +19,7 @@ internal sealed class KubeOpsEventFinalizerAttacherFactory(ILoggerFactory logger
         return (entity, token) =>
         {
             logger.LogTrace(
-                """Try to add finalizer "{finalizer}" on entity "{kind}/{name}".""",
+                """Try to add finalizer "{Finalizer}" on entity "{Kind}/{Name}".""",
                 identifier,
                 entity.Kind,
                 entity.Name());
@@ -30,7 +30,7 @@ internal sealed class KubeOpsEventFinalizerAttacherFactory(ILoggerFactory logger
             }
 
             logger.LogInformation(
-                """Added finalizer "{finalizer}" on entity "{kind}/{name}".""",
+                """Added finalizer "{Finalizer}" on entity "{Kind}/{Name}".""",
                 identifier,
                 entity.Kind,
                 entity.Name());

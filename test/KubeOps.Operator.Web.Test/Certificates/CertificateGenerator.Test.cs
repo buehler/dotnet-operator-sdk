@@ -2,6 +2,8 @@
 
 using FluentAssertions;
 
+using KubeOps.Operator.Web.Certificates;
+
 namespace KubeOps.Operator.Web.Test.Certificates;
 
 public class CertificateGeneratorTest : IDisposable

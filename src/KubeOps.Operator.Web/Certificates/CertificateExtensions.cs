@@ -47,21 +47,21 @@ public static class CertificateExtensions
             ECDiffieHellman ecdh => serverPair.Certificate.CopyWithPrivateKey(ecdh),
             DSA dsa => serverPair.Certificate.CopyWithPrivateKey(dsa),
             _ => throw new NotImplementedException($"{serverPair.Key} is not implemented for {nameof(CopyServerCertWithPrivateKey)}"),
-        
-/* Unmerged change from project 'KubeOps.Operator.Web(net7.0)'
-Before:
-}
-After:
-}
-*/
 
-/* Unmerged change from project 'KubeOps.Operator.Web(net8.0)'
-Before:
-}
-After:
-}
-*/
-};
+            /* Unmerged change from project 'KubeOps.Operator.Web(net7.0)'
+            Before:
+            }
+            After:
+            }
+            */
+
+            /* Unmerged change from project 'KubeOps.Operator.Web(net8.0)'
+            Before:
+            }
+            After:
+            }
+            */
+        };
 
         return new X509Certificate2(
             temp.Export(X509ContentType.Pfx, password),

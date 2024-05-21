@@ -25,19 +25,19 @@ internal class TunnelWebhookService(ILogger<CertificateWebhookService> logger, I
     {
         _developmentTunnel.Dispose();
         return Task.CompletedTask;
-    
-/* Unmerged change from project 'KubeOps.Operator.Web(net7.0)'
-Before:
-}
-After:
-}
-*/
 
-/* Unmerged change from project 'KubeOps.Operator.Web(net8.0)'
-Before:
-}
-After:
-}
-*/
-}
+        /* Unmerged change from project 'KubeOps.Operator.Web(net7.0)'
+        Before:
+        }
+        After:
+        }
+        */
+
+        /* Unmerged change from project 'KubeOps.Operator.Web(net8.0)'
+        Before:
+        }
+        After:
+        }
+        */
+    }
 }

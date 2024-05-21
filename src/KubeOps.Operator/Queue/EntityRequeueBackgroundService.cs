@@ -113,13 +113,13 @@ internal sealed class EntityRequeueBackgroundService<TEntity>(
 
     private async Task ReconcileSingleAsync(TEntity queued, CancellationToken cancellationToken)
     {
-        logger.LogTrace("""Execute requested requeued reconciliation for "{name}".""", queued.Name());
+        logger.LogTrace("""Execute requested requeued reconciliation for "{Name}".""", queued.Name());
 
         if (await client.GetAsync<TEntity>(queued.Name(), queued.Namespace(), cancellationToken) is not
             { } entity)
         {
             logger.LogWarning(
-                """Requeued entity "{name}" was not found. Skipping reconciliation.""", queued.Name());
+                """Requeued entity "{Name}" was not found. Skipping reconciliation.""", queued.Name());
             return;
         }
 
