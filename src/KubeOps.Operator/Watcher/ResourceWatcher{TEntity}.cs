@@ -128,9 +128,9 @@ internal class ResourceWatcher<TEntity>(
 
     private async Task WatchClientEventsAsync(CancellationToken stoppingToken)
     {
-        try
+        while (!stoppingToken.IsCancellationRequested)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
                 await foreach ((WatchEventType type, TEntity? entity) in client.WatchAsync<TEntity>(
                                    settings.Namespace,
@@ -184,14 +184,14 @@ internal class ResourceWatcher<TEntity>(
                     }
                 }
             }
-        }
-        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-        {
-            // Don't throw if the cancellation was indeed requested.
-        }
-        catch (Exception e)
-        {
-            await OnWatchErrorAsync(e);
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                // Don't throw if the cancellation was indeed requested.
+            }
+            catch (Exception e)
+            {
+                await OnWatchErrorAsync(e);
+            }
         }
     }
 
