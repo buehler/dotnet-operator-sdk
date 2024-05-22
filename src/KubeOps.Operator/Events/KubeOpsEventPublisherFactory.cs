@@ -22,7 +22,7 @@ internal sealed class KubeOpsEventPublisherFactory(
     {
         var @namespace = entity.Namespace() ?? "default";
         logger.LogTrace(
-            "Encoding event name with: {resourceName}.{resourceNamespace}.{reason}.{message}.{type}.",
+            "Encoding event name with: {ResourceName}.{ResourceNamespace}.{Reason}.{Message}.{Type}.",
             entity.Name(),
             @namespace,
             reason,
@@ -35,7 +35,7 @@ internal sealed class KubeOpsEventPublisherFactory(
                 SHA512.HashData(
                     Encoding.UTF8.GetBytes(eventName)));
 
-        logger.LogTrace("""Search or create event with name "{name}".""", encodedEventName);
+        logger.LogTrace("""Search or create event with name "{Name}".""", encodedEventName);
 
         Corev1Event? @event;
         try
@@ -46,7 +46,7 @@ internal sealed class KubeOpsEventPublisherFactory(
         {
             logger.LogError(
                 e,
-                """Could not receive event with name "{name}" on entity "{kind}/{name}".""",
+                """Could not receive event with name "{EventName}" on entity "{Kind}/{Name}".""",
                 eventName,
                 entity.Kind,
                 entity.Name());
@@ -80,7 +80,7 @@ internal sealed class KubeOpsEventPublisherFactory(
         @event.Count++;
         @event.LastTimestamp = DateTime.UtcNow;
         logger.LogTrace(
-            "Save event with new count {count} and last timestamp {timestamp}",
+            "Save event with new count {Count} and last timestamp {Timestamp}",
             @event.Count,
             @event.LastTimestamp);
 
@@ -88,7 +88,7 @@ internal sealed class KubeOpsEventPublisherFactory(
         {
             await client.SaveAsync(@event, token);
             logger.LogInformation(
-                """Created or updated event with name "{name}" to new count {count} on entity "{kind}/{name}".""",
+                """Created or updated event with name "{EventName}" to new count {Count} on entity "{Kind}/{Name}".""",
                 eventName,
                 @event.Count,
                 entity.Kind,
@@ -98,7 +98,7 @@ internal sealed class KubeOpsEventPublisherFactory(
         {
             logger.LogError(
                 e,
-                """Could not publish event with name "{name}" on entity "{kind}/{name}".""",
+                """Could not publish event with name "{EventName}" on entity "{Kind}/{Name}".""",
                 eventName,
                 entity.Kind,
                 entity.Name());

@@ -9,8 +9,6 @@ namespace KubeOps.Operator.Web.Webhooks.Admission.Validation;
 /// <param name="Valid">Whether the validation / the entity is valid or not.</param>
 public record ValidationResult(bool Valid = true) : IActionResult
 {
-    internal string Uid { get; init; } = string.Empty;
-
     /// <summary>
     /// Provides additional information to the validation result.
     /// The message is displayed to the user if the validation fails.
@@ -28,6 +26,8 @@ public record ValidationResult(bool Valid = true) : IActionResult
     /// If more than 4096 characters are submitted, additional messages are ignored.
     /// </summary>
     public IList<string> Warnings { get; init; } = new List<string>();
+
+    internal string Uid { get; init; } = string.Empty;
 
     /// <inheritdoc/>
     public async Task ExecuteResultAsync(ActionContext context)

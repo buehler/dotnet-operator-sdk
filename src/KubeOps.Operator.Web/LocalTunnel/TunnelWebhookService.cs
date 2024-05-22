@@ -5,26 +5,27 @@ using KubeOps.Operator.Web.Webhooks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace KubeOps.Operator.Web.LocalTunnel
+namespace KubeOps.Operator.Web.LocalTunnel;
+
+internal class TunnelWebhookService(
+    ILogger<CertificateWebhookService> logger,
+    IKubernetesClient client,
+    WebhookLoader loader,
+    WebhookConfig config,
+    DevelopmentTunnel developmentTunnel)
+    : WebhookServiceBase(client, loader, config), IHostedService
 {
-    internal class TunnelWebhookService(ILogger<CertificateWebhookService> logger, IKubernetesClient client, WebhookLoader loader, WebhookConfig config, DevelopmentTunnel developmentTunnel)
-        : WebhookServiceBase(client, loader, config), IHostedService
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
-        private readonly ILogger<CertificateWebhookService> _logger = logger;
-        private readonly DevelopmentTunnel _developmentTunnel = developmentTunnel;
+        Uri = await developmentTunnel.StartAsync(cancellationToken);
 
-        public async Task StartAsync(CancellationToken cancellationToken)
-        {
-            Uri = await _developmentTunnel.StartAsync(cancellationToken);
+        logger.LogDebug("Registering webhooks");
+        await RegisterAll();
+    }
 
-            _logger.LogDebug("Registering webhooks");
-            await RegisterAll();
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _developmentTunnel.Dispose();
-            return Task.CompletedTask;
-        }
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        developmentTunnel.Dispose();
+        return Task.CompletedTask;
     }
 }

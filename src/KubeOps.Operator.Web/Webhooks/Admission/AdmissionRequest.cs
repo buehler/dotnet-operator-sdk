@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 using k8s;
 using k8s.Models;
@@ -18,6 +19,7 @@ public sealed class AdmissionRequest<TEntity> : AdmissionReview
     /// Admission request data.
     /// </summary>
     [JsonPropertyName("request")]
+    [Required]
     public AdmissionRequestData<TEntity> Request { get; init; } = new();
 
     /// <summary>
@@ -31,6 +33,7 @@ public sealed class AdmissionRequest<TEntity> : AdmissionReview
         /// The unique ID of the admission request.
         /// </summary>
         [JsonPropertyName("uid")]
+        [Required]
         public string Uid { get; init; } = string.Empty;
 
         /// <summary>
@@ -39,6 +42,7 @@ public sealed class AdmissionRequest<TEntity> : AdmissionReview
         /// "CONNECT" does exist, but is not supported by the operator-sdk.
         /// </summary>
         [JsonPropertyName("operation")]
+        [Required]
         public string Operation { get; init; } = string.Empty;
 
         /// <summary>
@@ -59,6 +63,7 @@ public sealed class AdmissionRequest<TEntity> : AdmissionReview
         /// A flag to indicate if the API was called with the "dryRun" flag.
         /// </summary>
         [JsonPropertyName("dryRun")]
+        [Required]
         public bool DryRun { get; init; }
     }
 }

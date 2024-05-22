@@ -7,7 +7,7 @@ internal class CertificateGenerator(string serverName, string namespaceName) : I
 {
     public void Generate(ResultOutput output)
     {
-        using Operator.Web.CertificateGenerator generator = new(serverName, namespaceName);
+        using Operator.Web.Certificates.CertificateGenerator generator = new(serverName, namespaceName);
 
         output.Add("ca.pem", generator.Root.Certificate.EncodeToPem(), OutputFormat.Plain);
         output.Add("ca-key.pem", generator.Root.Key.EncodeToPem(), OutputFormat.Plain);

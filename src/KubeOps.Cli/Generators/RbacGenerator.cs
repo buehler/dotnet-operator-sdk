@@ -26,7 +26,7 @@ internal class RbacGenerator(MetadataLoadContext parser,
 
         var roleBinding = new V1ClusterRoleBinding(
                 roleRef: new V1RoleRef(V1ClusterRole.KubeGroup, V1ClusterRole.KubeKind, "operator-role"),
-                subjects: new List<V1Subject>
+                subjects: new List<Rbacv1Subject>
                 {
                     new(V1ServiceAccount.KubeKind, "default", namespaceProperty: "system"),
                 })
