@@ -18,10 +18,6 @@ public record MutationResult<TEntity>(TEntity? ModifiedObject = default) : IActi
 {
     private const string JsonPatch = "JSONPatch";
 
-    internal string Uid { get; init; } = string.Empty;
-
-    internal JsonNode? OriginalObject { get; init; }
-
     public bool Valid { get; init; } = true;
 
     /// <summary>
@@ -41,6 +37,10 @@ public record MutationResult<TEntity>(TEntity? ModifiedObject = default) : IActi
     /// If more than 4096 characters are submitted, additional messages are ignored.
     /// </summary>
     public IList<string> Warnings { get; init; } = new List<string>();
+
+    internal string Uid { get; init; } = string.Empty;
+
+    internal JsonNode? OriginalObject { get; init; }
 
     /// <inheritdoc/>
     public async Task ExecuteResultAsync(ActionContext context)

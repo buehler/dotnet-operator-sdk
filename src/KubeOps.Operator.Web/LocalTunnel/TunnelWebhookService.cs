@@ -7,37 +7,25 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Web.LocalTunnel;
 
-internal class TunnelWebhookService(ILogger<CertificateWebhookService> logger, IKubernetesClient client, WebhookLoader loader, WebhookConfig config, DevelopmentTunnel developmentTunnel)
+internal class TunnelWebhookService(
+    ILogger<CertificateWebhookService> logger,
+    IKubernetesClient client,
+    WebhookLoader loader,
+    WebhookConfig config,
+    DevelopmentTunnel developmentTunnel)
     : WebhookServiceBase(client, loader, config), IHostedService
 {
-    private readonly ILogger<CertificateWebhookService> _logger = logger;
-    private readonly DevelopmentTunnel _developmentTunnel = developmentTunnel;
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        Uri = await _developmentTunnel.StartAsync(cancellationToken);
+        Uri = await developmentTunnel.StartAsync(cancellationToken);
 
-        _logger.LogDebug("Registering webhooks");
+        logger.LogDebug("Registering webhooks");
         await RegisterAll();
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _developmentTunnel.Dispose();
+        developmentTunnel.Dispose();
         return Task.CompletedTask;
-
-        /* Unmerged change from project 'KubeOps.Operator.Web(net7.0)'
-        Before:
-        }
-        After:
-        }
-        */
-
-        /* Unmerged change from project 'KubeOps.Operator.Web(net8.0)'
-        Before:
-        }
-        After:
-        }
-        */
     }
 }

@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-using FluentAssertions;
+﻿using FluentAssertions;
 
 using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Certificates;

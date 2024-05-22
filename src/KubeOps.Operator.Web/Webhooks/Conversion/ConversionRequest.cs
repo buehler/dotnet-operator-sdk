@@ -1,9 +1,7 @@
-using System.Diagnostics.CodeAnalysis;
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.Versioning;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-
-using KubeOps.Operator.Web.Webhooks.Admission;
 
 namespace KubeOps.Operator.Web.Webhooks.Conversion;
 
@@ -19,6 +17,7 @@ public sealed class ConversionRequest : ConversionReview
     /// Conversion request data.
     /// </summary>
     [JsonPropertyName("request")]
+    [Required]
     public ConversionRequestData Request { get; init; } = new();
 
     /// <summary>
@@ -30,18 +29,20 @@ public sealed class ConversionRequest : ConversionReview
         /// The unique ID of the conversion request.
         /// </summary>
         [JsonPropertyName("uid")]
+        [Required]
         public string Uid { get; init; } = string.Empty;
 
         /// <summary>
         /// Target group/api version of the conversion.
         /// </summary>
         [JsonPropertyName("desiredAPIVersion")]
+        [Required]
         public string DesiredApiVersion { get; init; } = string.Empty;
 
         /// <summary>
         /// List of objects that need to be converted.
         /// </summary>
         [JsonPropertyName("objects")]
-        public JsonNode[] Objects { get; init; } = Array.Empty<JsonNode>();
+        public JsonNode[] Objects { get; init; } = [];
     }
 }

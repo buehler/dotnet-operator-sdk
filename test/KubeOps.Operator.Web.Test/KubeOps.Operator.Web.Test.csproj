@@ -16,4 +16,8 @@
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App"/>
     </ItemGroup>
+    
+    <PropertyGroup>
+        <NoWarn>CS0618</NoWarn>
+    </PropertyGroup>
 </Project>
