@@ -496,6 +496,10 @@ public interface IKubernetesClient : IDisposable
     /// and the watch is automatically recreated in such cases.
     /// </summary>
     /// <param name="eventTask">(async) Task Action that is executed when an event occurs.</param>
+    /// <param name="onTransientError">
+    /// Action that handles exceptions leading to automatically re-creating the watch.
+    /// Throwing any exception inside this handler will immediately break out of the current watch.
+    /// </param>
     /// <param name="namespace">
     /// The namespace to watch for entities (if needed).
     /// If the namespace is omitted, all entities on the cluster are watched.
@@ -510,6 +514,7 @@ public interface IKubernetesClient : IDisposable
     /// <returns>A task that completes when the watcher ends.</returns>
     public Task WatchSafeAsync<TEntity>(
         Func<WatchEventType, TEntity?, CancellationToken, Task> eventTask,
+        Action<Exception>? onTransientError = null,
         string? @namespace = null,
         string? resourceVersion = null,
         string? labelSelector = null,

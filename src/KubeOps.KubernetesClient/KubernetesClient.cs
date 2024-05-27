@@ -361,6 +361,7 @@ public class KubernetesClient : IKubernetesClient
     /// <inheritdoc />
     public async Task WatchSafeAsync<TEntity>(
         Func<WatchEventType, TEntity?, CancellationToken, Task> eventTask,
+        Action<Exception>? onTransientError = null,
         string? @namespace = null,
         string? resourceVersion = null,
         string? labelSelector = null,
@@ -384,12 +385,15 @@ public class KubernetesClient : IKubernetesClient
             }
             catch (KubernetesException cause) when (ResourceFailureCodes.Contains(cause.Status.Code))
             {
+                onTransientError?.Invoke(cause);
+
                 currentVersion = ResourceVersionFromException(cause);
                 if (currentVersion == null) break; // bail out of watch
             }
             catch (Exception cause) when (cause.All().Any(e => e.Message.Contains("server reset the stream")
                                                                || e is SocketException { ErrorCode: 104 }))
             {
+                onTransientError?.Invoke(cause);
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             }
         }

@@ -141,6 +141,7 @@ internal class ResourceWatcher<TEntity>(
                 onError.Clear();
                 await client.WatchSafeAsync<TEntity>(
                     eventTask: OnEventAsync,
+                    onTransientError: ex => logger.LogInformation("watch re-created due to transient error - resource: {Resource}, cause: {Cause}", typeof(TEntity), ex.Message),
                     @namespace: settings.Namespace,
                     resourceVersion: resourceVersion,
                     cancellationToken: stoppingToken);
