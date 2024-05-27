@@ -87,7 +87,7 @@ public interface IKubernetesClient : IDisposable
     /// <param name="labelSelector">A string, representing an optional label selector for filtering fetched objects.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A list of Kubernetes entities.</returns>
-    Task<IList<TEntity>> ListAsync<TEntity>(
+    Task<(string? Version, IList<TEntity> Items)> ListAsync<TEntity>(
         string? @namespace = null,
         string? labelSelector = null,
         CancellationToken cancellationToken = default)
@@ -106,7 +106,7 @@ public interface IKubernetesClient : IDisposable
     /// </param>
     /// <param name="labelSelectors">A list of label-selectors to apply to the search.</param>
     /// <returns>A list of Kubernetes entities.</returns>
-    Task<IList<TEntity>> ListAsync<TEntity>(
+    Task<(string? Version, IList<TEntity> Items)> ListAsync<TEntity>(
         string? @namespace = null,
         params LabelSelector[] labelSelectors)
         where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -116,13 +116,13 @@ public interface IKubernetesClient : IDisposable
     }
 
     /// <inheritdoc cref="ListAsync{TEntity}(string?,string?,CancellationToken)"/>
-    IList<TEntity> List<TEntity>(
+    (string? Version, IList<TEntity> Items) List<TEntity>(
         string? @namespace = null,
         string? labelSelector = null)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <inheritdoc cref="ListAsync{TEntity}(string?,LabelSelector[])"/>
-    IList<TEntity> List<TEntity>(
+    (string? Version, IList<TEntity> Items) List<TEntity>(
         string? @namespace = null,
         params LabelSelector[] labelSelectors)
         where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -484,6 +484,32 @@ public interface IKubernetesClient : IDisposable
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <returns>An asynchronous enumerable that finishes once <paramref name="cancellationToken"/> is cancelled.</returns>
     IAsyncEnumerable<(WatchEventType Type, TEntity Entity)> WatchAsync<TEntity>(
+        string? @namespace = null,
+        string? resourceVersion = null,
+        string? labelSelector = null,
+        CancellationToken cancellationToken = default)
+        where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+    /// <summary>
+    /// Creates an asynchronous entity watcher on the Kubernetes API.
+    /// Kubernetes recoverable exceptions are handled within the watcher,
+    /// and the watch is automatically recreated in such cases.
+    /// </summary>
+    /// <param name="eventTask">(async) Task Action that is executed when an event occurs.</param>
+    /// <param name="namespace">
+    /// The namespace to watch for entities (if needed).
+    /// If the namespace is omitted, all entities on the cluster are watched.
+    /// </param>
+    /// <param name="resourceVersion">
+    /// When specified with a watch call, shows changes that occur after that particular version of a resource.
+    /// Defaults to changes from the beginning of history.
+    /// </param>
+    /// <param name="labelSelector">A string, representing an optional label selector for filtering watched objects.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
+    /// <returns>A task that completes when the watcher ends.</returns>
+    public Task WatchSafeAsync<TEntity>(
+        Func<WatchEventType, TEntity?, CancellationToken, Task> eventTask,
         string? @namespace = null,
         string? resourceVersion = null,
         string? labelSelector = null,

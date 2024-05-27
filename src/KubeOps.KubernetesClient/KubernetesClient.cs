@@ -1,7 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 using k8s;
 using k8s.Autorest;
@@ -19,6 +21,22 @@ public class KubernetesClient : IKubernetesClient
     private const string DefaultNamespace = "default";
 
     private static readonly ConcurrentDictionary<Type, EntityMetadata> MetadataCache = new();
+    private static List<int?> ResourceFailureCodes = ((int?[])[(int)HttpStatusCode.GatewayTimeout, (int)HttpStatusCode.Gone]).ToList();
+
+    /// <summary>
+    /// HACK to ge the last applicable resourceVersion from the exception.
+    /// </summary>
+    /// <example>
+    ///  "too old resource version: 512122628 (544688086)".
+    /// </example>
+    private static string? ResourceVersionFromException(Exception? ex)
+    {
+        if (ex?.Message is null) return null;
+
+        var pattern = @"^\s*too old resource version.*\(([a-zA-Z0-9_-]+)\)\s*$";
+        var match = Regex.Match(ex.Message, pattern);
+        return (match.Groups.Count > 1) ? match.Groups[1].Value : null;
+    }
 
     private readonly KubernetesClientConfiguration _clientConfig;
     private readonly IKubernetes _client;
@@ -29,18 +47,14 @@ public class KubernetesClient : IKubernetesClient
     /// The client will use the default configuration.
     /// </summary>
     public KubernetesClient()
-        : this(KubernetesClientConfiguration.BuildDefaultConfig())
-    {
-    }
+        : this(KubernetesClientConfiguration.BuildDefaultConfig()) { }
 
     /// <summary>
     /// Create a new Kubernetes client for the given entity with a custom client configuration.
     /// </summary>
     /// <param name="clientConfig">The config for the underlying Kubernetes client.</param>
     public KubernetesClient(KubernetesClientConfiguration clientConfig)
-        : this(clientConfig, new Kubernetes(clientConfig))
-    {
-    }
+        : this(clientConfig, new Kubernetes(clientConfig)) { }
 
     /// <summary>
     /// Create a new Kubernetes client for the given entity with a custom client configuration and client.
@@ -180,7 +194,7 @@ public class KubernetesClient : IKubernetesClient
     }
 
     /// <inheritdoc />
-    public async Task<IList<TEntity>> ListAsync<TEntity>(
+    public async Task<(string? Version, IList<TEntity> Items)> ListAsync<TEntity>(
         string? @namespace = null,
         string? labelSelector = null,
         CancellationToken cancellationToken = default)
@@ -189,7 +203,7 @@ public class KubernetesClient : IKubernetesClient
         ThrowIfDisposed();
 
         var metadata = GetMetadata<TEntity>();
-        return (@namespace switch
+        var result = @namespace switch
         {
             null => await _client.CustomObjects.ListClusterCustomObjectAsync<EntityList<TEntity>>(
                 metadata.Group ?? string.Empty,
@@ -204,17 +218,20 @@ public class KubernetesClient : IKubernetesClient
                 metadata.PluralName,
                 labelSelector: labelSelector,
                 cancellationToken: cancellationToken),
-        }).Items;
+        };
+
+        return (result.Metadata.ResourceVersion, result.Items);
     }
 
     /// <inheritdoc />
-    public IList<TEntity> List<TEntity>(string? @namespace = null, string? labelSelector = null)
+    public (string? Version, IList<TEntity> Items) List<TEntity>(string? @namespace = null,
+        string? labelSelector = null)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         ThrowIfDisposed();
 
         var metadata = GetMetadata<TEntity>();
-        return (@namespace switch
+        var result = @namespace switch
         {
             null => _client.CustomObjects.ListClusterCustomObject<EntityList<TEntity>>(
                 metadata.Group ?? string.Empty,
@@ -227,7 +244,9 @@ public class KubernetesClient : IKubernetesClient
                 @namespace,
                 metadata.PluralName,
                 labelSelector: labelSelector),
-        }).Items;
+        };
+
+        return (result.Metadata.ResourceVersion, result.Items);
     }
 
     /// <inheritdoc />
@@ -336,6 +355,43 @@ public class KubernetesClient : IKubernetesClient
         catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
         {
             // The resource was not found. We can ignore this.
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task WatchSafeAsync<TEntity>(
+        Func<WatchEventType, TEntity?, CancellationToken, Task> eventTask,
+        string? @namespace = null,
+        string? resourceVersion = null,
+        string? labelSelector = null,
+        CancellationToken cancellationToken = default)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        var currentVersion = resourceVersion;
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await foreach (var (typ, e) in WatchAsync<TEntity>(@namespace, currentVersion, labelSelector, cancellationToken))
+                {
+                    currentVersion = e.ResourceVersion();
+                    await eventTask(typ, e, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // OK, end the watch
+            }
+            catch (KubernetesException cause) when (ResourceFailureCodes.Contains(cause.Status.Code))
+            {
+                currentVersion = ResourceVersionFromException(cause);
+                if (currentVersion == null) break; // bail out of watch
+            }
+            catch (Exception cause) when (cause.All().Any(e => e.Message.Contains("server reset the stream")
+                                                               || e is SocketException { ErrorCode: 104 }))
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            }
         }
     }
 

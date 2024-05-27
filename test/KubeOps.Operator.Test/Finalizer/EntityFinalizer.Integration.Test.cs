@@ -178,7 +178,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase
     public override async Task DisposeAsync()
     {
         await base.DisposeAsync();
-        var entities = await _client.ListAsync<V1OperatorIntegrationTestEntity>(_ns.Namespace);
+        var (_, entities) = await _client.ListAsync<V1OperatorIntegrationTestEntity>(_ns.Namespace);
         foreach (var e in entities)
         {
             if (e.Metadata.Finalizers is null)

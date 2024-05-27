@@ -33,3 +33,6 @@ coverage.info
 
 # Docs
 _site
+
+.idea/
+global.json

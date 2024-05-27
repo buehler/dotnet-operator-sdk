@@ -1,7 +1,4 @@
 using System.Collections.Concurrent;
-using System.Net;
-using System.Runtime.Serialization;
-using System.Text.Json;
 
 using k8s;
 using k8s.Models;
@@ -30,7 +27,6 @@ internal class ResourceWatcher<TEntity>(
     private readonly ConcurrentDictionary<string, long> _entityCache = new();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
-    private uint _watcherReconnectRetries;
     private Task? _eventWatcher;
     private bool _disposed;
 
@@ -128,70 +124,36 @@ internal class ResourceWatcher<TEntity>(
 
     private async Task WatchClientEventsAsync(CancellationToken stoppingToken)
     {
-        try
+        var onError = new BackoffPolicy(stoppingToken, BackoffPolicy.ExponentialWithJitter());
+        while (!stoppingToken.IsCancellationRequested)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                await foreach ((WatchEventType type, TEntity? entity) in client.WatchAsync<TEntity>(
-                                   settings.Namespace,
-                                   cancellationToken: stoppingToken))
+                var (resourceVersion, entities) = await client.ListAsync<TEntity>(
+                    @namespace: settings.Namespace,
+                    cancellationToken: stoppingToken);
+
+                foreach (var entity in entities)
                 {
-#pragma warning disable SA1312
-                    using var _ = logger.BeginScope(new
-#pragma warning restore SA1312
-                    {
-                        EventType = type,
-
-                        // ReSharper disable once RedundantAnonymousTypePropertyName
-                        Kind = entity?.Kind,
-                        Name = entity?.Name(),
-                        ResourceVersion = entity?.ResourceVersion(),
-                    });
-                    logger.LogInformation(
-                        """Received watch event "{EventType}" for "{Kind}/{Name}", last observed resource version: {ResourceVersion}.""",
-                        type,
-                        entity?.Kind,
-                        entity?.Name(),
-                        entity?.ResourceVersion());
-                    try
-                    {
-                        await OnEventAsync(type, entity, stoppingToken);
-                    }
-                    catch (KubernetesException e)
-                    {
-                        if (e.Status.Code == (int)HttpStatusCode.Gone)
-                        {
-                            logger.LogDebug(e, "Watch restarting due to 410 HTTP Gone");
-
-                            break;
-                        }
-
-                        LogReconciliationFailed(e);
-                    }
-                    catch (Exception e)
-                    {
-                        LogReconciliationFailed(e);
-                    }
-
-                    void LogReconciliationFailed(Exception exception)
-                    {
-                        logger.LogError(
-                            exception,
-                            "Reconciliation of {EventType} for {Kind}/{Name} failed.",
-                            type,
-                            entity?.Kind,
-                            entity.Name());
-                    }
+                    await OnEventAsync(WatchEventType.Added, entity, stoppingToken);
                 }
+
+                onError.Clear();
+                await client.WatchSafeAsync<TEntity>(
+                    eventTask: OnEventAsync,
+                    @namespace: settings.Namespace,
+                    resourceVersion: resourceVersion,
+                    cancellationToken: stoppingToken);
             }
-        }
-        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-        {
-            // Don't throw if the cancellation was indeed requested.
-        }
-        catch (Exception e)
-        {
-            await OnWatchErrorAsync(e);
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                // nothing to do, will end the watch
+            }
+            catch (Exception cause)
+            {
+                logger.LogError(cause, "Error while watching resources - resource: {Resource}", typeof(TEntity));
+                await onError.WaitOnException(cause);
+            }
         }
     }
 
@@ -240,40 +202,6 @@ internal class ResourceWatcher<TEntity>(
                     entity.Name());
                 break;
         }
-    }
-
-    private async Task OnWatchErrorAsync(Exception e)
-    {
-        switch (e)
-        {
-            case SerializationException when
-                e.InnerException is JsonException &&
-                e.InnerException.Message.Contains("The input does not contain any JSON tokens"):
-                logger.LogDebug(
-                    """The watcher received an empty response for resource "{Resource}".""",
-                    typeof(TEntity));
-                return;
-
-            case HttpRequestException when
-                e.InnerException is EndOfStreamException &&
-                e.InnerException.Message.Contains("Attempted to read past the end of the stream."):
-                logger.LogDebug(
-                    """The watcher received a known error from the watched resource "{Resource}". This indicates that there are no instances of this resource.""",
-                    typeof(TEntity));
-                return;
-        }
-
-        logger.LogError(e, """There was an error while watching the resource "{Resource}".""", typeof(TEntity));
-        _watcherReconnectRetries++;
-
-        var delay = TimeSpan
-            .FromSeconds(Math.Pow(2, Math.Clamp(_watcherReconnectRetries, 0, 5)))
-            .Add(TimeSpan.FromMilliseconds(new Random().Next(0, 1000)));
-        logger.LogWarning(
-            "There were {Retries} errors / retries in the watcher. Wait {Seconds}s before next attempt to connect.",
-            _watcherReconnectRetries,
-            delay.TotalSeconds);
-        await Task.Delay(delay);
     }
 
     private async Task ReconcileDeletionAsync(TEntity entity, CancellationToken cancellationToken)

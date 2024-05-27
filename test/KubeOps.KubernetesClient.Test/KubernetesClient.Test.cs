@@ -114,7 +114,7 @@ public class KubernetesClientTest : IntegrationTestBase, IDisposable
         _objects.Add(config1);
         _objects.Add(config2);
 
-        var configs = _client.List<V1ConfigMap>("default");
+        var (_, configs) = _client.List<V1ConfigMap>("default");
 
         // there are _at least_ 2 config maps (the two that were created)
         configs.Count.Should().BeGreaterOrEqualTo(2);
@@ -141,12 +141,12 @@ public class KubernetesClientTest : IntegrationTestBase, IDisposable
             });
         _objects.Add(config1);
 
-        var configs = _client.List<V1ConfigMap>("default");
+        var (_, configs) = _client.List<V1ConfigMap>("default");
         configs.Count.Should().BeGreaterOrEqualTo(2);
 
         _client.Delete(config2);
 
-        configs = _client.List<V1ConfigMap>("default");
+        (_, configs) = _client.List<V1ConfigMap>("default");
         configs.Count.Should().BeGreaterOrEqualTo(1);
     }
 
