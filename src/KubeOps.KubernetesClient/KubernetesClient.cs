@@ -23,21 +23,6 @@ public class KubernetesClient : IKubernetesClient
     private static readonly ConcurrentDictionary<Type, EntityMetadata> MetadataCache = new();
     private static List<int?> ResourceFailureCodes = ((int?[])[(int)HttpStatusCode.GatewayTimeout, (int)HttpStatusCode.Gone]).ToList();
 
-    /// <summary>
-    /// HACK to ge the last applicable resourceVersion from the exception.
-    /// </summary>
-    /// <example>
-    ///  "too old resource version: 512122628 (544688086)".
-    /// </example>
-    private static string? ResourceVersionFromException(Exception? ex)
-    {
-        if (ex?.Message is null) return null;
-
-        var pattern = @"^\s*too old resource version.*\(([a-zA-Z0-9_-]+)\)\s*$";
-        var match = Regex.Match(ex.Message, pattern);
-        return (match.Groups.Count > 1) ? match.Groups[1].Value : null;
-    }
-
     private readonly KubernetesClientConfiguration _clientConfig;
     private readonly IKubernetes _client;
     private bool _disposed;
@@ -224,8 +209,7 @@ public class KubernetesClient : IKubernetesClient
     }
 
     /// <inheritdoc />
-    public (string? Version, IList<TEntity> Items) List<TEntity>(string? @namespace = null,
-        string? labelSelector = null)
+    public (string? Version, IList<TEntity> Items) List<TEntity>(string? @namespace = null, string? labelSelector = null)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         ThrowIfDisposed();
@@ -365,6 +349,7 @@ public class KubernetesClient : IKubernetesClient
         string? @namespace = null,
         string? resourceVersion = null,
         string? labelSelector = null,
+        bool? allowWatchBookmarks = null,
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
@@ -373,25 +358,27 @@ public class KubernetesClient : IKubernetesClient
         {
             try
             {
-                await foreach (var (typ, e) in WatchAsync<TEntity>(@namespace, currentVersion, labelSelector, cancellationToken))
+                await foreach (var (typ, e) in WatchAsync<TEntity>(@namespace, currentVersion, labelSelector, allowWatchBookmarks, cancellationToken))
                 {
-                    currentVersion = e.ResourceVersion();
+                    if (typ == WatchEventType.Bookmark)
+                    {
+                        currentVersion = e.ResourceVersion();
+                        continue;
+                    }
+
                     await eventTask(typ, e, cancellationToken);
                 }
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            catch (Exception cause) when (cause.All().Any(e => e is OperationCanceledException && cancellationToken.IsCancellationRequested))
             {
                 // OK, end the watch
             }
             catch (KubernetesException cause) when (ResourceFailureCodes.Contains(cause.Status.Code))
             {
                 onTransientError?.Invoke(cause);
-
-                currentVersion = ResourceVersionFromException(cause);
-                if (currentVersion == null) break; // bail out of watch
+                break;
             }
-            catch (Exception cause) when (cause.All().Any(e => e.Message.Contains("server reset the stream")
-                                                               || e is SocketException { ErrorCode: 104 }))
+            catch (Exception cause) when (cause.All().Any(e => e.Message.Contains("server reset the stream") || e is SocketException { ErrorCode: 104 }))
             {
                 onTransientError?.Invoke(cause);
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
@@ -408,6 +395,7 @@ public class KubernetesClient : IKubernetesClient
         TimeSpan? timeout = null,
         string? resourceVersion = null,
         string? labelSelector = null,
+        bool? allowWatchBookmarks = null,
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
@@ -420,6 +408,7 @@ public class KubernetesClient : IKubernetesClient
                 metadata.Version,
                 @namespace,
                 metadata.PluralName,
+                allowWatchBookmarks: allowWatchBookmarks,
                 labelSelector: labelSelector,
                 resourceVersion: resourceVersion,
                 timeoutSeconds: timeout switch
@@ -433,6 +422,7 @@ public class KubernetesClient : IKubernetesClient
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 metadata.PluralName,
+                allowWatchBookmarks: allowWatchBookmarks,
                 labelSelector: labelSelector,
                 resourceVersion: resourceVersion,
                 timeoutSeconds: timeout switch
@@ -449,6 +439,7 @@ public class KubernetesClient : IKubernetesClient
         string? @namespace = null,
         string? resourceVersion = null,
         string? labelSelector = null,
+        bool? allowWatchBookmarks = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
@@ -461,6 +452,7 @@ public class KubernetesClient : IKubernetesClient
                 metadata.Version,
                 @namespace,
                 metadata.PluralName,
+                allowWatchBookmarks: allowWatchBookmarks,
                 labelSelector: labelSelector,
                 resourceVersion: resourceVersion,
                 watch: true,
@@ -469,6 +461,7 @@ public class KubernetesClient : IKubernetesClient
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 metadata.PluralName,
+                allowWatchBookmarks: allowWatchBookmarks,
                 labelSelector: labelSelector,
                 resourceVersion: resourceVersion,
                 watch: true,

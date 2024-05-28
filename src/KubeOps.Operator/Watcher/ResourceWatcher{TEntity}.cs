@@ -141,9 +141,10 @@ internal class ResourceWatcher<TEntity>(
                 onError.Clear();
                 await client.WatchSafeAsync<TEntity>(
                     eventTask: OnEventAsync,
-                    onTransientError: ex => logger.LogInformation("watch re-created due to transient error - resource: {Resource}, cause: {Cause}", typeof(TEntity), ex.Message),
+                    onTransientError: ex => logger.LogWarning("watch re-created due to transient error - resource: {Resource}, cause: ({ExceptionType}) {Cause}", typeof(TEntity), ex.GetType(), ex.Message),
                     @namespace: settings.Namespace,
                     resourceVersion: resourceVersion,
+                    allowWatchBookmarks: true, // needed for proper ResourceVersion handling in order to keep the watch alive
                     cancellationToken: stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

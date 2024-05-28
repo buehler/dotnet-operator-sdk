@@ -413,6 +413,7 @@ public interface IKubernetesClient : IDisposable
     /// When specified with a watch call, shows changes that occur after that particular version of a resource.
     /// Defaults to changes from the beginning of history.
     /// </param>
+    /// <param name="allowWatchBookmarks">allowWatchBookmarks requests watch events with type &quot;BOOKMARK&quot; for proper ResourceVersion handling.</param>
     /// <param name="cancellationToken">Cancellation-Token.</param>
     /// <param name="labelSelectors">A list of label-selectors to apply to the search.</param>
     /// <returns>A entity watcher for the given entity.</returns>
@@ -423,6 +424,7 @@ public interface IKubernetesClient : IDisposable
         string? @namespace = null,
         TimeSpan? timeout = null,
         string? resourceVersion = null,
+        bool? allowWatchBookmarks = null,
         CancellationToken cancellationToken = default,
         params LabelSelector[] labelSelectors)
         where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -434,6 +436,7 @@ public interface IKubernetesClient : IDisposable
             timeout,
             resourceVersion,
             labelSelectors.ToExpression(),
+            allowWatchBookmarks,
             cancellationToken);
 
     /// <summary>
@@ -455,6 +458,7 @@ public interface IKubernetesClient : IDisposable
     /// Defaults to changes from the beginning of history.
     /// </param>
     /// <param name="labelSelector">A string, representing an optional label selector for filtering watched objects.</param>
+    /// <param name="allowWatchBookmarks">allowWatchBookmarks requests watch events with type &quot;BOOKMARK&quot; for proper ResourceVersion handling.</param>
     /// <param name="cancellationToken">Cancellation-Token.</param>
     /// <returns>A entity watcher for the given entity.</returns>
     Watcher<TEntity> Watch<TEntity>(
@@ -465,6 +469,7 @@ public interface IKubernetesClient : IDisposable
         TimeSpan? timeout = null,
         string? resourceVersion = null,
         string? labelSelector = null,
+        bool? allowWatchBookmarks = null,
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
@@ -480,6 +485,7 @@ public interface IKubernetesClient : IDisposable
     /// Defaults to changes from the beginning of history.
     /// </param>
     /// <param name="labelSelector">A string, representing an optional label selector for filtering watched objects.</param>
+    /// <param name="allowWatchBookmarks">allowWatchBookmarks requests watch events with type &quot;BOOKMARK&quot; for proper ResourceVersion handling.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <returns>An asynchronous enumerable that finishes once <paramref name="cancellationToken"/> is cancelled.</returns>
@@ -487,6 +493,7 @@ public interface IKubernetesClient : IDisposable
         string? @namespace = null,
         string? resourceVersion = null,
         string? labelSelector = null,
+        bool? allowWatchBookmarks = null,
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
@@ -509,6 +516,7 @@ public interface IKubernetesClient : IDisposable
     /// Defaults to changes from the beginning of history.
     /// </param>
     /// <param name="labelSelector">A string, representing an optional label selector for filtering watched objects.</param>
+    /// <param name="allowWatchBookmarks">allowWatchBookmarks requests watch events with type &quot;BOOKMARK&quot; for proper ResourceVersion handling.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <returns>A task that completes when the watcher ends.</returns>
@@ -518,6 +526,7 @@ public interface IKubernetesClient : IDisposable
         string? @namespace = null,
         string? resourceVersion = null,
         string? labelSelector = null,
+        bool? allowWatchBookmarks = null,
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 }
