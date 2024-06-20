@@ -37,7 +37,7 @@ public class LeaderAwarenessIntegrationTest : IntegrationTestBase
     {
         await base.DisposeAsync();
         await _ns.DisposeAsync();
-        await _client.DeleteAsync(await _client.ListAsync<V1Lease>("default"));
+        await _client.DeleteAsync((await _client.ListAsync<V1Lease>("default")).Items);
         _client.Dispose();
     }
 
