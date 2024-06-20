@@ -87,7 +87,7 @@ public interface IKubernetesClient : IDisposable
     /// <param name="labelSelector">A string, representing an optional label selector for filtering fetched objects.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A list of Kubernetes entities.</returns>
-    Task<EntityList<TEntity>> ListAsync<TEntity>(
+    Task<IList<TEntity>> ListAsync<TEntity>(
         string? @namespace = null,
         string? labelSelector = null,
         CancellationToken cancellationToken = default)
@@ -106,7 +106,7 @@ public interface IKubernetesClient : IDisposable
     /// </param>
     /// <param name="labelSelectors">A list of label-selectors to apply to the search.</param>
     /// <returns>A list of Kubernetes entities.</returns>
-    Task<EntityList<TEntity>> ListAsync<TEntity>(
+    Task<IList<TEntity>> ListAsync<TEntity>(
         string? @namespace = null,
         params LabelSelector[] labelSelectors)
         where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -116,13 +116,13 @@ public interface IKubernetesClient : IDisposable
     }
 
     /// <inheritdoc cref="ListAsync{TEntity}(string?,string?,CancellationToken)"/>
-    EntityList<TEntity> List<TEntity>(
+    IList<TEntity> List<TEntity>(
         string? @namespace = null,
         string? labelSelector = null)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <inheritdoc cref="ListAsync{TEntity}(string?,LabelSelector[])"/>
-    EntityList<TEntity> List<TEntity>(
+    IList<TEntity> List<TEntity>(
         string? @namespace = null,
         params LabelSelector[] labelSelectors)
         where TEntity : IKubernetesObject<V1ObjectMeta>

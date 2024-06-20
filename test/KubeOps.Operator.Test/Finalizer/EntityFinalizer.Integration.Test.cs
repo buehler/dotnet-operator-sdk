@@ -179,7 +179,7 @@ public class EntityFinalizerIntegrationTest : IntegrationTestBase
     {
         await base.DisposeAsync();
         var entities = await _client.ListAsync<V1OperatorIntegrationTestEntity>(_ns.Namespace);
-        foreach (var e in entities.Items)
+        foreach (var e in entities)
         {
             if (e.Metadata.Finalizers is null)
             {

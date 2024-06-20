@@ -179,7 +179,7 @@ public class KubernetesClient : IKubernetesClient
     }
 
     /// <inheritdoc />
-    public async Task<EntityList<TEntity>> ListAsync<TEntity>(
+    public async Task<IList<TEntity>> ListAsync<TEntity>(
         string? @namespace = null,
         string? labelSelector = null,
         CancellationToken cancellationToken = default)
@@ -188,7 +188,7 @@ public class KubernetesClient : IKubernetesClient
         ThrowIfDisposed();
 
         var metadata = GetMetadata<TEntity>();
-        return @namespace switch
+        return (@namespace switch
         {
             null => await ApiClient.CustomObjects.ListClusterCustomObjectAsync<EntityList<TEntity>>(
                 metadata.Group ?? string.Empty,
@@ -203,17 +203,17 @@ public class KubernetesClient : IKubernetesClient
                 metadata.PluralName,
                 labelSelector: labelSelector,
                 cancellationToken: cancellationToken),
-        };
+        }).Items;
     }
 
     /// <inheritdoc />
-    public EntityList<TEntity> List<TEntity>(string? @namespace = null, string? labelSelector = null)
+    public IList<TEntity> List<TEntity>(string? @namespace = null, string? labelSelector = null)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         ThrowIfDisposed();
 
         var metadata = GetMetadata<TEntity>();
-        return @namespace switch
+        return (@namespace switch
         {
             null => ApiClient.CustomObjects.ListClusterCustomObject<EntityList<TEntity>>(
                 metadata.Group ?? string.Empty,
@@ -226,7 +226,7 @@ public class KubernetesClient : IKubernetesClient
                 @namespace,
                 metadata.PluralName,
                 labelSelector: labelSelector),
-        };
+        }).Items;
     }
 
     /// <inheritdoc />
