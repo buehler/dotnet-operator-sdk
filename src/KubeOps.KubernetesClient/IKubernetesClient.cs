@@ -40,7 +40,7 @@ public interface IKubernetesClient : IDisposable
     /// <item>
     /// <description>
     ///     The fallback secret file if running on the cluster
-    ///     (/var/run/secrets/Kubernetes.io/serviceaccount/namespace)
+    ///     (<c>/var/run/secrets/Kubernetes.io/serviceaccount/namespace</c>)
     /// </description>
     /// </item>
     /// <item>
@@ -87,7 +87,7 @@ public interface IKubernetesClient : IDisposable
     /// <param name="labelSelector">A string, representing an optional label selector for filtering fetched objects.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A list of Kubernetes entities.</returns>
-    Task<IList<TEntity>> ListAsync<TEntity>(
+    Task<EntityList<TEntity>> ListAsync<TEntity>(
         string? @namespace = null,
         string? labelSelector = null,
         CancellationToken cancellationToken = default)
@@ -106,7 +106,7 @@ public interface IKubernetesClient : IDisposable
     /// </param>
     /// <param name="labelSelectors">A list of label-selectors to apply to the search.</param>
     /// <returns>A list of Kubernetes entities.</returns>
-    Task<IList<TEntity>> ListAsync<TEntity>(
+    Task<EntityList<TEntity>> ListAsync<TEntity>(
         string? @namespace = null,
         params LabelSelector[] labelSelectors)
         where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -116,20 +116,20 @@ public interface IKubernetesClient : IDisposable
     }
 
     /// <inheritdoc cref="ListAsync{TEntity}(string?,string?,CancellationToken)"/>
-    IList<TEntity> List<TEntity>(
+    EntityList<TEntity> List<TEntity>(
         string? @namespace = null,
         string? labelSelector = null)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <inheritdoc cref="ListAsync{TEntity}(string?,LabelSelector[])"/>
-    IList<TEntity> List<TEntity>(
+    EntityList<TEntity> List<TEntity>(
         string? @namespace = null,
         params LabelSelector[] labelSelectors)
         where TEntity : IKubernetesObject<V1ObjectMeta>
         => List<TEntity>(@namespace, labelSelectors.ToExpression());
 
     /// <summary>
-    /// Create or Update a entity. This first fetches the entity from the Kubernetes API
+    /// Create or Update an entity. This first fetches the entity from the Kubernetes API
     /// and if it does exist, updates the entity. Otherwise, the entity is created.
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
@@ -252,7 +252,7 @@ public interface IKubernetesClient : IDisposable
         => entities.Select(Create);
 
     /// <summary>
-    /// Update the given entity on the Kubernetes API.
+    /// Update (replace) the given entity on the Kubernetes API.
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="entity">The entity instance.</param>
@@ -262,10 +262,10 @@ public interface IKubernetesClient : IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 
     /// <summary>
-    /// Update a list of entities on the Kubernetes API.
+    /// Update (replace) a list of entities on the Kubernetes API.
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
-    /// <param name="entities">An enumerable of entities.</param>
+    /// <param name="entities">Enumerable of entities.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The updated instances of the entities.</returns>
     async Task<IEnumerable<TEntity>> UpdateAsync<TEntity>(
@@ -275,10 +275,10 @@ public interface IKubernetesClient : IDisposable
         => await Task.WhenAll(entities.Select(entity => UpdateAsync(entity, cancellationToken)));
 
     /// <summary>
-    /// Update a list of entities on the Kubernetes API.
+    /// Update (replace) a list of entities on the Kubernetes API.
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
-    /// <param name="entities">An enumerable of entities.</param>
+    /// <param name="entities">Enumerable of entities.</param>
     /// <remarks>
     /// This is invoking the API without any cancellation support. In order to pass a <see cref="CancellationToken"/>,
     /// you need to use the <see cref="UpdateAsync{TEntity}(IEnumerable{TEntity},CancellationToken)"/> overload.
@@ -396,9 +396,9 @@ public interface IKubernetesClient : IDisposable
         => DeleteAsync<TEntity>(name, @namespace).GetAwaiter().GetResult();
 
     /// <summary>
-    /// Create a entity watcher on the Kubernetes API.
+    /// Create an entity watcher on the Kubernetes API.
     /// The entity watcher fires events for entity-events on
-    /// Kubernetes (events: <see cref="WatchEventType"/>.
+    /// Kubernetes (events: <see cref="WatchEventType"/>).
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="onEvent">Action that is called when an event occurs.</param>
@@ -409,19 +409,24 @@ public interface IKubernetesClient : IDisposable
     /// If the namespace is omitted, all entities on the cluster are watched.
     /// </param>
     /// <param name="timeout">The timeout which the watcher has (after this timeout, the server will close the connection).</param>
+    /// <param name="allowWatchBookmarks">
+    /// Parameter to tell the server to send BOOKMARK events. However, if the server has no implementation or
+    /// configuration for bookmarks, this flag is ignored.
+    /// </param>
     /// <param name="resourceVersion">
     /// When specified with a watch call, shows changes that occur after that particular version of a resource.
     /// Defaults to changes from the beginning of history.
     /// </param>
     /// <param name="cancellationToken">Cancellation-Token.</param>
     /// <param name="labelSelectors">A list of label-selectors to apply to the search.</param>
-    /// <returns>A entity watcher for the given entity.</returns>
+    /// <returns>An entity watcher for the given entity.</returns>
     Watcher<TEntity> Watch<TEntity>(
         Action<WatchEventType, TEntity> onEvent,
         Action<Exception>? onError = null,
         Action? onClose = null,
         string? @namespace = null,
         TimeSpan? timeout = null,
+        bool? allowWatchBookmarks = null,
         string? resourceVersion = null,
         CancellationToken cancellationToken = default,
         params LabelSelector[] labelSelectors)
@@ -432,14 +437,15 @@ public interface IKubernetesClient : IDisposable
             onClose,
             @namespace,
             timeout,
+            allowWatchBookmarks,
             resourceVersion,
             labelSelectors.ToExpression(),
             cancellationToken);
 
     /// <summary>
-    /// Create a entity watcher on the Kubernetes API.
+    /// Create an entity watcher on the Kubernetes API.
     /// The entity watcher fires events for entity-events on
-    /// Kubernetes (events: <see cref="WatchEventType"/>.
+    /// Kubernetes (events: <see cref="WatchEventType"/>).
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="onEvent">Action that is called when an event occurs.</param>
@@ -450,19 +456,24 @@ public interface IKubernetesClient : IDisposable
     /// If the namespace is omitted, all entities on the cluster are watched.
     /// </param>
     /// <param name="timeout">The timeout which the watcher has (after this timeout, the server will close the connection).</param>
+    /// <param name="allowWatchBookmarks">
+    /// Parameter to tell the server to send BOOKMARK events. However, if the server has no implementation or
+    /// configuration for bookmarks, this flag is ignored.
+    /// </param>
     /// <param name="resourceVersion">
     /// When specified with a watch call, shows changes that occur after that particular version of a resource.
     /// Defaults to changes from the beginning of history.
     /// </param>
     /// <param name="labelSelector">A string, representing an optional label selector for filtering watched objects.</param>
     /// <param name="cancellationToken">Cancellation-Token.</param>
-    /// <returns>A entity watcher for the given entity.</returns>
+    /// <returns>An entity watcher for the given entity.</returns>
     Watcher<TEntity> Watch<TEntity>(
         Action<WatchEventType, TEntity> onEvent,
         Action<Exception>? onError = null,
         Action? onClose = null,
         string? @namespace = null,
         TimeSpan? timeout = null,
+        bool? allowWatchBookmarks = null,
         string? resourceVersion = null,
         string? labelSelector = null,
         CancellationToken cancellationToken = default)
@@ -480,6 +491,10 @@ public interface IKubernetesClient : IDisposable
     /// Defaults to changes from the beginning of history.
     /// </param>
     /// <param name="labelSelector">A string, representing an optional label selector for filtering watched objects.</param>
+    /// <param name="allowWatchBookmarks">
+    /// Parameter to tell the server to send BOOKMARK events. However, if the server has no implementation or
+    /// configuration for bookmarks, this flag is ignored.
+    /// </param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <returns>An asynchronous enumerable that finishes once <paramref name="cancellationToken"/> is cancelled.</returns>
@@ -487,6 +502,7 @@ public interface IKubernetesClient : IDisposable
         string? @namespace = null,
         string? resourceVersion = null,
         string? labelSelector = null,
+        bool? allowWatchBookmarks = null,
         CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
 }

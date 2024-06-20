@@ -21,7 +21,6 @@ public class KubernetesClient : IKubernetesClient
     private static readonly ConcurrentDictionary<Type, EntityMetadata> MetadataCache = new();
 
     private readonly KubernetesClientConfiguration _clientConfig;
-    private readonly IKubernetes _client;
     private bool _disposed;
 
     /// <summary>
@@ -53,14 +52,14 @@ public class KubernetesClient : IKubernetesClient
     public KubernetesClient(KubernetesClientConfiguration clientConfig, IKubernetes client)
     {
         _clientConfig = clientConfig;
-        _client = client;
+        ApiClient = client;
     }
 
     /// <inheritdoc />
-    public IKubernetes ApiClient => _client;
+    public IKubernetes ApiClient { get; }
 
     /// <inheritdoc />
-    public Uri BaseUri => _client.BaseUri;
+    public Uri BaseUri => ApiClient.BaseUri;
 
     /// <summary>
     /// Clears the metadata cache.
@@ -130,13 +129,13 @@ public class KubernetesClient : IKubernetesClient
         try
         {
             return await (string.IsNullOrWhiteSpace(@namespace)
-                ? _client.CustomObjects.GetClusterCustomObjectAsync<TEntity>(
+                ? ApiClient.CustomObjects.GetClusterCustomObjectAsync<TEntity>(
                     metadata.Group ?? string.Empty,
                     metadata.Version,
                     metadata.PluralName,
                     name,
                     cancellationToken: cancellationToken)
-                : _client.CustomObjects.GetNamespacedCustomObjectAsync<TEntity>(
+                : ApiClient.CustomObjects.GetNamespacedCustomObjectAsync<TEntity>(
                     metadata.Group ?? string.Empty,
                     metadata.Version,
                     @namespace,
@@ -161,12 +160,12 @@ public class KubernetesClient : IKubernetesClient
         try
         {
             return string.IsNullOrWhiteSpace(@namespace)
-                ? _client.CustomObjects.GetClusterCustomObject<TEntity>(
+                ? ApiClient.CustomObjects.GetClusterCustomObject<TEntity>(
                     metadata.Group ?? string.Empty,
                     metadata.Version,
                     metadata.PluralName,
                     name)
-                : _client.CustomObjects.GetNamespacedCustomObject<TEntity>(
+                : ApiClient.CustomObjects.GetNamespacedCustomObject<TEntity>(
                     metadata.Group ?? string.Empty,
                     metadata.Version,
                     @namespace,
@@ -180,7 +179,7 @@ public class KubernetesClient : IKubernetesClient
     }
 
     /// <inheritdoc />
-    public async Task<IList<TEntity>> ListAsync<TEntity>(
+    public async Task<EntityList<TEntity>> ListAsync<TEntity>(
         string? @namespace = null,
         string? labelSelector = null,
         CancellationToken cancellationToken = default)
@@ -189,45 +188,45 @@ public class KubernetesClient : IKubernetesClient
         ThrowIfDisposed();
 
         var metadata = GetMetadata<TEntity>();
-        return (@namespace switch
+        return @namespace switch
         {
-            null => await _client.CustomObjects.ListClusterCustomObjectAsync<EntityList<TEntity>>(
+            null => await ApiClient.CustomObjects.ListClusterCustomObjectAsync<EntityList<TEntity>>(
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 metadata.PluralName,
                 labelSelector: labelSelector,
                 cancellationToken: cancellationToken),
-            _ => await _client.CustomObjects.ListNamespacedCustomObjectAsync<EntityList<TEntity>>(
+            _ => await ApiClient.CustomObjects.ListNamespacedCustomObjectAsync<EntityList<TEntity>>(
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 @namespace,
                 metadata.PluralName,
                 labelSelector: labelSelector,
                 cancellationToken: cancellationToken),
-        }).Items;
+        };
     }
 
     /// <inheritdoc />
-    public IList<TEntity> List<TEntity>(string? @namespace = null, string? labelSelector = null)
+    public EntityList<TEntity> List<TEntity>(string? @namespace = null, string? labelSelector = null)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         ThrowIfDisposed();
 
         var metadata = GetMetadata<TEntity>();
-        return (@namespace switch
+        return @namespace switch
         {
-            null => _client.CustomObjects.ListClusterCustomObject<EntityList<TEntity>>(
+            null => ApiClient.CustomObjects.ListClusterCustomObject<EntityList<TEntity>>(
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 metadata.PluralName,
                 labelSelector: labelSelector),
-            _ => _client.CustomObjects.ListNamespacedCustomObject<EntityList<TEntity>>(
+            _ => ApiClient.CustomObjects.ListNamespacedCustomObject<EntityList<TEntity>>(
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 @namespace,
                 metadata.PluralName,
                 labelSelector: labelSelector),
-        }).Items;
+        };
     }
 
     /// <inheritdoc />
@@ -267,7 +266,7 @@ public class KubernetesClient : IKubernetesClient
         var metadata = GetMetadata<TEntity>();
         return entity.Namespace() switch
         {
-            { } ns => _client.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync<TEntity>(
+            { } ns => ApiClient.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync<TEntity>(
                 entity,
                 metadata.Group ?? string.Empty,
                 metadata.Version,
@@ -275,7 +274,7 @@ public class KubernetesClient : IKubernetesClient
                 metadata.PluralName,
                 entity.Name(),
                 cancellationToken: cancellationToken),
-            _ => _client.CustomObjects.ReplaceClusterCustomObjectStatusAsync<TEntity>(
+            _ => ApiClient.CustomObjects.ReplaceClusterCustomObjectStatusAsync<TEntity>(
                 entity,
                 metadata.Group ?? string.Empty,
                 metadata.Version,
@@ -294,14 +293,14 @@ public class KubernetesClient : IKubernetesClient
         var metadata = GetMetadata<TEntity>();
         return entity.Namespace() switch
         {
-            { } ns => _client.CustomObjects.ReplaceNamespacedCustomObjectStatus<TEntity>(
+            { } ns => ApiClient.CustomObjects.ReplaceNamespacedCustomObjectStatus<TEntity>(
                 entity,
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 ns,
                 metadata.PluralName,
                 entity.Name()),
-            _ => _client.CustomObjects.ReplaceClusterCustomObjectStatus<TEntity>(
+            _ => ApiClient.CustomObjects.ReplaceClusterCustomObjectStatus<TEntity>(
                 entity,
                 metadata.Group ?? string.Empty,
                 metadata.Version,
@@ -346,6 +345,7 @@ public class KubernetesClient : IKubernetesClient
         Action? onClose = null,
         string? @namespace = null,
         TimeSpan? timeout = null,
+        bool? allowWatchBookmarks = null,
         string? resourceVersion = null,
         string? labelSelector = null,
         CancellationToken cancellationToken = default)
@@ -355,11 +355,12 @@ public class KubernetesClient : IKubernetesClient
         var metadata = GetMetadata<TEntity>();
         return (@namespace switch
         {
-            not null => _client.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(
+            not null => ApiClient.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 @namespace,
                 metadata.PluralName,
+                allowWatchBookmarks: allowWatchBookmarks,
                 labelSelector: labelSelector,
                 resourceVersion: resourceVersion,
                 timeoutSeconds: timeout switch
@@ -369,10 +370,11 @@ public class KubernetesClient : IKubernetesClient
                 },
                 watch: true,
                 cancellationToken: cancellationToken),
-            _ => _client.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(
+            _ => ApiClient.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 metadata.PluralName,
+                allowWatchBookmarks: allowWatchBookmarks,
                 labelSelector: labelSelector,
                 resourceVersion: resourceVersion,
                 timeoutSeconds: timeout switch
@@ -385,10 +387,12 @@ public class KubernetesClient : IKubernetesClient
         }).Watch(onEvent, onError, onClose);
     }
 
+    /// <inheritdoc />
     public async IAsyncEnumerable<(WatchEventType Type, TEntity Entity)> WatchAsync<TEntity>(
         string? @namespace = null,
         string? resourceVersion = null,
         string? labelSelector = null,
+        bool? allowWatchBookmarks = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
@@ -396,19 +400,21 @@ public class KubernetesClient : IKubernetesClient
         var metadata = GetMetadata<TEntity>();
         var watcher = (@namespace switch
         {
-            not null => _client.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(
+            not null => ApiClient.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 @namespace,
                 metadata.PluralName,
+                allowWatchBookmarks: allowWatchBookmarks,
                 labelSelector: labelSelector,
                 resourceVersion: resourceVersion,
                 watch: true,
                 cancellationToken: cancellationToken),
-            _ => _client.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(
+            _ => ApiClient.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(
                 metadata.Group ?? string.Empty,
                 metadata.Version,
                 metadata.PluralName,
+                allowWatchBookmarks: allowWatchBookmarks,
                 labelSelector: labelSelector,
                 resourceVersion: resourceVersion,
                 watch: true,
@@ -419,7 +425,11 @@ public class KubernetesClient : IKubernetesClient
 
         await foreach ((WatchEventType watchEventType, TEntity? entity) in watcher)
         {
-            Debug.Assert(entity is not null, "Received null entity during watch");
+            if (entity is null)
+            {
+                continue;
+            }
+
             yield return (watchEventType, entity);
         }
     }
@@ -441,7 +451,7 @@ public class KubernetesClient : IKubernetesClient
         // This ensures that even if the disposal of the client is not finished yet, that all calls to the client
         // are instantly failing.
         _disposed = true;
-        _client.Dispose();
+        ApiClient.Dispose();
     }
 
     private static EntityMetadata GetMetadata<TEntity>()
@@ -468,12 +478,12 @@ public class KubernetesClient : IKubernetesClient
         return metadata.Group switch
         {
             null => new GenericClient(
-                _client,
+                ApiClient,
                 metadata.Version,
                 metadata.PluralName,
                 false),
             _ => new GenericClient(
-                _client,
+                ApiClient,
                 metadata.Group,
                 metadata.Version,
                 metadata.PluralName,

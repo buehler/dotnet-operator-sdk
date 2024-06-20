@@ -34,10 +34,7 @@ internal class ResourceWatcher<TEntity>(
     private Task? _eventWatcher;
     private bool _disposed;
 
-    ~ResourceWatcher()
-    {
-        Dispose(false);
-    }
+    ~ResourceWatcher() => Dispose(false);
 
     public virtual Task StartAsync(CancellationToken cancellationToken)
     {
@@ -128,12 +125,15 @@ internal class ResourceWatcher<TEntity>(
 
     private async Task WatchClientEventsAsync(CancellationToken stoppingToken)
     {
-        try
+        string? currentVersion = null;
+        while (!stoppingToken.IsCancellationRequested)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                await foreach ((WatchEventType type, TEntity? entity) in client.WatchAsync<TEntity>(
+                await foreach ((WatchEventType type, TEntity entity) in client.WatchAsync<TEntity>(
                                    settings.Namespace,
+                                   resourceVersion: currentVersion,
+                                   allowWatchBookmarks: true,
                                    cancellationToken: stoppingToken))
                 {
 #pragma warning disable SA1312
@@ -143,25 +143,32 @@ internal class ResourceWatcher<TEntity>(
                         EventType = type,
 
                         // ReSharper disable once RedundantAnonymousTypePropertyName
-                        Kind = entity?.Kind,
-                        Name = entity?.Name(),
-                        ResourceVersion = entity?.ResourceVersion(),
+                        Kind = entity.Kind,
+                        Name = entity.Name(),
+                        ResourceVersion = entity.ResourceVersion(),
                     });
                     logger.LogInformation(
                         """Received watch event "{EventType}" for "{Kind}/{Name}", last observed resource version: {ResourceVersion}.""",
                         type,
-                        entity?.Kind,
-                        entity?.Name(),
-                        entity?.ResourceVersion());
+                        entity.Kind,
+                        entity.Name(),
+                        entity.ResourceVersion());
+
+                    if (type == WatchEventType.Bookmark)
+                    {
+                        currentVersion = entity.ResourceVersion();
+                        continue;
+                    }
+
                     try
                     {
                         await OnEventAsync(type, entity, stoppingToken);
                     }
                     catch (KubernetesException e)
                     {
-                        if (e.Status.Code == (int)HttpStatusCode.Gone)
+                        if (e.Status.Code is (int)HttpStatusCode.Gone or (int)HttpStatusCode.GatewayTimeout)
                         {
-                            logger.LogDebug(e, "Watch restarting due to 410 HTTP Gone");
+                            logger.LogDebug(e, "Watch restarting due to 410 HTTP Gone or 504 Gateway Timeout.");
 
                             break;
                         }
@@ -179,29 +186,50 @@ internal class ResourceWatcher<TEntity>(
                             exception,
                             "Reconciliation of {EventType} for {Kind}/{Name} failed.",
                             type,
-                            entity?.Kind,
+                            entity.Kind,
                             entity.Name());
                     }
                 }
             }
-        }
-        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-        {
-            // Don't throw if the cancellation was indeed requested.
-        }
-        catch (Exception e)
-        {
-            await OnWatchErrorAsync(e);
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                // Don't throw if the cancellation was indeed requested.
+                break;
+            }
+            catch (Exception e)
+            {
+                await OnWatchErrorAsync(e);
+            }
+
+            if (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+
+            logger.LogInformation(
+                "Watcher for {ResourceType} was terminated and is reconnecting.",
+                typeof(TEntity).Name);
         }
     }
 
-    private async Task OnEventAsync(WatchEventType type, TEntity? entity, CancellationToken cancellationToken)
+    private async Task OnEventAsync(WatchEventType type, TEntity entity, CancellationToken cancellationToken)
     {
         switch (type)
         {
             case WatchEventType.Added:
-                _entityCache.TryAdd(entity.Uid(), entity.Generation() ?? 0);
-                await ReconcileModificationAsync(entity!, cancellationToken);
+                if (_entityCache.TryAdd(entity.Uid(), entity.Generation() ?? 0))
+                {
+                    // Only perform reconciliation if the entity was not already in the cache.
+                    await ReconcileModificationAsync(entity, cancellationToken);
+                }
+                else
+                {
+                    logger.LogDebug(
+                        """Received ADDED event for entity "{Kind}/{Name}" which was already in the cache. Skip event.""",
+                        entity.Kind,
+                        entity.Name());
+                }
+
                 break;
             case WatchEventType.Modified:
                 switch (entity)
@@ -236,7 +264,7 @@ internal class ResourceWatcher<TEntity>(
                 logger.LogWarning(
                     """Received unsupported event "{EventType}" for "{Kind}/{Name}".""",
                     type,
-                    entity?.Kind,
+                    entity.Kind,
                     entity.Name());
                 break;
         }
