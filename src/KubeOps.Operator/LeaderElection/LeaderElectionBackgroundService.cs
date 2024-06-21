@@ -26,7 +26,7 @@ internal sealed class LeaderElectionBackgroundService(LeaderElector elector)
         // Therefore, we use Task.Run() and put the work to queue. The passed cancellation token of the StartAsync
         // method is not used, because it would only cancel the scheduling (which we definitely don't want to cancel).
         // To make this intention explicit, CancellationToken.None gets passed.
-        _ = Task.Run(() => elector.RunUntilLeadershipLostAsync(_cts.Token), CancellationToken.None);
+        _ = Task.Run(() => elector.RunAndTryToHoldLeadershipForeverAsync(_cts.Token), CancellationToken.None);
 
         return Task.CompletedTask;
     }
