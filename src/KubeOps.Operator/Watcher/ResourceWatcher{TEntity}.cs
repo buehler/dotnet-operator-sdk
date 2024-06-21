@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Text.Json;
-using System.Threading;
 
 using k8s;
 using k8s.Models;
