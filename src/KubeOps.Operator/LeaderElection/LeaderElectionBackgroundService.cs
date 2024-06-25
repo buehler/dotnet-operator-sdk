@@ -1,18 +1,21 @@
 using k8s.LeaderElection;
 
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.LeaderElection;
 
 /// <summary>
 /// This background service connects to the API and continuously watches the leader election.
 /// </summary>
+/// <param name="logger">The logger.</param>
 /// <param name="elector">The elector.</param>
-internal sealed class LeaderElectionBackgroundService(LeaderElector elector)
+internal sealed class LeaderElectionBackgroundService(ILogger<LeaderElectionBackgroundService> logger, LeaderElector elector)
     : IHostedService, IDisposable, IAsyncDisposable
 {
     private readonly CancellationTokenSource _cts = new();
     private bool _disposed;
+    private Task? _leadershipTask;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -26,7 +29,7 @@ internal sealed class LeaderElectionBackgroundService(LeaderElector elector)
         // Therefore, we use Task.Run() and put the work to queue. The passed cancellation token of the StartAsync
         // method is not used, because it would only cancel the scheduling (which we definitely don't want to cancel).
         // To make this intention explicit, CancellationToken.None gets passed.
-        _ = Task.Run(() => elector.RunAndTryToHoldLeadershipForeverAsync(_cts.Token), CancellationToken.None);
+        _leadershipTask = Task.Run(RunAndTryToHoldLeadershipForeverAsync, CancellationToken.None);
 
         return Task.CompletedTask;
     }
@@ -38,19 +41,23 @@ internal sealed class LeaderElectionBackgroundService(LeaderElector elector)
         _disposed = true;
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
         if (_disposed)
         {
-            return Task.CompletedTask;
+            return;
         }
 
 #if NET8_0_OR_GREATER
-        return _cts.CancelAsync();
+        await _cts.CancelAsync();
 #else
         _cts.Cancel();
-        return Task.CompletedTask;
 #endif
+
+        if (_leadershipTask is not null)
+        {
+            await _leadershipTask;
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -69,6 +76,21 @@ internal sealed class LeaderElectionBackgroundService(LeaderElector elector)
             else
             {
                 resource.Dispose();
+            }
+        }
+    }
+
+    private async Task RunAndTryToHoldLeadershipForeverAsync()
+    {
+        while (!_cts.IsCancellationRequested)
+        {
+            try
+            {
+                await elector.RunUntilLeadershipLostAsync(_cts.Token);
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Failed to hold leadership.");
             }
         }
     }
