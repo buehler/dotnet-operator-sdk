@@ -25,14 +25,18 @@ internal sealed class LeaderAwareResourceWatcher<TEntity>(
     private CancellationTokenSource _cts = new();
     private bool _disposed;
 
-    public override Task StartAsync(CancellationToken cancellationToken)
+    public override async Task StartAsync(CancellationToken cancellationToken)
     {
         logger.LogDebug("Subscribe for leadership updates.");
 
         elector.OnStartedLeading += StartedLeading;
         elector.OnStoppedLeading += StoppedLeading;
 
-        return elector.IsLeader() ? base.StartAsync(cancellationToken) : Task.CompletedTask;
+        if (elector.IsLeader())
+        {
+            using CancellationTokenSource linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);
+            await base.StartAsync(linkedCancellationTokenSource.Token);
+        }
     }
 
     public override Task StopAsync(CancellationToken cancellationToken)
