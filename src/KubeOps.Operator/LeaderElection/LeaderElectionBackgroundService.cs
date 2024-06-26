@@ -88,6 +88,10 @@ internal sealed class LeaderElectionBackgroundService(ILogger<LeaderElectionBack
             {
                 await elector.RunUntilLeadershipLostAsync(_cts.Token);
             }
+            catch (OperationCanceledException) when (_cts.IsCancellationRequested)
+            {
+                // Ignore cancellation exceptions when we've been asked to stop.
+            }
             catch (Exception exception)
             {
                 logger.LogError(exception, "Failed to hold leadership.");
