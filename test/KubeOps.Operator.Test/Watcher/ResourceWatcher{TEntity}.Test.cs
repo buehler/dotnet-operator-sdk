@@ -45,7 +45,7 @@ public sealed class ResourceWatcherTest
             .Verify(client => client.WatchAsync<V1Pod>("unit-test", null, null, true, It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
-    private static async IAsyncEnumerable<T> WaitForCancellationAsync<T>([EnumeratorCancellation]CancellationToken cancellationToken)
+    private static async IAsyncEnumerable<T> WaitForCancellationAsync<T>([EnumeratorCancellation] CancellationToken cancellationToken)
     {
         await Task.Delay(Timeout.Infinite, cancellationToken);
         yield return default!;
