@@ -1,4 +1,4 @@
-﻿using k8s;
+using k8s;
 using k8s.LeaderElection;
 using k8s.Models;
 
@@ -6,6 +6,7 @@ using KubeOps.Abstractions.Builder;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Queue;
 
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Watcher;
@@ -16,21 +17,26 @@ internal sealed class LeaderAwareResourceWatcher<TEntity>(
     TimedEntityQueue<TEntity> queue,
     OperatorSettings settings,
     IKubernetesClient client,
+    IHostApplicationLifetime hostApplicationLifetime,
     LeaderElector elector)
     : ResourceWatcher<TEntity>(logger, provider, queue, settings, client)
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts = new();
     private bool _disposed;
 
-    public override Task StartAsync(CancellationToken cancellationToken)
+    public override async Task StartAsync(CancellationToken cancellationToken)
     {
         logger.LogDebug("Subscribe for leadership updates.");
 
         elector.OnStartedLeading += StartedLeading;
         elector.OnStoppedLeading += StoppedLeading;
 
-        return elector.IsLeader() ? base.StartAsync(_cts.Token) : Task.CompletedTask;
+        if (elector.IsLeader())
+        {
+            using CancellationTokenSource linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);
+            await base.StartAsync(linkedCancellationTokenSource.Token);
+        }
     }
 
     public override Task StopAsync(CancellationToken cancellationToken)
@@ -43,7 +49,8 @@ internal sealed class LeaderAwareResourceWatcher<TEntity>(
 
         elector.OnStartedLeading -= StartedLeading;
         elector.OnStoppedLeading -= StoppedLeading;
-        return Task.CompletedTask;
+
+        return elector.IsLeader() ? base.StopAsync(cancellationToken) : Task.CompletedTask;
     }
 
     protected override void Dispose(bool disposing)
@@ -63,6 +70,13 @@ internal sealed class LeaderAwareResourceWatcher<TEntity>(
     private void StartedLeading()
     {
         logger.LogInformation("This instance started leading, starting watcher.");
+
+        if (_cts.IsCancellationRequested)
+        {
+            _cts.Dispose();
+            _cts = new CancellationTokenSource();
+        }
+
         base.StartAsync(_cts.Token);
     }
 
@@ -71,6 +85,9 @@ internal sealed class LeaderAwareResourceWatcher<TEntity>(
         _cts.Cancel();
 
         logger.LogInformation("This instance stopped leading, stopping watcher.");
-        base.StopAsync(_cts.Token).Wait();
+
+        // Stop the base implementation using the 'ApplicationStopped' cancellation token.
+        // The cancellation token should only be marked cancelled when the stop should no longer be graceful.
+        base.StopAsync(hostApplicationLifetime.ApplicationStopped).Wait();
     }
 }

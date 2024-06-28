@@ -28,8 +28,8 @@ internal class ResourceWatcher<TEntity>(
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private readonly ConcurrentDictionary<string, long> _entityCache = new();
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
+    private CancellationTokenSource _cancellationTokenSource = new();
     private uint _watcherReconnectRetries;
     private Task? _eventWatcher;
     private bool _disposed;
@@ -39,6 +39,12 @@ internal class ResourceWatcher<TEntity>(
     public virtual Task StartAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting resource watcher for {ResourceType}.", typeof(TEntity).Name);
+
+        if (_cancellationTokenSource.IsCancellationRequested)
+        {
+            _cancellationTokenSource.Dispose();
+            _cancellationTokenSource = new CancellationTokenSource();
+        }
 
         _eventWatcher = WatchClientEventsAsync(_cancellationTokenSource.Token);
 
