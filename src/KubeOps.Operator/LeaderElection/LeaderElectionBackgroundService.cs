@@ -82,6 +82,8 @@ internal sealed class LeaderElectionBackgroundService(ILogger<LeaderElectionBack
 
     private async Task RunAndTryToHoldLeadershipForeverAsync()
     {
+        uint leadershipRetries = 0;
+
         while (!_cts.IsCancellationRequested)
         {
             try
@@ -94,7 +96,14 @@ internal sealed class LeaderElectionBackgroundService(ILogger<LeaderElectionBack
             }
             catch (Exception exception)
             {
-                logger.LogError(exception, "Failed to hold leadership.");
+                leadershipRetries++;
+
+                var delay = TimeSpan
+                    .FromSeconds(Math.Pow(2, Math.Clamp(leadershipRetries, 0, 5)))
+                    .Add(TimeSpan.FromMilliseconds(new Random().Next(0, 1000)));
+
+                logger.LogError(exception, "Failed to hold leadership. Wait {Seconds}s before attempting to reacquire leadership.", delay.TotalSeconds);
+                await Task.Delay(delay);
             }
         }
     }
