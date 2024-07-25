@@ -170,16 +170,15 @@ internal class ResourceWatcher<TEntity>(
                     {
                         await OnEventAsync(type, entity, stoppingToken);
                     }
-                    catch (KubernetesException e)
+                    catch (KubernetesException e) when (e.Status.Code is (int)HttpStatusCode.GatewayTimeout)
                     {
-                        if (e.Status.Code is (int)HttpStatusCode.Gone or (int)HttpStatusCode.GatewayTimeout)
-                        {
-                            logger.LogDebug(e, "Watch restarting due to 410 HTTP Gone or 504 Gateway Timeout.");
-
-                            break;
-                        }
-
-                        LogReconciliationFailed(e);
+                        logger.LogDebug(e, "Watch restarting due to 504 Gateway Timeout.");
+                        break;
+                    }
+                    catch (KubernetesException e) when (e.Status.Code is (int)HttpStatusCode.Gone)
+                    {
+                        // Special handling when our resource version is outdated.
+                        throw;
                     }
                     catch (Exception e)
                     {
@@ -201,6 +200,11 @@ internal class ResourceWatcher<TEntity>(
             {
                 // Don't throw if the cancellation was indeed requested.
                 break;
+            }
+            catch (KubernetesException e) when (e.Status.Code is (int)HttpStatusCode.Gone)
+            {
+                logger.LogDebug(e, "Watch restarting with reset bookmark due to 410 HTTP Gone.");
+                currentVersion = null;
             }
             catch (Exception e)
             {
