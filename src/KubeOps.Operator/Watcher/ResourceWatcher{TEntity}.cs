@@ -131,9 +131,9 @@ internal class ResourceWatcher<TEntity>(
 
     private async Task WatchClientEventsAsync(CancellationToken stoppingToken)
     {
-        string? currentVersion = null;
         while (!stoppingToken.IsCancellationRequested)
         {
+            string? currentVersion = null;
             try
             {
                 await foreach ((WatchEventType type, TEntity entity) in client.WatchAsync<TEntity>(
