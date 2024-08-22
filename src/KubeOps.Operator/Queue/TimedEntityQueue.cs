@@ -33,7 +33,7 @@ internal sealed class TimedEntityQueue<TEntity> : IDisposable
     public void Enqueue(TEntity entity, TimeSpan requeueIn)
     {
         _management.AddOrUpdate(
-            GetKey(entity) ?? throw new InvalidOperationException("Cannot enqueue entities without name or namespace."),
+            GetKey(entity) ?? throw new InvalidOperationException("Cannot enqueue entities without name."),
             key =>
             {
                 var entry = new TimedQueueEntry<TEntity>(entity, requeueIn);
