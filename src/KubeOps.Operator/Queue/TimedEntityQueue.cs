@@ -95,9 +95,14 @@ internal sealed class TimedEntityQueue<TEntity> : IDisposable
 
     private string? GetKey(TEntity entity)
     {
-        if (entity.Name() is null || entity.Namespace() is null)
+        if (entity.Name() is null)
         {
             return null;
+        }
+
+        if (entity.Namespace() is null)
+        {
+            return entity.Name();
         }
 
         return $"{entity.Namespace()}/{entity.Name()}";
