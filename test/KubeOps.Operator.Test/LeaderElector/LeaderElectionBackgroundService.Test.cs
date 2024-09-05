@@ -50,8 +50,8 @@ public sealed class LeaderElectionBackgroundServiceTest
         await leaderElectionBackgroundService.StartAsync(CancellationToken.None);
 
         // Starting the background service should result in the lock attempt throwing, and then a subsequent attempt being made.
-        // Wait for the subsequent event to be signalled, if we time out the test fails.
-        electionLockSubsequentCallEvent.WaitOne(TimeSpan.FromMilliseconds(500)).Should().BeTrue();
+        // Wait for the subsequent event to be signalled, if we time out the test fails. The retry delay requires us to wait at least 3 seconds.
+        electionLockSubsequentCallEvent.WaitOne(TimeSpan.FromMilliseconds(3100)).Should().BeTrue();
 
         await leaderElectionBackgroundService.StopAsync(CancellationToken.None);
     }
