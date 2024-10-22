@@ -147,55 +147,41 @@ internal static partial class AssemblyLoader
             return mlc;
         });
 
-    public static IEnumerable<Type> GetEntities(this MetadataLoadContext context) => context.GetAssemblies()
-        .SelectMany(a => a.DefinedTypes)
+    public static IEnumerable<Type> GetEntities(this MetadataLoadContext context) => context
+        .GetTypesToInspect()
         .Select(t => (t, attrs: CustomAttributeData.GetCustomAttributes(t)))
         .Where(e => e.attrs.Any(a => a.AttributeType.Name == nameof(KubernetesEntityAttribute)) &&
                     e.attrs.All(a => a.AttributeType.Name != nameof(IgnoreAttribute)))
         .Select(e => e.t);
 
-    public static IEnumerable<CustomAttributeData> GetRbacAttributes(this MetadataLoadContext context)
-    {
-        foreach (var type in context.GetAssemblies()
-                     .SelectMany(a => a.DefinedTypes)
-                     .SelectMany(t =>
-                         t.GetCustomAttributesData<GenericRbacAttribute>()))
-        {
-            yield return type;
-        }
-
-        foreach (var type in context.GetAssemblies()
-                     .SelectMany(a => a.DefinedTypes)
-                     .SelectMany(t =>
-                         t.GetCustomAttributesData<EntityRbacAttribute>()))
-        {
-            yield return type;
-        }
-    }
+    public static IEnumerable<CustomAttributeData> GetRbacAttributes(this MetadataLoadContext context) => context
+        .GetTypesToInspect().SelectMany(t => t.GetCustomAttributesData<GenericRbacAttribute>().Concat(t.GetCustomAttributesData<EntityRbacAttribute>()));
 
     public static IEnumerable<ValidationWebhook> GetValidatedEntities(this MetadataLoadContext context) => context
-        .GetAssemblies()
-        .SelectMany(a => a.DefinedTypes)
+        .GetTypesToInspect()
         .Where(t => t.BaseType?.Name == typeof(ValidationWebhook<>).Name &&
                     t.BaseType?.Namespace == typeof(ValidationWebhook<>).Namespace)
         .Distinct()
         .Select(t => new ValidationWebhook(t, context.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata));
 
     public static IEnumerable<MutationWebhook> GetMutatedEntities(this MetadataLoadContext context) => context
-        .GetAssemblies()
-        .SelectMany(a => a.DefinedTypes)
+        .GetTypesToInspect()
         .Where(t => t.BaseType?.Name == typeof(MutationWebhook<>).Name &&
                     t.BaseType?.Namespace == typeof(MutationWebhook<>).Namespace)
         .Distinct()
         .Select(t => new MutationWebhook(t, context.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata));
 
     public static IEnumerable<EntityMetadata> GetConvertedEntities(this MetadataLoadContext context) => context
-        .GetAssemblies()
-        .SelectMany(a => a.DefinedTypes)
+        .GetTypesToInspect()
         .Where(t => t.BaseType?.Name == typeof(ConversionWebhook<>).Name &&
                     t.BaseType?.Namespace == typeof(ConversionWebhook<>).Namespace)
         .Distinct()
         .Select(t => context.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata);
+
+    private static IEnumerable<TypeInfo> GetTypesToInspect(this MetadataLoadContext context) => context
+        .GetAssemblies()
+        .SelectMany(a => a.DefinedTypes)
+        .Where(t => !t.IsInterface && !t.IsAbstract && !t.IsGenericType);
 
 #if NET7_0_OR_GREATER
     [GeneratedRegex(".*")]
