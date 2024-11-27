@@ -45,6 +45,8 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     [InlineData(typeof(EnumerableKeyPairsEntity), "object", null, false)]
     [InlineData(typeof(IntstrOrStringEntity), null, null, false)]
     [InlineData(typeof(EmbeddedResourceEntity), "object", null, false)]
+    [InlineData(typeof(EmbeddedCustomResourceEntity), "object", null, false)]
+    [InlineData(typeof(EmbeddedCustomResourceGenericEntity), "object", null, false)]
     [InlineData(typeof(EmbeddedResourceListEntity), "array", null, false)]
     public void Should_Transpile_Entity_Type_Correctly(Type type, string? expectedType, string? expectedFormat,
         bool isNullable)
@@ -685,6 +687,30 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     private class EmbeddedResourceEntity : CustomKubernetesEntity
     {
         public V1Pod Property { get; set; } = null!;
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class EmbeddedCustomResourceEntity : CustomKubernetesEntity
+    {
+        public EmbeddedCustomResource Property { get; set; } = null!;
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class EmbeddedCustomResource : CustomKubernetesEntity
+    {
+        public string Property { get; set; } = string.Empty;
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class EmbeddedCustomResourceGenericEntity : CustomKubernetesEntity
+    {
+        public EmbeddedCustomResourceGeneric Property { get; set; } = null!;
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class EmbeddedCustomResourceGeneric : CustomKubernetesEntity<EmbeddedCustomResourceGeneric.EntitySpec>
+    {
+        public class EntitySpec;
     }
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
