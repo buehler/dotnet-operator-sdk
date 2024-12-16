@@ -324,6 +324,11 @@ public static class Crds
             return context.MapEnumerationType(type, interfaces);
         }
 
+        if (type.BaseType?.Name == nameof(CustomKubernetesEntity) || type.BaseType?.Name == typeof(CustomKubernetesEntity<>).Name)
+        {
+            return context.MapObjectType(type);
+        }
+
         return type.BaseType?.FullName switch
         {
             "System.Object" => context.MapObjectType(type),
