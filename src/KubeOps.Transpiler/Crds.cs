@@ -313,7 +313,7 @@ public static class Crds
             return new V1JSONSchemaProps
             {
                 Type = Object,
-                AdditionalProperties = additionalProperties
+                AdditionalProperties = additionalProperties,
             };
         }
 
@@ -363,7 +363,7 @@ public static class Crds
                         Type = Object,
                         Properties = null,
                         XKubernetesPreserveUnknownFields = true,
-                        XKubernetesEmbeddedResource = true
+                        XKubernetesEmbeddedResource = true,
                     };
                 }
 
@@ -413,7 +413,7 @@ public static class Crds
             return new V1JSONSchemaProps
             {
                 Type = Object,
-                AdditionalProperties = additionalProperties
+                AdditionalProperties = additionalProperties,
             };
         }
 
