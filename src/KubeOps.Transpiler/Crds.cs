@@ -215,7 +215,11 @@ public static class Crds
         props.Description ??= prop.GetCustomAttributeData<DescriptionAttribute>()
             ?.GetCustomAttributeCtorArg<string>(context, 0);
 
-        props.Nullable = prop.IsNullable();
+        if (prop.IsNullable())
+        {
+            // Default to Nullable to null to avoid generating `nullable:false`
+            props.Nullable = true;
+        }
 
         if (prop.GetCustomAttributeData<ExternalDocsAttribute>() is { } extDocs)
         {
@@ -280,7 +284,7 @@ public static class Crds
     {
         if (type.FullName == "System.String")
         {
-            return new V1JSONSchemaProps { Type = String, Nullable = false };
+            return new V1JSONSchemaProps { Type = String };
         }
 
         if (type.Name == typeof(Nullable<>).Name && type.GenericTypeArguments.Length == 1)
@@ -310,13 +314,12 @@ public static class Crds
             {
                 Type = Object,
                 AdditionalProperties = additionalProperties,
-                Nullable = false,
             };
         }
 
         if (interfaceNames.Contains(typeof(IDictionary).FullName))
         {
-            return new V1JSONSchemaProps { Type = Object, XKubernetesPreserveUnknownFields = true, Nullable = false, };
+            return new V1JSONSchemaProps { Type = Object, XKubernetesPreserveUnknownFields = true };
         }
 
         if (interfaceNames.Contains(typeof(IEnumerable<>).FullName))
@@ -347,9 +350,9 @@ public static class Crds
         switch (type.FullName)
         {
             case "k8s.Models.V1ObjectMeta":
-                return new V1JSONSchemaProps { Type = Object, Nullable = false };
+                return new V1JSONSchemaProps { Type = Object };
             case "k8s.Models.IntstrIntOrString":
-                return new V1JSONSchemaProps { XKubernetesIntOrString = true, Nullable = false };
+                return new V1JSONSchemaProps { XKubernetesIntOrString = true };
             default:
                 if (context.GetContextType<IKubernetesObject>().IsAssignableFrom(type) &&
                     type is { IsAbstract: false, IsInterface: false } &&
@@ -361,7 +364,6 @@ public static class Crds
                         Properties = null,
                         XKubernetesPreserveUnknownFields = true,
                         XKubernetesEmbeddedResource = true,
-                        Nullable = false,
                     };
                 }
 
@@ -412,25 +414,24 @@ public static class Crds
             {
                 Type = Object,
                 AdditionalProperties = additionalProperties,
-                Nullable = false,
             };
         }
 
         var items = context.Map(listType);
-        return new V1JSONSchemaProps { Type = Array, Items = items, Nullable = false };
+        return new V1JSONSchemaProps { Type = Array, Items = items };
     }
 
     private static V1JSONSchemaProps MapValueType(this MetadataLoadContext _, Type type) =>
         type.FullName switch
         {
-            "System.Int32" => new V1JSONSchemaProps { Type = Integer, Format = Int32, Nullable = false },
-            "System.Int64" => new V1JSONSchemaProps { Type = Integer, Format = Int64, Nullable = false },
-            "System.Single" => new V1JSONSchemaProps { Type = Number, Format = Float, Nullable = false },
-            "System.Double" => new V1JSONSchemaProps { Type = Number, Format = Double, Nullable = false },
-            "System.Decimal" => new V1JSONSchemaProps { Type = Number, Format = Decimal, Nullable = false },
-            "System.Boolean" => new V1JSONSchemaProps { Type = Boolean, Nullable = false },
-            "System.DateTime" => new V1JSONSchemaProps { Type = String, Format = DateTime, Nullable = false },
-            "System.DateTimeOffset" => new V1JSONSchemaProps { Type = String, Format = DateTime, Nullable = false },
+            "System.Int32" => new V1JSONSchemaProps { Type = Integer, Format = Int32 },
+            "System.Int64" => new V1JSONSchemaProps { Type = Integer, Format = Int64 },
+            "System.Single" => new V1JSONSchemaProps { Type = Number, Format = Float },
+            "System.Double" => new V1JSONSchemaProps { Type = Number, Format = Double },
+            "System.Decimal" => new V1JSONSchemaProps { Type = Number, Format = Decimal },
+            "System.Boolean" => new V1JSONSchemaProps { Type = Boolean },
+            "System.DateTime" => new V1JSONSchemaProps { Type = String, Format = DateTime },
+            "System.DateTimeOffset" => new V1JSONSchemaProps { Type = String, Format = DateTime },
             _ => throw InvalidType(type),
         };
 
