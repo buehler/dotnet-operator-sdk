@@ -1,6 +1,9 @@
 name: .NET Testing
 
 on:
+  workflow_dispatch:
+
+on:
   pull_request:
     branches:
       - "**"
@@ -20,6 +23,11 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.x
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 9.x
 
       - name: Linting
         run: dotnet format --verify-no-changes
