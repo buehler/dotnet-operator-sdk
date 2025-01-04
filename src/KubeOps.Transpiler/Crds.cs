@@ -352,13 +352,6 @@ public static class Crds
             {
                 attributeNameByFieldName.Add(field.Name, enumMemberAtribute.Value);
             }
-
-#if NET9_0_OR_GREATER
-            if (field.GetCustomAttribute<JsonStringEnumMemberNameAttribute>() is { Name: not null } stringEnumMemberAttribute)
-            {
-                attributeNameByFieldName.Add(field.Name, stringEnumMemberAttribute.Name);
-            }
-#endif
         }
 
         var enumName = new List<object>();
