@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.ObjectModel;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
 using k8s;
@@ -336,10 +337,44 @@ public static class Crds
             "System.Enum" => new V1JSONSchemaProps
             {
                 Type = String,
-                EnumProperty = Enum.GetNames(type).Cast<object>().ToList(),
+                EnumProperty = GetEnumNames(context, type),
             },
             _ => throw InvalidType(type),
         };
+    }
+
+    private static IList<object> GetEnumNames(this MetadataLoadContext context, Type type)
+    {
+        var attributeNameByFieldName = new Dictionary<string, string>();
+        foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Static))
+        {
+            if (field.GetCustomAttribute<EnumMemberAttribute>() is { Value: not null } enumMemberAtribute)
+            {
+                attributeNameByFieldName.Add(field.Name, enumMemberAtribute.Value);
+            }
+
+#if NET9_0_OR_GREATER
+            if (field.GetCustomAttribute<JsonStringEnumMemberNameAttribute>() is { Name: not null } stringEnumMemberAttribute)
+            {
+                attributeNameByFieldName.Add(field.Name, stringEnumMemberAttribute.Name);
+            }
+#endif
+        }
+
+        var enumName = new List<object>();
+        foreach (var value in Enum.GetNames(type))
+        {
+            if (attributeNameByFieldName.TryGetValue(value, out var name))
+            {
+                enumName.Add(name);
+            }
+            else
+            {
+                enumName.Add(value);
+            }
+        }
+
+        return enumName;
     }
 
     private static V1JSONSchemaProps MapObjectType(this MetadataLoadContext context, Type type)
