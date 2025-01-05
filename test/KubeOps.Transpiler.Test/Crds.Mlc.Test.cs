@@ -40,6 +40,7 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     [InlineData(typeof(SetIntEntity), "array", null, false)]
     [InlineData(typeof(InheritedEnumerableEntity), "array", null, false)]
     [InlineData(typeof(EnumEntity), "string", null, false)]
+    [InlineData(typeof(NamedEnumEntity), "string", null, false)]
     [InlineData(typeof(NullableEnumEntity), "string", null, true)]
     [InlineData(typeof(DictionaryEntity), "object", null, false)]
     [InlineData(typeof(EnumerableKeyPairsEntity), "object", null, false)]
@@ -475,6 +476,14 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
         clusterCrd.Spec.Scope.Should().Be("Cluster");
     }
 
+    [Fact]
+    public void Should_Correctly_Get_Enum_Value_From_JsonStringEnumMemberNameAttribute()
+    {
+        var crd = _mlc.Transpile(typeof(NamedEnumEntity));
+        var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
+        specProperties.EnumProperty.Should().BeEquivalentTo(["enumValue1", "enumValue2"]);
+    }
+
     #region Test Entity Classes
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
@@ -655,6 +664,20 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
         public enum TestSpecEnum
         {
             Value1,
+            Value2,
+        }
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class NamedEnumEntity : CustomKubernetesEntity
+    {
+        public TestSpecEnum Property { get; set; }
+
+        public enum TestSpecEnum
+        {
+            [JsonStringEnumMemberName("enumValue1")]
+            Value1,
+            [JsonStringEnumMemberName("enumValue2")]
             Value2,
         }
     }
