@@ -14,43 +14,43 @@ namespace KubeOps.Transpiler.Test;
 public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
 {
     [Theory]
-    [InlineData(typeof(StringTestEntity), "string", null, false)]
+    [InlineData(typeof(StringTestEntity), "string", null, null)]
     [InlineData(typeof(NullableStringTestEntity), "string", null, true)]
-    [InlineData(typeof(IntTestEntity), "integer", "int32", false)]
+    [InlineData(typeof(IntTestEntity), "integer", "int32", null)]
     [InlineData(typeof(NullableIntTestEntity), "integer", "int32", true)]
-    [InlineData(typeof(LongTestEntity), "integer", "int64", false)]
+    [InlineData(typeof(LongTestEntity), "integer", "int64", null)]
     [InlineData(typeof(NullableLongTestEntity), "integer", "int64", true)]
-    [InlineData(typeof(FloatTestEntity), "number", "float", false)]
+    [InlineData(typeof(FloatTestEntity), "number", "float", null)]
     [InlineData(typeof(NullableFloatTestEntity), "number", "float", true)]
-    [InlineData(typeof(DecimalTestEntity), "number", "decimal", false)]
+    [InlineData(typeof(DecimalTestEntity), "number", "decimal", null)]
     [InlineData(typeof(NullableDecimalTestEntity), "number", "decimal", true)]
-    [InlineData(typeof(DoubleTestEntity), "number", "double", false)]
+    [InlineData(typeof(DoubleTestEntity), "number", "double", null)]
     [InlineData(typeof(NullableDoubleTestEntity), "number", "double", true)]
-    [InlineData(typeof(BoolTestEntity), "boolean", null, false)]
+    [InlineData(typeof(BoolTestEntity), "boolean", null, null)]
     [InlineData(typeof(NullableBoolTestEntity), "boolean", null, true)]
-    [InlineData(typeof(DateTimeTestEntity), "string", "date-time", false)]
+    [InlineData(typeof(DateTimeTestEntity), "string", "date-time", null)]
     [InlineData(typeof(NullableDateTimeTestEntity), "string", "date-time", true)]
-    [InlineData(typeof(DateTimeOffsetTestEntity), "string", "date-time", false)]
+    [InlineData(typeof(DateTimeOffsetTestEntity), "string", "date-time", null)]
     [InlineData(typeof(NullableDateTimeOffsetTestEntity), "string", "date-time", true)]
-    [InlineData(typeof(V1ObjectMetaTestEntity), "object", null, false)]
-    [InlineData(typeof(StringArrayEntity), "array", null, false)]
+    [InlineData(typeof(V1ObjectMetaTestEntity), "object", null, null)]
+    [InlineData(typeof(StringArrayEntity), "array", null, null)]
     [InlineData(typeof(NullableStringArrayEntity), "array", null, true)]
-    [InlineData(typeof(EnumerableIntEntity), "array", null, false)]
-    [InlineData(typeof(HashSetIntEntity), "array", null, false)]
-    [InlineData(typeof(SetIntEntity), "array", null, false)]
-    [InlineData(typeof(InheritedEnumerableEntity), "array", null, false)]
-    [InlineData(typeof(EnumEntity), "string", null, false)]
-    [InlineData(typeof(NamedEnumEntity), "string", null, false)]
+    [InlineData(typeof(EnumerableIntEntity), "array", null, null)]
+    [InlineData(typeof(HashSetIntEntity), "array", null, null)]
+    [InlineData(typeof(SetIntEntity), "array", null, null)]
+    [InlineData(typeof(InheritedEnumerableEntity), "array", null, null)]
+    [InlineData(typeof(EnumEntity), "string", null, null)]
+    [InlineData(typeof(NamedEnumEntity), "string", null, null)]
     [InlineData(typeof(NullableEnumEntity), "string", null, true)]
-    [InlineData(typeof(DictionaryEntity), "object", null, false)]
-    [InlineData(typeof(EnumerableKeyPairsEntity), "object", null, false)]
-    [InlineData(typeof(IntstrOrStringEntity), null, null, false)]
-    [InlineData(typeof(EmbeddedResourceEntity), "object", null, false)]
-    [InlineData(typeof(EmbeddedCustomResourceEntity), "object", null, false)]
-    [InlineData(typeof(EmbeddedCustomResourceGenericEntity), "object", null, false)]
-    [InlineData(typeof(EmbeddedResourceListEntity), "array", null, false)]
+    [InlineData(typeof(DictionaryEntity), "object", null, null)]
+    [InlineData(typeof(EnumerableKeyPairsEntity), "object", null, null)]
+    [InlineData(typeof(IntstrOrStringEntity), null, null, null)]
+    [InlineData(typeof(EmbeddedResourceEntity), "object", null, null)]
+    [InlineData(typeof(EmbeddedCustomResourceEntity), "object", null, null)]
+    [InlineData(typeof(EmbeddedCustomResourceGenericEntity), "object", null, null)]
+    [InlineData(typeof(EmbeddedResourceListEntity), "array", null, null)]
     public void Should_Transpile_Entity_Type_Correctly(Type type, string? expectedType, string? expectedFormat,
-        bool isNullable)
+        bool? isNullable)
     {
         var crd = _mlc.Transpile(type);
         var prop = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
@@ -60,15 +60,15 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     }
 
     [Theory]
-    [InlineData(typeof(StringArrayEntity), "string", false)]
-    [InlineData(typeof(NullableStringArrayEntity), "string", false)]
-    [InlineData(typeof(EnumerableIntEntity), "integer", false)]
+    [InlineData(typeof(StringArrayEntity), "string", null)]
+    [InlineData(typeof(NullableStringArrayEntity), "string", null)]
+    [InlineData(typeof(EnumerableIntEntity), "integer", null)]
     [InlineData(typeof(EnumerableNullableIntEntity), "integer", true)]
-    [InlineData(typeof(HashSetIntEntity), "integer", false)]
-    [InlineData(typeof(SetIntEntity), "integer", false)]
-    [InlineData(typeof(InheritedEnumerableEntity), "integer", false)]
-    [InlineData(typeof(EmbeddedResourceListEntity), "object", false)]
-    public void Should_Set_Correct_Array_Type(Type type, string expectedType, bool isNullable)
+    [InlineData(typeof(HashSetIntEntity), "integer", null)]
+    [InlineData(typeof(SetIntEntity), "integer", null)]
+    [InlineData(typeof(InheritedEnumerableEntity), "integer", null)]
+    [InlineData(typeof(EmbeddedResourceListEntity), "object", null)]
+    public void Should_Set_Correct_Array_Type(Type type, string expectedType, bool? isNullable)
     {
         var crd = _mlc.Transpile(type);
         var prop = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"].Items as V1JSONSchemaProps;
@@ -77,9 +77,9 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     }
 
     [Theory]
-    [InlineData(typeof(DictionaryEntity), "string", false)]
-    [InlineData(typeof(EnumerableKeyPairsEntity), "string", false)]
-    public void Should_Set_Correct_Dictionary_Additional_Properties_Type(Type type, string expectedType, bool isNullable)
+    [InlineData(typeof(DictionaryEntity), "string", null)]
+    [InlineData(typeof(EnumerableKeyPairsEntity), "string", null)]
+    public void Should_Set_Correct_Dictionary_Additional_Properties_Type(Type type, string expectedType, bool? isNullable)
     {
         var crd = _mlc.Transpile(type);
         var prop = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"].AdditionalProperties as V1JSONSchemaProps;
