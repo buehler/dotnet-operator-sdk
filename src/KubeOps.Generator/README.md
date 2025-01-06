@@ -16,7 +16,10 @@ which results in the following `csproj` reference:
 
 ```xml
 <ItemGroup>
-    <PackageReference Include="KubeOps.Generator" Version="..." />
+    <PackageReference Include="KubeOps.Generator" Version="...">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
 </ItemGroup>
 ```
 
