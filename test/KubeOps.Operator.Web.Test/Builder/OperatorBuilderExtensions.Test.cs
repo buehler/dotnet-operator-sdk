@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using System.Runtime.Versioning;
+
+using FluentAssertions;
 
 using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Certificates;
@@ -12,7 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace KubeOps.Operator.Web.Test.Builder;
-
+[RequiresPreviewFeatures]
 public class OperatorBuilderExtensionsTest : IDisposable
 {
     private readonly IOperatorBuilder _builder = new OperatorBuilder(new ServiceCollection(), new());
