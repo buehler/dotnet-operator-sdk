@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 using k8s;
 using k8s.Models;
@@ -111,7 +112,7 @@ public sealed class MlcProvider : IAsyncLifetime
         return Task.CompletedTask;
     }
 }
-
+[RequiresPreviewFeatures]
 public sealed class ApplicationProvider : IAsyncLifetime
 {
     private WebApplication? _app;

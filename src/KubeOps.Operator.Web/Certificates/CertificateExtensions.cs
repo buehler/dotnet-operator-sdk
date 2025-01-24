@@ -49,9 +49,16 @@ public static class CertificateExtensions
             _ => throw new NotImplementedException($"{serverPair.Key} is not implemented for {nameof(CopyServerCertWithPrivateKey)}"),
         };
 
+#if NET9_0_OR_GREATER
+        return X509CertificateLoader.LoadPkcs12(
+            temp.Export(X509ContentType.Pfx, password),
+            password,
+            X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+#else
         return new X509Certificate2(
             temp.Export(X509ContentType.Pfx, password),
             password,
             X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+#endif
     }
 }
