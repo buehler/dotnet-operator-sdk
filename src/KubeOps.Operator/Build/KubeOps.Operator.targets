@@ -18,7 +18,7 @@
         <PropertyGroup>
             <KubeOpsAssemblyTimestampAfterCompile>%(IntermediateAssembly.ModifiedTime)</KubeOpsAssemblyTimestampAfterCompile>
         </PropertyGroup>
-        <Message Text="Fetched intermediate assembly before compile timestamp: %(IntermediateAssembly.ModifiedTime)" />
+        <Message Text="Fetched intermediate assembly after compile timestamp: %(IntermediateAssembly.ModifiedTime)" />
     </Target>
 
     <Target Name="GenerateKustomizationConfig" DependsOnTargets="BaseConfig">
