@@ -422,6 +422,7 @@ public static class Crds
                         { Count: > 0 } p => p,
                         _ => null,
                     },
+                    XKubernetesPreserveUnknownFields = type.GetCustomAttributeData<PreserveUnknownFieldsAttribute>() != null ? true : null,
                 };
         }
     }
