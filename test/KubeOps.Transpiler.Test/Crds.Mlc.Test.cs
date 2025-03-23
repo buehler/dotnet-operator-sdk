@@ -342,6 +342,24 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     }
 
     [Fact]
+    public void Should_Set_Preserve_Unknown_Fields_On_Classes()
+    {
+        var crd = _mlc.Transpile(typeof(UnknownFieldsEntity));
+
+        var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
+        specProperties.XKubernetesPreserveUnknownFields.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Should_Set_Preserve_Unknown_Fields_On_ObjectLists()
+    {
+        var crd = _mlc.Transpile(typeof(UnknownFieldsListEntity));
+
+        var specProperties = (V1JSONSchemaProps)crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"].Properties["propertyList"].Items;
+        specProperties.XKubernetesPreserveUnknownFields.Should().BeTrue();
+    }
+
+    [Fact]
     public void Should_Not_Set_Preserve_Unknown_Fields_On_Generic_Dictionaries()
     {
         var crd = _mlc.Transpile(typeof(DictionaryEntity));
@@ -686,6 +704,25 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     private class SimpleDictionaryEntity : CustomKubernetesEntity
     {
         public IDictionary Property { get; set; } = null!;
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class UnknownFieldsEntity : CustomKubernetesEntity<UnknownFieldsEntity.EntitySpec>
+    {
+        [PreserveUnknownFields]
+        public class EntitySpec;
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class UnknownFieldsListEntity : CustomKubernetesEntity<UnknownFieldsListEntity.EntitySpec>
+    {
+        public class EntitySpec
+        {
+            public List<ObjectList> PropertyList { get; set; } = null!;
+
+            [PreserveUnknownFields]
+            public class ObjectList;
+        }
     }
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
