@@ -116,7 +116,7 @@ internal static class OperatorGenerator
             {
                 NamePrefix = $"{name}-",
                 Namespace = $"{name}-system",
-                CommonLabels = new Dictionary<string, string> { { "operator", name }, },
+                Labels = new KustomizationCommonLabels(new Dictionary<string, string> { { "operator", name }, }),
                 Resources = result.DefaultFormatFiles.ToList(),
                 Images =
                     new List<KustomizationImage>
