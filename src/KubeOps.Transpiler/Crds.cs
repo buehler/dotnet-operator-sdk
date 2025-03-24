@@ -288,6 +288,11 @@ public static class Crds
             return new V1JSONSchemaProps { Type = String };
         }
 
+        if (type.FullName == "System.Object")
+        {
+            return new V1JSONSchemaProps { Type = Object, XKubernetesPreserveUnknownFields = true };
+        }
+
         if (type.Name == typeof(Nullable<>).Name && type.GenericTypeArguments.Length == 1)
         {
             var props = context.Map(type.GenericTypeArguments[0]);
