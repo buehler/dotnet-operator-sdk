@@ -26,7 +26,7 @@ public class KustomizationConfig : KubernetesObject
     /// <summary>
     /// Common labels for the resources.
     /// </summary>
-    public IDictionary<string, string>? CommonLabels { get; set; }
+    public KustomizationCommonLabels? Labels { get; set; }
 
     /// <summary>
     /// Resource list.
