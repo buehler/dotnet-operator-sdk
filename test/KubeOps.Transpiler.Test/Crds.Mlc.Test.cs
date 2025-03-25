@@ -324,6 +324,15 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     }
 
     [Fact]
+    public void Should_Set_Validations()
+    {
+        var crd = _mlc.Transpile(typeof(ValidationsAttrEntity));
+
+        var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
+        specProperties.XKubernetesValidations.Should().HaveCount(1);
+    }
+
+    [Fact]
     public void Should_Set_EmbeddedResource_Fields()
     {
         var crd = _mlc.Transpile(typeof(EmbeddedResourceAttrEntity));
@@ -941,6 +950,13 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     public class PreserveUnknownFieldsAttrEntity : CustomKubernetesEntity
     {
         [PreserveUnknownFields]
+        public string Property { get; set; } = null!;
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    public class ValidationsAttrEntity : CustomKubernetesEntity
+    {
+        [Validations("has(self.https) || self.kind != 'https'", "http object must be specified if handling is https")]
         public string Property { get; set; } = null!;
     }
 
