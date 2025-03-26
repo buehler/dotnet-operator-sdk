@@ -300,6 +300,11 @@ public static class Crds
             return new V1JSONSchemaProps { Type = String };
         }
 
+        if (type.FullName == "System.Object")
+        {
+            return new V1JSONSchemaProps { Type = Object, XKubernetesPreserveUnknownFields = true };
+        }
+
         if (type.Name == typeof(Nullable<>).Name && type.GenericTypeArguments.Length == 1)
         {
             var props = context.Map(type.GenericTypeArguments[0]);
@@ -345,7 +350,29 @@ public static class Crds
             return context.MapObjectType(type);
         }
 
-        return type.BaseType?.FullName switch
+        static Type GetRootBaseType(Type type)
+        {
+            var current = type;
+            while (current.BaseType != null)
+            {
+                var baseName = current.BaseType.FullName;
+
+                if (baseName == "System.Object" ||
+                    baseName == "System.ValueType" ||
+                    baseName == "System.Enum")
+                {
+                    return current.BaseType; // This is the root base we're after
+                }
+
+                current = current.BaseType;
+            }
+
+            return current; // In case it's already System.Object
+        }
+
+        var rootBase = GetRootBaseType(type);
+
+        return rootBase.FullName switch
         {
             "System.Object" => context.MapObjectType(type),
             "System.ValueType" => context.MapValueType(type),
