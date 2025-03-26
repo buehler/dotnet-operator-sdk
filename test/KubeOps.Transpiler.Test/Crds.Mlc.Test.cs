@@ -11,7 +11,7 @@ using KubeOps.Abstractions.Entities.Attributes;
 
 namespace KubeOps.Transpiler.Test;
 
-public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
+public partial class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
 {
     [Theory]
     [InlineData(typeof(StringTestEntity), "string", null, null)]
