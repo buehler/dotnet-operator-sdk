@@ -278,6 +278,18 @@ public static class Crds
             props.Properties = null;
         }
 
+        if (prop.GetCustomAttributesData<ValidationRuleAttribute>().ToArray() is { Length: > 0 } validations)
+        {
+            props.XKubernetesValidations = validations
+                .Select(validation => new V1ValidationRule(
+                    validation.GetCustomAttributeCtorArg<string>(context, 0),
+                    fieldPath: validation.GetCustomAttributeCtorArg<string?>(context, 1),
+                    message: validation.GetCustomAttributeCtorArg<string?>(context, 2),
+                    messageExpression: validation.GetCustomAttributeCtorArg<string?>(context, 3),
+                    reason: validation.GetCustomAttributeCtorArg<string?>(context, 4)))
+                .ToList();
+        }
+
         return props;
     }
 

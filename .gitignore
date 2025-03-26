@@ -33,3 +33,9 @@ coverage.info
 
 # Docs
 _site
+
+#OSX
+.DS_Store
+
+#Rider
+.idea
