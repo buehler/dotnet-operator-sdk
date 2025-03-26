@@ -7,7 +7,7 @@ using KubeOps.Abstractions.Entities.Attributes;
 
 namespace KubeOps.Transpiler.Test;
 
-public partial class CrdsMlcTest
+public sealed partial class CrdsMlcTest
 {
     private const string Rule1 = "has(self.https) || self.kind != 'https'";
     private const string Message1 = "https object must be specified if kind is https";
@@ -85,22 +85,22 @@ public partial class CrdsMlcTest
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     public sealed class SingleValidateAttrEntity : CustomKubernetesEntity
     {
-        [Validate(Rule1, message: Message1)]
+        [ValidationRule(Rule1, message: Message1)]
         public string Property { get; set; } = null!;
     }
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     public sealed class MultiValidateAttrEntity : CustomKubernetesEntity
     {
-        [Validate(Rule1, message: Message1)]
-        [Validate(Rule2, message: Message2)]
+        [ValidationRule(Rule1, message: Message1)]
+        [ValidationRule(Rule2, message: Message2)]
         public string Property { get; set; } = null!;
     }
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
     public sealed class AllFieldsValidateAttrEntity : CustomKubernetesEntity
     {
-        [Validate(Rule1, FieldPath1, Message1, MessageExpression1, Reason1)]
+        [ValidationRule(Rule1, FieldPath1, Message1, MessageExpression1, Reason1)]
         public string Property { get; set; } = null!;
     }
 
