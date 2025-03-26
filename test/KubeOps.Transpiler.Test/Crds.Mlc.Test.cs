@@ -11,7 +11,7 @@ using KubeOps.Abstractions.Entities.Attributes;
 
 namespace KubeOps.Transpiler.Test;
 
-public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
+public partial class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
 {
     [Theory]
     [InlineData(typeof(StringTestEntity), "string", null, null)]
@@ -321,15 +321,6 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
 
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
         specProperties.XKubernetesPreserveUnknownFields.Should().BeTrue();
-    }
-
-    [Fact]
-    public void Should_Set_Validations()
-    {
-        var crd = _mlc.Transpile(typeof(ValidationsAttrEntity));
-
-        var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["property"];
-        specProperties.XKubernetesValidations.Should().HaveCount(1);
     }
 
     [Fact]
@@ -950,13 +941,6 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     public class PreserveUnknownFieldsAttrEntity : CustomKubernetesEntity
     {
         [PreserveUnknownFields]
-        public string Property { get; set; } = null!;
-    }
-
-    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
-    public class ValidationsAttrEntity : CustomKubernetesEntity
-    {
-        [Validations("has(self.https) || self.kind != 'https'", "http object must be specified if handling is https")]
         public string Property { get; set; } = null!;
     }
 
