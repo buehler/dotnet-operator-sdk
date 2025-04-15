@@ -3,6 +3,7 @@ using k8s.Models;
 
 using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
+using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Events;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.Abstractions.Queue;
@@ -54,6 +55,31 @@ internal class OperatorBuilder : IOperatorBuilder
         return this;
     }
 
+    public IOperatorBuilder AddController<TImplementation, TEntity, TLabelSelector>()
+        where TImplementation : class, IEntityController<TEntity>
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+        where TLabelSelector : class, IEntityLabelSelector<TEntity>
+    {
+        Services.AddHostedService<EntityRequeueBackgroundService<TEntity>>();
+        Services.TryAddScoped<IEntityController<TEntity>, TImplementation>();
+        Services.TryAddSingleton(new TimedEntityQueue<TEntity>());
+        Services.TryAddTransient<IEntityRequeueFactory, KubeOpsEntityRequeueFactory>();
+        Services.TryAddTransient<EntityRequeue<TEntity>>(services =>
+            services.GetRequiredService<IEntityRequeueFactory>().Create<TEntity>());
+        Services.TryAddSingleton<IEntityLabelSelector<TEntity>, TLabelSelector>();
+
+        if (_settings.EnableLeaderElection)
+        {
+            Services.AddHostedService<LeaderAwareResourceWatcher<TEntity>>();
+        }
+        else
+        {
+            Services.AddHostedService<ResourceWatcher<TEntity>>();
+        }
+
+        return this;
+    }
+
     public IOperatorBuilder AddFinalizer<TImplementation, TEntity>(string identifier)
         where TImplementation : class, IEntityFinalizer<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -90,6 +116,8 @@ internal class OperatorBuilder : IOperatorBuilder
         Services.TryAddTransient<IEventPublisherFactory, KubeOpsEventPublisherFactory>();
         Services.TryAddTransient<EventPublisher>(
             services => services.GetRequiredService<IEventPublisherFactory>().Create());
+
+        Services.AddSingleton(typeof(IEntityLabelSelector<>), typeof(DefaultEntityLabelSelector<>));
 
         if (_settings.EnableLeaderElection)
         {
