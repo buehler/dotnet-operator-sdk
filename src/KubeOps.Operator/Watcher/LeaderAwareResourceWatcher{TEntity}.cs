@@ -3,6 +3,7 @@ using k8s.LeaderElection;
 using k8s.Models;
 
 using KubeOps.Abstractions.Builder;
+using KubeOps.Abstractions.Entities;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Queue;
 
@@ -16,10 +17,11 @@ internal sealed class LeaderAwareResourceWatcher<TEntity>(
     IServiceProvider provider,
     TimedEntityQueue<TEntity> queue,
     OperatorSettings settings,
+    IEntityLabelSelector<TEntity> labelSelector,
     IKubernetesClient client,
     IHostApplicationLifetime hostApplicationLifetime,
     LeaderElector elector)
-    : ResourceWatcher<TEntity>(logger, provider, queue, settings, client)
+    : ResourceWatcher<TEntity>(logger, provider, queue, settings, labelSelector, client)
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private CancellationTokenSource _cts = new();

@@ -4,6 +4,7 @@ using k8s;
 using k8s.Models;
 
 using KubeOps.Abstractions.Builder;
+using KubeOps.Abstractions.Entities;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Queue;
 using KubeOps.Operator.Watcher;
@@ -25,12 +26,13 @@ public sealed class ResourceWatcherTest
         var timedEntityQueue = new TimedEntityQueue<V1Pod>();
         var operatorSettings = new OperatorSettings() { Namespace = "unit-test" };
         var kubernetesClient = Mock.Of<IKubernetesClient>();
+        var labelSelector = new DefaultEntityLabelSelector<V1Pod>();
 
         Mock.Get(kubernetesClient)
             .Setup(client => client.WatchAsync<V1Pod>("unit-test", null, null, true, It.IsAny<CancellationToken>()))
             .Returns<string?, string?, string?, bool?, CancellationToken>((_, _, _, _, cancellationToken) => WaitForCancellationAsync<(WatchEventType, V1Pod)>(cancellationToken));
 
-        var resourceWatcher = new ResourceWatcher<V1Pod>(logger, serviceProvider, timedEntityQueue, operatorSettings, kubernetesClient);
+        var resourceWatcher = new ResourceWatcher<V1Pod>(logger, serviceProvider, timedEntityQueue, operatorSettings, labelSelector, kubernetesClient);
 
         // Act.
         // Start and stop the watcher.
