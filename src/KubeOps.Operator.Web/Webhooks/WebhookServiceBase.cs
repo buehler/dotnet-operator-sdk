@@ -71,7 +71,7 @@ internal abstract class WebhookServiceBase(IKubernetesClient client, WebhookLoad
                 Entities.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata))
             .Select(hook => new V1MutatingWebhook
             {
-                Name = $"mutate.{hook.Metadata.SingularName}.{hook.Metadata.Group}.{hook.Metadata.Version}",
+                Name = $"mutate.{hook.Metadata.SingularName}.{Defaulted(hook.Metadata.Group, "core")}.{hook.Metadata.Version}",
                 MatchPolicy = "Exact",
                 AdmissionReviewVersions = new[] { "v1" },
                 SideEffects = "None",
@@ -110,7 +110,7 @@ internal abstract class WebhookServiceBase(IKubernetesClient client, WebhookLoad
                 Entities.ToEntityMetadata(t.BaseType!.GenericTypeArguments[0]).Metadata))
             .Select(hook => new V1ValidatingWebhook
             {
-                Name = $"validate.{hook.Metadata.SingularName}.{hook.Metadata.Group}.{hook.Metadata.Version}",
+                Name = $"validate.{hook.Metadata.SingularName}.{Defaulted(hook.Metadata.Group, "core")}.{hook.Metadata.Version}",
                 MatchPolicy = "Exact",
                 AdmissionReviewVersions = new[] { "v1" },
                 SideEffects = "None",
@@ -140,4 +140,7 @@ internal abstract class WebhookServiceBase(IKubernetesClient client, WebhookLoad
             await Client.SaveAsync(validatorConfig);
         }
     }
+
+    private static string Defaulted(string? value, string defaultValue) =>
+        string.IsNullOrWhiteSpace(value) ? defaultValue : value;
 }
