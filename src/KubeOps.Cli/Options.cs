@@ -40,4 +40,14 @@ internal static class Options
         ["--clear-out"],
         () => false,
         description: "Clear the output path before generating resources.");
+
+    public static readonly Option<string> AccessibleDockerImage = new(
+        "--docker-image",
+        () => "accessible-docker-image",
+        description: "An accessible docker image to deploy");
+
+    public static readonly Option<string> AccessibleDockerTag = new(
+        "--docker-image-tag",
+        () => "latest",
+        description: "Tag for an accessible docker image to deploy");
 }

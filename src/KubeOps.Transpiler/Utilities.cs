@@ -57,6 +57,18 @@ public static class Utilities
             .Where(a => a.AttributeType.Name == typeof(TAttribute).Name);
 
     /// <summary>
+    /// Load an enumerable of custom attributes from a read-only-reflected property.
+    /// </summary>
+    /// <param name="prop">The property.</param>
+    /// <typeparam name="TAttribute">The type of the attribute to load.</typeparam>
+    /// <returns>The custom attribute data list if any were found.</returns>
+    public static IEnumerable<CustomAttributeData> GetCustomAttributesData<TAttribute>(this PropertyInfo prop)
+        where TAttribute : Attribute
+        => CustomAttributeData
+            .GetCustomAttributes(prop)
+            .Where(a => a.AttributeType.Name == typeof(TAttribute).Name);
+
+    /// <summary>
     /// Load a specific named argument from a custom attribute.
     /// Named arguments are in the property-notation:
     /// <c>[KubernetesEntity(Kind = "foobar")]</c>.

@@ -11,7 +11,7 @@ using KubeOps.Abstractions.Entities.Attributes;
 
 namespace KubeOps.Transpiler.Test;
 
-public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
+public partial class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
 {
     [Theory]
     [InlineData(typeof(StringTestEntity), "string", null, null)]
@@ -347,6 +347,15 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
         var crd = _mlc.Transpile(typeof(UnknownFieldsEntity));
 
         var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"];
+        specProperties.XKubernetesPreserveUnknownFields.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Should_Set_Preserve_Unknown_Fields_On_System_Object()
+    {
+        var crd = _mlc.Transpile(typeof(EntityWithSystemObject));
+
+        var specProperties = crd.Spec.Versions.First().Schema.OpenAPIV3Schema.Properties["spec"].Properties["obj"];
         specProperties.XKubernetesPreserveUnknownFields.Should().BeTrue();
     }
 
@@ -711,6 +720,15 @@ public class CrdsMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     {
         [PreserveUnknownFields]
         public class EntitySpec;
+    }
+
+    [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
+    private class EntityWithSystemObject : CustomKubernetesEntity<EntityWithSystemObject.EntitySpec>
+    {
+        public class EntitySpec
+        {
+            public object Obj { get; set; } = null!;
+        }
     }
 
     [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
