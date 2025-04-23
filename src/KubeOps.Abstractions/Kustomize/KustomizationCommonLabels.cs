@@ -9,7 +9,7 @@ public class KustomizationCommonLabels
     {
         foreach (var keyValuePair in pairs)
         {
-            Pairs.Add(keyValuePair.Key,keyValuePair.Value);
+            Pairs.Add(keyValuePair.Key, keyValuePair.Value);
         }
     }
 

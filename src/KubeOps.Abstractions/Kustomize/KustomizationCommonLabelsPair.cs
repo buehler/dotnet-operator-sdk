@@ -1,3 +1,3 @@
 ﻿namespace KubeOps.Abstractions.Kustomize;
 
-public class KustomizationCommonLabelsPair: Dictionary<string, string> { }
+public class KustomizationCommonLabelsPair : Dictionary<string, string>;
