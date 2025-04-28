@@ -7,11 +7,19 @@ public class KustomizationCommonLabels
 {
     public KustomizationCommonLabels(IDictionary<string, string> pairs)
     {
-        Pairs.Add(new KustomizationCommonLabelsPair() { Pairs = pairs });
+        foreach (var keyValuePair in pairs)
+        {
+            Pairs.Add(keyValuePair.Key, keyValuePair.Value);
+        }
     }
+
+    /// <summary>
+    /// Include selectors.
+    /// </summary>
+    public bool IncludeSelectors { get; init; } = true;
 
     /// <summary>
     /// A list of common labels.
     /// </summary>
-    public List<KustomizationCommonLabelsPair> Pairs { get; set; } = new List<KustomizationCommonLabelsPair>();
+    public KustomizationCommonLabelsPair Pairs { get; set; } = new KustomizationCommonLabelsPair();
 }
