@@ -2,9 +2,11 @@
 
 using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
+using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Events;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.Abstractions.Queue;
+using KubeOps.KubernetesClient.LabelSelectors;
 using KubeOps.Operator.Builder;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Queue;
@@ -12,6 +14,7 @@ using KubeOps.Operator.Test.TestEntities;
 using KubeOps.Operator.Watcher;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace KubeOps.Operator.Test.Builder;
@@ -29,6 +32,29 @@ public class OperatorBuilderTest
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(EventPublisher) &&
             s.Lifetime == ServiceLifetime.Transient);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(IEntityLabelSelector<>) &&
+            s.ImplementationType == typeof(DefaultEntityLabelSelector<>) &&
+            s.Lifetime == ServiceLifetime.Singleton);
+    }
+
+    [Fact]
+    public void Should_Use_Specific_EntityLabelSelector_Implementation()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Register the default and specific implementations
+        services.AddSingleton(typeof(IEntityLabelSelector<>), typeof(DefaultEntityLabelSelector<>));
+        services.TryAddSingleton<IEntityLabelSelector<V1OperatorIntegrationTestEntity>, TestLabelSelector>();
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Act
+        var resolvedService = serviceProvider.GetRequiredService<IEntityLabelSelector<V1OperatorIntegrationTestEntity>>();
+
+        // Assert
+        Assert.IsType<TestLabelSelector>(resolvedService);
     }
 
     [Fact]
@@ -50,6 +76,31 @@ public class OperatorBuilderTest
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(EntityRequeue<V1OperatorIntegrationTestEntity>) &&
             s.Lifetime == ServiceLifetime.Transient);
+    }
+
+    [Fact]
+    public void Should_Add_Controller_Resources_With_Label_Selector()
+    {
+        _builder.AddController<TestController, V1OperatorIntegrationTestEntity, TestLabelSelector>();
+
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(IEntityController<V1OperatorIntegrationTestEntity>) &&
+            s.ImplementationType == typeof(TestController) &&
+            s.Lifetime == ServiceLifetime.Scoped);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(IHostedService) &&
+            s.ImplementationType == typeof(ResourceWatcher<V1OperatorIntegrationTestEntity>) &&
+            s.Lifetime == ServiceLifetime.Singleton);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(TimedEntityQueue<V1OperatorIntegrationTestEntity>) &&
+            s.Lifetime == ServiceLifetime.Singleton);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(EntityRequeue<V1OperatorIntegrationTestEntity>) &&
+            s.Lifetime == ServiceLifetime.Transient);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(IEntityLabelSelector<V1OperatorIntegrationTestEntity>) &&
+            s.ImplementationType == typeof(TestLabelSelector) &&
+            s.Lifetime == ServiceLifetime.Singleton);
     }
 
     [Fact]
@@ -104,5 +155,18 @@ public class OperatorBuilderTest
     {
         public Task FinalizeAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken) =>
             Task.CompletedTask;
+    }
+
+    private class TestLabelSelector : IEntityLabelSelector<V1OperatorIntegrationTestEntity>
+    {
+        public ValueTask<string?> GetLabelSelectorAsync(CancellationToken cancellationToken)
+        {
+            var labelSelectors = new LabelSelector[]
+            {
+                new EqualsSelector("label", "value")
+            };
+
+            return ValueTask.FromResult<string?>(labelSelectors.ToExpression());
+        }
     }
 }
