@@ -62,11 +62,7 @@ internal class ResourceWatcher<TEntity>(
             return;
         }
 
-#if NET8_0_OR_GREATER
         await _cancellationTokenSource.CancelAsync();
-#else
-        _cancellationTokenSource.Cancel();
-#endif
         if (_eventWatcher is not null)
         {
             await _eventWatcher.WaitAsync(cancellationToken);
