@@ -44,12 +44,7 @@ internal sealed class EntityRequeueBackgroundService<TEntity>(
             return Task.CompletedTask;
         }
 
-#if NET8_0_OR_GREATER
         return _cts.CancelAsync();
-#else
-        _cts.Cancel();
-        return Task.CompletedTask;
-#endif
     }
 
     public void Dispose()
