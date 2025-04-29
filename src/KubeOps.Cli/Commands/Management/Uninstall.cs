@@ -63,7 +63,7 @@ internal static class Uninstall
         }
 
         console.WriteLine($"Found {crds.Count} CRDs.");
-        if (!force && !console.Confirm("[red]Should the CRDs be uninstalled?[/]", false))
+        if (!force && !await console.ConfirmAsync("[red]Should the CRDs be uninstalled?[/]", false))
         {
             ctx.ExitCode = ExitCodes.Aborted;
             return;
