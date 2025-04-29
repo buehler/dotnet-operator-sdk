@@ -117,7 +117,7 @@ public class KubernetesClientAsyncTest : IntegrationTestBase, IDisposable
         var configs = await _client.ListAsync<V1ConfigMap>("default");
 
         // there are _at least_ 2 config maps (the two that were created)
-        configs.Count.Should().BeGreaterOrEqualTo(2);
+        configs.Count.Should().BeGreaterThanOrEqualTo(2);
     }
 
     [Fact]
@@ -142,12 +142,12 @@ public class KubernetesClientAsyncTest : IntegrationTestBase, IDisposable
         _objects.Add(config1);
 
         var configs = await _client.ListAsync<V1ConfigMap>("default");
-        configs.Count.Should().BeGreaterOrEqualTo(2);
+        configs.Count.Should().BeGreaterThanOrEqualTo(2);
 
         await _client.DeleteAsync(config2);
 
         configs = await _client.ListAsync<V1ConfigMap>("default");
-        configs.Count.Should().BeGreaterOrEqualTo(1);
+        configs.Count.Should().BeGreaterThanOrEqualTo(1);
     }
 
     [Fact]

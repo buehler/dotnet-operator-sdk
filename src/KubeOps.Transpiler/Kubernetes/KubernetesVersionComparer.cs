@@ -59,7 +59,7 @@ public sealed partial class KubernetesVersionComparer : IComparer<string>
     private static partial Regex KubernetesVersionRegex();
 #endif
 
-    private Version ExtractVersion(Match match)
+    private static Version ExtractVersion(Match match)
     {
         var major = int.Parse(match.Groups["major"].Value);
         if (!Enum.TryParse<Stream>(match.Groups["stream"].Value, true, out var stream))

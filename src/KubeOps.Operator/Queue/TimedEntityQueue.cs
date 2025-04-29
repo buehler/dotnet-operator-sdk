@@ -33,7 +33,7 @@ internal sealed class TimedEntityQueue<TEntity> : IDisposable
     public void Enqueue(TEntity entity, TimeSpan requeueIn)
     {
         _management.AddOrUpdate(
-            GetKey(entity) ?? throw new InvalidOperationException("Cannot enqueue entities without name."),
+            TimedEntityQueue<TEntity>.GetKey(entity) ?? throw new InvalidOperationException("Cannot enqueue entities without name."),
             key =>
             {
                 var entry = new TimedQueueEntry<TEntity>(entity, requeueIn);
@@ -81,7 +81,7 @@ internal sealed class TimedEntityQueue<TEntity> : IDisposable
 
     public void Remove(TEntity entity)
     {
-        var key = GetKey(entity);
+        var key = TimedEntityQueue<TEntity>.GetKey(entity);
         if (key is null)
         {
             return;
@@ -93,7 +93,7 @@ internal sealed class TimedEntityQueue<TEntity> : IDisposable
         }
     }
 
-    private string? GetKey(TEntity entity)
+    private static string? GetKey(TEntity entity)
     {
         if (entity.Name() is null)
         {
