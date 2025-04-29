@@ -46,7 +46,7 @@ public class EntityRequeueIntegrationTest : IntegrationTestBase
         await _mock.WaitForInvocations;
 
         // Expecting invocations, but since in parallel, there is a possibility to for target hit while other are in flight.
-        _mock.Invocations.Count.Should().BeGreaterOrEqualTo(100).And.BeLessThan(105);
+        _mock.Invocations.Count.Should().BeGreaterThanOrEqualTo(100).And.BeLessThan(105);
         var invocationsGroupedById = _mock.Invocations.GroupBy(item => item.Entity.Metadata.Uid).ToList();
         invocationsGroupedById.Count.Should().Be(4);
         var invocationDistributions = invocationsGroupedById
