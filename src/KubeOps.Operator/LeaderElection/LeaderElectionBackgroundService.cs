@@ -48,11 +48,7 @@ internal sealed class LeaderElectionBackgroundService(ILogger<LeaderElectionBack
             return;
         }
 
-#if NET8_0_OR_GREATER
         await _cts.CancelAsync();
-#else
-        _cts.Cancel();
-#endif
 
         if (_leadershipTask is not null)
         {

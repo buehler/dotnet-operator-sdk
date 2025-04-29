@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 
 namespace KubeOps.Transpiler.Kubernetes;
 
@@ -10,11 +10,6 @@ namespace KubeOps.Transpiler.Kubernetes;
 /// </summary>
 public sealed partial class KubernetesVersionComparer : IComparer<string>
 {
-#if !NET7_0_OR_GREATER
-    private static readonly Regex KubernetesVersionRegex =
-        new("^v(?<major>[0-9]+)((?<stream>alpha|beta)(?<minor>[0-9]+))?$", RegexOptions.Compiled);
-#endif
-
     private enum Stream
     {
         Alpha = 1,
@@ -29,21 +24,13 @@ public sealed partial class KubernetesVersionComparer : IComparer<string>
             return StringComparer.CurrentCulture.Compare(x, y);
         }
 
-#if NET7_0_OR_GREATER
         var matchX = KubernetesVersionRegex().Match(x);
-#else
-        var matchX = KubernetesVersionRegex.Match(x);
-#endif
         if (!matchX.Success)
         {
             return StringComparer.CurrentCulture.Compare(x, y);
         }
 
-#if NET7_0_OR_GREATER
         var matchY = KubernetesVersionRegex().Match(y);
-#else
-        var matchY = KubernetesVersionRegex.Match(y);
-#endif
         if (!matchY.Success)
         {
             return StringComparer.CurrentCulture.Compare(x, y);
@@ -54,10 +41,8 @@ public sealed partial class KubernetesVersionComparer : IComparer<string>
         return versionX.CompareTo(versionY);
     }
 
-#if NET7_0_OR_GREATER
     [GeneratedRegex("^v(?<major>[0-9]+)((?<stream>alpha|beta)(?<minor>[0-9]+))?$", RegexOptions.Compiled)]
     private static partial Regex KubernetesVersionRegex();
-#endif
 
     private Version ExtractVersion(Match match)
     {

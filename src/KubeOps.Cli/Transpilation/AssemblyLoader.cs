@@ -183,10 +183,6 @@ internal static partial class AssemblyLoader
         .SelectMany(a => a.DefinedTypes)
         .Where(t => !t.IsInterface && !t.IsAbstract && !t.IsGenericType);
 
-#if NET7_0_OR_GREATER
-    [GeneratedRegex(".*")]
+[GeneratedRegex(".*")]
     private static partial Regex DefaultRegex();
-#else
-    private static Regex DefaultRegex() => new(".*");
-#endif
 }

@@ -12,10 +12,10 @@ detailed documentation, head to the [GitHub Pages](https://buehler.github.io/dot
 
 ## Packages
 
-All packages support .NET6.0 and higher. The reason is that modern C# features are
-used and client libraries are still possible for .NET 6.0 and up.
+All packages support .NET8.0 and higher. The reason is that modern C# features are
+used and client libraries are optimized for .NET 8.0 and up.
 Also, the KubernetesClient package follows the same strategy regarding the
-older framework versions.
+framework versions.
 The following packages exist:
 
 | Package                                                              | Description                                            | Latest Version                                                                                                                                                          |
