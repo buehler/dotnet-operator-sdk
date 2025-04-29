@@ -177,13 +177,6 @@ public class FinalizerRegistrationGeneratorTest
     public void Should_Generate_Correct_Code(string input, string expectedResult)
     {
         var inputCompilation = input.CreateCompilation();
-
-        var diagnostics = inputCompilation.GetDiagnostics();
-        if (diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
-        {
-            return;
-        }
-
         expectedResult = expectedResult.ReplaceLineEndings();
 
         var driver = CSharpGeneratorDriver.Create(new FinalizerRegistrationGenerator());
