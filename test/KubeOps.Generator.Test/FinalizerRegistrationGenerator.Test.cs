@@ -69,7 +69,7 @@ public class FinalizerRegistrationGeneratorTest
                 {
                 }
 
-                public sealed class EntityFinalizerBase<TEntity> : IEntityFinalizer<TEntity> 
+                public abstract class EntityFinalizerBase<TEntity> : IEntityFinalizer<TEntity> 
                     where TEntity : IKubernetesObject<V1ObjectMeta>
                 {
                 }
@@ -142,7 +142,7 @@ public class FinalizerRegistrationGeneratorTest
                 {
                 }
 
-                public sealed class EntityFinalizerBase<TEntity> : IEntityFinalizer<TEntity> 
+                public abstract class EntityFinalizerBase<TEntity> : IEntityFinalizer<TEntity> 
                     where TEntity : IKubernetesObject<V1ObjectMeta>
                 {
                 }
@@ -165,11 +165,11 @@ public class FinalizerRegistrationGeneratorTest
                      public static class FinalizerRegistrations
                      {
                          public const string V1TestEntityFinalizerIdentifier = "testing.dev/v1testentityfinalizer";
-                         public const string V1TestEntityFinalizer2 = "testing.dev/v1testentityfinalizer2";
+                         public const string V1TestEntityFinalizer2Identifier = "testing.dev/v1testentityfinalizer2finalizer";
                          public static IOperatorBuilder RegisterFinalizers(this IOperatorBuilder builder)
                          {
-                             builder.AddFinalizer<global::V1TestEntityFinalizer, global::V1TestEntity>(V1TestEntityFinalizer);
-                             builder.AddFinalizer<global::V1TestEntityFinalizer2, global::V1TestEntity>(V1TestEntityFinalizer2);
+                             builder.AddFinalizer<global::V1TestEntityFinalizer, global::V1TestEntity>(V1TestEntityFinalizerIdentifier);
+                             builder.AddFinalizer<global::V1TestEntityFinalizer2, global::V1TestEntity>(V1TestEntityFinalizer2Identifier);
                              return builder;
                          }
                      }
@@ -177,13 +177,6 @@ public class FinalizerRegistrationGeneratorTest
     public void Should_Generate_Correct_Code(string input, string expectedResult)
     {
         var inputCompilation = input.CreateCompilation();
-
-        var diagnostics = inputCompilation.GetDiagnostics();
-        if (diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
-        {
-            return;
-        }
-
         expectedResult = expectedResult.ReplaceLineEndings();
 
         var driver = CSharpGeneratorDriver.Create(new FinalizerRegistrationGenerator());
