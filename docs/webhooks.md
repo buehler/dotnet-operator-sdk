@@ -1,5 +1,7 @@
 # Webhooks
 
+**Note:** Using KubeOps webhooks requires your operator to be hosted within an ASP.NET Core application. The `KubeOps.Operator.Web` NuGet package provides the necessary integration and middleware.
+
 KubeOps leverages ASP.NET Core to host webhook endpoints, allowing your operator to interact with the Kubernetes API server during crucial lifecycle events. This requires the `KubeOps.Operator.Web` NuGet package.
 
 There are two main categories of webhooks supported:
@@ -41,6 +43,7 @@ There are two main categories of webhooks supported:
     ```
 6.  **Configure Kubernetes:** Create `ValidatingWebhookConfiguration` or `MutatingWebhookConfiguration` Kubernetes resources. These tell the API server to send admission requests for specific resources/operations to your operator's webhook service endpoint (usually `/mutate/{webhook-name}` or `/validate/{webhook-name}`).
     *   **Important:** Manually creating these YAML configurations can be complex. The KubeOps [CLI Tool](./cli.md) is **highly recommended** for generating these based on your webhook attributes: `dotnet kubeops generate webhooks --assembly /path/to/your/operator.dll --output-path ./deployment`.
+    *   Additionally, the command `dotnet kubeops generate operator` (which also generates RBAC) creates the necessary Kubernetes `Service` manifest required to expose your webhook endpoints within the cluster so the API server can reach them.
 
 ### Validation Webhook Example
 
@@ -79,7 +82,7 @@ public class TestValidationWebhook : ValidationWebhook<V1TestEntity>
 }
 ```
 
-Find the full example code here: [`examples/WebhookOperator/`](../../../examples/WebhookOperator/).
+Find the full example code here: [https://github.com/ewassef/dotnet-operator-sdk/tree/main/examples/WebhookOperator/](https://github.com/ewassef/dotnet-operator-sdk/tree/main/examples/WebhookOperator/).
 
 ### Mutation Webhook Example
 
@@ -135,7 +138,7 @@ See: [Kubernetes API Versioning](https://kubernetes.io/docs/tasks/extend-kuberne
     *   Set `spec.conversion.strategy` to `Webhook`.
     *   Configure `spec.conversion.webhook.clientConfig` to point to your operator's conversion webhook service endpoint (usually `/convert/{webhook-name}`).
     *   Specify the `spec.conversion.webhook.conversionReviewVersions` your webhook supports (e.g., `["v1", "v1beta1"]`).
-    *   *Note:* The KubeOps [CLI Tool](./cli.md) can help generate CRDs with conversion settings (`dotnet kubeops generate crds ...`).
+    *   *Note:* The KubeOps [CLI Tool](./cli.md) can help generate CRDs with conversion settings (`dotnet kubeops generate crds ...`). This is the **recommended approach** to ensure the `conversion` stanza is correctly configured.
 
 ### Conversion Webhook Example
 
@@ -204,7 +207,7 @@ public class TestConversionWebhook : ConversionWebhook<V3TestEntity>
 }
 ```
 
-Find the full example code here: [`examples/ConversionWebhookOperator`](../../../examples/ConversionWebhookOperator).
+Find the full conversion webhook example code in the GitHub repository: [https://github.com/ewassef/dotnet-operator-sdk/tree/main/examples/ConversionWebhookOperator/](https://github.com/ewassef/dotnet-operator-sdk/tree/main/examples/ConversionWebhookOperator/)
 
 ## Important Considerations
 

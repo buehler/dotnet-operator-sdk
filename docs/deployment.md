@@ -62,10 +62,11 @@ Deploying a KubeOps operator involves packaging it as a container image and crea
         ```
     *   **Review Generated Manifests:** Inspect the YAML files in the `./deploy` directory. Key files include:
         *   [CRD definitions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/) (`*.crd.yaml`) - Defines your custom resource types.
-        *   `namespace.yaml` (if generated) - Defines the namespace where the operator will run.
+        *   `namespace.yaml` (often generated) - Defines the namespace where the operator will run (e.g., `my-first-operator-system`). Applying this multiple times may result in an "already exists" message, which is typically safe to ignore.
         *   [`ServiceAccount`](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/) (`service_account.yaml`) - Identity for the operator pod.
         *   [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) resources (`role.yaml`, `cluster_role.yaml`, `role_binding.yaml`, `cluster_role_binding.yaml`) - Grant permissions to the ServiceAccount.
         *   [`Deployment`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) (`deployment.yaml`) - Defines how your operator pod(s) run.
+        *   [`Service`](https://kubernetes.io/docs/concepts/services-networking/service/) (`service.yaml` - if webhooks are used) - Exposes the operator's webhook endpoints internally so the Kubernetes API server can reach them.
         *   [Webhook configurations](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#webhook-configuration) (`*.validating.yaml`, `*.mutating.yaml`, CRD updates for conversion) - Configures admission/conversion webhooks if used.
 
 4.  **Apply Manifests to Cluster:**
@@ -101,4 +102,5 @@ Deploying a KubeOps operator involves packaging it as a container image and crea
     2.  Re-run `dotnet kubeops generate operator --image ...` with the *new* image tag.
     3.  Run `kubectl apply -f ./deploy` again. Kubernetes will perform a [rolling update](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment) of the `Deployment`.
 
-See the various `examples/` projects in the main KubeOps repository for concrete deployment manifests and configurations.
+See concrete deployment manifests and configurations in the GitHub repository, for example:
+[`examples/Operator/deploy/`](https://github.com/ewassef/dotnet-operator-sdk/tree/main/examples/Operator/deploy)

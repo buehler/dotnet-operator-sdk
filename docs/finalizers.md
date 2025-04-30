@@ -30,6 +30,7 @@ To implement cleanup logic, create a class that implements `IResourceFinalizer<T
 ```csharp
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Finalizer;
+using k8s.Models; // For V1ConfigMap
 using Microsoft.Extensions.Logging;
 using MyFirstOperator.Entities; // Your entity namespace
 
@@ -56,7 +57,7 @@ public class V1Alpha1DemoEntityFinalizer : IResourceFinalizer<V1Alpha1DemoEntity
         var configMapName = $"{entity.Name}-config";
         try
         {
-            await _client.DeleteObject<k8s.Models.V1ConfigMap>(configMapName, entity.Namespace());
+            await _client.DeleteObject<V1ConfigMap>(configMapName, entity.Namespace());
             _logger.LogInformation($"Deleted associated ConfigMap {configMapName} for {entity.Name}.");
         }
         catch (k8s.Autorest.HttpOperationException e) when (e.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -91,7 +92,7 @@ Key Points:
 
     ```csharp
     // In your Program.cs or startup configuration
-    builder.Services.AddKubernetesOperator()
+    builder.Services.AddKubernetesOperator(options => { /* configure options if needed */ })
         .AddController<V1Alpha1DemoEntityController, V1Alpha1DemoEntity>()
         // Register the finalizer implementation for the specific entity
         // The identifier string MUST match the one in the [ResourceFinalizerMetadata] attribute.
@@ -102,5 +103,5 @@ By using finalizers correctly, you ensure that your operator cleans up after its
 
 ## Example
 
-See a practical example of a finalizer implementation here:
-[`examples/Operator/Finalizer/`](../examples/Operator/Finalizer/)
+See a practical example of a finalizer implementation in the GitHub repository:
+[`examples/Operator/Finalizer/`](https://github.com/ewassef/dotnet-operator-sdk/tree/main/examples/Operator/Finalizer/)

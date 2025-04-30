@@ -137,9 +137,33 @@ var createdMap = await client.CreateAsync(newConfigMap);
 var existingPod = await client.GetAsync<V1Pod>("my-pod", "default");
 if (existingPod != null)
 {
+    // Ensure Annotations dictionary exists before adding to it
     existingPod.Metadata.Annotations ??= new Dictionary<string, string>();
     existingPod.Metadata.Annotations["my-annotation"] = "updated-value";
     var updatedPod = await client.UpdateAsync(existingPod);
+}
+```
+
+**Update Resource Status:**
+
+```csharp
+// Assuming myCrd has a Status property
+var existingCrd = await client.GetAsync<V1MyCrd>("my-instance", "default");
+if (existingCrd != null)
+{
+    existingCrd.Status.Message = "Processing completed";
+    var updatedCrd = await client.UpdateStatusAsync(existingCrd);
+}
+```
+
+**Watch Resources:**
+
+```csharp
+// Watch for Pod events in the 'default' namespace
+await foreach (var (type, pod) in client.WatchAsync<V1Pod>(namespaceParameter: "default"))
+{
+    Console.WriteLine($"Event: {type}, Pod: {pod.Name()}");
+    // Handle Added, Modified, Deleted events
 }
 ```
 
@@ -153,3 +177,6 @@ if (crdToDelete != null)
 {
     await client.DeleteAsync(crdToDelete);
 }
+```
+
+## Documentation

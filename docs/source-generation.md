@@ -1,3 +1,6 @@
+---
+uid: source-generation
+---
 # Source Generation
 
 KubeOps leverages C# Source Generators to reduce boilerplate code and streamline the setup process for your operator. The primary package responsible for this is `KubeOps.Generator`.

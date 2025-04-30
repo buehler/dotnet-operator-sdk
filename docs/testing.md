@@ -1,3 +1,6 @@
+---
+uid: placeholder-testing
+---
 # Testing Your Operator
 
 Testing is crucial for ensuring your Kubernetes operator behaves correctly and reliably. Given the interaction with the Kubernetes API and potentially external systems, a multi-layered testing strategy is recommended.
@@ -426,3 +429,75 @@ kubectl delete -f ./deploy --ignore-not-found=true
 *   **Test Frameworks:** Use standard .NET test frameworks like [xUnit](https://xunit.net/), [NUnit](https://nunit.org/), or MSTest.
 *   **Test Isolation:** Ensure tests do not interfere with each other, especially integration/E2E tests. Proper cleanup is vital.
 *   **CI/CD Integration:** Automate your tests in your CI/CD pipeline for continuous feedback.
+
+## Testing Reconciliation Logic with `envtest`
+
+While the previous `envtest` example focused on direct API interaction, you often want to test the operator's full reconciliation loop (`ReconcileAsync`, `StatusModifiedAsync`, etc.) running against the `envtest` API server.
+
+You can achieve this by configuring and running the KubeOps `IHost` within your test fixture or test method, pointing its Kubernetes client configuration to the `envtest` instance.
+
+**Conceptual Example (Using OperatorBuilder with `envtest` kubeconfig):**
+
+```csharp
+// Inside an xUnit test method, assuming 'fixture' is the EnvtestFixture instance
+public async Task OperatorHost_ShouldReconcileResource_WithEnvtest(EnvtestFixture fixture)
+{
+    // Arrange: Ensure CRD is applied via fixture.Client
+
+    // Configure and build the operator host using the envtest kubeconfig
+    var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+    {
+        // Prevent ASP.NET Core default logging from interfering if needed
+        Args = new[] { "--urls=http://localhost:0" } // Run on a random port
+    });
+
+    // Configure KubeOps to use the envtest kubeconfig path
+    builder.Services.AddKubernetesOperator(options =>
+    {
+        options.Name = "envtest-operator";
+        options.KubeConfigPath = fixture.KubeconfigPath; // Use envtest kubeconfig!
+    })
+    .AddController<MyController, V1MyResource>() // Register your controller
+    .AddFinalizer<MyFinalizer, V1MyResource>("my.finalizer.id"); // Register finalizers
+    // Add other services your operator needs
+
+    var app = builder.Build();
+
+    // Run the operator host in the background
+    var cts = new CancellationTokenSource();
+    var runTask = app.RunAsync(cts.Token);
+
+    // Act: Create a custom resource using the fixture's client
+    var testResource = new V1MyResource 
+    {
+        ApiVersion = "mygroup.io/v1",
+        Kind = "MyResource",
+        Metadata = new V1ObjectMeta { Name = "test-in-envtest", NamespaceProperty = "default" },
+        Spec = new V1MyResource.MySpec { /* ... */ }
+    };
+    await fixture.Client.CreateNamespacedCustomObjectAsync(testResource, "mygroup.io", "v1", "default", "myresources");
+
+    // Assert: Wait for reconciliation to occur and check results
+    // This requires polling or other mechanisms to observe the side effects
+    // (e.g., check if a dependent ConfigMap was created via fixture.Client.ReadNamespacedConfigMapAsync)
+    await Task.Delay(TimeSpan.FromSeconds(10)); // Crude wait for reconciliation
+
+    V1ConfigMap? createdMap = null;
+    try
+    {
+        createdMap = await fixture.Client.ReadNamespacedConfigMapAsync($"{testResource.Name()}-config", "default");
+    }
+    catch { /* Ignore if not found */ }
+
+    Assert.NotNull(createdMap);
+    Assert.Equal("ExpectedValue", createdMap.Data["key"]);
+
+    // Cleanup
+    cts.Cancel(); // Stop the operator host
+    await runTask; // Ensure it shuts down
+    await fixture.Client.DeleteNamespacedCustomObjectAsync("mygroup.io", "v1", "default", "myresources", testResource.Name());
+}
+
+// Note: This approach tests the full operator stack, including DI, controller logic, and KubeOps runtime behavior against a real API server.
+// If your operator uses webhooks, you would typically use `WebApplicationFactory<Program>` from `Microsoft.AspNetCore.Mvc.Testing` instead of `OperatorBuilder` directly, configuring it similarly to use the `envtest` kubeconfig.
+// Observing the results of reconciliation often requires polling the API server via the test client (`fixture.Client`).

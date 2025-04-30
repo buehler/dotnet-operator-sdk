@@ -1,3 +1,6 @@
+---
+uid: operator-configuration
+---
 # Operator Configuration
 
 KubeOps utilizes the standard .NET configuration system, allowing you to configure operator settings primarily through `appsettings.json` files, environment variables, or command-line arguments.

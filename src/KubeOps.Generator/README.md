@@ -147,7 +147,7 @@ public static class EntityInitializer
 
 The generator creates a file in the root namespace called `ControllerRegistrations.g.cs`.
 This file contains a function to register all found controllers
-(i.e. classes that implement the `IEntityController<T>` interface).
+(i.e. classes that implement the `IResourceController<TEntity>` interface).
 
 #### Example
 
@@ -168,7 +168,7 @@ public static class ControllerRegistrations
 
 The generator creates a file in the root namespace called `FinalizerRegistrations.g.cs`.
 This file contains all finalizers with generated finalizer-identifiers.
-Further, a function to register all finalizers is generated.
+Further, a function to register all finalizers (i.e., classes that implement `IResourceFinalizer<TEntity>`) is generated.
 
 #### Example
 

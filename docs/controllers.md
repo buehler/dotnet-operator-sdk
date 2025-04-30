@@ -12,9 +12,11 @@ This interface defines the contract for a controller that handles a specific ent
 
 ```csharp
 using KubeOps.Operator.Controller;
+using KubeOps.KubernetesClient;
 using KubeOps.Operator.Controller.Results;
 using Microsoft.Extensions.Logging;
 using MyFirstOperator.Entities; // Assuming your entity is defined here
+using k8s.Models; // Needed for V1Deployment, V1OwnerReference, etc.
 
 public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEntity>
 {
@@ -30,6 +32,9 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
     public async Task<ResourceControllerResult?> ReconcileAsync(V1Alpha1DemoEntity entity)
     {
         _logger.LogInformation($"Reconciling entity {entity.Name} in namespace {entity.Namespace()}.");
+
+        // Assume V1Alpha1DemoEntity.Spec has properties like 'Replicas' and 'Image'
+        // public class DemoEntitySpec { public int Replicas { get; set; } = 1; public string Image { get; set; } = string.Empty; /* ... */ }
 
         // --- Reconciliation Logic: Manage a Deployment --- 
 
@@ -168,8 +173,11 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
 
     public Task StatusModifiedAsync(V1Alpha1DemoEntity entity)
     {
-        _logger.LogInformation($"Status updated for entity {entity.Name}.");
-        // Usually, no action is needed here unless the status change itself triggers further reconciliation.
+        _logger.LogInformation($"Status updated for entity {entity.Name} to state: {entity.Status?.State ?? "Unknown"}.");
+        // This method is called when the status subresource of the entity changes.
+        // Usually, no action is needed here, as the controller primarily reacts to spec changes.
+        // However, it could be used to trigger actions based on status conditions if needed
+        // (e.g., reacting to a status change driven by an external system).
         return Task.CompletedTask;
     }
 
@@ -184,11 +192,6 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
     }
 }
 ```
-
-**Key elements:**
-
-*   **`TEntity`**: The specific type of custom resource this controller manages (e.g., `V1Alpha1DemoEntity`). It must match the type defined in [Defining Custom Entities](./custom-entities.md).
-*   **Dependency Injection**: Controllers are registered in the [.NET Dependency Injection](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection) container. You can inject services like loggers (`ILogger<T>`), the Kubernetes client (`IKubernetesClient`), or your own services.
 
 ## The `ReconcileAsync` Method
 
@@ -217,7 +220,7 @@ The `entity` parameter contains the full custom resource object, including its `
 ## Other Interface Methods
 
 *   **`StatusModifiedAsync(TEntity entity)`**: Called *only* when the `status` subresource of the entity is updated. This is less common to implement, as most logic reacts to `spec` changes handled in `ReconcileAsync`.
-*   **`DeletedAsync(TEntity entity)`**: Called when the entity is observed as deleted by the Kubernetes API server *after* any finalizers have completed. Use this for simple cleanup tasks. For complex cleanup that must happen *before* the resource is removed from the API, use [Finalizers](./finalizers.md) instead.
+*   **`DeletedAsync(TEntity entity)`**: Called when the entity is observed as deleted by the Kubernetes API server *after* any finalizers have completed. Use this for simple cleanup tasks. For complex cleanup that must happen *before* the resource is removed from the cluster, use [Finalizers](./finalizers.md) instead.
 
 ## Watching Related Resources (Advanced)
 
@@ -484,8 +487,11 @@ See a practical example of a controller implementation here:
 ```csharp
     public Task StatusModifiedAsync(V1Alpha1DemoEntity entity)
     {
-        _logger.LogInformation($"Status updated for entity {entity.Name}.");
-        // Usually, no action is needed here unless the status change itself triggers further reconciliation.
+        _logger.LogInformation($"Status updated for entity {entity.Name} to state: {entity.Status?.State ?? "Unknown"}.");
+        // This method is called when the status subresource of the entity changes.
+        // Usually, no action is needed here, as the controller primarily reacts to spec changes.
+        // However, it could be used to trigger actions based on status conditions if needed
+        // (e.g., reacting to a status change driven by an external system).
         return Task.CompletedTask;
     }
 ```
@@ -504,3 +510,48 @@ This method is called when the `status` subresource of the entity is updated. It
         // resource is removed from the cluster. See [Finalizers](./finalizers.md).
         return Task.CompletedTask;
     }
+
+```
+
+Follow these instructions to make the following change to my code document.
+
+Instruction: Add missing using statements to the initial snippet, clarify the Image property in the main example's spec, and add context to StatusModifiedAsync.
+
+Code Edit:
+```
+{{ ... }}
+ 
+ ```csharp
+ using KubeOps.Operator.Controller;
++using KubeOps.KubernetesClient;
+ using KubeOps.Operator.Controller.Results;
+ using Microsoft.Extensions.Logging;
+ using MyFirstOperator.Entities; // Assuming your entity is defined here
++using k8s.Models; // Needed for V1Deployment, V1OwnerReference, etc.
+ 
+ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEntity>
+ {
+{{ ... }}
+     public async Task<ResourceControllerResult?> ReconcileAsync(V1Alpha1DemoEntity entity)
+     {
+         _logger.LogInformation($"Reconciling entity {entity.Name} in namespace {entity.Namespace()}.");
++
++        // Assume V1Alpha1DemoEntity.Spec has properties like 'Replicas' and 'Image'
++        // public class DemoEntitySpec { public int Replicas { get; set; } = 1; public string Image { get; set; } = string.Empty; /* ... */ }
+ 
+         // --- Reconciliation Logic: Manage a Deployment --- 
+ 
+{{ ... }}
+ 
+     public Task StatusModifiedAsync(V1Alpha1DemoEntity entity)
+     {
+-        _logger.LogInformation($"Status updated for entity {entity.Name}.");
+-        // Usually, no action is needed here unless the status change itself triggers further reconciliation.
++        _logger.LogInformation($"Status updated for entity {entity.Name} to state: {entity.Status?.State ?? "Unknown"}.");
++        // This method is called when the status subresource of the entity changes.
++        // Usually, no action is needed here, as the controller primarily reacts to spec changes.
++        // However, it could be used to trigger actions based on status conditions if needed
++        // (e.g., reacting to a status change driven by an external system).
+         return Task.CompletedTask;
+     }
+ 

@@ -1,3 +1,6 @@
+---
+uid: rbac-generation
+---
 # RBAC Generation
 
 Kubernetes uses [Role-Based Access Control (RBAC)](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) to regulate access to resources within a cluster. Operators, by their nature, need specific permissions to watch, get, list, create, update, and delete the resources they manage (both custom resources and built-in ones like Pods, ConfigMaps, etc.).
@@ -53,7 +56,7 @@ dotnet kubeops generate operator -s ./MyOperator.csproj -o ./deploy
 **How it Works:**
 
 1.  The CLI tool scans the specified project (`-s`) for classes implementing KubeOps interfaces (controllers, etc.).
-2.  It uses the logic from the [`KubeOps.Transpiler`](../../src/KubeOps.Transpiler/README.md) package to find all `[EntityRbac]` attributes on these classes.
+2.  It uses the logic from the [`KubeOps.Transpiler`](https://github.com/ewassef/dotnet-operator-sdk/blob/main/src/KubeOps.Transpiler/README.md) package to find all `[EntityRbac]` attributes on these classes.
 3.  It aggregates these permissions.
 4.  Based on the operator's configured scope (usually inferred from settings passed to the `OperatorBuilder` in `Program.cs`, like watching specific namespaces or all namespaces), it generates either:
     *   A `Role` and `RoleBinding` manifest (for namespace scope).

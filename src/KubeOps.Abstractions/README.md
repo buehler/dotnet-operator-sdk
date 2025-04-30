@@ -12,6 +12,7 @@ The primary abstractions defined here include:
 
 *   **Entities:**
     *   `CustomKubernetesEntity<TSpec, TStatus>`: The base class for defining your [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
+    *   `CustomKubernetesEntity<TSpec>`: A simpler base class for entities that do not require a `.status` subresource.
     *   `[KubernetesEntity]`: Attribute to mark a C# class as a Kubernetes entity and define its Group, Version, and Kind (GVK).
     *   `[EntityScope]`: Attribute to define whether an entity is `Namespaced` or `Cluster`-scoped.
     *   Various validation attributes (`[Description]`, `[RangeMaximum]`, `[Pattern]`, etc.) used to generate OpenAPI validation rules for the CRD. See [.NET Data Annotations](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations?view=net-8.0) for common attributes.
@@ -28,6 +29,7 @@ The primary abstractions defined here include:
     *   `IAdmissionWebhook<TEntity, TOperation>`: Base interface for admission webhooks.
     *   `IMutationWebhook<TEntity, TOperation>`: Interface for webhooks that can modify entities during admission.
     *   `IValidationWebhook<TEntity, TOperation>`: Interface for webhooks that validate entities during admission.
+    *   `IConversionWebhook<TFrom, TTo>`: Interface for implementing CRD conversion between different API versions.
     *   See: [Admission Webhooks](../../docs/webhooks.md)
 *   **Common Utilities:** Various helper methods and base types used internally by the SDK.
 

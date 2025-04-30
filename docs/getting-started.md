@@ -83,7 +83,7 @@ Run the operator using the .NET CLI:
 dotnet run
 ```
 
-This command builds and runs your operator project directly. It will connect to the Kubernetes cluster configured in your current `kubectl` context (usually found in `~/.kube/config`). The KubeOps runtime automatically attempts to install the CRD defined in your `Entities` project if it doesn't already exist.
+This command builds and runs your operator project directly. It will connect to the Kubernetes cluster configured in your current `kubectl` context (usually found in `~/.kube/config`). The KubeOps runtime automatically attempts to install the `V1DemoEntity` CRD (defined in `MyFirstOperator.Entities`) if it doesn't already exist in the cluster.
 
 The operator will start, connect to your currently configured Kubernetes cluster (check `kubectl config current-context`), install the necessary CRD (`V1DemoEntity`), and begin watching for resources.
 
@@ -101,5 +101,5 @@ Next Steps:
 
 ## Full Example
 
-For a complete, runnable example demonstrating these concepts, refer to the main example operator project:
-[`examples/Operator`](../examples/Operator)
+For a complete, runnable example demonstrating these concepts, refer to the main example operator project in the GitHub repository:
+[`examples/Operator`](https://github.com/ewassef/dotnet-operator-sdk/tree/main/examples/Operator)

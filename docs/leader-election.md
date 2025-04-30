@@ -1,3 +1,6 @@
+---
+uid: leader-election
+---
 # Leader Election
 
 When running multiple replicas of your operator for high availability, only one instance should be actively reconciling resources at any given time to prevent conflicting actions and ensure consistent state management. Kubernetes provides a **Leader Election** mechanism to achieve this.

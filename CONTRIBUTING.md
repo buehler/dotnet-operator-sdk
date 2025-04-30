@@ -3,6 +3,11 @@
 First of all, thank you for considering contributing to KubeOps.
 This is an open souce project and shall be driven by the community.
 
+This project and everyone participating in it is governed by the
+[KubeOps Code of Conduct](./CODE_OF_CONDUCT.md). By participating, you are
+expected to uphold this code. Please report unacceptable behavior to
+[INSERT PROJECT EMAIL ADDRESS].
+
 This document describes how contributions may be done and what is required
 to develop on KubeOps.
 

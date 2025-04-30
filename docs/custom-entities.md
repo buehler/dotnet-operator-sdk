@@ -33,6 +33,8 @@ Kubernetes resources typically separate the *desired state* (`spec`) from the *o
 
 Your entity class should inherit from `CustomKubernetesEntity<TSpec, TStatus>`. This base class provides the standard Kubernetes properties like `ApiVersion`, `Kind`, and `Metadata`, which are automatically populated based on the `[KubernetesEntity]` attribute and Kubernetes API interactions. You only need to define your `TSpec` and optionally `TStatus` types.
 
+**Note:** If your custom resource does not require a dedicated `status` subresource (common for simpler or configuration-like resources), you can inherit from `CustomKubernetesEntity<TSpec>` instead.
+
 ```csharp
 using k8s.Models;
 using KubeOps.Abstractions.Entities;
@@ -157,5 +159,5 @@ Example:
 
 ## Example
 
-See a practical example of custom entity definition here:
-[`examples/Operator/Entities/`](../examples/Operator/Entities/)
+See a practical example of custom entity definitions in the GitHub repository:
+[`examples/Operator/Entities/`](https://github.com/ewassef/dotnet-operator-sdk/tree/main/examples/Operator/Entities/)

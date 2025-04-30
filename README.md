@@ -63,13 +63,20 @@ The SDK is designed to be modular. You can include only the packages you need:
 
 ## Examples
 
-You can find various example operators demonstrating different features in the [`examples/`](./examples/) directory of this repository.
+You can find various example operators demonstrating different features in the [`examples/`](https://github.com/ewassef/dotnet-operator-sdk/tree/main/examples/) directory of this repository.
+
+## Governance
+
+KubeOps is currently maintained by [the original author/maintainer team - consider listing names or linking to GitHub profiles/team page]. We welcome community contributions and aim to foster an open and collaborative development process. As the project grows, we may establish a more formal governance structure. Decision-making primarily occurs through GitHub issues and pull requests.
 
 ## Contribution
 
 If you want to contribute, feel free to open a pull request or write issues :-)
-Read more about contribution (especially for setting up your local environment)
-in the [CONTRIBUTING file](./CONTRIBUTING.md).
+Please note that this project is released with a [Contributor Code of Conduct](./CODE_OF_CONDUCT.md).
+By participating in this project you agree to abide by its terms.
++
+ Read more about contribution (especially for setting up your local environment)
+ in the [CONTRIBUTING file](./CONTRIBUTING.md).
 
 In short:
 

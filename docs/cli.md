@@ -28,15 +28,20 @@ The following commands are available. For detailed options and descriptions for 
     *   Prints version information for the connected Kubernetes cluster.
 
 *   **`install`** (Alias: `i`)
-    *   Installs the [CRDs](./custom-entities.md) defined in your operator project into the currently configured Kubernetes cluster. This command typically requires the path to your solution or project file.
+    *   Installs the [CRDs](./custom-entities.md) defined in your operator **Entities project** into the currently configured Kubernetes cluster. This command typically requires the path to your solution or Entities project file.
 
 *   **`uninstall`** (Alias: `u`)
-    *   Uninstalls the [CRDs](./custom-entities.md) defined in your operator project from the currently configured Kubernetes cluster. Requires the path to your solution or project file.
+    *   Uninstalls the [CRDs](./custom-entities.md) defined in your operator **Entities project** from the currently configured Kubernetes cluster. Requires the path to your solution or Entities project file.
 
 *   **`generate`** (Alias: `gen`, `g`)
     *   Generates various elements related to the operator.
+    *   Common options for `generate` subcommands include `-p` or `--project` to specify the input project/assembly and `-o` or `--output-path` to specify the directory for generated YAML files.
     *   **`operator`** (Alias: `op`)
-        *   Generates necessary files for deploying your operator, including manifests for Deployments, Roles, RoleBindings, and any associated webhooks.
+        *   Generates necessary files for deploying your operator, including manifests for Deployments, Roles, RoleBindings, and any associated webhooks. See [Deployment](./deployment.md) and [RBAC Generation](./rbac-generation.md).
+    *   **`crds`**
+        *   Generates Custom Resource Definition (CRD) YAML manifests based on the entity classes found in the specified **Entities project**. Essential for defining your custom resources in Kubernetes. See [Custom Entities](./custom-entities.md).
+    *   **`webhooks`**
+        *   Generates `ValidatingWebhookConfiguration` and `MutatingWebhookConfiguration` YAML manifests based on webhook classes and attributes found in the specified **Operator project assembly**. Requires the compiled `.dll` path. See [Webhooks](./webhooks.md).
 
 ### Example: Checking API Version
 
