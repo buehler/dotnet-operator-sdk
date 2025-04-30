@@ -19,10 +19,12 @@ using MyFirstOperator.Entities; // Assuming your entity is defined here
 public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEntity>
 {
     private readonly ILogger<V1Alpha1DemoEntityController> _logger;
+    private readonly IKubernetesClient _client; // Assume IKubernetesClient is injected
 
-    public V1Alpha1DemoEntityController(ILogger<V1Alpha1DemoEntityController> logger)
+    public V1Alpha1DemoEntityController(ILogger<V1Alpha1DemoEntityController> logger, IKubernetesClient client)
     {
         _logger = logger;
+        _client = client;
     }
 
     public async Task<ResourceControllerResult?> ReconcileAsync(V1Alpha1DemoEntity entity)
@@ -38,7 +40,8 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
             {
                 Name = $"{entity.Name}-deployment", // Deployment name derived from CR name
                 NamespaceProperty = entity.Namespace(),
-                // Set owner reference so the Deployment is garbage collected when the entity is deleted
+                // **IMPORTANT**: Set owner reference so the Deployment is automatically
+                // garbage collected by Kubernetes when the V1Alpha1DemoEntity is deleted.
                 OwnerReferences = new List<V1OwnerReference> { entity.CreateOwnerReference() }
             },
             Spec = new V1DeploymentSpec
@@ -80,6 +83,8 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
         catch (KubernetesException e)
         {
             _logger.LogError(e, $"Error getting Deployment {desiredDeployment.Name()}.");
+            // Consider adding specific error handling (e.g., conflict resolution)
+            // based on e.Status.Code or e.Status.Reason.
             return ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(15)); // Requeue on error
         }
 
@@ -141,11 +146,12 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
             return ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(15)); 
         }
 
-        // 4. Update the entity status
+        // 4. Update the entity's status subresource
         entity.Status.LastUpdated = DateTime.UtcNow;
         try
         {
-            // Use the client to update the status subresource
+            // Use the UpdateStatus method to specifically update the status.
+            // This avoids potential conflicts if only the status changed.
             await _client.UpdateStatus(entity);
             _logger.LogInformation($"Updated status for {entity.Name}.");
         }
@@ -170,14 +176,16 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
     public Task DeletedAsync(V1Alpha1DemoEntity entity)
     {
         _logger.LogInformation($"Entity {entity.Name} deleted.");
-        // Called when the entity is deleted. 
-        // Note: Finalizers should be used for complex cleanup before deletion occurs.
+        // This method is called *after* the entity is marked for deletion 
+        // *and* all registered KubeOps finalizers have completed successfully.
+        // Use Finalizers for any cleanup logic that must happen *before* the
+        // resource is removed from the cluster. See [Finalizers](./finalizers.md).
         return Task.CompletedTask;
     }
 }
 ```
 
-Key elements:
+**Key elements:**
 
 *   **`TEntity`**: The specific type of custom resource this controller manages (e.g., `V1Alpha1DemoEntity`). It must match the type defined in [Defining Custom Entities](./custom-entities.md).
 *   **Dependency Injection**: Controllers are registered in the [.NET Dependency Injection](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection) container. You can inject services like loggers (`ILogger<T>`), the Kubernetes client (`IKubernetesClient`), or your own services.
@@ -362,11 +370,12 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
             return ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(15)); 
         }
 
-        // 4. Update the entity status
+        // 4. Update the entity's status subresource
         entity.Status.LastUpdated = DateTime.UtcNow;
         try
         {
-            // Use the client to update the status subresource
+            // Use the UpdateStatus method to specifically update the status.
+            // This avoids potential conflicts if only the status changed.
             await _client.UpdateStatus(entity);
             _logger.LogInformation($"Updated status for {entity.Name}.");
         }
@@ -456,3 +465,42 @@ Remember to register your controller implementation in your application's servic
 
 See a practical example of a controller implementation here:
 [`examples/Operator/Controller/`](../examples/Operator/Controller/)
+
+**Status Updates:** It's crucial to update only the `status` subresource whenever possible using `_client.UpdateStatus(entity)`. Updating the entire entity can lead to conflicts if the `spec` was modified concurrently. KubeOps automatically handles retries for status updates on conflict, but using `UpdateStatus` is the correct pattern.
+
+ **Idempotency:** The `ReconcileAsync` method should be idempotent. This means running it multiple times with the same input `entity` should produce the same end state in the cluster. The example above achieves this by checking if the Deployment exists and comparing its spec before creating or updating.
+
+ **Error Handling:** Implement robust error handling. Catch `KubernetesException` and potentially inspect `e.Status.Code` or `e.Status.Reason` to handle specific issues like conflicts (409), not found (404), or permissions errors (403). Use requeue results appropriately.
+
+**RBAC Requirements:** Note that the example controller interacts with `Deployment` resources (get, create, update). Therefore, the ServiceAccount your operator runs as will need RBAC permissions for these actions on Deployments in the relevant namespaces. KubeOps helps generate this RBAC using the `[EntityRbac]` attribute (see [RBAC Generation](./rbac-generation.md)). You would typically add attributes like:
+
+```csharp
+// On the controller class or within the entity definition
+[EntityRbac(typeof(V1Deployment), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Create | RbacVerb.Update | RbacVerb.Patch)]
+```
+
+## The `StatusModifiedAsync` Method
+
+```csharp
+    public Task StatusModifiedAsync(V1Alpha1DemoEntity entity)
+    {
+        _logger.LogInformation($"Status updated for entity {entity.Name}.");
+        // Usually, no action is needed here unless the status change itself triggers further reconciliation.
+        return Task.CompletedTask;
+    }
+```
+
+This method is called when the `status` subresource of the entity is updated. It's less common to implement this method, as most logic reacts to `spec` changes handled in `ReconcileAsync`. However, if the status change itself triggers further reconciliation or if you need to react to status updates, implement this method accordingly.
+
+## The `DeletedAsync` Method
+
+```csharp
+    public Task DeletedAsync(V1Alpha1DemoEntity entity)
+    {
+        _logger.LogInformation($"Entity {entity.Name} deleted.");
+        // This method is called *after* the entity is marked for deletion 
+        // *and* all registered KubeOps finalizers have completed successfully.
+        // Use Finalizers for any cleanup logic that must happen *before* the
+        // resource is removed from the cluster. See [Finalizers](./finalizers.md).
+        return Task.CompletedTask;
+    }
