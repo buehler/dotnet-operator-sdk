@@ -36,7 +36,7 @@ public class MyControllerTests
     public async Task ReconcileAsync_ShouldCreateConfigMap_WhenMissing()
     {
         // Arrange
-        var mockLogger = Mock.Of<ILogger<MyController>>(); // Concise Moq setup
+        var mockLogger = new Mock<ILogger<MyController>>();
         var mockClient = new Mock<IKubernetesClient>();
 
         var controller = new MyController(mockLogger.Object, mockClient.Object);
@@ -55,11 +55,11 @@ public class MyControllerTests
         };
 
         // Mock KubernetesClient responses:
-        // - Simulate GetAsync returns null (not found)
+        // - Simulate GetAsync returns null, indicating the ConfigMap doesn't exist yet.
         mockClient.Setup(c => c.GetAsync<k8s.Models.V1ConfigMap>(It.IsAny<string>(), It.IsAny<string?>()))
-                  .ReturnsAsync((k8s.Models.V1ConfigMap?)null); // Simulate ConfigMap doesn't exist
+                  .ReturnsAsync((k8s.Models.V1ConfigMap?)null); // Explicitly cast null to the nullable type
 
-        // - Setup CreateAsync to succeed (no return value needed)
+        // - Setup CreateAsync<V1ConfigMap> to return Task.CompletedTask, simulating successful creation.
         mockClient.Setup(c => c.CreateAsync(It.IsAny<V1ConfigMap>()))
                   .Returns(Task.CompletedTask);
 
@@ -260,6 +260,66 @@ public class MyResourceIntegrationTests : IClassFixture<EnvtestFixture>
         }
     }
 }
+
+### Testing Reconciliation Logic with `envtest`
+
+While the previous example showed direct client interaction, you often want to test the operator's full reconciliation loop (`ReconcileAsync`, `StatusModifiedAsync`, etc.) running against the `envtest` API server.
+
+You can achieve this by configuring and running the KubeOps `IHost` within your test fixture or test method, pointing its Kubernetes client configuration to the `envtest` instance.
+
+**Conceptual Example (Using `IHost` within `EnvtestFixture` or a Test):**
+
+```csharp
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using k8s;
+
+// ... (Assuming EnvtestFixture provides KubeconfigPath and Client)
+
+private async Task RunOperatorHostAsync(EnvtestFixture fixture, CancellationToken cancellationToken)
+{
+    var hostBuilder = Host.CreateDefaultBuilder()
+        .ConfigureServices((context, services) =>
+        {
+            // **Crucial:** Configure KubeOps to use the envtest kubeconfig
+            services.AddKubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile(fixture.KubeconfigPath));
+
+            // Add KubeOps Operator services
+            services.AddKubernetesOperator()
+                // Add your controllers, finalizers, webhooks, etc.
+                .AddController<MyController>();
+                // Add other required services your operator uses
+
+            // Optional: Configure KubeOps settings if needed
+            // services.Configure<OperatorSettings>(settings => { ... });
+        });
+
+    var host = hostBuilder.Build();
+
+    // Start the operator host in the background
+    await host.StartAsync(cancellationToken);
+
+    // --- Test Logic --- 
+    // Now that the operator host is running against envtest:
+    // 1. Use fixture.Client to CREATE/UPDATE your custom resource.
+    // 2. Wait for the operator to reconcile (implement robust waiting logic).
+    // 3. Use fixture.Client to GET the resource and assert its status or check
+    //    for dependent resources created by the controller.
+    // Example:
+    var myCr = new V1MyResource { /* ... */ };
+    await fixture.Client.CreateNamespacedCustomObjectAsync<V1MyResource>(myCr, ...);
+    // Wait for status update...
+    var updatedCr = await fixture.Client.GetNamespacedCustomObjectAsync<V1MyResource>(...);
+    Assert.Equal("Processed", updatedCr?.Status?.State);
+    // --- End Test Logic ---
+
+    // Stop the operator host
+    await host.StopAsync(cancellationToken);
+    host.Dispose();
+}
+
+// You would typically call RunOperatorHostAsync from within a test method
+// using the fixture and potentially a CancellationTokenSource.
 
 ### Using Kind / Minikube
 
