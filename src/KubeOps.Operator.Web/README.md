@@ -1,39 +1,84 @@
-# KubeOps Operator Web
+# KubeOps.Operator.Web
 
-The KubeOps Operator Web package provides a webserver to enable
-webhooks for your Kubernetes operator.
+[![Nuget](https://img.shields.io/nuget/vpre/KubeOps.Operator.Web?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps.Operator.Web/absoluteLatest)
 
-## Usage
+This package integrates KubeOps with ASP.NET Core, enabling your operator to host the HTTP endpoints required for Kubernetes [Admission Webhooks](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/) and [CRD Conversion Webhooks](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#configure-a-conversion-webhook).
 
-To enable webhooks and external access to your operator, you need to
-use ASP.net. The project file needs to reference `Microsoft.NET.Sdk.Web`
-instead of `Microsoft.NET.Sdk` and the `Program.cs` needs to be changed.
+When the Kubernetes API server needs to validate, mutate, or convert a resource as configured in a `ValidatingWebhookConfiguration`, `MutatingWebhookConfiguration`, or `CustomResourceDefinition`, it sends an HTTP request to a service endpoint. This package provides the necessary infrastructure to receive and handle these requests within your .NET operator.
 
-To allow webhooks, the MVC controllers need to be registered and mapped.
+> For a comprehensive explanation of different webhook types, how to implement their logic using KubeOps base classes/interfaces, and how to configure Kubernetes resources to use them, please refer to the main **[Webhooks Documentation](../../../docs/webhooks.md)**.
 
-The basic `Program.cs` setup looks like this:
+## Setup
 
-```csharp
-using KubeOps.Operator;
+Using this package requires structuring your operator as an ASP.NET Core web application:
 
-var builder = WebApplication.CreateBuilder(args);
-builder.Services
-    .AddKubernetesOperator()
-    .RegisterComponents();
+1.  **Project SDK:** Ensure your project file (`.csproj`) uses the `Microsoft.NET.Sdk.Web` SDK:
+    ```xml
+    <Project Sdk="Microsoft.NET.Sdk.Web">
+      ...
+    </Project>
+    ```
+2.  **Program.cs Configuration:** Modify your `Program.cs` to configure both KubeOps and ASP.NET Core routing:
 
-builder.Services
-    .AddControllers();
+    ```csharp
+    using KubeOps.Operator;
 
-var app = builder.Build();
+    var builder = WebApplication.CreateBuilder(args);
 
-app.UseRouting();
-app.MapControllers();
+    // 1. Add KubeOps services and register components (controllers, finalizers, webhooks)
+    builder.Services
+        .AddKubernetesOperator()
+        .RegisterComponents(); // Scans assemblies for controllers, finalizers, webhooks
 
-await app.RunAsync();
-```
+    // Alternatively, register webhooks explicitly:
+    // builder.Services.AddWebhook<MyValidationWebhook>();
+    // builder.Services.AddWebhook<MyMutationWebhook>();
+    // builder.Services.AddWebhook<MyConversionWebhook>();
 
-Note the `.AddControllers` and `.MapControllers` call.
-Without them, your webhooks will not be reachable.
+    // 2. Add standard ASP.NET Core MVC services
+    builder.Services.AddControllers();
+
+    var app = builder.Build();
+
+    // 3. Enable ASP.NET Core routing
+    app.UseRouting();
+
+    // 4. Map controllers (including webhook endpoints)
+    app.MapControllers();
+
+    // 5. Run the operator and web host
+    await app.RunAsync();
+    ```
+
+Key points:
+*   `AddKubernetesOperator()`: Initializes core KubeOps services.
+*   `RegisterComponents()`: Automatically discovers and registers your implementations of controllers, finalizers, and webhooks based on their attributes and base classes.
+You can also use `AddWebhook<T>()` for explicit registration if needed.
+*   `AddControllers()`: Adds services required for MVC controllers, which KubeOps webhooks are built upon.
+*   `MapControllers()`: Configures the ASP.NET Core routing middleware to direct incoming HTTP requests to the correct webhook controller actions.
+
+## Webhook Endpoint Routing
+
+KubeOps automatically configures routes for your webhooks based on the attributes you apply:
+
+*   `[ValidationWebhook(typeof(TEntity))]`: Creates an endpoint at `/validate/{webhook-name}`.
+*   `[MutationWebhook(typeof(TEntity))]`: Creates an endpoint at `/mutate/{webhook-name}`.
+*   `[ConversionWebhook(typeof(TStorageEntity))]`: Creates an endpoint at `/convert/{webhook-name}`.
+
+The `{webhook-name}` is typically derived from the C# class name of your webhook implementation (e.g., `TestValidationWebhook` might map to `/validate/testvalidationwebhook`). These are the endpoints you configure in your `ValidatingWebhookConfiguration`, `MutatingWebhookConfiguration`, or `CustomResourceDefinition` Kubernetes manifests.
+
+## Implementation Overview
+
+(Refer to the main [Webhooks Documentation](../../../docs/webhooks.md) for full details and examples)
+
+*   **Validation Hooks:** Inherit from `ValidationWebhook<TEntity>` and decorate with `[ValidationWebhook(typeof(TEntity))]`.
+*   **Mutation Hooks:** Inherit from `MutationWebhook<TEntity>` and decorate with `[MutationWebhook(typeof(TEntity))]`.
+*   **Conversion Hooks:** Inherit from `ConversionWebhook<TStorageEntity>` and decorate with `[ConversionWebhook(typeof(TStorageEntity))]`. Implement `IEntityConverter<,>` for conversions.
+
+## Important Considerations
+
+*   **TLS:** Kubernetes requires webhook endpoints to be served over HTTPS. Managing TLS certificates and configuring the API server to trust them is crucial. See the [main webhook docs](../../../docs/webhooks.md#important-considerations) for more details.
+*   **Dependencies:** This package brings in ASP.NET Core dependencies.
 
 ## Validation Hooks
 
