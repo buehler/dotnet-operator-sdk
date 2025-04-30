@@ -31,7 +31,32 @@ If your operator uses [Webhooks](./webhooks.md), specific settings relate to the
 
 ## Advanced Settings
 
-*(Placeholder: Add details on advanced settings like Kubernetes client configuration, watcher timeouts, metrics endpoints, etc.)*
+Beyond the basic `OperatorSettings`, you might encounter these areas:
+
+### Kubernetes Client Configuration
+
+KubeOps uses the official `KubernetesClient` library under the hood. Configuration for connecting to the Kubernetes API server typically follows the standard patterns established by that library:
+
+*   **In-Cluster Configuration:** When running inside a Kubernetes pod with a ServiceAccount mounted, KubeOps automatically uses `KubernetesClientConfiguration.IsInCluster()` and `KubernetesClientConfiguration.BuildDefaultConfig()` to connect using the pod's service account token and the cluster's internal API server endpoint.
+*   **Local/External Configuration (`kubeconfig`):** When running outside the cluster (e.g., during local development), KubeOps relies on finding a valid `kubeconfig` file. It uses `KubernetesClientConfiguration.BuildDefaultConfig()` which searches standard locations (`~/.kube/config` or the path specified by the `KUBECONFIG` environment variable).
+*   **Custom Configuration:** For more complex scenarios (e.g., custom authentication, specific timeouts for the client itself), you can potentially replace or configure the `IKubernetesClient` registration in your `Program.cs` dependency injection setup, although this is less common for typical operator use cases.
+
+### Metrics Endpoint
+
+KubeOps exposes operational metrics using the popular [Prometheus](https://prometheus.io/) exposition format. This allows monitoring tools to scrape data about the operator's performance and behavior.
+
+*   **Endpoint:** By default, metrics are available at the `/metrics` path on the operator's web host.
+*   **Default Port:** This endpoint shares the same host and port configuration as other KubeOps web features (like webhooks), typically defaulting to port `8080` (HTTP) or `8443` (HTTPS) unless configured otherwise via ASP.NET Core settings (e.g., `ASPNETCORE_URLS`).
+*   **Included Metrics:** Metrics often include information about event queue lengths, reconciliation times, errors, and client interactions. *(Note: Specific metrics may evolve; inspecting the `/metrics` endpoint is the best way to see currently available data.)*
+
+### Health Check Endpoints
+
+When using KubeOps with its ASP.NET Core integration, standard health check endpoints are typically registered:
+
+*   **`/healthz` (Liveness):** Indicates if the operator process itself is running and responsive. Kubernetes uses this probe to determine if the container needs to be restarted.
+*   **`/readyz` (Readiness):** Indicates if the operator is ready to start processing events and reconciling resources. For operators using leader election, this endpoint usually reflects whether the current instance is the leader. Kubernetes uses this probe to determine if the pod should receive traffic (though operators typically don't serve external traffic directly, this affects event processing readiness).
+
+These endpoints integrate seamlessly with Kubernetes [Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/), allowing Kubernetes to manage the operator's lifecycle effectively.
 
 ## Accessing Configuration
 

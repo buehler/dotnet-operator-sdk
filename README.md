@@ -1,20 +1,33 @@
 # KubeOps
 
+**Build Kubernetes Operators in .NET with Ease**
+
 [![.NET Pre-Release](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/dotnet-release.yml/badge.svg?branch=main)](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/dotnet-release.yml)
 [![.NET Release](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/dotnet-release.yml/badge.svg?branch=release)](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/dotnet-release.yml)
 [![Scheduled Code Security Testing](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/security-analysis.yml/badge.svg?event=schedule)](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/security-analysis.yml)
 
-**KubeOps** is a [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) SDK designed for [.NET](https://dotnet.microsoft.com/) developers. Operators are a powerful way to automate the management of complex, stateful applications on Kubernetes. They act like extensions to the Kubernetes API, allowing you to encode human operational knowledge into software that reliably manages an application. This SDK simplifies the process of building robust operators using familiar .NET patterns and tools.
+**KubeOps** is a [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) SDK designed for [.NET](https://dotnet.microsoft.com/) developers. It allows you to leverage your C# skills and the rich .NET ecosystem to build powerful Kubernetes controllers that automate the management of complex applications. KubeOps simplifies operator development by providing high-level abstractions, code generators, and helper utilities.
 
 **For comprehensive documentation, tutorials, and API references, please visit the official [KubeOps Documentation Site](https://buehler.github.io/dotnet-operator-sdk/).**
 
 The documentation is also provided within the code itself (description of methods and classes), and each package contains a README with further information.
 
+## Key Features
+
+*   **Define CRDs in C#:** Model your [Custom Resource Definitions (CRDs)](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/) using plain C# classes and attributes.
+*   **Controller Logic:** Implement reconciliation logic using the `IResourceController<TEntity>` interface.
+*   **Finalizers:** Easily add cleanup logic before resource deletion with `IResourceFinalizer<TEntity>`.
+*   **Webhooks:** Create [Admission](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/) (validating/mutating) and [Conversion](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#webhook-conversion) webhooks integrated with ASP.NET Core.
+*   **Code Generation:** Includes Roslyn source generators and a CLI tool (`dotnet kubeops`) to automate boilerplate code for CRDs, controllers, and RBAC rules.
+*   **Enhanced Kubernetes Client:** Provides convenience methods built on top of the official client library.
+*   **Leader Election:** Automatic handling for high-availability operator deployments.
+*   **Testing Support:** Provides utilities and patterns to help with unit and integration testing.
+
 ## Packages
 
 All packages target [.NET 8.0](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-8/overview) and [.NET 9.0](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-9/overview), leveraging modern C# features. The underlying Kubernetes client library (`KubernetesClient.Official`) also follows this versioning strategy.
 
-The SDK is modular, consisting of the following packages:
+The SDK is designed to be modular. You can include only the packages you need:
 
 | Package                                                              | Description                                                                                                                                                             | Latest Version                                                                                                                                                          |
 |----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -25,6 +38,8 @@ The SDK is modular, consisting of the following packages:
 | [KubeOps.Operator](./src/KubeOps.Operator/README.md)                 | The main engine of the SDK. Handles reconciling resources, watching for changes, and managing the operator lifecycle. This is the primary package needed to run an operator. | [![Nuget](https://img.shields.io/nuget/vpre/KubeOps.Operator?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps.Operator/absoluteLatest)                 |
 | [KubeOps.Operator.Web](./src/KubeOps.Operator.Web/README.md)         | Integrates the operator with ASP.NET Core to expose endpoints for features like [Admission Webhooks](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/). | [![Nuget](https://img.shields.io/nuget/vpre/KubeOps.Operator.Web?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps.Operator.Web/absoluteLatest)         |
 | [KubeOps.Transpiler](./src/KubeOps.Transpiler/README.md)             | Utilities for converting .NET type definitions into Kubernetes YAML manifests, specifically for [CRDs](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/) and [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) rules. | [![Nuget](https://img.shields.io/nuget/vpre/KubeOps.Transpiler?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps.Transpiler/absoluteLatest)             |
+
+*Note: NuGet badges show the latest pre-release version.*
 
 ## Contribution
 
@@ -43,6 +58,4 @@ In short:
 
 ## Motivation
 
-The motivation was to learn more about the quirks of kubernetes itself and
-provide an alternative to kubebuilder and operator sdk which are both
-written in GoLang.
+KubeOps aims to provide a first-class experience for developing Kubernetes operators within the .NET ecosystem, offering an alternative to Go-based SDKs like Kubebuilder and Operator SDK, while embracing familiar C# patterns and tooling.
