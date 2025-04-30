@@ -12,7 +12,7 @@ The documentation is also provided within the code itself (description of method
 
 ## Packages
 
-All packages target [.NET 6.0](https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-6) and higher, leveraging modern C# features. The underlying Kubernetes client library (`KubernetesClient.Official`) also follows this versioning strategy.
+All packages target [.NET 8.0](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-8/overview) and [.NET 9.0](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-9/overview), leveraging modern C# features. The underlying Kubernetes client library (`KubernetesClient.Official`) also follows this versioning strategy.
 
 The SDK is modular, consisting of the following packages:
 
