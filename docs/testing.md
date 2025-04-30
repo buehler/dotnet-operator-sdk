@@ -372,7 +372,56 @@ E2E tests validate the complete workflow of your operator in a production-like e
 *   Verify the operator's overall behavior, including interactions between controllers, finalizers, webhooks, and the Kubernetes API.
 *   Typically involves deploying the packaged operator container image to the test cluster.
 
-**Key Considerations for All Testing:**
+**Example Structure (Conceptual - Often Implemented in Scripts or Test Code):**
+
+```bash
+# E2E Test Script Example (using kubectl and hypothetical CR 'myresource')
+
+# 1. Prerequisites: Cluster available (e.g., Kind), operator image built and pushed.
+#    Operator deployment manifests (deployment.yaml, rbac.yaml, etc.) available.
+
+# 2. Deploy Operator (Assuming manifests are in ./deploy)
+echo "Deploying operator..."
+kubectl apply -f ./deploy
+kubectl wait --for=condition=available deployment/my-operator -n my-operator-system --timeout=120s
+
+# 3. Apply Custom Resource
+echo "Applying custom resource instance..."
+cat <<EOF | kubectl apply -f -
+apiVersion: mygroup.io/v1alpha1
+kind: MyResource
+metadata:
+  name: e2e-test-instance
+  namespace: default
+spec:
+  message: "E2E Test"
+EOF
+
+# 4. Wait and Assert Expected State
+echo "Waiting for resource status to be 'Ready'..."
+# (Implement robust polling/waiting logic)
+timeout 180s bash -c \
+  'until [[ "$(kubectl get myresource e2e-test-instance -n default -o jsonpath="{.status.state}")" == "Ready" ]];\
+  do echo "Waiting..."; sleep 5; done'
+
+echo "Asserting dependent deployment exists..."
+kubectl get deployment e2e-test-instance-deployment -n default
+if [ $? -ne 0 ]; then
+  echo "Assertion Failed: Dependent deployment not found!"
+  # Exit or cleanup
+fi
+
+echo "E2E Scenario Successful!"
+
+# 5. Cleanup
+echo "Cleaning up resources..."
+kubectl delete myresource e2e-test-instance -n default
+kubectl delete -f ./deploy --ignore-not-found=true
+```
+
+*Note: The above is a simplified shell script example. Production E2E tests often use testing frameworks (like Ginkgo/Gomega in Go, or custom C# test runners calling `kubectl` or using a Kubernetes client) for better structure, assertions, and reporting.*
+
+ **Key Considerations for All Testing:**
 
 *   **Test Frameworks:** Use standard .NET test frameworks like [xUnit](https://xunit.net/), [NUnit](https://nunit.org/), or MSTest.
 *   **Test Isolation:** Ensure tests do not interfere with each other, especially integration/E2E tests. Proper cleanup is vital.
