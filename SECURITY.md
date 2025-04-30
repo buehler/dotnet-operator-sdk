@@ -13,9 +13,9 @@ Information about supported versions and their security update status will be do
 
 The KubeOps team and community take security bugs seriously. We appreciate your efforts to responsibly disclose your findings, and will make every effort to acknowledge your contributions.
 
-To report a security vulnerability, please use the [GitHub Security Advisory "Report a Vulnerability" tab](https://github.com/ewassef/dotnet-operator-sdk/security/advisories/new).
+To report a security vulnerability, please use the [GitHub Security Advisory "Report a Vulnerability" tab](https://github.com/buehler/dotnet-operator-sdk/security/advisories/new).
 
-Alternatively, you can report a security vulnerability by emailing the project maintainers at [INSERT PROJECT SECURITY EMAIL ADDRESS].
+Alternatively, you can report a security vulnerability by [opening a new issue](https://github.com/buehler/dotnet-operator-sdk/issues/new) with the title prefixed with '[SECURITY]'.
 
 Please include the requested information listed below (as much as you can provide) to help us better understand the nature and scope of the possible issue:
 
