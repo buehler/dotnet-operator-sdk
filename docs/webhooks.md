@@ -1,3 +1,6 @@
+---
+uid: webhooks
+---
 # Webhooks
 
 **Note:** Using KubeOps webhooks requires your operator to be hosted within an ASP.NET Core application. The `KubeOps.Operator.Web` NuGet package provides the necessary integration and middleware.
