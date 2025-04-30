@@ -23,6 +23,26 @@ The documentation is also provided within the code itself (description of method
 *   **Leader Election:** Automatic handling for high-availability operator deployments.
 *   **Testing Support:** Provides utilities and patterns to help with unit and integration testing.
 
+## Getting Started
+
+The quickest way to start building an operator with KubeOps is by using the CLI tool:
+
+1.  **Install the CLI:**
+    ```bash
+    dotnet tool install --global KubeOps.Cli
+    ```
+    *(Or `dotnet tool update --global KubeOps.Cli` to get the latest version)*
+
+2.  **Create a new operator project:**
+    ```bash
+    dotnet kubeops new operator MyOperator
+    cd MyOperator
+    ```
+
+3.  **Explore the code:** The template generates a basic operator structure with a sample custom resource, controller, and finalizer.
+
+4.  **Dive deeper:** Follow the tutorials and guides on the [KubeOps Documentation Site](https://buehler.github.io/dotnet-operator-sdk/).
+
 ## Packages
 
 All packages target [.NET 8.0](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-8/overview) and [.NET 9.0](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-9/overview), leveraging modern C# features. The underlying Kubernetes client library (`KubernetesClient.Official`) also follows this versioning strategy.
@@ -40,6 +60,10 @@ The SDK is designed to be modular. You can include only the packages you need:
 | [KubeOps.Transpiler](./src/KubeOps.Transpiler/README.md)             | Utilities for converting .NET type definitions into Kubernetes YAML manifests, specifically for [CRDs](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/) and [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) rules. | [![Nuget](https://img.shields.io/nuget/vpre/KubeOps.Transpiler?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps.Transpiler/absoluteLatest)             |
 
 *Note: NuGet badges show the latest pre-release version.*
+
+## Examples
+
+You can find various example operators demonstrating different features in the [`examples/`](./examples/) directory of this repository.
 
 ## Contribution
 
@@ -59,3 +83,11 @@ In short:
 ## Motivation
 
 KubeOps aims to provide a first-class experience for developing Kubernetes operators within the .NET ecosystem, offering an alternative to Go-based SDKs like Kubebuilder and Operator SDK, while embracing familiar C# patterns and tooling.
+
+**Why choose KubeOps?**
+
+*   **Leverage your .NET Skills:** Build operators using C#, a language you already know, with access to the extensive .NET Base Class Library and NuGet ecosystem.
+*   **Strong Typing & IDE Support:** Benefit from compile-time checks and rich IDE features like IntelliSense and debugging.
+*   **Simplified Abstractions:** Focus on your reconciliation logic, not Kubernetes API boilerplate.
+*   **Code Generation:** Reduce manual effort with generators for CRDs, RBAC, and controller/webhook registrations.
+*   **Integrated Testing:** Develop unit and integration tests using familiar .NET testing frameworks.
