@@ -13,7 +13,7 @@ using k8s.Models;
 using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Entities.Attributes;
 
-[KubernetesEntity(Group = "kubeops.dev", ApiVersion = "v1alpha1", Kind = "DemoEntity", PluralName = "demoentities")]
+[KubernetesEntity(Group = "example.com", ApiVersion = "v1alpha1", Kind = "DemoEntity", PluralName = "demoentities")]
 public class V1Alpha1DemoEntity : CustomKubernetesEntity<V1Alpha1DemoEntity.DemoEntitySpec, V1Alpha1DemoEntity.DemoEntityStatus>
 {
     // Entity implementation follows
@@ -23,7 +23,7 @@ public class V1Alpha1DemoEntity : CustomKubernetesEntity<V1Alpha1DemoEntity.Demo
 Key parameters for `[KubernetesEntity]`: 
 
 *   **`Kind`**: (Required) The PascalCase name for your custom resource kind (e.g., `MyDatabase`, `WebAppInstance`). This is how users will refer to your resource in YAML manifests (`kind: MyDatabase`).
-*   **`Group`**: (Required) The API group for your resource. This provides namespacing and avoids collisions. It typically follows reverse domain name notation (e.g., `mycompany.com`, `apps.example.org`).
+*   **`Group`**: (Required) The API group for your resource. This provides namespacing and avoids collisions. It typically follows reverse domain name notation (e.g., `example.com`, `apps.example.org`).
 *   **`ApiVersion`**: (Required) The version of your custom resource API (e.g., `v1`, `v1alpha1`, `v1beta1`). This allows you to evolve your API over time.
 *   **`PluralName`**: (Optional) The lowercase plural name used when interacting with the resource via `kubectl` or the API (e.g., `mydatabases`, `webappinstances`). If omitted, KubeOps attempts to generate it by adding an 's' to the `Kind`. For non-standard plurals, specify it explicitly.
 
@@ -39,7 +39,7 @@ using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Entities.Attributes;
 using System.ComponentModel.DataAnnotations; // For validation attributes
 
-[KubernetesEntity(Group = "ewassef.dev", ApiVersion = "v1alpha1", Kind = "DemoEntity", PluralName = "demoentities")]
+[KubernetesEntity(Group = "example.com", ApiVersion = "v1alpha1", Kind = "DemoEntity", PluralName = "demoentities")]
 public class V1Alpha1DemoEntity : CustomKubernetesEntity<V1Alpha1DemoEntity.DemoEntitySpec, V1Alpha1DemoEntity.DemoEntityStatus>
 {
     /// <summary>
@@ -79,17 +79,18 @@ public class V1Alpha1DemoEntity : CustomKubernetesEntity<V1Alpha1DemoEntity.Demo
 
 While you define entities using C# classes, Kubernetes needs the CRD defined in YAML format. KubeOps provides tools to generate this YAML automatically:
 
-1.  **KubeOps.Cli:** The simplest way is using the KubeOps [.NET Tool](https://learn.microsoft.com/en-us/dotnet/core/tools/global-tools):
+1.  **KubeOps.Cli:** The simplest way is using the KubeOps [CLI Tool](./cli.md):
     ```bash
     # Navigate to the directory containing your solution (.sln) or project (.csproj) file
     cd /path/to/your/project
 
-    # Generate CRDs for all entities found in the specified assembly (usually your Entities project)
-    dotnet kubeops generate crds --assembly ./bin/Debug/net6.0/MyFirstOperator.Entities.dll --output-path ./deploy
+    # Generate CRDs for all entities found in the specified project
+    # Adjust the project path as needed
+    dotnet kubeops generate crds --project ./MyFirstOperator.Entities/MyFirstOperator.Entities.csproj --output-path ./deploy
     ```
-    Replace `net6.0` with your target framework if different, and adjust the assembly path as needed. This command inspects the specified assembly, finds classes marked with `[KubernetesEntity]`, and generates the corresponding CRD YAML files in the `--output-path`.
+    This command inspects the specified project, finds classes marked with `[KubernetesEntity]`, and generates the corresponding CRD YAML files in the `--output-path`.
 
-2.  **Source Generators:** The `KubeOps.Generator` package (typically included in new projects scaffolded by the CLI) uses [.NET Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview). It automatically generates CRD YAML during the build process. Look for generated files in your project's `obj/Generated/KubeOps.Generator/` directory after building.
+2.  **Source Generators:** The `KubeOps.Generator` package (typically included in new projects scaffolded by the CLI) uses [.NET Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview). It automatically generates CRD YAML during the build process. Look for generated files in your project's `obj/Generated/KubeOps.Generator/` directory (relative to the project file) after building.
 
 Typically, you'll use the CLI for ad-hoc generation or CI/CD pipelines, while the source generator provides continuous generation during development.
 
@@ -105,7 +106,7 @@ using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Entities.Attributes;
 using KubeOps.Abstractions.Entities.Attributes.Validation;
 
-[KubernetesEntity(Group = "ewassef.dev", ApiVersion = "v1", Kind = "ClusterData", PluralName = "clusterdata")]
+[KubernetesEntity(Group = "example.com", ApiVersion = "v1", Kind = "ClusterData", PluralName = "clusterdata")]
 [EntityScope(EntityScope.Cluster)] // Mark as Cluster-scoped
 public class V1ClusterData : CustomKubernetesEntity<V1ClusterData.Spec>
 {

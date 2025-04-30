@@ -58,6 +58,6 @@ Common patterns for dealing with related resources include:
 
 2.  **Using Owner References**: When your controller *creates* dependent resources (like a `Deployment` or `Service` for your `MyDatabase`), setting [Owner References](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/) is crucial. This links the dependent resource to your custom resource. If your custom resource is deleted, Kubernetes automatically garbage-collects (deletes) the dependent resources. This simplifies cleanup but doesn't trigger reconciliation on *changes* to the dependent resource.
 
-    KubeOps provides helpers for setting owner references. See the `ResourceExtensions.WithOwner` method.
+    KubeOps provides helper methods for creating owner references. See the [example in the Controllers documentation](./controllers.md#using-the-kubernetes-client) where `entity.CreateOwnerReference()` is used when creating a dependent ConfigMap.
 
 If direct watching of related resources (i.e., triggering reconciliation of `MyDatabase` when its `Secret` changes) is a feature you need, consider discussing it or contributing to the KubeOps project.

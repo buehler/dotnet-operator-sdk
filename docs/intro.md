@@ -24,4 +24,4 @@ KubeOps is built around a few key concepts:
 *   **Finalizers:** Mechanisms to run cleanup logic before a custom resource managed by your operator is deleted from the cluster.
 *   **Webhooks:** (Optional) HTTP callbacks (implemented using ASP.NET Core) that Kubernetes calls for validation or mutation of resources during create, update, or delete operations.
 
-Ready to build your first operator? Head over to the **Getting Started** guide!
+Ready to build your first operator? Head over to the [**Getting Started**](./getting-started.md) guide!

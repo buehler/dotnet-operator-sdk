@@ -36,7 +36,8 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
         // 4. Update the entity.Status if necessary
         // ------------------------------------------
 
-        // Example: Update the status
+        // Example: Update the status based on reconciliation
+        // (Actual API call to update status shown in the 'Using the Kubernetes Client' section below)
         if (entity.Status.ObservedMessage != entity.Spec.Message)
         {
             entity.Status.ObservedMessage = entity.Spec.Message;

@@ -22,9 +22,15 @@ There are two main categories of webhooks supported:
 4.  **Implement Methods:** Override the relevant methods (`Create`, `Update`, `Delete`) to contain your logic.
     *   Validation methods return `ValidationResult`, typically `Success()` or `Fail("reason", [optional httpStatusCode])`.
     *   Mutation methods return `MutationResult<TEntity>`, typically `NoChanges()` or `Modified(updatedEntity)`.
-5.  **Register:** In your `Program.cs`, register the webhook implementation: `builder.Services.AddWebhook<MyValidationWebhook>();` or `builder.Services.AddWebhook<MyMutationWebhook>();`
+5.  **Register:** In your `Program.cs` or other startup code, register the webhook implementation using the dependency injection container:
+    ```csharp
+    // Example registration
+    builder.Services.AddWebhook<MyValidationWebhook>();
+    // or
+    builder.Services.AddWebhook<MyMutationWebhook>();
+    ```
 6.  **Configure Kubernetes:** Create `ValidatingWebhookConfiguration` or `MutatingWebhookConfiguration` Kubernetes resources. These tell the API server to send admission requests for specific resources/operations to your operator's webhook service endpoint (usually `/mutate/{webhook-name}` or `/validate/{webhook-name}`).
-    *   *Note:* The `KubeOps.Cli` tool can help generate these configurations based on your webhook attributes (`dotnet kubeops generate webhooks ...`).
+    *   *Note:* The KubeOps [CLI Tool](./cli.md) can help generate these configurations based on your webhook attributes (`dotnet kubeops generate webhooks ...`).
 
 ### Validation Webhook Example
 
@@ -63,6 +69,8 @@ public class TestValidationWebhook : ValidationWebhook<V1TestEntity>
 }
 ```
 
+Find the full example code here: [`examples/WebhookOperator/`](../../../examples/WebhookOperator/).
+
 ### Mutation Webhook Example
 
 This example changes `spec.username` to "random overwritten" if it's initially set to "overwrite" during creation.
@@ -92,8 +100,6 @@ public class TestMutationWebhook : MutationWebhook<V1TestEntity>
 }
 ```
 
-Find the full example code here: [`examples/WebhookOperator/Webhooks`](../../../examples/WebhookOperator/Webhooks).
-
 ## Conversion Webhooks
 
 When you manage multiple versions of a Custom Resource Definition (CRD), Kubernetes needs a way to convert resources between these versions. This is essential for allowing users to interact with different API versions while maintaining a single storage version internally. KubeOps uses **Conversion Webhooks** for this.
@@ -106,16 +112,20 @@ See: [Kubernetes API Versioning](https://kubernetes.io/docs/tasks/extend-kuberne
 2.  **Define Versions:** Define your different entity versions as separate C# classes (e.g., `V1Entity`, `V2Entity`, `V3Entity`), each marked with `[KubernetesEntity]`. Ensure your CRD definition in Kubernetes lists all supported versions and specifies one as the `storage` version.
 3.  **Create Implementation:** Create a class inheriting from `ConversionWebhook<TStorageEntity>` (found in `KubeOps.Operator.Web.Webhooks.Conversion`), where `TStorageEntity` is the C# type corresponding to your designated `storage` version (e.g., `V3Entity`).
 4.  **Add Attribute:** Decorate the implementation class with `[ConversionWebhook(typeof(TStorageEntity))]`.
-5.  **Implement Converters:** Override the `Converters` property. This property must return a collection of objects, each implementing `IEntityConverter<TFrom, TStorage>` or `IEntityConverter<TStorage, TTo>`. Each converter handles bidirectional conversion between *one specific non-storage version* and the *storage version*.
-    *   Implement the `Convert(TFrom from)` method to convert from the non-storage version to the storage version.
-    *   Implement the `Revert(TStorage to)` method to convert from the storage version back to the non-storage version.
-6.  **Register:** In your `Program.cs`, register the webhook implementation: `builder.Services.AddWebhook<MyConversionWebhook>();`
+5.  **Implement Converters:** Override the `Converters` property. This property must return a collection of objects, each implementing the bidirectional `IEntityConverter<TNonStorage, TStorage>` interface (found in `KubeOps.Operator.Web.Webhooks.Conversion`). Each implementation handles conversion between *one specific non-storage version* (`TNonStorage`) and the *storage version* (`TStorage`).
+    *   Implement the `Convert(TNonStorage from)` method to convert from the non-storage version to the storage version.
+    *   Implement the `Revert(TStorage storage)` method to convert from the storage version back to the non-storage version.
+6.  **Register:** In your `Program.cs` or other startup code, register the webhook implementation using the dependency injection container:
+    ```csharp
+    // Example registration
+    builder.Services.AddWebhook<MyConversionWebhook>();
+    ```
 7.  **Configure Kubernetes:** Update your CRD manifest:
     *   Define all supported versions under `spec.versions`.
     *   Set `spec.conversion.strategy` to `Webhook`.
     *   Configure `spec.conversion.webhook.clientConfig` to point to your operator's conversion webhook service endpoint (usually `/convert/{webhook-name}`).
     *   Specify the `spec.conversion.webhook.conversionReviewVersions` your webhook supports (e.g., `["v1", "v1beta1"]`).
-    *   *Note:* The `KubeOps.Cli` tool can help generate CRDs with conversion settings (`dotnet kubeops generate crds ...`).
+    *   *Note:* The KubeOps [CLI Tool](./cli.md) can help generate CRDs with conversion settings (`dotnet kubeops generate crds ...`).
 
 ### Conversion Webhook Example
 

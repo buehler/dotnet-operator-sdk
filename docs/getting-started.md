@@ -6,7 +6,7 @@ This guide will walk you through installing the necessary tools and creating you
 
 Before you begin, ensure you have the following installed:
 
-1.  **[.NET SDK](https://dotnet.microsoft.com/download):** KubeOps requires .NET 6.0 or later. You can check your version by running `dotnet --version`.
+1.  **[.NET SDK](https://dotnet.microsoft.com/download):** KubeOps targets .NET 8.0 and later. You can check your version by running `dotnet --version`.
 2.  **[Docker](https://www.docker.com/get-started):** Required for building container images of your operator.
 3.  **[Kubernetes Cluster](https://kubernetes.io/docs/setup/):** A running Kubernetes cluster is needed to deploy and test your operator. Local options include:
     *   [minikube](https://minikube.sigs.k8s.io/docs/start/)
@@ -19,39 +19,55 @@ Before you begin, ensure you have the following installed:
 
 The KubeOps CLI is a [.NET Tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools) that helps scaffold new operator projects and generate Kubernetes manifests.
 
-Install it globally using the following command:
+It's recommended to install it as a local tool within your solution or project directory. This pins the tool version to your project, ensuring reproducible builds.
+
+First, if you don't already have one, create a tool manifest file in your solution's root directory:
 
 ```bash
-dotnet tool install --global KubeOps.Cli
+dotnet new tool-manifest
+```
+
+Then, install the KubeOps CLI tool:
+
+```bash
+dotnet tool install KubeOps.Cli
 ```
 
 Verify the installation:
 
 ```bash
-dotnet kubeops --version
+dotnet kubeops --version # You might need to be in a directory with the tool-manifest
 ```
 
-## 2. Create Your First Operator Project
+## 2. Install KubeOps Templates
 
-Use the KubeOps CLI to create a new operator project. Choose a directory for your project and run:
+KubeOps provides project templates to quickly scaffold a new operator. Install them using:
+
+```bash
+dotnet new install KubeOps.Templates
+```
+
+## 3. Create Your First Operator Project
+
+Now, use the KubeOps template to create a new operator project. Choose a directory for your project and run:
 
 ```bash
 dotnet new operator -n MyFirstOperator
 ```
 
-This command creates a new solution (`MyFirstOperator.sln`) with the following projects:
+This command creates a new solution (`MyFirstOperator.sln`) using the template, typically including:
 
 *   **`MyFirstOperator.Operator`:** The main operator project containing the `Program.cs` entry point, controllers, finalizers, and webhook handlers.
 *   **`MyFirstOperator.Entities`:** A separate project to define your Custom Resource entities (CRDs).
 *   **`MyFirstOperator.Test`:** A unit testing project.
 
-## 3. Understand the Project Structure
+## 4. Understand the Project Structure
 
 *   **`Entities/V1DemoEntity.cs`:** An example Custom Resource definition.
 *   **`Operator/Controller/V1DemoEntityController.cs`:** An example controller that watches for changes to `V1DemoEntity` resources.
 *   **`Operator/Program.cs`:** The main entry point that configures and runs the operator using the `OperatorBuilder`.
 
-## 4. Run the Operator Locally
+## 5. Run the Operator Locally
 
 Navigate into the operator project directory:
 

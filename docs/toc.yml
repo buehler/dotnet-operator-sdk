@@ -15,6 +15,7 @@
 - name: CLI Usage
   href: cli.md
 - name: Operator Configuration
-  href: configuration.md
+  href: operator-configuration.md
 - name: Testing Your Operator
   href: testing.md
+  topicUid: placeholder-testing
