@@ -4,7 +4,11 @@ The KubeOps CLI (`dotnet kubeops`) is a [.NET Tool](https://learn.microsoft.com/
 
 ## Installation
 
-To install the CLI into your solution / project, first create a new tool manifest:
+The KubeOps CLI can be installed either locally within a specific repository or globally on your machine.
+
+**Local Installation (Recommended for Projects):**
+
+First, ensure you have a tool manifest file (usually `.config/dotnet-tools.json`). If not, create one:
 
 ```bash
 dotnet new tool-manifest
@@ -16,7 +20,15 @@ Then install the CLI:
 dotnet tool install KubeOps.Cli
 ```
 
-This installs the tool locally for the current repository. You can then invoke it using `dotnet kubeops <command>`.
+This installs and pins the tool version for the current repository. Invoke it using `dotnet kubeops <command>`.
+
+**Global Installation (Convenient for General Use):**
+
+```bash
+dotnet tool install --global KubeOps.Cli
+```
+
+This makes the `dotnet kubeops` command available anywhere on your system. Use `dotnet tool update --global KubeOps.Cli` to get the latest version.
 
 ## Available Commands
 
@@ -44,8 +56,18 @@ Below is an overview of the available commands. For detailed options and descrip
     ```
 
 ### Code & Manifest Generation
+*   **`new`**: Scaffolds new KubeOps projects.
+    *   **`new operator`**: Creates a new operator project from a template, including a basic custom resource, controller, and finalizer.
+
+        ```bash
+        # Create a new operator project in a directory named 'MyNewOperator'
+        dotnet kubeops new operator MyNewOperator
+        ```
+
 *   **`generate` (aliases `gen`, `g`)**: Parent command for various generation tasks.
     *   **`generate crd`**: Generates CRD YAML manifests for entities found in the specified solution/project (`-s <path>`) and outputs them to a specified directory (`-o <path>`). This does *not* apply them to the cluster; it only creates the files.
+        *   If `-o` is omitted, output defaults to the current directory.
+        *   This command uses the [KubeOps.Transpiler](../KubeOps.Transpiler/README.md) package to convert C# entity definitions to CRDs.
 
         ```bash
         # Generate CRD files for MyOperator.csproj into the './deploy' directory
@@ -53,6 +75,10 @@ Below is an overview of the available commands. For detailed options and descrip
         ```
 
     *   **`generate operator` (alias `op`)**: Generates a set of Kubernetes deployment manifests (e.g., Deployment, ServiceAccount, RBAC Roles/Bindings) necessary to deploy your operator. It inspects your operator project (`-s <path>`) and outputs the YAML files to a specified directory (`-o <path>`). This often includes manifests for any webhooks defined.
+        *   If `-o` is omitted, output defaults to the current directory.
+        *   This command inspects `[EntityRbac]` attributes on controllers/webhooks to generate `Role` and `ClusterRole` resources.
+        *   It also finds webhook implementations (`[ValidationWebhook]`, `[MutationWebhook]`, `[ConversionWebhook]`) to generate corresponding `ValidatingWebhookConfiguration`, `MutatingWebhookConfiguration`, and CRD `conversion` settings.
+        *   It utilizes the [KubeOps.Transpiler](../KubeOps.Transpiler/README.md) package for analyzing attributes.
 
         ```bash
         # Generate deployment manifests for MyOperator.csproj into './deploy'
