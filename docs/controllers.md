@@ -29,31 +29,135 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
     {
         _logger.LogInformation($"Reconciling entity {entity.Name} in namespace {entity.Namespace()}.");
 
-        // --- Your Reconciliation Logic Goes Here ---
-        // 1. Check the current state of the world (e.g., related Pods, Services, ConfigMaps)
-        // 2. Compare with the desired state in entity.Spec
-        // 3. Create/Update/Delete resources to match the desired state
-        // 4. Update the entity.Status if necessary
-        // ------------------------------------------
+        // --- Reconciliation Logic: Manage a Deployment --- 
 
-        // Example: Update the status based on reconciliation
-        // (Actual API call to update status shown in the 'Using the Kubernetes Client' section below)
-        if (entity.Status.ObservedMessage != entity.Spec.Message)
+        // 1. Define the Desired Deployment based on the entity's spec
+        var desiredDeployment = new V1Deployment
         {
-            entity.Status.ObservedMessage = entity.Spec.Message;
-            entity.Status.State = "Processed";
-            entity.Status.LastUpdated = DateTime.UtcNow;
+            Metadata = new V1ObjectMeta
+            {
+                Name = $"{entity.Name}-deployment", // Deployment name derived from CR name
+                NamespaceProperty = entity.Namespace(),
+                // Set owner reference so the Deployment is garbage collected when the entity is deleted
+                OwnerReferences = new List<V1OwnerReference> { entity.CreateOwnerReference() }
+            },
+            Spec = new V1DeploymentSpec
+            {
+                Replicas = entity.Spec.Replicas, // Use replicas from CR spec
+                Selector = new V1LabelSelector { MatchLabels = new Dictionary<string, string> { { "app", entity.Name } } },
+                Template = new V1PodTemplateSpec
+                {
+                    Metadata = new V1ObjectMeta { Labels = new Dictionary<string, string> { { "app", entity.Name } } },
+                    Spec = new V1PodSpec
+                    {
+                        Containers = new List<V1Container>
+                        {
+                            new V1Container
+                            {
+                                Name = "app-container",
+                                Image = entity.Spec.Image, // Use image from CR spec
+                                // Ports, env vars, volumes, etc., would go here
+                            }
+                        }
+                    }
+                }
+            }
+        };
 
-            // Indicate that the status subresource needs to be updated
-            // The KubernetesClient (injected or used directly) handles the API call.
-            // This example assumes you have a method/service to do this.
-            // await _kubernetesClient.UpdateStatus(entity);
+        _logger.LogInformation($"Desired state: Deployment '{desiredDeployment.Name()}' with {desiredDeployment.Spec.Replicas} replicas and image '{desiredDeployment.Spec.Template.Spec.Containers[0].Image}'.");
 
-            _logger.LogInformation($"Updated status for {entity.Name}.");
+        // 2. Get the current state of the Deployment
+        V1Deployment? existingDeployment = null;
+        try
+        {
+            existingDeployment = await _client.GetAsync<V1Deployment>(desiredDeployment.Metadata.Name, desiredDeployment.Metadata.NamespaceProperty);
+        }
+        catch (KubernetesException e) when (e.Status.Code == 404)
+        {
+            _logger.LogInformation($"Deployment {desiredDeployment.Name()} not found.");
+            // Not an error, deployment doesn't exist yet.
+        }
+        catch (KubernetesException e)
+        {
+            _logger.LogError(e, $"Error getting Deployment {desiredDeployment.Name()}.");
+            return ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(15)); // Requeue on error
         }
 
-        // Return null or a ResourceControllerResult to requeue
-        return null; // Returning null means reconciliation completed successfully for now
+        // 3. Compare desired state with actual state and act
+        try
+        {
+            if (existingDeployment == null)
+            {
+                // Deployment does not exist - Create it
+                _logger.LogInformation($"Creating Deployment {desiredDeployment.Name()}.");
+                await _client.CreateAsync(desiredDeployment);
+                entity.Status.State = "DeploymentCreating";
+                entity.Status.ObservedReplicas = 0; // Initial status
+            }
+            else
+            {
+                // Deployment exists - Check if updates are needed
+                bool needsUpdate = false;
+                if (existingDeployment.Spec.Replicas != desiredDeployment.Spec.Replicas)
+                {
+                    _logger.LogInformation($"Updating replicas for Deployment {existingDeployment.Name()} from {existingDeployment.Spec.Replicas} to {desiredDeployment.Spec.Replicas}.");
+                    existingDeployment.Spec.Replicas = desiredDeployment.Spec.Replicas;
+                    needsUpdate = true;
+                }
+
+                var existingImage = existingDeployment.Spec.Template.Spec.Containers.FirstOrDefault()?.Image;
+                var desiredImage = desiredDeployment.Spec.Template.Spec.Containers.FirstOrDefault()?.Image;
+                if (existingImage != desiredImage)
+                {
+                    _logger.LogInformation($"Updating image for Deployment {existingDeployment.Name()} from '{existingImage}' to '{desiredImage}'.");
+                    existingDeployment.Spec.Template.Spec.Containers[0].Image = desiredImage;
+                    needsUpdate = true;
+                }
+
+                if (needsUpdate)
+                {
+                    _logger.LogInformation($"Applying updates to Deployment {existingDeployment.Name()}.");
+                    // Ensure the resource version matches for the update
+                    desiredDeployment.Metadata.ResourceVersion = existingDeployment.Metadata.ResourceVersion;
+                    await _client.UpdateObject(desiredDeployment); // Use the desired state for update
+                    entity.Status.State = "DeploymentUpdating";
+                }
+                else
+                {
+                    _logger.LogInformation($"Deployment {existingDeployment.Name()} is already up-to-date.");
+                }
+
+                // Update status based on existing deployment's observed state
+                entity.Status.ObservedReplicas = existingDeployment.Status?.ReadyReplicas ?? 0;
+                entity.Status.State = (entity.Status.ObservedReplicas == entity.Spec.Replicas) ? "DeploymentReady" : "DeploymentProgressing";
+            }
+        }
+        catch (KubernetesException e)
+        {
+            _logger.LogError(e, $"Error creating/updating Deployment for {entity.Name}.");
+            entity.Status.State = "Error";
+            // Requeue to retry the operation
+            // Consider adding specific error handling (e.g., conflict resolution)
+            return ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(15)); 
+        }
+
+        // 4. Update the entity status
+        entity.Status.LastUpdated = DateTime.UtcNow;
+        try
+        {
+            // Use the client to update the status subresource
+            await _client.UpdateStatus(entity);
+            _logger.LogInformation($"Updated status for {entity.Name}.");
+        }
+        catch (KubernetesException e)
+        {
+            _logger.LogError(e, $"Error updating status for {entity.Name}.");
+            // Status updates often conflict if multiple reconciles happen quickly.
+            // Requeuing might be appropriate here.
+            return ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(5));
+        }
+
+        return null;
     }
 
     public Task StatusModifiedAsync(V1Alpha1DemoEntity entity)
@@ -148,51 +252,117 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
     {
         _logger.LogInformation($"Reconciling entity {entity.Name} in namespace {entity.Namespace()}.");
 
-        // Example: Create or Update a ConfigMap based on the entity's spec
-        var configMap = new V1ConfigMap
+        // Example: Create or Update a Deployment based on the entity's spec
+        var desiredDeployment = new V1Deployment
         {
             Metadata = new V1ObjectMeta
             {
-                Name = $"{entity.Name}-config",
+                Name = $"{entity.Name}-deployment", // Deployment name derived from CR name
                 NamespaceProperty = entity.Namespace(),
-                // Set owner reference so the ConfigMap is garbage collected when the entity is deleted
+                // Set owner reference so the Deployment is garbage collected when the entity is deleted
                 OwnerReferences = new List<V1OwnerReference> { entity.CreateOwnerReference() }
             },
-            Data = new Dictionary<string, string>
+            Spec = new V1DeploymentSpec
             {
-                { "message", entity.Spec.Message },
-                { "replicas", entity.Spec.Replicas.ToString() },
+                Replicas = entity.Spec.Replicas, // Use replicas from CR spec
+                Selector = new V1LabelSelector { MatchLabels = new Dictionary<string, string> { { "app", entity.Name } } },
+                Template = new V1PodTemplateSpec
+                {
+                    Metadata = new V1ObjectMeta { Labels = new Dictionary<string, string> { { "app", entity.Name } } },
+                    Spec = new V1PodSpec
+                    {
+                        Containers = new List<V1Container>
+                        {
+                            new V1Container
+                            {
+                                Name = "app-container",
+                                Image = entity.Spec.Image, // Use image from CR spec
+                                // Ports, env vars, volumes, etc., would go here
+                            }
+                        }
+                    }
+                }
             }
         };
 
+        _logger.LogInformation($"Desired state: Deployment '{desiredDeployment.Name()}' with {desiredDeployment.Spec.Replicas} replicas and image '{desiredDeployment.Spec.Template.Spec.Containers[0].Image}'.");
+
+        // 2. Get the current state of the Deployment
+        V1Deployment? existingDeployment = null;
         try
         {
-            // Use the client to create or update the resource
-            var existingConfigMap = await _client.GetAsync<V1ConfigMap>(configMap.Metadata.Name, configMap.Metadata.NamespaceProperty);
-            if (existingConfigMap != null)
+            existingDeployment = await _client.GetAsync<V1Deployment>(desiredDeployment.Metadata.Name, desiredDeployment.Metadata.NamespaceProperty);
+        }
+        catch (KubernetesException e) when (e.Status.Code == 404)
+        {
+            _logger.LogInformation($"Deployment {desiredDeployment.Name()} not found.");
+            // Not an error, deployment doesn't exist yet.
+        }
+        catch (KubernetesException e)
+        {
+            _logger.LogError(e, $"Error getting Deployment {desiredDeployment.Name()}.");
+            return ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(15)); // Requeue on error
+        }
+
+        // 3. Compare desired state with actual state and act
+        try
+        {
+            if (existingDeployment == null)
             {
-                // Ensure the resource version matches for the update
-                configMap.Metadata.ResourceVersion = existingConfigMap.Metadata.ResourceVersion;
-                await _client.UpdateObject(configMap);
-                _logger.LogInformation($"Updated ConfigMap {configMap.Name()} for entity {entity.Name}.");
+                // Deployment does not exist - Create it
+                _logger.LogInformation($"Creating Deployment {desiredDeployment.Name()}.");
+                await _client.CreateAsync(desiredDeployment);
+                entity.Status.State = "DeploymentCreating";
+                entity.Status.ObservedReplicas = 0; // Initial status
             }
             else
             {
-                await _client.CreateAsync(configMap);
-                _logger.LogInformation($"Created ConfigMap {configMap.Name()} for entity {entity.Name}.");
+                // Deployment exists - Check if updates are needed
+                bool needsUpdate = false;
+                if (existingDeployment.Spec.Replicas != desiredDeployment.Spec.Replicas)
+                {
+                    _logger.LogInformation($"Updating replicas for Deployment {existingDeployment.Name()} from {existingDeployment.Spec.Replicas} to {desiredDeployment.Spec.Replicas}.");
+                    existingDeployment.Spec.Replicas = desiredDeployment.Spec.Replicas;
+                    needsUpdate = true;
+                }
+
+                var existingImage = existingDeployment.Spec.Template.Spec.Containers.FirstOrDefault()?.Image;
+                var desiredImage = desiredDeployment.Spec.Template.Spec.Containers.FirstOrDefault()?.Image;
+                if (existingImage != desiredImage)
+                {
+                    _logger.LogInformation($"Updating image for Deployment {existingDeployment.Name()} from '{existingImage}' to '{desiredImage}'.");
+                    existingDeployment.Spec.Template.Spec.Containers[0].Image = desiredImage;
+                    needsUpdate = true;
+                }
+
+                if (needsUpdate)
+                {
+                    _logger.LogInformation($"Applying updates to Deployment {existingDeployment.Name()}.");
+                    // Ensure the resource version matches for the update
+                    desiredDeployment.Metadata.ResourceVersion = existingDeployment.Metadata.ResourceVersion;
+                    await _client.UpdateObject(desiredDeployment); // Use the desired state for update
+                    entity.Status.State = "DeploymentUpdating";
+                }
+                else
+                {
+                    _logger.LogInformation($"Deployment {existingDeployment.Name()} is already up-to-date.");
+                }
+
+                // Update status based on existing deployment's observed state
+                entity.Status.ObservedReplicas = existingDeployment.Status?.ReadyReplicas ?? 0;
+                entity.Status.State = (entity.Status.ObservedReplicas == entity.Spec.Replicas) ? "DeploymentReady" : "DeploymentProgressing";
             }
         }
         catch (KubernetesException e)
         {
-            _logger.LogError(e, $"Error creating/updating ConfigMap for {entity.Name}.");
-            // Decide if this error warrants a requeue
-            // return ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(15));
-            throw; // Or rethrow if it's a permanent issue
+            _logger.LogError(e, $"Error creating/updating Deployment for {entity.Name}.");
+            entity.Status.State = "Error";
+            // Requeue to retry the operation
+            // Consider adding specific error handling (e.g., conflict resolution)
+            return ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(15)); 
         }
 
-        // Example: Update the entity status
-        entity.Status.ObservedMessage = entity.Spec.Message;
-        entity.Status.State = "ConfigMapUpdated";
+        // 4. Update the entity status
         entity.Status.LastUpdated = DateTime.UtcNow;
         try
         {
@@ -225,7 +395,7 @@ The `IKubernetesClient` offers methods like:
 *   `UpdateStatus<TEntity>(TEntity obj)`: Updates only the `status` subresource of an existing resource. Use this for status updates to avoid conflicts with spec changes.
 *   `DeleteObject<TEntity>(TEntity obj)` or `DeleteObject<TEntity>(string name, string? ns = null)`: Deletes a resource, either by providing the object instance or by name and optional namespace.
 
-**Important:** Always consider setting [Owner References](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/) (using the `entity.CreateOwnerReference()` helper) on resources created by your controller. This ensures Kubernetes automatically garbage collects the dependent resources (like the ConfigMap above) when the owner (your `V1Alpha1DemoEntity`) is deleted.
+**Important:** Always consider setting [Owner References](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/) (using the `entity.CreateOwnerReference()` helper) on resources created by your controller. This ensures Kubernetes automatically garbage collects the dependent resources (like the Deployment above) when the owner (your `V1Alpha1DemoEntity`) is deleted.
 
 ## Handling Errors and Requeuing
 

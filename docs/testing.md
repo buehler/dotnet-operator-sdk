@@ -21,11 +21,13 @@ Unit tests focus on isolating and testing individual components of your operator
 
 ```csharp
 using Moq;
+using k8s;
+using k8s.Models;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Controller.Results;
 using Microsoft.Extensions.Logging;
-using MyOperator.Controllers;
-using MyOperator.Entities;
+using MyOperator.Controllers; // Assuming your controller lives here
+using MyOperator.Entities;    // Assuming your entity lives here
 using Xunit;
 
 public class MyControllerTests
@@ -34,27 +36,49 @@ public class MyControllerTests
     public async Task ReconcileAsync_ShouldCreateConfigMap_WhenMissing()
     {
         // Arrange
-        var mockLogger = new Mock<ILogger<MyController>>();
+        var mockLogger = Mock.Of<ILogger<MyController>>(); // Concise Moq setup
         var mockClient = new Mock<IKubernetesClient>();
 
         var controller = new MyController(mockLogger.Object, mockClient.Object);
         var entity = new V1MyResource 
         { 
-            Metadata = new k8s.Models.V1ObjectMeta { Name = "test-resource", NamespaceProperty = "test-ns" },
-            Spec = new V1MyResource.MySpec { /* ... */ }
+            Metadata = new V1ObjectMeta { Name = "test-resource", NamespaceProperty = "test-ns" },
+            Spec = new V1MyResource.MySpec { Message = "Hello" }
         };
 
-        // Mock KubernetesClient responses
+        // Example: Define the expected ConfigMap
+        var expectedConfigMap = new V1ConfigMap
+        {
+            Metadata = new V1ObjectMeta { Name = $"{entity.Name}-config", NamespaceProperty = entity.Namespace() },
+            Data = new Dictionary<string, string> { { "message", entity.Spec.Message } }
+            // OwnerReferences would typically be set here too
+        };
+
+        // Mock KubernetesClient responses:
+        // - Simulate GetAsync returns null (not found)
         mockClient.Setup(c => c.GetAsync<k8s.Models.V1ConfigMap>(It.IsAny<string>(), It.IsAny<string?>()))
                   .ReturnsAsync((k8s.Models.V1ConfigMap?)null); // Simulate ConfigMap doesn't exist
+
+        // - Setup CreateAsync to succeed (no return value needed)
+        mockClient.Setup(c => c.CreateAsync(It.IsAny<V1ConfigMap>()))
+                  .Returns(Task.CompletedTask);
 
         // Act
         var result = await controller.ReconcileAsync(entity);
 
         // Assert
-        Assert.Null(result); // Expect successful reconcile (no requeue)
-        mockClient.Verify(c => c.CreateAsync(It.IsAny<k8s.Models.V1ConfigMap>()), Times.Once); // Verify ConfigMap was created
+        Assert.Null(result); // Expect successful reconcile (null result means no requeue requested)
+
+        // Verify that CreateAsync was called once with a ConfigMap matching expectations
+        // (Using It.Is<> for complex object matching or manual property checks)
+        mockClient.Verify(
+            c => c.CreateAsync(It.Is<V1ConfigMap>(cm => 
+                cm.Metadata.Name == expectedConfigMap.Metadata.Name && 
+                cm.Data["message"] == expectedConfigMap.Data["message"])), 
+            Times.Once);
     }
+
+    // Add more tests for update scenarios, error handling, status updates, etc.
 }
 ```
 
@@ -62,32 +86,222 @@ public class MyControllerTests
 
 Integration tests verify the interaction between your operator and a real (or simulated) Kubernetes API server. This is essential for catching issues related to API calls, resource watching, and CRD handling.
 
-**Common Approaches:**
+**Key Goal:** Test that your operator correctly interacts with the Kubernetes API for its core functions (CRD management, resource creation/update based on CR spec, webhook validation/mutation) without necessarily running the full reconciliation loop in the test process.
 
-1.  **`envtest` (Recommended):** Part of the Kubernetes [controller-runtime](https://github.com/kubernetes-sigs/controller-runtime) project (Go-based), `envtest` sets up and runs a local instance of the Kubernetes API server (`kube-apiserver`) and `etcd` for testing purposes. It doesn't require Docker or a full Kubelet.
-    *   *Setup:* Requires downloading `envtest` binaries suitable for your OS. You'll typically manage these via a script or setup step in your test project. Your tests will need to start the `envtest` process and obtain the connection details (kubeconfig) to configure the .NET `KubernetesClientConfiguration`.
-    *   *Pros:* Fast startup compared to full clusters, lightweight, provides a real API server for testing CRD application, validation/mutation webhooks, and basic API interactions.
-    *   *Cons:* Does not include Kubelets or other controllers (e.g., Deployment controller), so it cannot test interactions involving Pod scheduling or built-in controller behavior. Primarily tests API-level interactions.
+### Using `envtest` (Recommended)
 
-2.  **[Kind (Kubernetes IN Docker)](https://kind.sigs.k8s.io/) / [Minikube](https://minikube.sigs.k8s.io/docs/):** Run tests against a local, single-node or multi-node Kubernetes cluster running in Docker (`kind`) or a lightweight VM (`minikube`).
-    *   *Setup:* Requires Docker and the `kind` or `minikube` CLI installed.
-    *   *Pros:* Provides a more complete Kubernetes environment, including Kubelets and built-in controllers. Allows testing interactions between your operator and standard Kubernetes resources (Pods, Deployments, etc.).
-    *   *Cons:* Slower startup than `envtest`, requires more system resources (especially Docker Desktop on Windows/macOS).
+`envtest`, part of the Kubernetes [controller-runtime](https://github.com/kubernetes-sigs/controller-runtime) project, starts a temporary `kube-apiserver` and `etcd` instance locally, providing a real API server endpoint for your tests without needing Docker or a full cluster.
 
-3.  **Test Cluster:** Use a dedicated test cluster (e.g., a namespace in a shared development cluster, a cloud-based test cluster).
-    *   *Pros:* Most realistic environment, tests real network policies, storage, etc.
-    *   *Cons:* Can be slow to provision/access, resource-intensive, potentially expensive, requires careful environment management and cleanup, potential for conflicts if shared.
+**Pros:**
 
-Integration tests typically involve:
-*   Starting the test environment (e.g., `envtest` process, `kind create cluster`).
-*   Configuring the .NET Kubernetes client (`KubernetesClientConfiguration.BuildConfigFromConfigFile` or equivalent) to point to the test environment.
-*   Deploying your operator's CRDs to the test environment using the client.
-*   (Optionally) Running your operator executable against the test cluster (less common for pure integration tests, more for E2E).
-*   Using a Kubernetes client within your test code (e.g., using `Microsoft.Extensions.Hosting` for DI or direct client instantiation) to:
-    *   Create/update/delete instances of your custom resource.
-    *   Wait for expected conditions (using polling or watches).
-    *   Assert that the operator (if running) or the API server (e.g., for webhook validation) behaves correctly (e.g., dependent resources are created, status is updated, validation rejects invalid specs).
-*   Cleaning up all created resources meticulously after each test to ensure isolation.
+*   Fast startup.
+*   Lightweight.
+*   Real API server for testing CRD application, API interactions, admission webhooks (requires separate webhook server setup/tunneling for testing).
+
+**Cons:**
+
+*   No Kubelets or built-in controllers (e.g., Deployment controller). Cannot test interactions involving Pod scheduling or built-in controller behavior directly.
+
+**Setup:**
+
+1.  **Install `envtest`:** Download the `setup-envtest` utility script/binary or the `envtest` binaries directly. Add the location of `kube-apiserver` and `etcd` to your system's PATH or configure your test runner to find them. See the [controller-runtime envtest setup](https://book.kubebuilder.io/reference/envtest.html) documentation.
+2.  **Test Fixture:** Use a test fixture (like xUnit's `IAsyncLifetime`) to manage the `envtest` process lifecycle (start before tests, stop after).
+
+**Example (Conceptual Integration Test using `envtest`, xUnit & `k8s-client`):**
+
+```csharp
+using k8s;
+using k8s.Models;
+using KubeOps.KubernetesClient; // Or use the official k8s.Kubernetes directly
+using System.Diagnostics;
+using Xunit;
+using YamlDotNet.Serialization; // For loading manifests
+
+// --- Test Fixture to manage envtest lifecycle ---
+public class EnvtestFixture : IAsyncLifetime
+{
+    private Process? _envtestProcess;
+    public string KubeconfigPath { get; private set; } = string.Empty;
+    public Kubernetes? Client { get; private set; }
+
+    public async Task InitializeAsync()
+    {
+        // 1. Start envtest (adjust path and arguments as needed)
+        // Assumes setup-envtest was used or envtest binaries are in PATH
+        // The '-p' flag prints the paths, including the kubeconfig file path.
+        // Using KUBEBUILDER_ASSETS is often more robust.
+        var assetsPath = Environment.GetEnvironmentVariable("KUBEBUILDER_ASSETS");
+        if (string.IsNullOrEmpty(assetsPath))
+        {
+            // Fallback or throw - envtest needs to know where kube-apiserver/etcd are.
+            // Example: You might run 'setup-envtest use <version> -p path > envtest_paths.txt'
+            // and read the path from there.
+            throw new InvalidOperationException("KUBEBUILDER_ASSETS environment variable not set. Cannot locate envtest binaries.");
+        }
+
+        KubeconfigPath = Path.Combine(Path.GetTempPath(), $"kubeconfig-envtest-{Guid.NewGuid()}");
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "envtest", // Assumes envtest is in PATH
+            Arguments = $"local -k {KubeconfigPath}", // Start local env, output kubeconfig
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            Environment = { { "KUBEBUILDER_ASSETS", assetsPath } } // Crucial!
+        };
+
+        _envtestProcess = Process.Start(startInfo);
+        // TODO: Add robust process waiting & error handling
+        // Wait for envtest to be ready (e.g., check for output, wait fixed time - crude)
+        await Task.Delay(TimeSpan.FromSeconds(15)); // Adjust timing based on envtest startup
+
+        // 2. Configure Kubernetes Client
+        var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeconfigPath);
+        Client = new Kubernetes(config);
+
+        // 3. Apply CRDs (Essential before creating CR instances)
+        // Assumes your CRD YAML is in your test project (e.g., copied from main project)
+        await ApplyManifestAsync("path/to/your/crd.v1.yaml");
+    }
+
+    public async Task DisposeAsync()
+    {
+        _envtestProcess?.Kill(entireProcessTree: true); // Ensure etcd/apiserver are stopped
+        _envtestProcess?.Dispose();
+        if (File.Exists(KubeconfigPath)) File.Delete(KubeconfigPath);
+        await Task.CompletedTask;
+    }
+
+    private async Task ApplyManifestAsync(string manifestPath)
+    {
+        var yamlContent = await File.ReadAllTextAsync(manifestPath);
+        var objects = KubernetesYaml.LoadAllFromString<IKubernetesObject<V1ObjectMeta>>(yamlContent);
+        foreach (var obj in objects)
+        {
+            try
+            {
+                // Simplified apply - real implementation needs GET/PATCH/CREATE logic
+                // For CRDs, CREATE is usually sufficient in tests
+                if (obj is V1CustomResourceDefinition crd)
+                {
+                     await Client.ApiextensionsV1.CreateCustomResourceDefinitionAsync(crd);
+                     // TODO: Add wait logic for CRD to be established
+                     await Task.Delay(TimeSpan.FromSeconds(2)); 
+                }
+                // Add cases for other resource types if needed
+            }
+            catch (Microsoft.Rest.HttpOperationException e) when (e.Response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            { /* Already exists - ignore for simple test setup */ }
+        }
+    }
+}
+
+// --- Example Test Class using the Fixture ---
+public class MyResourceIntegrationTests : IClassFixture<EnvtestFixture>
+{
+    private readonly EnvtestFixture _fixture;
+    private readonly Kubernetes _client;
+
+    public MyResourceIntegrationTests(EnvtestFixture fixture)
+    {
+        _fixture = fixture;
+        _client = fixture.Client!;
+    }
+
+    [Fact]
+    public async Task Can_Create_And_Get_CustomResource()
+    {
+        // Arrange
+        var resource = new V1MyResource // Your generated CRD class
+        {
+            ApiVersion = V1MyResource.KubeApiVersion,
+            Kind = V1MyResource.KubeKind,
+            Metadata = new V1ObjectMeta { Name = "test-cr", NamespaceProperty = "default" },
+            Spec = new V1MyResource.MySpec { Message = "Integration Test" }
+        };
+
+        // Act
+        V1MyResource createdResource = null;
+        try
+        {
+             // Use generic client helper or specific API group client
+             createdResource = await _client.CreateNamespacedCustomObjectAsync<V1MyResource>(
+                 resource, 
+                 V1MyResource.KubeGroup, 
+                 V1MyResource.KubeApiVersion, 
+                 "default", // Namespace
+                 V1MyResource.KubePluralName);
+
+             var retrievedResource = await _client.GetNamespacedCustomObjectAsync<V1MyResource>(
+                 V1MyResource.KubeGroup, 
+                 V1MyResource.KubeApiVersion, 
+                 "default", 
+                 V1MyResource.KubePluralName, 
+                 "test-cr");
+
+            // Assert
+            Assert.NotNull(createdResource);
+            Assert.NotNull(retrievedResource);
+            Assert.Equal("test-cr", retrievedResource.Metadata.Name);
+            Assert.Equal("Integration Test", retrievedResource.Spec.Message);
+        }
+        finally
+        { 
+            // Cleanup: Delete the resource after the test
+            if (createdResource != null)
+            {
+                 await _client.DeleteNamespacedCustomObjectAsync(
+                    V1MyResource.KubeGroup, 
+                    V1MyResource.KubeApiVersion, 
+                    "default", 
+                    V1MyResource.KubePluralName, 
+                    "test-cr");
+            }
+        }
+    }
+}
+
+### Using Kind / Minikube
+
+Using [Kind (Kubernetes IN Docker)](https://kind.sigs.k8s.io/) or [Minikube](https://minikube.sigs.k8s.io/docs/) provides a more complete Kubernetes environment, including Kubelets and built-in controllers. This is useful if your operator's logic depends on the behavior of standard controllers (e.g., checking Deployment status, Pod readiness).
+
+*   *Setup:* Requires Docker and the `kind` or `minikube` CLI installed.
+*   *Pros:* Provides a more complete Kubernetes environment, including Kubelets and built-in controllers. Allows testing interactions between your operator and standard Kubernetes resources (Pods, Deployments, etc.).
+*   *Cons:* Slower startup than `envtest`, requires more system resources (especially Docker Desktop on Windows/macOS).
+
+The test structure is similar to `envtest` (apply CRDs, create CRs, assert), but the client configuration changes:
+
+```csharp
+// Typically, Kind/Minikube update your default kubeconfig (~/.kube/config)
+// Or you can point to a specific one via KUBECONFIG environment variable
+var config = KubernetesClientConfiguration.BuildDefaultConfig(); 
+
+// Or, if 'kind' provides a specific kubeconfig file:
+// var kubeconfigPath = Environment.GetEnvironmentVariable("KIND_KUBECONFIG_PATH"); // Example env var
+// var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath);
+
+var client = new Kubernetes(config);
+
+// ... rest of the test logic (apply CRD, create/get CR) ...
+```
+
+Starting/stopping the Kind/Minikube cluster would typically happen outside the test process, perhaps in CI scripts (`kind create cluster`, `kind delete cluster`).
+
+### Using a Shared/Remote Test Cluster
+
+Using a dedicated test cluster (e.g., a namespace in a shared development cluster, a cloud-based test cluster) provides the most realistic environment.
+
+*   *Pros:* Most realistic environment, tests real network policies, storage, etc.
+*   *Cons:* Can be slow to provision/access, resource-intensive, potentially expensive, requires careful environment management and cleanup, potential for conflicts if shared.
+
+Client configuration usually involves pointing to the appropriate kubeconfig file for that cluster.
+
+**Important Integration Testing Considerations:**
+
+*   **CRD Application:** Always apply your CRDs to the test API server *before* attempting to create instances of your custom resource.
+*   **Cleanup:** Meticulously delete all resources created during a test (CR instances, namespaces if used) in a `finally` block or test teardown method to ensure test isolation.
+*   **Waiting/Polling:** When testing asynchronous operations (like waiting for a resource to be created or a status to update), implement robust waiting logic (e.g., polling with timeouts) instead of fixed `Task.Delay` calls.
+*   **Testing Operator Logic:** The examples above primarily test interaction with the API server. To test the operator's *reconciliation logic* in an integration environment, you often need to run the operator host itself, configured to point to the test cluster. This can be done within the test process using `Microsoft.Extensions.Hosting` or by running the compiled operator as a separate process against the test cluster (closer to E2E testing).
 
 ## End-to-End (E2E) Testing
 

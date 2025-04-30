@@ -47,6 +47,12 @@ public class MyCustomResourceSpec
 
 // --- Transpilation Logic (e.g., in a build task or utility) ---
 
+// Note: The transpiler also uses standard .NET attributes on your entity properties 
+// (e.g., System.ComponentModel attributes like [Description], [Required], [Range],
+// [MinLength], [MaxLength], [RegularExpression], etc.) to generate a richer
+// OpenAPI v3 schema within the CRD. This schema is used by `kubectl explain`
+// and for server-side validation by the Kubernetes API server.
+
 // 1. Get the assembly containing your custom resource types
 //    (Adjust path as needed or use Assembly.LoadFrom/Assembly.Load)
 var assemblyPath = "path/to/your/Operator.Project.dll";
@@ -81,5 +87,7 @@ foreach (var crd in crds)
 *   **KubeOps CLI:** This package is the engine behind the `dotnet kubeops generate crd` command.
 *   **Custom Build Tasks:** Integrate CRD generation directly into your MSBuild process.
 *   **Schema Validation Tools:** Use the generated CRD schema for validating custom resource YAML files.
+
+The assembly inspection and attribute processing logic within this package is also utilized by the KubeOps CLI (`dotnet kubeops generate operator`) to discover `[EntityRbac]` attributes when generating RBAC manifests (`Role`/`ClusterRole`).
 
 For more details on defining the C# classes themselves, see the main KubeOps documentation on [Custom Entities](../../docs/custom-entities.md).

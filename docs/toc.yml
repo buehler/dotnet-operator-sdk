@@ -22,6 +22,12 @@
     - name: Leader Election
       href: leader-election.md
       topicUid: leader-election
+    - name: Source Generation
+      href: source-generation.md
+      topicUid: source-generation
+    - name: RBAC Generation
+      href: rbac-generation.md
+      topicUid: rbac-generation
     - name: Testing Your Operator
       href: testing.md
       topicUid: placeholder-testing
