@@ -39,6 +39,8 @@ Verify the installation:
 dotnet kubeops --version # You might need to be in a directory with the tool-manifest
 ```
 
+> **Note:** You can also install the CLI globally (`dotnet tool install -g KubeOps.Cli`), but local installation is generally preferred for better project dependency management.
+
 ## 2. Install KubeOps Templates
 
 KubeOps provides project templates to quickly scaffold a new operator. Install them using:
@@ -81,7 +83,13 @@ Run the operator using the .NET CLI:
 dotnet run
 ```
 
+This command builds and runs your operator project directly. It will connect to the Kubernetes cluster configured in your current `kubectl` context (usually found in `~/.kube/config`). The KubeOps runtime automatically attempts to install the CRD defined in your `Entities` project if it doesn't already exist.
+
 The operator will start, connect to your currently configured Kubernetes cluster (check `kubectl config current-context`), install the necessary CRD (`V1DemoEntity`), and begin watching for resources.
+
+> **Note:** After making changes to your entities or adding RBAC requirements (using `[EntityRbac]` attributes), you can generate the corresponding Kubernetes YAML manifests using the CLI:
+> *   `dotnet kubeops generate crd -o ./deployment` (Generates CRD files)
+> *   `dotnet kubeops generate operator -o ./deployment` (Generates RBAC - Role/ClusterRole, ServiceAccount, etc.)
 
 Congratulations! You've created and run your first basic KubeOps operator.
 
@@ -89,8 +97,7 @@ Next Steps:
 
 *   Learn more about defining [Custom Entities](./custom-entities.md).
 *   Dive deeper into writing [Controller Logic](./controllers.md).
-
-This provides a basic overview. Subsequent sections will dive deeper into defining entities, implementing controllers, and handling finalizers.
+*   Understand how to build a container image and [Deploy your Operator](./deployment.md) to your cluster.
 
 ## Full Example
 

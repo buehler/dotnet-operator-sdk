@@ -19,9 +19,21 @@ While the official Go-based [Operator SDK](https://sdk.operatorframework.io/) an
 
 KubeOps is built around a few key concepts:
 
-*   **Entities:** Plain C# classes decorated with attributes that define your Custom Resources (CRs) and their corresponding CRDs.
-*   **Controllers:** Classes that contain the reconciliation logic. They watch for changes to your custom resources (and potentially other Kubernetes resources) and take actions to drive the cluster state towards the desired state defined in the CR.
-*   **Finalizers:** Mechanisms to run cleanup logic before a custom resource managed by your operator is deleted from the cluster.
-*   **Webhooks:** (Optional) HTTP callbacks (implemented using ASP.NET Core) that Kubernetes calls for validation or mutation of resources during create, update, or delete operations.
+*   **[Entities](./custom-entities.md):** Plain C# classes decorated with attributes that define your Custom Resources (CRs) and their corresponding Custom Resource Definitions (CRDs).
+*   **[Controllers](./controllers.md):** Classes that contain the reconciliation logic. They watch for changes to your custom resources (and potentially other Kubernetes resources) and take actions to drive the cluster state towards the desired state defined in the CR.
+*   **[Finalizers](./finalizers.md):** Mechanisms to run cleanup logic *before* a custom resource managed by your operator is actually deleted from the cluster.
+*   **[Webhooks](./webhooks.md):** (Optional) HTTP callbacks (implemented using ASP.NET Core) that Kubernetes calls for validating, mutating, or converting resources during API operations.
+
+## KubeOps SDK Structure
+
+The KubeOps SDK is composed of several NuGet packages:
+
+*   **`KubeOps.Operator`:** The core runtime engine that handles watching resources, the reconciliation loop, event dispatching, and leader election.
+*   **`KubeOps.KubernetesClient`:** An enhanced, developer-friendly client for interacting with the Kubernetes API.
+*   **`KubeOps.Abstractions`:** Defines the core interfaces, attributes, and base classes used across the SDK.
+*   **`KubeOps.Transpiler`:** Generates CRD YAML from your C# entity definitions.
+*   **`KubeOps.Generator`:** Provides Roslyn source generators for automating component registration and other boilerplate code.
+*   **`KubeOps.Cli`:** A .NET CLI tool for scaffolding projects and generating CRDs and RBAC manifests.
+*   **`KubeOps.Operator.Web`:** Integrates KubeOps with ASP.NET Core for hosting webhook endpoints.
 
 Ready to build your first operator? Head over to the [**Getting Started**](./getting-started.md) guide!

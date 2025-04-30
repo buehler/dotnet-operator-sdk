@@ -31,7 +31,7 @@ Key parameters for `[KubernetesEntity]`:
 
 Kubernetes resources typically separate the *desired state* (`spec`) from the *observed state* (`status`). KubeOps follows this convention.
 
-Your entity class should inherit from `CustomKubernetesEntity<TSpec, TStatus>`:
+Your entity class should inherit from `CustomKubernetesEntity<TSpec, TStatus>`. This base class provides the standard Kubernetes properties like `ApiVersion`, `Kind`, and `Metadata`, which are automatically populated based on the `[KubernetesEntity]` attribute and Kubernetes API interactions. You only need to define your `TSpec` and optionally `TStatus` types.
 
 ```csharp
 using k8s.Models;
@@ -90,9 +90,9 @@ While you define entities using C# classes, Kubernetes needs the CRD defined in 
     ```
     This command inspects the specified project, finds classes marked with `[KubernetesEntity]`, and generates the corresponding CRD YAML files in the `--output-path`.
 
-2.  **Source Generators:** The `KubeOps.Generator` package (typically included in new projects scaffolded by the CLI) uses [.NET Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview). It automatically generates CRD YAML during the build process. Look for generated files in your project's `obj/Generated/KubeOps.Generator/` directory (relative to the project file) after building.
+2.  **Source Generators (`KubeOps.Generator`):** The `KubeOps.Generator` package (typically included in new projects scaffolded by the CLI) uses [.NET Source Generators](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview). This is the **recommended approach during development**, as it automatically generates CRD YAML during the build process whenever your entity definitions change. Look for generated files in your project's `obj/Generated/KubeOps.Generator/` directory (relative to the project file) after building. You can commit these generated CRDs or use them in deployment scripts.
 
-Typically, you'll use the CLI for ad-hoc generation or CI/CD pipelines, while the source generator provides continuous generation during development.
+Typically, you'll rely on the source generator for up-to-date CRDs during development and use the CLI command for specific tasks like exporting CRDs for a CI/CD pipeline or manual inspection.
 
 ## Resource Scope
 
