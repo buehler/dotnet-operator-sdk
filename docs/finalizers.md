@@ -2,6 +2,8 @@
 
 When a user requests to delete a Kubernetes object, the API server doesn't immediately remove it. Instead, it sets a `metadata.deletionTimestamp` on the object. The object remains visible via the API until all specified [**Finalizers**](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/) are removed from its `metadata.finalizers` list.
 
+Finalizers run *before* the object is actually removed, giving controllers a chance to perform cleanup. This is different from the controller's `DeletedAsync` method, which runs *after* finalizers are complete and the object is gone.
+
 Finalizers are crucial for operators because they provide a hook to perform cleanup actions *before* a custom resource is actually deleted from the cluster. This is essential for tasks like:
 
 *   Deleting external resources managed by the operator (e.g., cloud databases, DNS records).
@@ -17,7 +19,7 @@ KubeOps simplifies finalizer usage. When you register an implementation of the `
 1.  **Adds** a specific finalizer (e.g., `operator.kubeops.dev/myentityfinalizer`) to the `metadata.finalizers` list of any newly created or reconciled `TEntity` resource.
 2.  **Detects** when a user requests deletion of a `TEntity` resource (by observing the `metadata.deletionTimestamp`).
 3.  **Calls** the `FinalizeAsync` method of your registered `IResourceFinalizer<TEntity>` implementation.
-4.  **Removes** its finalizer from the `metadata.finalizers` list *only after* your `FinalizeAsync` method completes successfully.
+4.  **Removes** its finalizer from the `metadata.finalizers` list (which is a list of strings, allowing multiple finalizers) *only after* your `FinalizeAsync` method completes successfully.
 
 Once all finalizers (including the one managed by KubeOps) are removed, the Kubernetes garbage collector physically deletes the resource.
 
@@ -79,11 +81,12 @@ public class V1Alpha1DemoEntityFinalizer : IResourceFinalizer<V1Alpha1DemoEntity
 
 Key Points:
 
-*   **`[ResourceFinalizerMetadata("...")]`**: (Required) This attribute assigns a unique identifier string for your finalizer. KubeOps uses this string when adding/removing the finalizer from the resource's metadata. Use a DNS-like name convention.
+*   **`[ResourceFinalizerMetadata("...")]`**: **(Required)** This attribute assigns a unique identifier string for your finalizer. KubeOps uses this string when adding/removing the finalizer from the resource's metadata. Use a DNS-like name convention.
 *   **`TEntity`**: The specific custom resource type this finalizer applies to.
 *   **`FinalizeAsync(TEntity entity)`**: This method contains your cleanup logic. It's called when the resource has a `deletionTimestamp` and your finalizer is present in `metadata.finalizers`.
 *   **Idempotency:** Your cleanup logic should be idempotent, meaning running it multiple times should have the same effect as running it once. Kubernetes might call the finalizer multiple times if previous attempts failed or the operator restarted.
 *   **Error Handling:** If `FinalizeAsync` throws an exception, KubeOps will *not* remove its finalizer. This effectively blocks the deletion of the resource until the finalizer succeeds. Implement robust error handling and potentially internal retries for transient issues.
+*   **Return Value:** The `FinalizeAsync` method returns `Task`. Successful completion (i.e., the Task finishes without throwing an exception) signals to KubeOps that the finalization logic is complete and the finalizer can be removed.
 *   **Registration:** Like controllers, finalizers must be registered during operator startup (usually in `Program.cs` or a dependency injection setup method). KubeOps uses the `IOperatorBuilder` for this:
 
     ```csharp

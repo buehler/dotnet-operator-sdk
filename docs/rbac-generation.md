@@ -55,7 +55,7 @@ dotnet kubeops generate operator -s ./MyOperator.csproj -o ./deploy
 1.  The CLI tool scans the specified project (`-s`) for classes implementing KubeOps interfaces (controllers, etc.).
 2.  It uses the logic from the [`KubeOps.Transpiler`](../../src/KubeOps.Transpiler/README.md) package to find all `[EntityRbac]` attributes on these classes.
 3.  It aggregates these permissions.
-4.  Based on whether your operator is configured to be namespace-scoped or cluster-scoped, it generates either:
+4.  Based on the operator's configured scope (usually inferred from settings passed to the `OperatorBuilder` in `Program.cs`, like watching specific namespaces or all namespaces), it generates either:
     *   A `Role` and `RoleBinding` manifest (for namespace scope).
     *   A `ClusterRole` and `ClusterRoleBinding` manifest (for cluster scope).
 5.  These generated YAML files are written to the specified output directory (`-o`), alongside other deployment manifests like the `Deployment` and `ServiceAccount`.

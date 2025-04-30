@@ -22,15 +22,25 @@ There are two main categories of webhooks supported:
 4.  **Implement Methods:** Override the relevant methods (`Create`, `Update`, `Delete`) to contain your logic.
     *   Validation methods return `ValidationResult`, typically `Success()` or `Fail("reason", [optional httpStatusCode])`.
     *   Mutation methods return `MutationResult<TEntity>`, typically `NoChanges()` or `Modified(updatedEntity)`.
-5.  **Register:** In your `Program.cs` or other startup code, register the webhook implementation using the dependency injection container:
+5.  **Register:** In your `Program.cs` or other startup code, register the webhook implementation using the standard .NET dependency injection container:
     ```csharp
-    // Example registration
-    builder.Services.AddWebhook<MyValidationWebhook>();
-    // or
+    // Example registration in Program.cs
+    var builder = WebApplication.CreateBuilder(args);
+    builder.Services.AddKubernetesOperator(); // Base KubeOps registration
+
+    // Register specific webhook implementations
+    builder.Services.AddWebhook<MyValidationWebhook>(); 
     builder.Services.AddWebhook<MyMutationWebhook>();
+
+    // ... other service registrations ...
+
+    var app = builder.Build();
+    app.UseKubernetesOperator(); // Enable KubeOps endpoints
+    // ... other middleware ...
+    app.Run();
     ```
 6.  **Configure Kubernetes:** Create `ValidatingWebhookConfiguration` or `MutatingWebhookConfiguration` Kubernetes resources. These tell the API server to send admission requests for specific resources/operations to your operator's webhook service endpoint (usually `/mutate/{webhook-name}` or `/validate/{webhook-name}`).
-    *   *Note:* The KubeOps [CLI Tool](./cli.md) can help generate these configurations based on your webhook attributes (`dotnet kubeops generate webhooks ...`).
+    *   **Important:** Manually creating these YAML configurations can be complex. The KubeOps [CLI Tool](./cli.md) is **highly recommended** for generating these based on your webhook attributes: `dotnet kubeops generate webhooks --assembly /path/to/your/operator.dll --output-path ./deployment`.
 
 ### Validation Webhook Example
 
@@ -118,7 +128,7 @@ See: [Kubernetes API Versioning](https://kubernetes.io/docs/tasks/extend-kuberne
 6.  **Register:** In your `Program.cs` or other startup code, register the webhook implementation using the dependency injection container:
     ```csharp
     // Example registration
-    builder.Services.AddWebhook<MyConversionWebhook>();
+    builder.Services.AddWebhook<MyConversionWebhook>(); // Registered via DI like other webhooks
     ```
 7.  **Configure Kubernetes:** Update your CRD manifest:
     *   Define all supported versions under `spec.versions`.
@@ -198,7 +208,12 @@ Find the full example code here: [`examples/ConversionWebhookOperator`](../../..
 
 ## Important Considerations
 
-*   **TLS:** Webhook endpoints *must* be served over HTTPS. Kubernetes needs to trust the certificate served by your operator. Managing certificates and configuring the API server can be complex. Tools like [cert-manager](https://cert-manager.io/) are often used.
+*   **TLS & Connectivity:** 
+    *   Webhook endpoints *must* be served over HTTPS. The Kubernetes API server must be able to reach your operator's webhook service endpoint (usually via a Kubernetes `Service` of type `ClusterIP`).
+    *   The API server must trust the TLS certificate presented by your operator's webhook endpoint. 
+    *   **Production:** Tools like [cert-manager](https://cert-manager.io/) are commonly used to automate certificate provisioning and rotation within the cluster.
+    *   **Development:** For local development (e.g., using `dotnet run` and port-forwarding or tools like [ngrok](https://ngrok.com/)), you might use self-signed certificates or disable TLS verification temporarily (not recommended for production!). KubeOps development templates often include helper scripts or configurations for local TLS setup.
+    *   The generated `ValidatingWebhookConfiguration` or `MutatingWebhookConfiguration` includes a `clientConfig.caBundle` field where the CA certificate used to sign the webhook server's certificate must be placed, allowing the API server to verify the connection.
 *   **RBAC:** Your operator's ServiceAccount needs appropriate RBAC permissions to get/list/watch the resources targeted by the webhooks, as well as permissions to manage `ValidatingWebhookConfiguration`, `MutatingWebhookConfiguration`, and potentially `CustomResourceDefinition` resources.
 *   **Availability:** If your webhook service is down, the API server operations depending on it (creation, updates, reads of different versions) will fail. Ensure your operator deployment is highly available.
 *   **Idempotency:** Mutation webhooks might be called multiple times for the same event. Ensure your mutation logic is idempotent (applying it multiple times has the same effect as applying it once).
