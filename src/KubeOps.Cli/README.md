@@ -1,4 +1,4 @@
-﻿# KubeOps CLI
+# KubeOps CLI
 
 .NET tool to help managing your KubeOps project.
 It allows you to generate the needed files for your operator
@@ -26,8 +26,8 @@ Here is a brief overview over the available commands
 (for all options and descriptions, use `-h` or `--help`):
 
 - `api-version`, `av`: Prints the version information for the actual connected Kubernetes cluster
-- `install`, `i`: Install the CRDs for the given solution into the cluster
-- `uninstall`, `u`: Uninstall the CRDs for the given solution from the cluster
+- `install`, `i`: Install the [CRDs](../../docs/custom-entities.md) (Custom Resource Definitions) for the given solution into the cluster
+- `uninstall`, `u`: Uninstall the [CRDs](../../docs/custom-entities.md) for the given solution from the cluster
 - `generate`, `gen`, `g`: Generates elements related to the operator
   - `operator`, `op`: Generate the all files necessary for deployment for the operator, including any webhooks
 
@@ -44,4 +44,3 @@ When running `dotnet kubeops api-version`, your output may look like this:
 │ Minor       │ 27          │
 │ Platform    │ linux/arm64 │
 └─────────────┴─────────────┘
-```
