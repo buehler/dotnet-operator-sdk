@@ -2,6 +2,8 @@
 
 [![Nuget](https://img.shields.io/nuget/vpre/KubeOps.Operator.Web?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps.Operator.Web/absoluteLatest)
 
+**This package requires your operator to run as an ASP.NET Core web application.**
+
 This package integrates KubeOps with ASP.NET Core, enabling your operator to host the HTTP endpoints required for Kubernetes [Admission Webhooks](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/) and [CRD Conversion Webhooks](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#configure-a-conversion-webhook).
 
 When the Kubernetes API server needs to validate, mutate, or convert a resource as configured in a `ValidatingWebhookConfiguration`, `MutatingWebhookConfiguration`, or `CustomResourceDefinition`, it sends an HTTP request to a service endpoint. This package provides the necessary infrastructure to receive and handle these requests within your .NET operator.
@@ -52,7 +54,7 @@ Using this package requires structuring your operator as an ASP.NET Core web app
 
 Key points:
 *   `AddKubernetesOperator()`: Initializes core KubeOps services.
-*   `RegisterComponents()`: Automatically discovers and registers your implementations of controllers, finalizers, and webhooks based on their attributes and base classes.
+*   `RegisterComponents()`: **(Recommended)** Automatically discovers and registers implementations of controllers, finalizers, and webhooks based on attributes and base classes found within the specified or entry assemblies.
 You can also use `AddWebhook<T>()` for explicit registration if needed.
 *   `AddControllers()`: Adds services required for MVC controllers, which KubeOps webhooks are built upon.
 *   `MapControllers()`: Configures the ASP.NET Core routing middleware to direct incoming HTTP requests to the correct webhook controller actions.
@@ -104,6 +106,11 @@ An example of such a validation webhook looks like:
 [ValidationWebhook(typeof(V1TestEntity))]
 public class TestValidationWebhook : ValidationWebhook<V1TestEntity>
 {
+    // Constructor for Dependency Injection (e.g., inject ILogger, IKubernetesClient)
+    public TestValidationWebhook(/* ... dependencies ... */)
+    {
+    }
+
     public override ValidationResult Create(V1TestEntity entity, bool dryRun)
     {
         if (entity.Spec.Username == "forbidden")
@@ -153,6 +160,11 @@ An example of such a mutation webhook looks like:
 [MutationWebhook(typeof(V1TestEntity))]
 public class TestMutationWebhook : MutationWebhook<V1TestEntity>
 {
+    // Constructor for Dependency Injection
+    public TestMutationWebhook(/* ... dependencies ... */)
+    {
+    }
+
     public override MutationResult<V1TestEntity> Create(V1TestEntity entity, bool dryRun)
     {
         if (entity.Spec.Username == "overwrite")
@@ -244,9 +256,14 @@ The conversion logic is implemented in the `IEntityConverter` interface.
 Each converter has a "convert" (from -> to) and a "revert" (to -> from) method.
 
 ```csharp
-[ConversionWebhook(typeof(V2TestEntity))]
-public class TestConversionWebhook : ConversionWebhook<V2TestEntity>
+[ConversionWebhook(typeof(V2TestEntity))] // Attribute defines the route
+public class TestConversionWebhook : ConversionWebhook<V2TestEntity> // Provides ASP.NET Core Controller behavior
 {
+    // Constructor for Dependency Injection (e.g., ILogger)
+    public TestConversionWebhook(/* ... dependencies ... */)
+    {
+    }
+
     protected override IEnumerable<IEntityConverter<V2TestEntity>> Converters => new IEntityConverter<V2TestEntity>[]
     {
         new V1ToV2(), // other versions...
