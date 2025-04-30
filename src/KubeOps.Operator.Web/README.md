@@ -8,7 +8,7 @@ This package integrates KubeOps with ASP.NET Core, enabling your operator to hos
 
 When the Kubernetes API server needs to validate, mutate, or convert a resource as configured in a `ValidatingWebhookConfiguration`, `MutatingWebhookConfiguration`, or `CustomResourceDefinition`, it sends an HTTP request to a service endpoint. This package provides the necessary infrastructure to receive and handle these requests within your .NET operator.
 
-> For a comprehensive explanation of different webhook types, how to implement their logic using KubeOps base classes/interfaces, and how to configure Kubernetes resources to use them, please refer to the main **[Webhooks Documentation](@webhooks)**.
+> For a comprehensive explanation of different webhook types, how to implement their logic using KubeOps base classes/interfaces, and how to configure Kubernetes resources to use them, please refer to the main **[Webhooks Documentation](/webhooks.html)**.
 
 ## Setup
 
@@ -71,7 +71,7 @@ The `{webhook-name}` is typically derived from the C# class name of your webhook
 
 ## Implementation Overview
 
-(Refer to the main [Webhooks Documentation](@webhooks) for full details and examples)
+(Refer to the main [Webhooks Documentation](/webhooks.html) for full details and examples)
 
 *   **Validation Hooks:** Inherit from `ValidationWebhook<TEntity>` and decorate with `[ValidationWebhook(typeof(TEntity))]`.
 *   **Mutation Hooks:** Inherit from `MutationWebhook<TEntity>` and decorate with `[MutationWebhook(typeof(TEntity))]`.
@@ -79,7 +79,7 @@ The `{webhook-name}` is typically derived from the C# class name of your webhook
 
 ## Important Considerations
 
-*   **TLS:** Kubernetes requires webhook endpoints to be served over HTTPS. Managing TLS certificates and configuring the API server to trust them is crucial. See the [main webhook docs](@webhooks#important-considerations) for more details.
+*   **TLS:** Kubernetes requires webhook endpoints to be served over HTTPS. Managing TLS certificates and configuring the API server to trust them is crucial. See the [main webhook docs](/webhooks.html#important-considerations) for more details.
 *   **Dependencies:** This package brings in ASP.NET Core dependencies.
 
 ## Validation Hooks
