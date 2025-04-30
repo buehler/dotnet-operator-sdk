@@ -13,7 +13,7 @@ using k8s.Models;
 using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Entities.Attributes;
 
-[KubernetesEntity(Group = "ewassef.dev", ApiVersion = "v1alpha1", Kind = "DemoEntity", PluralName = "demoentities")]
+[KubernetesEntity(Group = "kubeops.dev", ApiVersion = "v1alpha1", Kind = "DemoEntity", PluralName = "demoentities")]
 public class V1Alpha1DemoEntity : CustomKubernetesEntity<V1Alpha1DemoEntity.DemoEntitySpec, V1Alpha1DemoEntity.DemoEntityStatus>
 {
     // Entity implementation follows
