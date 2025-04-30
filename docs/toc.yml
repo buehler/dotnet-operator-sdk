@@ -12,3 +12,9 @@
   href: watchers.md
 - name: Admission Webhooks
   href: webhooks.md
+- name: CLI Usage
+  href: cli.md
+- name: Operator Configuration
+  href: configuration.md
+- name: Testing Your Operator
+  href: testing.md

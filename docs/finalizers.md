@@ -8,7 +8,7 @@ Finalizers are crucial for operators because they provide a hook to perform clea
 *   Performing ordered cleanup of dependent Kubernetes resources.
 *   Ensuring graceful shutdown procedures are followed.
 
-The `DeletedAsync` method on the controller is called *after* finalizers have run and the object is truly being removed, making it unsuitable for pre-deletion cleanup.
+Remember that the `DeletedAsync` method on the controller is called *after* finalizers have run and the object is truly being removed from the API server. Therefore, `FinalizeAsync` is the correct place for pre-deletion cleanup logic that needs to interact with the resource or dependent resources before they disappear.
 
 ## KubeOps Finalizer Management
 
@@ -84,6 +84,20 @@ Key Points:
 *   **`FinalizeAsync(TEntity entity)`**: This method contains your cleanup logic. It's called when the resource has a `deletionTimestamp` and your finalizer is present in `metadata.finalizers`.
 *   **Idempotency:** Your cleanup logic should be idempotent, meaning running it multiple times should have the same effect as running it once. Kubernetes might call the finalizer multiple times if previous attempts failed or the operator restarted.
 *   **Error Handling:** If `FinalizeAsync` throws an exception, KubeOps will *not* remove its finalizer. This effectively blocks the deletion of the resource until the finalizer succeeds. Implement robust error handling and potentially internal retries for transient issues.
-*   **Registration:** Like controllers, finalizers must be registered with the .NET dependency injection container during operator startup (usually in `Program.cs`). KubeOps provides extension methods like `builder.Services.AddResourceFinalizer<MyFinalizer, MyEntity>();`.
+*   **Registration:** Like controllers, finalizers must be registered during operator startup (usually in `Program.cs` or a dependency injection setup method). KubeOps uses the `IOperatorBuilder` for this:
+
+    ```csharp
+    // In your Program.cs or startup configuration
+    builder.Services.AddKubernetesOperator()
+        .AddController<V1Alpha1DemoEntityController, V1Alpha1DemoEntity>()
+        // Register the finalizer implementation for the specific entity
+        // The identifier string MUST match the one in the [ResourceFinalizerMetadata] attribute.
+        .AddFinalizer<V1Alpha1DemoEntityFinalizer, V1Alpha1DemoEntity>("operator.kubeops.dev/demofinalizer");
+    ```
 
 By using finalizers correctly, you ensure that your operator cleans up after itself, maintaining a healthy state in the cluster and managing any external resources appropriately.
+
+## Example
+
+See a practical example of a finalizer implementation here:
+[`examples/Operator/Finalizer/`](../examples/Operator/Finalizer/)

@@ -151,3 +151,10 @@ Example:
         [Items(1, 5)] // Must have between 1 and 5 tags
         public List<string> Tags { get; set; } = new List<string>();
     }
+
+```
+
+## Example
+
+See a practical example of custom entity definition here:
+[`examples/Operator/Entities/`](../examples/Operator/Entities/)

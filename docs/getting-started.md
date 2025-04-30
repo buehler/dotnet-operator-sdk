@@ -73,3 +73,10 @@ Next Steps:
 
 *   Learn more about defining [Custom Entities](./custom-entities.md).
 *   Dive deeper into writing [Controller Logic](./controllers.md).
+
+This provides a basic overview. Subsequent sections will dive deeper into defining entities, implementing controllers, and handling finalizers.
+
+## Full Example
+
+For a complete, runnable example demonstrating these concepts, refer to the main example operator project:
+[`examples/Operator`](../examples/Operator)

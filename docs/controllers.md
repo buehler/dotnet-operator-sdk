@@ -267,3 +267,12 @@ Reconciliation logic might fail due to various reasons:
             return null; 
         }
     }
+
+```
+
+Remember to register your controller implementation in your application's service collection, typically in `Program.cs`.
+
+## Example
+
+See a practical example of a controller implementation here:
+[`examples/Operator/Controller/`](../examples/Operator/Controller/)
