@@ -168,8 +168,19 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
         try
         {
             // Use the client to create or update the resource
-            await _client.CreateOrUpdateObject(configMap);
-            _logger.LogInformation($"Created/Updated ConfigMap {configMap.Name()} for entity {entity.Name}.");
+            var existingConfigMap = await _client.GetAsync<V1ConfigMap>(configMap.Metadata.Name, configMap.Metadata.NamespaceProperty);
+            if (existingConfigMap != null)
+            {
+                // Ensure the resource version matches for the update
+                configMap.Metadata.ResourceVersion = existingConfigMap.Metadata.ResourceVersion;
+                await _client.UpdateObject(configMap);
+                _logger.LogInformation($"Updated ConfigMap {configMap.Name()} for entity {entity.Name}.");
+            }
+            else
+            {
+                await _client.CreateAsync(configMap);
+                _logger.LogInformation($"Created ConfigMap {configMap.Name()} for entity {entity.Name}.");
+            }
         }
         catch (KubernetesException e)
         {
@@ -207,14 +218,12 @@ public class V1Alpha1DemoEntityController : IResourceController<V1Alpha1DemoEnti
 
 The `IKubernetesClient` offers methods like:
 
-*   `Get<TEntity>(string name, string? ns = null)`: Get a specific resource.
-*   `List<TEntity>(string? ns = null, string? labelSelector = null)`: List resources.
-*   `SaveObject<TEntity>(TEntity obj)`: Create a new resource.
-*   `UpdateObject<TEntity>(TEntity obj)`: Update an existing resource (entire object).
-*   `UpdateStatus<TEntity>(TEntity obj)`: Update *only* the status subresource of an entity.
-*   `CreateOrUpdateObject<TEntity>(TEntity obj)`: Get the resource; if it exists, update it; otherwise, create it. Convenient for ensuring resources exist.
-*   `DeleteObject<TEntity>(TEntity obj)`: Delete a resource.
-*   And many more variations...
+*   `GetAsync<TEntity>(string name, string? ns = null)`: Retrieves a specific resource by name and optional namespace. Returns `null` if not found.
+*   `ListAsync<TEntity>(string? ns = null, string? labelSelector = null)`: Lists resources of a specific type, optionally filtered by namespace or label selector.
+*   `CreateAsync<TEntity>(TEntity obj)`: Creates a new resource in the cluster.
+*   `UpdateObject<TEntity>(TEntity obj)`: Updates an existing resource. The resource must already exist.
+*   `UpdateStatus<TEntity>(TEntity obj)`: Updates only the `status` subresource of an existing resource. Use this for status updates to avoid conflicts with spec changes.
+*   `DeleteObject<TEntity>(TEntity obj)` or `DeleteObject<TEntity>(string name, string? ns = null)`: Deletes a resource, either by providing the object instance or by name and optional namespace.
 
 **Important:** Always consider setting [Owner References](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/) (using the `entity.CreateOwnerReference()` helper) on resources created by your controller. This ensures Kubernetes automatically garbage collects the dependent resources (like the ConfigMap above) when the owner (your `V1Alpha1DemoEntity`) is deleted.
 

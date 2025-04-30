@@ -14,8 +14,14 @@
   href: webhooks.md
 - name: CLI Usage
   href: cli.md
-- name: Operator Configuration
-  href: operator-configuration.md
-- name: Testing Your Operator
-  href: testing.md
-  topicUid: placeholder-testing
+- name: Advanced
+  items:
+    - name: Operator Configuration
+      href: operator-configuration.md
+      topicUid: operator-configuration
+    - name: Leader Election
+      href: leader-election.md
+      topicUid: leader-election
+    - name: Testing Your Operator
+      href: testing.md
+      topicUid: placeholder-testing
