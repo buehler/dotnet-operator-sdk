@@ -114,7 +114,7 @@ KubeOps allows controllers to watch related resources. When a watched related re
 
 This is typically configured during operator startup using the `OperatorBuilder` and involves specifying how to map events from the related resource back to the owner custom resource instance(s).
 
-*TODO: Add a dedicated page explaining Watchers in detail and link it here. Example configuration in Program.cs needed.* 
+For detailed information on how to configure watchers and map events back to your controller's reconciliation loop, please see the [Watching Related Resources](./watchers.md) documentation.
 
 ## Using the Kubernetes Client
 
@@ -267,6 +267,3 @@ Reconciliation logic might fail due to various reasons:
             return null; 
         }
     }
-```
-
-*TODO: Add sections on Watching other resources, Finalizers.*
