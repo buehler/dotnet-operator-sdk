@@ -64,6 +64,6 @@ public sealed class AdmissionRequest<TEntity> : AdmissionReview
         /// </summary>
         [JsonPropertyName("dryRun")]
         [Required]
-        public bool DryRun { get; init; }
+        public bool DryRun { get; init; } = false;
     }
 }

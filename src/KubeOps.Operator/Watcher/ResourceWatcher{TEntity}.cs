@@ -8,6 +8,7 @@ using k8s.Models;
 
 using KubeOps.Abstractions.Builder;
 using KubeOps.Abstractions.Controller;
+using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.KubernetesClient;
 using KubeOps.Operator.Queue;
@@ -23,6 +24,7 @@ internal class ResourceWatcher<TEntity>(
     IServiceProvider provider,
     TimedEntityQueue<TEntity> requeue,
     OperatorSettings settings,
+    IEntityLabelSelector<TEntity> labelSelector,
     IKubernetesClient client)
     : IHostedService, IAsyncDisposable, IDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -60,11 +62,7 @@ internal class ResourceWatcher<TEntity>(
             return;
         }
 
-#if NET8_0_OR_GREATER
         await _cancellationTokenSource.CancelAsync();
-#else
-        _cancellationTokenSource.Cancel();
-#endif
         if (_eventWatcher is not null)
         {
             await _eventWatcher.WaitAsync(cancellationToken);
@@ -139,6 +137,7 @@ internal class ResourceWatcher<TEntity>(
                 await foreach ((WatchEventType type, TEntity entity) in client.WatchAsync<TEntity>(
                                    settings.Namespace,
                                    resourceVersion: currentVersion,
+                                   labelSelector: await labelSelector.GetLabelSelectorAsync(stoppingToken),
                                    allowWatchBookmarks: true,
                                    cancellationToken: stoppingToken))
                 {

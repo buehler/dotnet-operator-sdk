@@ -98,16 +98,17 @@ public class V1TestEntity :
 ### Controller
 
 A controller is the element that reconciles a specific entity.
-You can reconcile your own custom entities or all other entities
-as long as they are registered within the SDK. For a guide
-on how to reconcile external entities, refer to the
+You implement controllers using the `IResourceController<TEntity>` interface.
+You can reconcile your own custom entities or other Kubernetes resources
+as long as they are registered with the operator. For a guide
+on how to reconcile external resources, refer to the
 [documentation](https://buehler.github.io/dotnet-operator-sdk/).
 
 A simple controller could look like this:
 
 ```csharp
 [EntityRbac(typeof(V1TestEntity), Verbs = RbacVerb.All)]
-public class V1TestEntityController : IEntityController<V1TestEntity>
+public class V1TestEntityController : IResourceController<V1TestEntity>
 {
     private readonly IKubernetesClient _client;
     private readonly EntityFinalizerAttacher<FinalizerOne, V1TestEntity> _finalizer1;
@@ -154,14 +155,15 @@ updates its status and then saves the entity.
 
 ### Finalizer
 
-A [finalizer](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
-is an element for asynchronous cleanup in Kubernetes.
+A [finalizer](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/) 
+is an element for asynchronous cleanup in Kubernetes, implemented using the
+`IResourceFinalizer<TEntity>` interface.
 
 It is attached with an `EntityFinalizerAttacher` and is called
 when the entity is marked as deleted.
 
 ```csharp
-public class FinalizerOne : IEntityFinalizer<V1TestEntity>
+public class FinalizerOne : IResourceFinalizer<V1TestEntity>
 {
     public Task FinalizeAsync(V1TestEntity entity)
     {

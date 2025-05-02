@@ -4,6 +4,10 @@ This is a C# source generator for KubeOps and operators.
 It is used to generate convenience functions to help registering
 resources within an operator.
 
+## Motivation
+
+The primary goal of this generator is to reduce boilerplate code required in your operator's `Program.cs` (or startup logic). Instead of manually calling `builder.AddController<...>()`, `builder.AddFinalizer<...>()`, `builder.AddWebhook<...>()`, etc., for every component, the generator scans your project and creates extension methods that register all discovered components with a single call.
+
 ## Usage
 
 The generator is automatically used when the `KubeOps.Generator` package is referenced.
@@ -21,6 +25,25 @@ which results in the following `csproj` reference:
         <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
 </ItemGroup>
+```
+
+Once referenced, you typically use the main generated extension method in your `Program.cs`:
+
+```csharp
+using KubeOps.Operator;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add KubeOps services and register all discovered components
+builder.Services
+    .AddKubernetesOperator()
+    .RegisterComponents(); // <--- Generated extension method
+
+// ... other service registrations
+
+var app = builder.Build();
+// ... configure middleware
+app.RunOperatorAsync();
 ```
 
 ## Generated Sources
@@ -124,7 +147,7 @@ public static class EntityInitializer
 
 The generator creates a file in the root namespace called `ControllerRegistrations.g.cs`.
 This file contains a function to register all found controllers
-(i.e. classes that implement the `IEntityController<T>` interface).
+(i.e. classes that implement the `IResourceController<TEntity>` interface).
 
 #### Example
 
@@ -145,7 +168,7 @@ public static class ControllerRegistrations
 
 The generator creates a file in the root namespace called `FinalizerRegistrations.g.cs`.
 This file contains all finalizers with generated finalizer-identifiers.
-Further, a function to register all finalizers is generated.
+Further, a function to register all finalizers (i.e., classes that implement `IResourceFinalizer<TEntity>`) is generated.
 
 #### Example
 
@@ -160,6 +183,29 @@ public static class FinalizerRegistrations
     {
         builder.AddFinalizer<global::Operator.Finalizer.FinalizerOne, global::Operator.Entities.V1TestEntity>(FinalizerOneIdentifier);
         builder.AddFinalizer<global::Operator.Finalizer.FinalizerTwo, global::Operator.Entities.V1TestEntity>(FinalizerTwoIdentifier);
+        return builder;
+    }
+}
+```
+
+### Webhook Registrations
+
+The generator creates a file in the root namespace called `WebhookRegistrations.g.cs`.
+This file contains a function to register all found webhooks
+(i.e., classes decorated with `[ValidationWebhook]`, `[MutationWebhook]`, or `[ConversionWebhook]`).
+
+#### Example
+
+```csharp
+using KubeOps.Abstractions.Builder;
+
+public static class WebhookRegistrations
+{
+    public static IOperatorBuilder RegisterWebhooks(this IOperatorBuilder builder)
+    {
+        // Example assuming MyValidationWebhook and MyMutationWebhook exist
+        builder.AddValidationWebhook<global::Operator.Webhooks.MyValidationWebhook, global::Operator.Entities.V1TestEntity>();
+        builder.AddMutationWebhook<global::Operator.Webhooks.MyMutationWebhook, global::Operator.Entities.V1TestEntity>();
         return builder;
     }
 }
@@ -180,9 +226,16 @@ public static class OperatorBuilderExtensions
     public static IOperatorBuilder RegisterComponents(this IOperatorBuilder builder)
     {
         builder.RegisterEntities();
+        builder.RegisterWebhooks();
         builder.RegisterControllers();
         builder.RegisterFinalizers();
         return builder;
     }
 }
 ```
+
+## Troubleshooting
+
+*   **Generated files not visible?** Source generators add files during the build process. They might not appear directly in your Visual Studio Solution Explorer unless you explicitly look in the `obj/Debug/netX.Y/generated/KubeOps.Generator` folder or use features like VS's "Show all files".
+*   **Changes not picked up?** If you add a new controller/finalizer/webhook and it's not being registered, ensure your project compiles successfully and try rebuilding the solution.
+*   **Entity Initializer not working?** Make sure your entity class is marked `partial` and does not have an explicitly defined parameterless constructor if you want the generator to create one.

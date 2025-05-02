@@ -19,8 +19,11 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
@@ -31,8 +34,9 @@ jobs:
 
       - run: dotnet docfx
 
-      - uses: actions/upload-pages-artifact@v1
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
-      - uses: actions/deploy-pages@v1
+      - uses: actions/deploy-pages@v4
+        id: deployment
