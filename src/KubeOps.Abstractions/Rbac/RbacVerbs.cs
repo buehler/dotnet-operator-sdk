@@ -50,4 +50,9 @@ public enum RbacVerb
     /// Delete resources on the api.
     /// </summary>
     Delete = 1 << 7,
+
+    /// <summary>
+    /// All possible permissions (defined explicitly).
+    /// </summary>
+    AllExplicit = 1 << 8,
 }

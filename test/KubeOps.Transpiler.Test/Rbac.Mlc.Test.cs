@@ -83,6 +83,15 @@ public class RbacMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
         roles.Should().HaveCount(5);
     }
 
+    [Fact]
+    public void Should_Correctly_Calculate_All_Verbs_Explicitly()
+    {
+        var role = _mlc
+            .Transpile(_mlc.GetContextType<RbacTest6>().GetCustomAttributesData<EntityRbacAttribute>()).ToList().First();
+        role.Resources.Should().Contain("leases");
+        role.Verbs.Should().Contain(new[] { "get", "list", "watch", "create", "update", "patch", "delete" });
+    }
+
     [KubernetesEntity(Group = "test", ApiVersion = "v1")]
     [EntityRbac(typeof(RbacTest1), Verbs = RbacVerb.Get)]
     [EntityRbac(typeof(RbacTest1), Verbs = RbacVerb.Update)]
@@ -114,6 +123,10 @@ public class RbacMlcTest(MlcProvider provider) : TranspilerTestBase(provider)
     [EntityRbac(typeof(V1Service), Verbs = RbacVerb.All)]
     [EntityRbac(typeof(V1Lease), Verbs = RbacVerb.All)]
     public class RbacTest5 : CustomKubernetesEntity;
+
+    [KubernetesEntity(Group = "test", ApiVersion = "v1")]
+    [EntityRbac(typeof(V1Lease), Verbs = RbacVerb.AllExplicit)]
+    public class RbacTest6 : CustomKubernetesEntity;
 
     [KubernetesEntity(Group = "test", ApiVersion = "v1")]
     [GenericRbac(Urls = ["url", "foobar"], Resources = ["configmaps"], Groups = ["group"],
