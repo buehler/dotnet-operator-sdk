@@ -36,6 +36,6 @@ internal class RbacGenerator(MetadataLoadContext parser,
     }
 
     [EntityRbac(typeof(Corev1Event), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Create | RbacVerb.Update)]
-    [EntityRbac(typeof(V1Lease), Verbs = RbacVerb.All)]
+    [EntityRbac(typeof(V1Lease), Verbs = RbacVerb.AllExplicit)]
     private sealed class DefaultRbacAttributes;
 }
