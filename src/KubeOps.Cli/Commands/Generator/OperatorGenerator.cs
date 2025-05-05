@@ -36,13 +36,13 @@ internal static class OperatorGenerator
                     Arguments.SolutionOrProjectFile,
                 };
             cmd.AddAlias("op");
-            cmd.SetHandler(Handler);
+            cmd.SetHandler(ctx => Handler(AnsiConsole.Console, ctx));
 
             return cmd;
         }
     }
 
-    private static async Task Handler(InvocationContext ctx)
+    internal static async Task Handler(IAnsiConsole console, InvocationContext ctx)
     {
         var name = ctx.ParseResult.GetValueForArgument(Arguments.OperatorName);
         var file = ctx.ParseResult.GetValueForArgument(Arguments.SolutionOrProjectFile);
@@ -51,15 +51,15 @@ internal static class OperatorGenerator
         var dockerImage = ctx.ParseResult.GetValueForOption(Options.AccessibleDockerImage)!;
         var dockerImageTag = ctx.ParseResult.GetValueForOption(Options.AccessibleDockerTag)!;
 
-        var result = new ResultOutput(AnsiConsole.Console, format);
-        AnsiConsole.Console.WriteLine("Generate operator resources.");
+        var result = new ResultOutput(console, format);
+        console.WriteLine("Generate operator resources.");
 
-        AnsiConsole.Console.MarkupLine("[green]Load Project/Solution file.[/]");
+        console.MarkupLine("[green]Load Project/Solution file.[/]");
         var parser = file switch
         {
-            { Extension: ".csproj", Exists: true } => await AssemblyLoader.ForProject(AnsiConsole.Console, file),
+            { Extension: ".csproj", Exists: true } => await AssemblyLoader.ForProject(console, file),
             { Extension: ".sln", Exists: true } => await AssemblyLoader.ForSolution(
-                AnsiConsole.Console,
+                console,
                 file,
                 ctx.ParseResult.GetValueForOption(Options.SolutionProjectRegex),
                 ctx.ParseResult.GetValueForOption(Options.TargetFramework)),
@@ -71,42 +71,42 @@ internal static class OperatorGenerator
         var validators = parser.GetValidatedEntities().ToList();
         var hasWebhooks = mutators.Count > 0 || validators.Count > 0 || parser.GetConvertedEntities().Any();
 
-        AnsiConsole.Console.MarkupLine("[green]Generate RBAC rules.[/]");
+        console.MarkupLine("[green]Generate RBAC rules.[/]");
         new RbacGenerator(parser, format).Generate(result);
 
-        AnsiConsole.Console.MarkupLine("[green]Generate Dockerfile.[/]");
+        console.MarkupLine("[green]Generate Dockerfile.[/]");
         new DockerfileGenerator(hasWebhooks).Generate(result);
 
         if (hasWebhooks)
         {
-            AnsiConsole.Console.MarkupLine(
+            console.MarkupLine(
                 "[yellow]The operator contains webhooks of some sort, generating webhook operator specific resources.[/]");
 
-            AnsiConsole.Console.MarkupLine("[green]Generate CA and Server certificates.[/]");
+            console.MarkupLine("[green]Generate CA and Server certificates.[/]");
             new CertificateGenerator(name, $"{name}-system").Generate(result);
 
-            AnsiConsole.Console.MarkupLine("[green]Generate Deployment and Service.[/]");
+            console.MarkupLine("[green]Generate Deployment and Service.[/]");
             new WebhookDeploymentGenerator(format).Generate(result);
 
             var caBundle =
                 Encoding.ASCII.GetBytes(
                     Convert.ToBase64String(Encoding.ASCII.GetBytes(result["ca.pem"].ToString() ?? string.Empty)));
 
-            AnsiConsole.Console.MarkupLine("[green]Generate Validation Webhooks.[/]");
+            console.MarkupLine("[green]Generate Validation Webhooks.[/]");
             new ValidationWebhookGenerator(validators, caBundle, format).Generate(result);
 
-            AnsiConsole.Console.MarkupLine("[green]Generate Mutation Webhooks.[/]");
+            console.MarkupLine("[green]Generate Mutation Webhooks.[/]");
             new MutationWebhookGenerator(mutators, caBundle, format).Generate(result);
 
-            AnsiConsole.Console.MarkupLine("[green]Generate CRDs.[/]");
+            console.MarkupLine("[green]Generate CRDs.[/]");
             new CrdGenerator(parser, caBundle, format).Generate(result);
         }
         else
         {
-            AnsiConsole.Console.MarkupLine("[green]Generate Deployment.[/]");
+            console.MarkupLine("[green]Generate Deployment.[/]");
             new DeploymentGenerator(format).Generate(result);
 
-            AnsiConsole.Console.MarkupLine("[green]Generate CRDs.[/]");
+            console.MarkupLine("[green]Generate CRDs.[/]");
             new CrdGenerator(parser, Array.Empty<byte>(), format).Generate(result);
         }
 
@@ -120,7 +120,7 @@ internal static class OperatorGenerator
             {
                 NamePrefix = $"{name}-",
                 Namespace = $"{name}-system",
-                Labels = new KustomizationCommonLabels(new Dictionary<string, string> { { "operator", name }, }),
+                Labels = [new KustomizationCommonLabels(new Dictionary<string, string> { { "operator", name }, })],
                 Resources = result.DefaultFormatFiles.ToList(),
                 Images =
                     new List<KustomizationImage>
@@ -156,7 +156,7 @@ internal static class OperatorGenerator
         {
             if (ctx.ParseResult.GetValueForOption(Options.ClearOutputPath))
             {
-                AnsiConsole.Console.MarkupLine("[yellow]Clear output path.[/]");
+                console.MarkupLine("[yellow]Clear output path.[/]");
                 try
                 {
                     Directory.Delete(outPath, true);
@@ -167,11 +167,11 @@ internal static class OperatorGenerator
                 }
                 catch (Exception e)
                 {
-                    AnsiConsole.Console.MarkupLine($"[red]Could not clear output path: {e.Message}[/]");
+                    console.MarkupLine($"[red]Could not clear output path: {e.Message}[/]");
                 }
             }
 
-            AnsiConsole.Console.MarkupLine($"[green]Write output to {outPath}.[/]");
+            console.MarkupLine($"[green]Write output to {outPath}.[/]");
             await result.Write(outPath);
         }
         else
