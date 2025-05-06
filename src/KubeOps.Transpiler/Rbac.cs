@@ -83,9 +83,14 @@ public static class Rbac
     {
         RbacVerb.None => Array.Empty<string>(),
         _ when verbs.HasFlag(RbacVerb.All) => ["*"],
+        _ when verbs.HasFlag(RbacVerb.AllExplicit) =>
+            Enum.GetValues<RbacVerb>()
+                .Where(v => v != RbacVerb.All && v != RbacVerb.None && v != RbacVerb.AllExplicit)
+                .Select(v => v.ToString().ToLowerInvariant())
+                .ToArray(),
         _ =>
             Enum.GetValues<RbacVerb>()
-                .Where(v => verbs.HasFlag(v) && v != RbacVerb.All && v != RbacVerb.None)
+                .Where(v => verbs.HasFlag(v) && v != RbacVerb.All && v != RbacVerb.None && v != RbacVerb.AllExplicit)
                 .Select(v => v.ToString().ToLowerInvariant())
                 .ToArray(),
     };
