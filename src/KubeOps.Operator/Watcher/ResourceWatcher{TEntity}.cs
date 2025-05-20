@@ -19,7 +19,7 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Watcher;
 
-internal class ResourceWatcher<TEntity>(
+public class ResourceWatcher<TEntity>(
     ILogger<ResourceWatcher<TEntity>> logger,
     IServiceProvider provider,
     TimedEntityQueue<TEntity> requeue,
@@ -127,6 +127,64 @@ internal class ResourceWatcher<TEntity>(
         }
     }
 
+    protected virtual async Task OnEventAsync(WatchEventType type, TEntity entity, CancellationToken cancellationToken)
+    {
+        switch (type)
+        {
+            case WatchEventType.Added:
+                if (_entityCache.TryAdd(entity.Uid(), entity.Generation() ?? 0))
+                {
+                    // Only perform reconciliation if the entity was not already in the cache.
+                    await ReconcileModificationAsync(entity, cancellationToken);
+                }
+                else
+                {
+                    logger.LogDebug(
+                        """Received ADDED event for entity "{Kind}/{Name}" which was already in the cache. Skip event.""",
+                        entity.Kind,
+                        entity.Name());
+                }
+
+                break;
+            case WatchEventType.Modified:
+                switch (entity)
+                {
+                    case { Metadata.DeletionTimestamp: null }:
+                        _entityCache.TryGetValue(entity.Uid(), out var cachedGeneration);
+
+                        // Check if entity spec has changed through "Generation" value increment. Skip reconcile if not changed.
+                        if (entity.Generation() <= cachedGeneration)
+                        {
+                            logger.LogDebug(
+                                """Entity "{Kind}/{Name}" modification did not modify generation. Skip event.""",
+                                entity.Kind,
+                                entity.Name());
+                            return;
+                        }
+
+                        // update cached generation since generation now changed
+                        _entityCache.TryUpdate(entity.Uid(), entity.Generation() ?? 1, cachedGeneration);
+                        await ReconcileModificationAsync(entity, cancellationToken);
+                        break;
+                    case { Metadata: { DeletionTimestamp: not null, Finalizers.Count: > 0 } }:
+                        await ReconcileFinalizersSequentialAsync(entity, cancellationToken);
+                        break;
+                }
+
+                break;
+            case WatchEventType.Deleted:
+                await ReconcileDeletionAsync(entity, cancellationToken);
+                break;
+            default:
+                logger.LogWarning(
+                    """Received unsupported event "{EventType}" for "{Kind}/{Name}".""",
+                    type,
+                    entity.Kind,
+                    entity.Name());
+                break;
+        }
+    }
+
     private async Task WatchClientEventsAsync(CancellationToken stoppingToken)
     {
         string? currentVersion = null;
@@ -149,6 +207,7 @@ internal class ResourceWatcher<TEntity>(
 
                         // ReSharper disable once RedundantAnonymousTypePropertyName
                         Kind = entity.Kind,
+                        Namespace = entity.Namespace(),
                         Name = entity.Name(),
                         ResourceVersion = entity.ResourceVersion(),
                     });
@@ -218,64 +277,6 @@ internal class ResourceWatcher<TEntity>(
             logger.LogInformation(
                 "Watcher for {ResourceType} was terminated and is reconnecting.",
                 typeof(TEntity).Name);
-        }
-    }
-
-    private async Task OnEventAsync(WatchEventType type, TEntity entity, CancellationToken cancellationToken)
-    {
-        switch (type)
-        {
-            case WatchEventType.Added:
-                if (_entityCache.TryAdd(entity.Uid(), entity.Generation() ?? 0))
-                {
-                    // Only perform reconciliation if the entity was not already in the cache.
-                    await ReconcileModificationAsync(entity, cancellationToken);
-                }
-                else
-                {
-                    logger.LogDebug(
-                        """Received ADDED event for entity "{Kind}/{Name}" which was already in the cache. Skip event.""",
-                        entity.Kind,
-                        entity.Name());
-                }
-
-                break;
-            case WatchEventType.Modified:
-                switch (entity)
-                {
-                    case { Metadata.DeletionTimestamp: null }:
-                        _entityCache.TryGetValue(entity.Uid(), out var cachedGeneration);
-
-                        // Check if entity spec has changed through "Generation" value increment. Skip reconcile if not changed.
-                        if (entity.Generation() <= cachedGeneration)
-                        {
-                            logger.LogDebug(
-                                """Entity "{Kind}/{Name}" modification did not modify generation. Skip event.""",
-                                entity.Kind,
-                                entity.Name());
-                            return;
-                        }
-
-                        // update cached generation since generation now changed
-                        _entityCache.TryUpdate(entity.Uid(), entity.Generation() ?? 1, cachedGeneration);
-                        await ReconcileModificationAsync(entity, cancellationToken);
-                        break;
-                    case { Metadata: { DeletionTimestamp: not null, Finalizers.Count: > 0 } }:
-                        await ReconcileFinalizersSequentialAsync(entity, cancellationToken);
-                        break;
-                }
-
-                break;
-            case WatchEventType.Deleted:
-                await ReconcileDeletionAsync(entity!, cancellationToken);
-                break;
-            default:
-                logger.LogWarning(
-                    """Received unsupported event "{EventType}" for "{Kind}/{Name}".""",
-                    type,
-                    entity.Kind,
-                    entity.Name());
-                break;
         }
     }
 

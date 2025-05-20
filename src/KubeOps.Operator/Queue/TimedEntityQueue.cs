@@ -10,7 +10,7 @@ namespace KubeOps.Operator.Queue;
 /// The given enumerable only contains items that should be considered for reconciliations.
 /// </summary>
 /// <typeparam name="TEntity">The type of the inner entity.</typeparam>
-internal sealed class TimedEntityQueue<TEntity> : IDisposable
+public sealed class TimedEntityQueue<TEntity> : IDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     // A shared task factory for all the created tasks.
