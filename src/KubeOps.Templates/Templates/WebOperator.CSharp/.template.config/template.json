@@ -1,0 +1,67 @@
+﻿{
+  "$schema": "https://json.schemastore.org/template",
+  "author": "Christoph Bühler",
+  "classifications": [
+    "Kubernetes",
+    "Operator"
+  ],
+  "identity": "KubeOps.Templates.WebOperator.CSharp",
+  "groupIdentity": "KubeOps.Templates.WebOperator",
+  "name": "Kubernetes Web Operator",
+  "description": "Create a Kubernetes Web operator with demo implementation. This also adds webserver capabilities to enable web based features like web hooks.",
+  "shortName": "operator-web",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "GeneratedOperatorProject",
+  "defaultName": "Operator",
+  "preferNameDirectory": true,
+  "postActions": [
+    {
+      "actionId": "B17581D1-C5C9-4489-8F0A-004BE667B814",
+      "description": "Add KubeOps Operator reference",
+      "continueOnError": false,
+      "manualInstructions": [
+        {
+          "text": "Add the KubeOps package to your project via nuget"
+        }
+      ],
+      "args": {
+        "referenceType": "package",
+        "reference": "KubeOps.Operator",
+        "projectFileExtensions": ".csproj"
+      }
+    },
+    {
+      "actionId": "B17581D1-C5C9-4489-8F0A-004BE667B814",
+      "description": "Add KubeOps Operator Web SDK reference",
+      "continueOnError": false,
+      "manualInstructions": [
+        {
+          "text": "Add the KubeOps Operator Web package to your project via nuget"
+        }
+      ],
+      "args": {
+        "referenceType": "package",
+        "reference": "KubeOps.Operator.Web",
+        "projectFileExtensions": ".csproj"
+      }
+    },
+    {
+      "actionId": "B17581D1-C5C9-4489-8F0A-004BE667B814",
+      "description": "Add KubeOps Generator reference",
+      "continueOnError": false,
+      "manualInstructions": [
+        {
+          "text": "Add the KubeOps Generator package to your project via nuget"
+        }
+      ],
+      "args": {
+        "referenceType": "package",
+        "reference": "KubeOps.Generator",
+        "projectFileExtensions": ".csproj"
+      }
+    }
+  ]
+}

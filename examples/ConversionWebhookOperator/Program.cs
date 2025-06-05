@@ -1,16 +1,31 @@
+using System.Net;
+
 using KubeOps.Operator;
 using KubeOps.Operator.Web.Builder;
-
-#pragma warning disable CS0618 // Type or member is obsolete
+using KubeOps.Operator.Web.Certificates;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services
+var opBuilder = builder.Services
     .AddKubernetesOperator()
-    .RegisterComponents()
+    .RegisterComponents();
+
 #if DEBUG
-    .AddDevelopmentTunnel(5000)
+const string ip = "192.168.1.100";
+const ushort port = 443;
+using var generator = new CertificateGenerator(ip);
+var cert = generator.Server.CopyServerCertWithPrivateKey();
+
+// Configure Kestrel to listen on IPv4, use port 443, and use the server certificate
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Listen(IPAddress.Any, port, async listenOptions =>
+    {
+        listenOptions.UseHttps(cert);
+    });
+});
+
+opBuilder.UseCertificateProvider(port, ip, generator);
 #endif
-    ;
 
 builder.Services
     .AddControllers();

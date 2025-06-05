@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageType>Template</PackageType>
+    <PackageId>KubeOps.Templates</PackageId>
+    <Title>KubeOps Templates</Title>
+    <PackageTags>dotnet-new templates Kubernetes Operator Sdk KubeOps</PackageTags>
+    <PackageDescription>dotnet new templates for KubeOps operator sdk.</PackageDescription>
+
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Templates\WebOperator.CSharp\Webhooks\TestMutationWebhook.cs" />
+    <Compile Include="Templates\WebOperator.CSharp\Webhooks\TestValidationWebhook.cs" />
+    <Content Include="Templates\**\*"
+      Exclude="Templates\**\bin\**;Templates\**\obj\**" />
+    <Compile Remove="**\*" />
+  </ItemGroup>
+
+</Project>
