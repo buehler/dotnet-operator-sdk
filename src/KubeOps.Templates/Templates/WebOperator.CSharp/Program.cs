@@ -9,6 +9,7 @@ var opBuilder = builder.Services
     .AddKubernetesOperator()
     .RegisterComponents();
 
+//-:cnd:noEmit
 #if DEBUG
 const string ip = "192.168.1.100";
 const ushort port = 443;
@@ -17,7 +18,7 @@ var cert = generator.Server.CopyServerCertWithPrivateKey();
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.Listen(IPAddress.Any, port, async listenOptions =>
+    serverOptions.Listen(IPAddress.Any, port, listenOptions =>
     {
         listenOptions.UseHttps(cert);
     });
@@ -25,6 +26,7 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 
 opBuilder.UseCertificateProvider(port, ip, generator);
 #endif
+//+:cnd:noEmit
 
 builder.Services
     .AddControllers();

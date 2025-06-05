@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Title>KubeOps Templates</Title>
+        <TargetFrameworks>netstandard2.0</TargetFrameworks>
+
+        <IncludeContentInPack>true</IncludeContentInPack>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <ContentTargetFolders>content</ContentTargetFolders>
+        <NoWarn>$(NoWarn);NU5128</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageId>KubeOps.Templates</PackageId>
+        <PackageTags>dotnet-new templates Kubernetes Operator Sdk KubeOps</PackageTags>
+        <PackageType>Template</PackageType>
+        <PackageDescription>dotnet new templates for KubeOps operator sdk.</PackageDescription>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="Templates\**\*"
+            Exclude="Templates\**\bin\**;Templates\**\obj\**" />
+        <Compile Remove="**\*" />
+    </ItemGroup>
+
+</Project>

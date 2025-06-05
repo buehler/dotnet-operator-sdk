@@ -24,5 +24,7 @@
 
     <ItemGroup>
         <ProjectReference Include="$(MSBuildThisFileDirectory)\..\src\KubeOps.Abstractions\KubeOps.Abstractions.csproj" />
+        <Using Include="Xunit"/>
     </ItemGroup>
+
 </Project>
