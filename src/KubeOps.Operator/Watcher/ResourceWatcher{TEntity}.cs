@@ -11,6 +11,7 @@ using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.KubernetesClient;
+using KubeOps.Operator.Logging;
 using KubeOps.Operator.Queue;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -200,17 +201,7 @@ public class ResourceWatcher<TEntity>(
                                    cancellationToken: stoppingToken))
                 {
 #pragma warning disable SA1312
-                    using var _ = logger.BeginScope(new
-#pragma warning restore SA1312
-                    {
-                        EventType = type,
-
-                        // ReSharper disable once RedundantAnonymousTypePropertyName
-                        Kind = entity.Kind,
-                        Namespace = entity.Namespace(),
-                        Name = entity.Name(),
-                        ResourceVersion = entity.ResourceVersion(),
-                    });
+                    using var _ = logger.BeginScope(EntityLoggingScope.CreateFor(type, entity));
                     logger.LogInformation(
                         """Received watch event "{EventType}" for "{Kind}/{Name}", last observed resource version: {ResourceVersion}.""",
                         type,
