@@ -1,10 +1,12 @@
 # KubeOps Dotnet New Templates
 
+[![Nuget](https://img.shields.io/nuget/v/KubeOps.Templates?label=NuGet&logo=nuget)](https://www.nuget.org/packages/KubeOps.Templates)
+
 To use the operator SDK as easy as possible, this
 [Nuget Package](https://www.nuget.org/packages/KubeOps.Templates)
 contains `dotnet new` templates.
 These templates enable developers to create Kubernetes operators
-with the simple dotnet new command in C# or F#.
+with the simple dotnet new command in C#.
 
 ## Installation
 
@@ -15,59 +17,46 @@ To install the template package, use the `dotnet` cli
 dotnet new --install KubeOps.Templates::*
 ```
 
-As soon as the templates are installed, you may use them with:
-
-```bash
-dotnet new operator
-#or
-dotnet new operator-empty
-```
-
-Note that several of the templates are available in multiple languages
-of the .NET framework (i.e. C\# and F\#) and you may switch the
-language with the `-lang` flag of `dotnet new`.
+As soon as the templates are installed, you may use them with the short names below:
 
 ## Templates
 
-### Empty Operator
+### operator
 
-_Available Languages_: C\#, F\#
+_Short Name_: `operator`
 
-_Type_: Generate a project
+Creates a standard Kubernetes operator with demo implementations for controllers, entities, and finalizers. This template is a good starting point for most operator projects.
 
-_Templatename_: `operator-empty`
+```bash
+dotnet new operator -n MyOperator
+```
 
-_Example installation_: `dotnet new operator-empty -n MyOperator`
+### operator-empty
 
-_Description_:
-This template contains the well known `Program.cs`
-and `Startup.cs` files of any other `ASP.NET` project
-and configures the startup file to use KubeObs.
-No additional code is provided.
+_Short Name_: `operator-empty`
 
-### Demo Operator
+Creates a minimal, empty Kubernetes operator project without web capabilities. Ideal for advanced users who want to start from scratch.
 
-_Available Languages_: C\#, F\#
+```bash
+dotnet new operator-empty -n MyOperator
+```
 
-_Type_: Generate a project
+### operator-web
 
-_Templatename_: `operator`
+_Short Name_: `operator-web`
 
-_Example installation_: `dotnet new operator -n MyOperator`
+Creates a Kubernetes operator with web server capabilities and demo implementations, including webhooks. Use this template if you need web-based features like admission webhooks.
 
-_Description_:
-This template contains the well known `Program.cs`
-and `Startup.cs` files of any other `ASP.NET` project
-and configures the startup file to use KubeObs.
-In addition to the empty operator, an example file
-for each "concept" is provided. You'll find an
-example implementation of:
+```bash
+dotnet new operator-web -n MyOperator
+```
 
-- A resource controller
-- A custom entity (that generates a CRD)
-- A finalizer
-- A validation webhook
-- A mutation webhook
+### operator-web-empty
 
-This template is meant to show all possible elements
-of KubeOps in one go.
+_Short Name_: `operator-web-empty`
+
+Creates a minimal Kubernetes operator project with web server capabilities, but no demo implementations. Use this template if you want web features but a clean slate.
+
+```bash
+dotnet new operator-web-empty -n MyOperator
+```
