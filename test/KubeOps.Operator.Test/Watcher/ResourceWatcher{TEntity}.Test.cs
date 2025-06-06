@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 using k8s;
 using k8s.Models;
@@ -21,10 +22,11 @@ public sealed class ResourceWatcherTest
     public async Task Restarting_Watcher_Should_Trigger_New_Watch()
     {
         // Arrange.
+        var activitySource = new ActivitySource("unit-test");
         var logger = Mock.Of<ILogger<ResourceWatcher<V1Pod>>>();
         var serviceProvider = Mock.Of<IServiceProvider>();
         var timedEntityQueue = new TimedEntityQueue<V1Pod>();
-        var operatorSettings = new OperatorSettings() { Namespace = "unit-test" };
+        var operatorSettings = new OperatorSettings { Namespace = "unit-test" };
         var kubernetesClient = Mock.Of<IKubernetesClient>();
         var labelSelector = new DefaultEntityLabelSelector<V1Pod>();
 
@@ -32,7 +34,7 @@ public sealed class ResourceWatcherTest
             .Setup(client => client.WatchAsync<V1Pod>("unit-test", null, null, true, It.IsAny<CancellationToken>()))
             .Returns<string?, string?, string?, bool?, CancellationToken>((_, _, _, _, cancellationToken) => WaitForCancellationAsync<(WatchEventType, V1Pod)>(cancellationToken));
 
-        var resourceWatcher = new ResourceWatcher<V1Pod>(logger, serviceProvider, timedEntityQueue, operatorSettings, labelSelector, kubernetesClient);
+        var resourceWatcher = new ResourceWatcher<V1Pod>(activitySource, logger, serviceProvider, timedEntityQueue, operatorSettings, labelSelector, kubernetesClient);
 
         // Act.
         // Start and stop the watcher.
