@@ -1,8 +1,10 @@
 # KubeOps Transpiler
 
-[![Nuget](https://img.shields.io/nuget/vpre/KubeOps.Transpiler?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps.Transpiler/absoluteLatest)
+[![NuGet](https://img.shields.io/nuget/v/KubeOps.Transpiler?label=NuGet&logo=nuget)](https://www.nuget.org/packages/KubeOps.Transpiler)
 
 The `KubeOps.Transpiler` package provides utilities primarily focused on **generating Kubernetes Custom Resource Definition (CRD) manifests (YAML/JSON) from .NET type definitions**.
+
+> **Note:** This package is rarely used on its own. It is a logical part of the KubeOps operator framework and is typically used through the KubeOps CLI or as part of the operator build process.
 
 It allows you to define your custom resources using C# classes and attributes, and then automatically create the corresponding Kubernetes CRD schema required to register your resource type with the cluster.
 
@@ -25,8 +27,9 @@ The core functionality revolves around inspecting .NET assemblies and their type
 You can transpile .NET types decorated with the `[KubernetesEntity]` attribute (defined in `KubeOps.Abstractions`) into `V1CustomResourceDefinition` objects from the official Kubernetes client library.
 
 This process involves inspecting your C# class properties and translating them into an [OpenAPI v3 schema](https://swagger.io/specification/v3/) embedded within the CRD. The transpiler utilizes standard .NET attributes on your entity properties (e.g., `System.ComponentModel` attributes like `[Description]`, `[Required]`, `[Range]`, and validation attributes like `[MinLength]`, `[MaxLength]`, `[RegularExpression]`) to generate richer schema information. This schema is crucial as it enables:
-*   `kubectl explain <your-kind>.<your-group>`
-*   Server-side validation by the Kubernetes API server when resources are created or updated.
+
+- `kubectl explain <your-kind>.<your-group>`
+- Server-side validation by the Kubernetes API server when resources are created or updated.
 
 This process often utilizes `System.Reflection.MetadataLoadContext` to inspect assemblies without fully loading or executing them, which is useful in build-time tools or CLIs.
 
@@ -43,7 +46,7 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 // Define your custom resource class (usually in a separate project)
-[KubernetesEntity(Group = "ewassef.dev", ApiVersion = "v1alpha1", Kind = "MyResource")]
+[KubernetesEntity(Group = "demo.dev", ApiVersion = "v1alpha1", Kind = "MyResource")]
 public class MyCustomResource : CustomKubernetesEntity
 {
     public MyCustomResourceSpec Spec { get; set; } = new();
@@ -85,13 +88,14 @@ foreach (var crd in crds)
     Console.WriteLine(crdYaml);
     // Or write to a file, e.g., File.WriteAllText($"{crd.Metadata.Name}.crd.yaml", crdYaml);
 }
+```
 
 ### Use Cases
 
-*   **KubeOps CLI:** This package is the engine behind the `dotnet kubeops generate crd` command.
-*   **Custom Build Tasks:** Integrate CRD generation directly into your MSBuild process.
-*   **Schema Validation Tools:** Use the generated CRD schema for validating custom resource YAML files.
+- **KubeOps CLI:** This package is the engine behind the `dotnet kubeops generate crd` command.
+- **Custom Build Tasks:** Integrate CRD generation directly into your MSBuild process.
+- **Schema Validation Tools:** Use the generated CRD schema for validating custom resource YAML files.
 
 The assembly inspection and attribute processing logic within this package is also leveraged by the KubeOps CLI (`dotnet kubeops generate operator`) command. The CLI uses this package's capabilities to find types decorated with `[EntityRbac]` attributes when generating the RBAC manifests (`Role`/`ClusterRole`) for your operator.
 
-For more details on defining the C# classes themselves, see the main KubeOps documentation on [Custom Entities](../../docs/custom-entities.md).
+For more details on defining the C# classes themselves, see the main KubeOps documentation.
