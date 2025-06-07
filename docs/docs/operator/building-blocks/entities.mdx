@@ -3,3 +3,154 @@ title: Custom Entities
 description: Creating Custom Entities
 sidebar_position: 1
 ---
+
+# Custom Entities
+
+Custom Entities in KubeOps represent [Custom Resource Definitions (CRDs)](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) in Kubernetes. They allow you to extend the Kubernetes API with your own resource types.
+
+## Creating a Custom Entity
+
+To create a custom entity, create a class that inherits from one of the base entity classes and decorate it with the `[KubernetesEntity]` attribute:
+
+```csharp
+[KubernetesEntity(Group = "demo.kubeops.dev", ApiVersion = "v1", Kind = "DemoEntity")]
+public class V1DemoEntity : CustomKubernetesEntity<V1DemoEntity.V1DemoEntitySpec, V1DemoEntity.V1DemoEntityStatus>
+{
+    public class V1DemoEntitySpec
+    {
+        public string Username { get; set; } = string.Empty;
+    }
+
+    public class V1DemoEntityStatus
+    {
+        public string DemoStatus { get; set; } = string.Empty;
+    }
+}
+```
+
+## Entity Types
+
+KubeOps provides three base classes for creating custom entities:
+
+1. `CustomKubernetesEntity`: Base class with only metadata
+2. `CustomKubernetesEntity<TSpec>`: Entity with specification
+3. `CustomKubernetesEntity<TSpec, TStatus>`: Entity with specification and status
+
+### Entity Scope
+
+Entities can be either namespaced or cluster-wide. Use the `[EntityScope]` attribute to specify the scope:
+
+```csharp
+[KubernetesEntity(Group = "demo.kubeops.dev", ApiVersion = "v1", Kind = "DemoEntity")]
+[EntityScope(EntityScope.Namespaced)] // or EntityScope.Cluster
+public class V1DemoEntity : CustomKubernetesEntity<V1DemoEntity.V1DemoEntitySpec>
+{
+    public class V1DemoEntitySpec
+    {
+        public string Username { get; set; } = string.Empty;
+    }
+}
+```
+
+## Spec and Status
+
+### Spec
+
+The `Spec` property contains the desired state of your resource. It's defined as a nested class within your entity:
+
+```csharp
+public class V1DemoEntitySpec
+{
+    [Required]
+    public string Username { get; set; } = string.Empty;
+
+    [Description("The number of replicas to run")]
+    public int Replicas { get; set; } = 1;
+}
+```
+
+### Status
+
+The `Status` property (optional) contains the current state of your resource:
+
+```csharp
+public class V1DemoEntityStatus
+{
+    public string CurrentState { get; set; } = string.Empty;
+    public DateTime LastUpdated { get; set; }
+}
+```
+
+## Entity Attributes
+
+KubeOps provides various attributes to customize and validate your entities:
+
+### Entity Definition Attributes
+
+- `[KubernetesEntity]`: Defines the basic entity information (Group, Version, Kind)
+- `[EntityScope]`: Specifies if the entity is namespaced or cluster-wide
+- `[StorageVersion]`: Marks an entity as the storage version for version conversion
+- `[KubernetesEntityShortNames]`: Defines short names for the CRD (e.g., "deploy" for "deployment")
+
+### Validation Attributes
+
+- `[Required]`: Marks a property as required
+- `[Pattern]`: Defines a regex pattern for string validation
+- `[Length]`: Specifies minimum and maximum length for strings or arrays
+- `[RangeMinimum]` and `[RangeMaximum]`: Defines numeric value ranges
+- `[MultipleOf]`: Specifies that a number must be a multiple of a given value
+- `[Items]`: Defines minimum and maximum items for arrays
+- `[ValidationRule]`: Defines custom validation rules using CEL expressions
+
+### Documentation Attributes
+
+- `[Description]`: Adds a description to a property or entity
+- `[ExternalDocs]`: Links to external documentation
+
+### Display Attributes
+
+- `[AdditionalPrinterColumn]`: Adds a column to `kubectl get` output
+- `[GenericAdditionalPrinterColumn]`: Adds a custom column to `kubectl get` output
+
+### Special Attributes
+
+- `[Ignore]`: Excludes a property or entity from CRD generation
+- `[PreserveUnknownFields]`: Preserves unknown fields in the Kubernetes object
+- `[EmbeddedResource]`: Marks a property as an embedded Kubernetes resource
+
+## Example with Multiple Attributes
+
+```csharp
+[KubernetesEntity(Group = "demo.kubeops.dev", ApiVersion = "v1", Kind = "DemoEntity")]
+[EntityScope(EntityScope.Namespaced)]
+[KubernetesEntityShortNames("demo")]
+[Description("A demo entity for testing purposes")]
+public class V1DemoEntity : CustomKubernetesEntity<V1DemoEntity.V1DemoEntitySpec, V1DemoEntity.V1DemoEntityStatus>
+{
+    public class V1DemoEntitySpec
+    {
+        [Required]
+        [Description("The username for the demo entity")]
+        [Length(3, 50)]
+        public string Username { get; set; } = string.Empty;
+
+        [Description("Number of replicas to run")]
+        [RangeMinimum(1)]
+        [RangeMaximum(10)]
+        public int Replicas { get; set; } = 1;
+
+        [Pattern(@"^[a-z0-9-]+$")]
+        [Description("The namespace where resources should be created")]
+        public string? TargetNamespace { get; set; }
+    }
+
+    public class V1DemoEntityStatus
+    {
+        [Description("Current state of the entity")]
+        public string CurrentState { get; set; } = string.Empty;
+
+        [Description("Last time the entity was updated")]
+        public DateTime LastUpdated { get; set; }
+    }
+}
+```
