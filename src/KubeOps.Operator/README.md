@@ -14,7 +14,7 @@ dotnet add package KubeOps.Operator
 
 After installation, you can create entities, controllers, finalizers, and other components to implement your operator.
 
-All resources must be registered with the operator builder to be recognized by the SDK and used as operator resources. The [KubeOps.Generator](../KubeOps.Generator/README.md) provides convenience methods to register all components at once.
+All resources must be registered with the operator builder to be recognized by the SDK and used as operator resources. The [`KubeOps.Generator`](https://buehler.github.io/dotnet-operator-sdk/docs/packages/generator) provides convenience methods to register all components at once.
 
 You'll need to use the Generic Host to run your operator. For a plain operator without webhooks, ASP.NET is not required (unlike v7).
 
@@ -37,7 +37,7 @@ await host.RunAsync();
 
 ### Registering Resources
 
-When using the [KubeOps.Generator](../KubeOps.Generator/README.md), you can use the `RegisterComponents` function:
+When using the KubeOps.Generator, you can use the `RegisterComponents` function:
 
 ```csharp
 builder.Services

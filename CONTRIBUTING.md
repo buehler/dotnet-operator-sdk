@@ -4,7 +4,7 @@ First of all, thank you for considering contributing to KubeOps.
 This is an open souce project and shall be driven by the community.
 
 This project and everyone participating in it is governed by the
-[KubeOps Code of Conduct](./CODE_OF_CONDUCT.md). By participating, you are
+[KubeOps Code of Conduct](https://github.com/buehler/dotnet-operator-sdk/blob/main/CODE_OF_CONDUCT.md). By participating, you are
 expected to uphold this code. Please report unacceptable behavior by
 [opening a new issue](https://github.com/buehler/dotnet-operator-sdk/issues/new) with the title prefixed with '[CODE OF CONDUCT]'.
 
