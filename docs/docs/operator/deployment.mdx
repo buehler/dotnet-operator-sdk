@@ -3,3 +3,200 @@ title: Deployment
 description: Deploying your KubeOps Operator
 sidebar_position: 6
 ---
+
+# Deployment
+
+This guide explains how to deploy your KubeOps operator to a Kubernetes cluster. KubeOps generates all necessary deployment files during the build process, making deployment straightforward.
+
+## Prerequisites
+
+Before deploying your operator, ensure you have:
+
+1. A running Kubernetes cluster
+2. `kubectl` configured to access your cluster
+3. Generated deployment files (in the `config` directory by default)
+4. A container registry to host your operator's Docker image
+
+## Deployment Steps
+
+### 1. Build the Docker Image
+
+First, build the Docker image using the generated Dockerfile:
+
+```bash
+# Navigate to your project directory
+cd your-operator-project
+
+# Build the Docker image
+docker build -t your-registry/your-operator:latest .
+```
+
+### 2. Push the Docker Image
+
+Push the image to your container registry:
+
+```bash
+# Push to your registry
+docker push your-registry/your-operator:latest
+```
+
+### 3. Deploy Using Kustomize
+
+KubeOps generates Kustomize files that handle the deployment. Deploy using:
+
+```bash
+# Navigate to the config directory
+cd config
+
+# Apply the Kustomize configuration
+kubectl apply -k .
+```
+
+This will:
+
+- Create necessary RBAC rules
+- Deploy the operator
+- Install CRDs
+- Set up any required configurations
+
+## Generated Deployment Files
+
+KubeOps generates the following files in your config directory:
+
+```
+config/
+├── crd/                    # Custom Resource Definitions
+├── rbac/                   # RBAC rules
+├── deployment.yaml         # Operator deployment
+├── kustomization.yaml      # Kustomize configuration
+└── namespace.yaml          # Namespace configuration
+```
+
+## Automated Deployment
+
+You can automate the deployment process using GitHub Actions or similar CI/CD tools. Here's an example workflow:
+
+```yaml
+name: Deploy Operator
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }} .
+          docker push ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}
+
+      - name: Generate Deployment Files
+        run: dotnet build -c Release
+
+      - name: Commit Generated Files
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add config/
+          git commit -m "Update deployment files for ${{ github.event.release.tag_name }}"
+          git push
+```
+
+## Distribution Options
+
+### 1. Manual Distribution
+
+Users can deploy your operator by:
+
+1. Downloading the generated config files
+2. Building the Docker image
+3. Applying the Kustomize configuration
+
+```bash
+# Clone your repository
+git clone https://github.com/your-org/your-operator.git
+cd your-operator
+
+# Build and push the image
+docker build -t your-registry/your-operator:latest .
+docker push your-registry/your-operator:latest
+
+# Deploy using Kustomize
+kubectl apply -k config/
+```
+
+### 2. Automated Distribution
+
+For automated distribution:
+
+1. Set up GitHub Container Registry (GCR)
+2. Configure GitHub Actions to:
+   - Build and push images on release
+   - Update deployment files
+   - Create release artifacts
+
+Users can then deploy using:
+
+```bash
+# Add your GCR credentials
+kubectl create secret docker-registry gcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=$GITHUB_USER \
+  --docker-password=$GITHUB_TOKEN
+
+# Deploy using the release artifacts
+kubectl apply -f https://github.com/your-org/your-operator/releases/download/v1.0.0/config.tar.gz
+```
+
+## Best Practices
+
+1. **Versioning**:
+
+   - Use semantic versioning for releases
+   - Tag Docker images with specific versions
+   - Include version information in CRDs
+
+2. **Security**:
+
+   - Use non-root users in Docker images
+   - Implement proper RBAC rules
+   - Scan images for vulnerabilities
+
+3. **Monitoring**:
+
+   - Set up proper health checks
+   - Configure resource limits
+   - Implement logging and metrics
+
+4. **Updates**:
+   - Document upgrade procedures
+   - Test upgrades in staging
+   - Provide rollback instructions
+
+## Common Issues
+
+1. **Image Pull Errors**:
+
+   - Check registry credentials
+   - Verify image exists
+   - Ensure proper permissions
+
+2. **RBAC Issues**:
+
+   - Verify service account permissions
+   - Check role bindings
+   - Review operator logs
+
+3. **CRD Installation**:
+   - Check CRD compatibility
+   - Verify API version
+   - Review validation rules

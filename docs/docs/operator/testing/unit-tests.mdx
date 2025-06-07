@@ -3,3 +3,271 @@ title: Unit Tests
 description: Unit Testing your Operator
 sidebar_position: 1
 ---
+
+# Unit Testing
+
+Unit testing is a software testing method where individual units of code are tested in isolation. For KubeOps operators, this means testing controllers, finalizers, and webhooks without requiring a running Kubernetes cluster.
+
+## Testing Approach
+
+KubeOps operators can be tested using standard .NET testing frameworks and mocking libraries. The key is to:
+
+1. Mock dependencies (like `IKubernetesClient`, `EventPublisher`, etc.)
+2. Create test entities
+3. Call methods directly
+4. Verify the expected behavior
+
+## Testing Controllers
+
+Here's an example of testing a controller using xUnit and Moq:
+
+```csharp
+public class DemoControllerTests
+{
+    private readonly Mock<IKubernetesClient> _clientMock;
+    private readonly Mock<EventPublisher> _eventPublisherMock;
+    private readonly DemoController _controller;
+
+    public DemoControllerTests()
+    {
+        _clientMock = new Mock<IKubernetesClient>();
+        _eventPublisherMock = new Mock<EventPublisher>();
+        _controller = new DemoController(_clientMock.Object, _eventPublisherMock.Object);
+    }
+
+    [Fact]
+    public async Task ReconcileAsync_WhenEntityIsNew_CreatesDeployment()
+    {
+        // Arrange
+        var entity = new V1DemoEntity
+        {
+            Metadata = new V1ObjectMeta
+            {
+                Name = "test-entity",
+                NamespaceProperty = "default"
+            },
+            Spec = new V1DemoEntitySpec
+            {
+                Replicas = 3
+            }
+        };
+
+        _clientMock
+            .Setup(c => c.Get<V1Deployment>(entity.Metadata.Name, entity.Metadata.NamespaceProperty))
+            .ReturnsAsync((V1Deployment)null);
+
+        // Act
+        await _controller.ReconcileAsync(entity, CancellationToken.None);
+
+        // Assert
+        _clientMock.Verify(
+            c => c.Create(It.Is<V1Deployment>(d =>
+                d.Metadata.Name == entity.Metadata.Name &&
+                d.Spec.Replicas == entity.Spec.Replicas)),
+            Times.Once);
+
+        _eventPublisherMock.Verify(
+            e => e(
+                entity,
+                "Created",
+                It.IsAny<string>(),
+                EventType.Normal,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ReconcileAsync_WhenDeploymentExists_UpdatesReplicas()
+    {
+        // Arrange
+        var entity = new V1DemoEntity
+        {
+            Metadata = new V1ObjectMeta
+            {
+                Name = "test-entity",
+                NamespaceProperty = "default"
+            },
+            Spec = new V1DemoEntitySpec
+            {
+                Replicas = 5
+            }
+        };
+
+        var existingDeployment = new V1Deployment
+        {
+            Metadata = new V1ObjectMeta
+            {
+                Name = entity.Metadata.Name,
+                NamespaceProperty = entity.Metadata.NamespaceProperty
+            },
+            Spec = new V1DeploymentSpec
+            {
+                Replicas = 3
+            }
+        };
+
+        _clientMock
+            .Setup(c => c.Get<V1Deployment>(entity.Metadata.Name, entity.Metadata.NamespaceProperty))
+            .ReturnsAsync(existingDeployment);
+
+        // Act
+        await _controller.ReconcileAsync(entity, CancellationToken.None);
+
+        // Assert
+        _clientMock.Verify(
+            c => c.Update(It.Is<V1Deployment>(d =>
+                d.Metadata.Name == entity.Metadata.Name &&
+                d.Spec.Replicas == entity.Spec.Replicas)),
+            Times.Once);
+    }
+}
+```
+
+## Testing Finalizers
+
+Testing finalizers follows a similar pattern:
+
+```csharp
+public class DemoFinalizerTests
+{
+    private readonly Mock<IKubernetesClient> _clientMock;
+    private readonly DemoFinalizer _finalizer;
+
+    public DemoFinalizerTests()
+    {
+        _clientMock = new Mock<IKubernetesClient>();
+        _finalizer = new DemoFinalizer(_clientMock.Object);
+    }
+
+    [Fact]
+    public async Task FinalizeAsync_WhenResourcesExist_DeletesThem()
+    {
+        // Arrange
+        var entity = new V1DemoEntity
+        {
+            Metadata = new V1ObjectMeta
+            {
+                Name = "test-entity",
+                NamespaceProperty = "default"
+            }
+        };
+
+        var resources = new List<V1Deployment>
+        {
+            new() { Metadata = new V1ObjectMeta { Name = "resource-1" } },
+            new() { Metadata = new V1ObjectMeta { Name = "resource-2" } }
+        };
+
+        _clientMock
+            .Setup(c => c.List<V1Deployment>(It.IsAny<string>()))
+            .ReturnsAsync(resources);
+
+        // Act
+        await _finalizer.FinalizeAsync(entity, CancellationToken.None);
+
+        // Assert
+        _clientMock.Verify(
+            c => c.Delete(It.IsAny<V1Deployment>()),
+            Times.Exactly(2));
+    }
+}
+```
+
+## Testing Webhooks
+
+Webhooks can be tested by verifying their validation or mutation logic:
+
+```csharp
+public class DemoValidationWebhookTests
+{
+    private readonly DemoValidationWebhook _webhook;
+
+    public DemoValidationWebhookTests()
+    {
+        _webhook = new DemoValidationWebhook();
+    }
+
+    [Fact]
+    public void Create_WhenUsernameIsForbidden_ReturnsError()
+    {
+        // Arrange
+        var entity = new V1DemoEntity
+        {
+            Spec = new V1DemoEntitySpec
+            {
+                Username = "forbidden"
+            }
+        };
+
+        // Act
+        var result = _webhook.Create(entity, false);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Contains("forbidden", result.Message);
+    }
+
+    [Fact]
+    public void Create_WhenUsernameIsValid_ReturnsSuccess()
+    {
+        // Arrange
+        var entity = new V1DemoEntity
+        {
+            Spec = new V1DemoEntitySpec
+            {
+                Username = "valid-user"
+            }
+        };
+
+        // Act
+        var result = _webhook.Create(entity, false);
+
+        // Assert
+        Assert.True(result.Success);
+    }
+}
+```
+
+## Best Practices
+
+1. **Test Organization**:
+
+   - Group tests by component (controllers, finalizers, webhooks)
+   - Use descriptive test names
+   - Follow the Arrange-Act-Assert pattern
+
+2. **Mocking**:
+
+   - Mock only what's necessary
+   - Verify important interactions
+   - Use strict mocks when appropriate
+
+3. **Test Coverage**:
+
+   - Test success and failure cases
+   - Test edge cases
+   - Test error handling
+
+4. **Test Data**:
+   - Use realistic test data
+   - Create helper methods for common setups
+   - Consider using test data builders
+
+## Common Pitfalls
+
+1. **Over-mocking**:
+
+   - Don't mock everything
+   - Focus on external dependencies
+   - Keep tests simple
+
+2. **Test Maintenance**:
+
+   - Keep tests focused
+   - Avoid test interdependence
+   - Document complex test scenarios
+
+3. **Test Reliability**:
+   - Avoid timing-dependent tests
+   - Use deterministic test data
+   - Clean up test resources

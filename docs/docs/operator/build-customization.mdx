@@ -3,3 +3,168 @@ title: Build Customization
 description: Customizing the Build Process
 sidebar_position: 5.5
 ---
+
+# Build Customization
+
+KubeOps integrates with the .NET build process to automatically generate Kubernetes resources during build time. This document explains how to customize this behavior.
+
+## Default Behavior
+
+By default, KubeOps will:
+
+1. Generate Kubernetes resources after a successful build
+2. Use the assembly name (lowercase) as the operator name
+3. Generate resources in a `config` directory in your project
+4. Only regenerate resources when:
+   - The assembly has changed (detected by timestamp)
+   - The build configuration is `Release`
+
+## Build Properties
+
+You can customize the build process by setting the following MSBuild properties in your project file:
+
+### Basic Configuration
+
+```xml
+<PropertyGroup>
+    <!-- Custom operator name (defaults to assembly name) -->
+    <OperatorName>my-custom-operator</OperatorName>
+
+    <!-- Custom output directory (defaults to 'config') -->
+    <KubeOpsConfigOut>$(MSBuildProjectDirectory)\k8s</KubeOpsConfigOut>
+
+    <!-- Custom Docker image name -->
+    <DockerImage>my-registry/my-operator</DockerImage>
+
+    <!-- Custom Docker image tag -->
+    <DockerImageTag>latest</DockerImageTag>
+</PropertyGroup>
+```
+
+### Disabling Automatic Generation
+
+To disable automatic resource generation during build:
+
+```xml
+<PropertyGroup>
+    <!-- Disable automatic generation -->
+    <GenerateOperatorResources>false</GenerateOperatorResources>
+</PropertyGroup>
+```
+
+## Build Process Details
+
+The build process consists of several MSBuild targets:
+
+1. **BaseConfig**:
+
+   - Sets default values for:
+     - `OperatorName`: Assembly name (lowercase)
+     - `KubeOpsCli`: Path to the KubeOps CLI tool
+     - `KubeOpsConfigOut`: Output directory for generated resources
+
+2. **GetAssemblyBeforeTimestamp**:
+
+   - Captures the assembly timestamp before compilation
+   - Used to detect changes in the assembly
+
+3. **GetAssemblyAfterTimestamp**:
+
+   - Captures the assembly timestamp after compilation
+   - Used to detect changes in the assembly
+
+4. **GenerateKustomizationConfig**:
+
+   - Generates the Kubernetes resources
+   - Uses the configured Docker image and tag if specified
+   - Outputs resources to the configured directory
+
+5. **GenerateOperatorResources**:
+   - Runs after `CopyFilesToOutputDirectory`
+   - Only runs if:
+     - The project is an executable (`OutputType` is `exe`)
+     - The assembly has changed OR the build is in `Release` mode
+   - Checks if the KubeOps CLI is installed
+   - Calls `GenerateKustomizationConfig` if the CLI is available
+
+## CLI Tool Requirements
+
+The build process requires the KubeOps CLI tool to be installed. If it's not installed, you'll see a message:
+
+```
+KubeOps CLI is not installed as tool, cannot generate stuff for projects.
+Please install it with 'dotnet tool install KubeOps.Cli' to use automatic build generation.
+```
+
+To install the CLI tool:
+
+```bash
+dotnet tool install KubeOps.Cli
+```
+
+## Example Configurations
+
+### Basic Operator
+
+```xml
+<PropertyGroup>
+    <OperatorName>my-operator</OperatorName>
+    <DockerImage>my-registry/my-operator</DockerImage>
+    <DockerImageTag>1.0.0</DockerImageTag>
+</PropertyGroup>
+```
+
+### Custom Output Directory
+
+```xml
+<PropertyGroup>
+    <KubeOpsConfigOut>$(MSBuildProjectDirectory)\k8s\resources</KubeOpsConfigOut>
+</PropertyGroup>
+```
+
+### Development Configuration
+
+```xml
+<PropertyGroup>
+    <!-- Disable automatic generation in Debug mode -->
+    <GenerateOperatorResources Condition="'$(Configuration)' == 'Debug'">false</GenerateOperatorResources>
+</PropertyGroup>
+```
+
+## Best Practices
+
+1. **Version Control**:
+
+   - Consider whether to commit generated resources
+   - Use `.gitignore` to exclude generated files if needed
+   - Document the generation process in your README
+
+2. **Build Configuration**:
+
+   - Use different settings for Debug and Release builds
+   - Consider using environment-specific configurations
+   - Document your build customization in the project
+
+3. **Docker Images**:
+   - Use consistent naming conventions
+   - Include version information in tags
+   - Consider using multi-stage builds
+
+## Common Issues
+
+1. **Missing CLI Tool**:
+
+   - Ensure the KubeOps CLI is installed
+   - Check the tool installation path
+   - Verify the tool version compatibility
+
+2. **Generation Timing**:
+
+   - Resources might not generate in Debug mode
+   - Changes might not trigger regeneration
+   - Consider manual generation for testing
+
+3. **Output Location**:
+   - Verify the output directory exists
+   - Check for permission issues
+   - Ensure the path is valid for your OS
