@@ -40,6 +40,8 @@ const config = {
     ],
   ],
 
+  themes: ["@docusaurus/theme-mermaid"],
+
   themeConfig: {
     image: "img/logo_big.png",
     navbar: {
@@ -49,6 +51,12 @@ const config = {
         src: "img/logo.png",
       },
       items: [
+        {
+          type: "docSidebar",
+          position: "left",
+          label: "Documentation",
+          sidebarId: "operator",
+        },
         {
           type: "docSidebar",
           position: "left",
@@ -75,7 +83,11 @@ const config = {
           items: [
             {
               label: "Documentation",
-              to: "/docs/intro",
+              to: "/docs/operator",
+            },
+            {
+              label: "Packages",
+              to: "/docs/packages",
             },
           ],
         },
