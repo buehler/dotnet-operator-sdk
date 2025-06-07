@@ -1,4 +1,6 @@
-﻿using k8s;
+﻿using System.Diagnostics;
+
+using k8s;
 using k8s.Models;
 
 using KubeOps.Abstractions.Builder;
@@ -19,7 +21,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace KubeOps.Operator.Builder;
 
-internal class OperatorBuilder : IOperatorBuilder
+internal sealed class OperatorBuilder : IOperatorBuilder
 {
     private readonly OperatorSettings _settings;
 
@@ -96,6 +98,7 @@ internal class OperatorBuilder : IOperatorBuilder
     private void AddOperatorBase()
     {
         Services.AddSingleton(_settings);
+        Services.AddSingleton(new ActivitySource(_settings.Name));
 
         // Add the default configuration and the client separately. This allows external users to override either
         // just the config (e.g. for integration tests) or to replace the whole client, e.g. with a mock.
