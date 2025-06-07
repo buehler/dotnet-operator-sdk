@@ -1,4 +1,4 @@
-# KubeOps.Operator.Web
+# KubeOps Web Operator
 
 [![NuGet](https://img.shields.io/nuget/v/KubeOps.Operator.Web?label=NuGet&logo=nuget)](https://www.nuget.org/packages/KubeOps.Operator.Web)
 

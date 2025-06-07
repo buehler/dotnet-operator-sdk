@@ -1,4 +1,4 @@
-# KubeOps
+# KubeOps - Kubernetes Operators in .NET
 
 **Build Kubernetes Operators in .NET with Ease**
 
@@ -70,7 +70,7 @@ The SDK is designed to be modular. You can include only the packages you need:
 
 ## Examples
 
-You can find various example operators demonstrating different features in the [`examples/`](https://github.com/ewassef/dotnet-operator-sdk/tree/main/examples/) directory of this repository.
+You can find various example operators demonstrating different features in the [`examples/`](https://github.com/buehler/dotnet-operator-sdk/tree/main/examples/) directory of this repository.
 
 ## License
 
