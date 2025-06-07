@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Text.Json;
@@ -21,6 +22,7 @@ using Microsoft.Extensions.Logging;
 namespace KubeOps.Operator.Watcher;
 
 public class ResourceWatcher<TEntity>(
+    ActivitySource activitySource,
     ILogger<ResourceWatcher<TEntity>> logger,
     IServiceProvider provider,
     TimedEntityQueue<TEntity> requeue,
@@ -201,6 +203,7 @@ public class ResourceWatcher<TEntity>(
                                    cancellationToken: stoppingToken))
                 {
 #pragma warning disable SA1312
+                    using var __ = activitySource.StartActivity($"""processing "{type}" event""", ActivityKind.Consumer);
                     using var _ = logger.BeginScope(EntityLoggingScope.CreateFor(type, entity));
                     logger.LogInformation(
                         """Received watch event "{EventType}" for "{Kind}/{Name}", last observed resource version: {ResourceVersion}.""",
