@@ -1,7 +1,9 @@
 # KubeOps Generator
 
+[![NuGet](https://img.shields.io/nuget/v/KubeOps.Generator?label=NuGet&logo=nuget)](https://www.nuget.org/packages/KubeOps.Generator)
+
 This is a C# source generator for KubeOps and operators.
-It is used to generate convenience functions to help registering
+It is used to generate convenience functions to help register
 resources within an operator.
 
 ## Motivation
@@ -83,12 +85,12 @@ that is annotated with the `KubernetesEntityAttribute`.
 For each **partial** class that does not contain a default constructor,
 the generator will create a default constructor that sets the `Kind` and `ApiVersion` fields.
 
-For each **non partial** class, a method extension is created that sets
+For each **non-partial** class, a method extension is created that sets
 the `Kind` and `ApiVersion` fields.
 
-> [!NOTE]
-> Setting your class partial is crucial for the generator to create the constructor.
-> Also, if some default constructor is already present, the generator uses the
+> **NOTE:**
+> Setting your class as partial is crucial for the generator to create the constructor.
+> Also, if a default constructor is already present, the generator uses the
 > method extension fallback.
 
 #### Example
@@ -116,7 +118,7 @@ public partial class V1TestEntity
 }
 ```
 
-The **non partial** defined entity below:
+The **non-partial** defined entity below:
 
 ```csharp
 namespace Operator.Entities;
@@ -142,12 +144,11 @@ public static class EntityInitializer
 }
 ```
 
-
 ### Controller Registrations
 
 The generator creates a file in the root namespace called `ControllerRegistrations.g.cs`.
 This file contains a function to register all found controllers
-(i.e. classes that implement the `IResourceController<TEntity>` interface).
+(i.e., classes that implement the `IResourceController<TEntity>` interface).
 
 #### Example
 
@@ -167,7 +168,7 @@ public static class ControllerRegistrations
 ### Finalizer Registrations
 
 The generator creates a file in the root namespace called `FinalizerRegistrations.g.cs`.
-This file contains all finalizers with generated finalizer-identifiers.
+This file contains all finalizers with generated finalizer identifiers.
 Further, a function to register all finalizers (i.e., classes that implement `IResourceFinalizer<TEntity>`) is generated.
 
 #### Example
@@ -236,6 +237,6 @@ public static class OperatorBuilderExtensions
 
 ## Troubleshooting
 
-*   **Generated files not visible?** Source generators add files during the build process. They might not appear directly in your Visual Studio Solution Explorer unless you explicitly look in the `obj/Debug/netX.Y/generated/KubeOps.Generator` folder or use features like VS's "Show all files".
-*   **Changes not picked up?** If you add a new controller/finalizer/webhook and it's not being registered, ensure your project compiles successfully and try rebuilding the solution.
-*   **Entity Initializer not working?** Make sure your entity class is marked `partial` and does not have an explicitly defined parameterless constructor if you want the generator to create one.
+- **Generated files not visible?** Source generators add files during the build process. They might not appear directly in your Visual Studio Solution Explorer unless you explicitly look in the `obj/Debug/netX.Y/generated/KubeOps.Generator` folder or use features like VS's "Show all files".
+- **Changes not picked up?** If you add a new controller/finalizer/webhook and it's not being registered, ensure your project compiles successfully and try rebuilding the solution.
+- **Entity Initializer not working?** Make sure your entity class is marked as `partial` and does not have an explicitly defined parameterless constructor if you want the generator to create one.

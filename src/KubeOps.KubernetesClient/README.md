@@ -1,29 +1,24 @@
 # KubeOps Kubernetes Client
 
-[![Nuget](https://img.shields.io/nuget/vpre/KubeOps.KubernetesClient?label=nuget%20prerelease)](https://www.nuget.org/packages/KubeOps.KubernetesClient/absoluteLatest)
+[![NuGet](https://img.shields.io/nuget/v/KubeOps.KubernetesClient?label=NuGet&logo=nuget)](https://www.nuget.org/packages/KubeOps.KubernetesClient)
 
-This package provides an **enhanced, developer-friendly interface** for interacting with the Kubernetes API, built on top of the official [kubernetes-client/csharp](https://github.com/kubernetes-client/csharp) library. While the official client is powerful, it often requires verbose calls, especially for Custom Resources.
+This package provides an enhanced, developer-friendly interface for interacting with the Kubernetes API, built on top of the official [kubernetes-client/csharp](https://github.com/kubernetes-client/csharp) library. While the official client is powerful, it often requires verbose calls, especially for Custom Resources.
 
-The `KubeOps.KubernetesClient` aims to simplify common operator tasks by offering:
+The `KubeOps.KubernetesClient` simplifies common operator tasks by offering:
 
-*   **True Generic Methods:** Perform operations like `Get`, `List`, `Create`, `Update`, `Delete`, and `Watch` on *any* Kubernetes resource type (including your custom resources defined with `[KubernetesEntity]`) using strongly-typed generic methods, without manually providing API group, version, and plural name.
-*   **Simplified API:** Reduces the boilerplate needed for common CRUD operations.
-*   **Type Safety:** Leverages C# generics for better compile-time checking.
+- **True Generic Methods:** Perform operations like `Get`, `List`, `Create`, `Update`, `Delete`, and `Watch` on any Kubernetes resource type (including custom resources defined with `[KubernetesEntity]`) using strongly-typed generic methods, without manually specifying API group, version, and plural name.
+- **Simplified API:** Reduces boilerplate code for common CRUD operations.
+- **Type Safety:** Leverages C# generics for better compile-time checking.
 
-This is an "enhanced" version of the original
-[Google Kubernetes Client](https://github.com/kubernetes-client/csharp).
-It extends the original client with some additional features, like
-true generics and method variants. The original `GenericClient` does support
-"generics", but only in a limited way. The client needs to be initialized
-with group and kind information as well.
+This is an enhanced version of the original [Google Kubernetes Client](https://github.com/kubernetes-client/csharp). It extends the original client with additional features, such as true generics and method variants. The original `GenericClient` supports generics in a limited way, requiring initialization with group and kind information.
 
-It acts as a wrapper, handling the complexities of determining the correct API endpoint and resource mapping based on the provided C# type.
+The client acts as a wrapper, automatically handling the complexities of determining the correct API endpoint and resource mapping based on the provided C# type.
 
 ## Usage
 
 ### Dependency Injection (Recommended)
 
-When using the main `KubeOps.Operator` package, an instance of `IKubernetesClient` is automatically registered in the .NET Dependency Injection container. You can simply inject it into your controllers, finalizers, or webhooks:
+When using the main `KubeOps.Operator` package, an instance of `IKubernetesClient` is automatically registered in the .NET Dependency Injection container. You can inject it into your controllers, finalizers, or webhooks:
 
 ```csharp
 using KubeOps.KubernetesClient;
@@ -55,14 +50,12 @@ public class MyResourceController : IResourceController<V1MyResource>
 
         return null; // Requeue later
     }
-
-    // ... other methods
 }
 ```
 
 ### Standalone Usage
 
-If you need to use the client outside the main KubeOps operator framework (e.g., in a command-line tool or script), you can instantiate it directly. It will automatically attempt to load configuration based on standard Kubernetes conventions ([Kubeconfig file](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) or [in-cluster service account](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/)).
+If you need to use the client outside the main KubeOps operator framework (e.g., in a command-line tool or script), you can instantiate it directly. The client automatically loads configuration based on standard Kubernetes conventions ([Kubeconfig file](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) or [in-cluster service account](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/)).
 
 ```csharp
 using KubeOps.KubernetesClient;
@@ -84,43 +77,39 @@ if (configMap != null)
 {
     Console.WriteLine($"ConfigMap Data: {string.Join(',', configMap.Data)}");
 }
-
 ```
 
 For advanced configuration (e.g., custom Kubeconfig paths, timeouts), refer to the underlying `k8s.KubernetesClientConfiguration` documentation from the official client library.
 
 ## Examples
 
-An example of the client that lists all namespaces in the cluster:
+### List Resources
 
 ```csharp
 var client = new KubernetesClient() as IKubernetesClient;
 
-// Get all namespaces in the cluster.
+// Get all namespaces in the cluster
 var namespaces = await client.ListAsync<V1Namespace>();
+
+// List all pods in the 'staging' namespace
+var podsInStaging = await client.ListAsync<V1Pod>("staging");
+
+// List all custom resources of type V1MyCrd across all namespaces
+// Note: This requires appropriate RBAC permissions for cluster-scoped resources
+var allMyCrds = await client.ListAsync<V1MyCrd>(null);
 ```
 
-**Get a specific resource:**
+### Get Resources
 
 ```csharp
 // Get a Pod in the 'production' namespace
 var pod = await client.GetAsync<V1Pod>("my-app-pod-xyz", "production");
 
-// Get a custom resource (assuming V1MyCrd is defined)
+// Get a custom resource
 var myCrd = await client.GetAsync<V1MyCrd>("my-instance", "default");
 ```
 
-**List resources (with optional namespace):**
-
-```csharp
-// List all pods in the 'staging' namespace
-var podsInStaging = await client.ListAsync<V1Pod>("staging");
-
-// List all custom resources of type V1MyCrd across all namespaces (for cluster-scoped or if allowed by RBAC)
-var allMyCrds = await client.ListAsync<V1MyCrd>(null);
-```
-
-**Create a resource:**
+### Create Resources
 
 ```csharp
 var newConfigMap = new V1ConfigMap
@@ -131,23 +120,22 @@ var newConfigMap = new V1ConfigMap
 var createdMap = await client.CreateAsync(newConfigMap);
 ```
 
-**Update a resource:**
+### Update Resources
 
 ```csharp
 var existingPod = await client.GetAsync<V1Pod>("my-pod", "default");
 if (existingPod != null)
 {
-    // Ensure Annotations dictionary exists before adding to it
     existingPod.Metadata.Annotations ??= new Dictionary<string, string>();
     existingPod.Metadata.Annotations["my-annotation"] = "updated-value";
     var updatedPod = await client.UpdateAsync(existingPod);
 }
 ```
 
-**Update Resource Status:**
+### Update Resource Status
 
 ```csharp
-// Assuming myCrd has a Status property
+// Update the status of a custom resource
 var existingCrd = await client.GetAsync<V1MyCrd>("my-instance", "default");
 if (existingCrd != null)
 {
@@ -156,7 +144,7 @@ if (existingCrd != null)
 }
 ```
 
-**Watch Resources:**
+### Watch Resources
 
 ```csharp
 // Watch for Pod events in the 'default' namespace
@@ -167,16 +155,16 @@ await foreach (var (type, pod) in client.WatchAsync<V1Pod>(namespaceParameter: "
 }
 ```
 
-**Delete a resource:**
+### Delete Resources
 
 ```csharp
+// Delete by name and namespace
 await client.DeleteAsync<V1Pod>("pod-to-delete", "default");
 
+// Delete using an existing resource instance
 var crdToDelete = await client.GetAsync<V1MyCrd>("crd-instance-to-delete", "dev");
 if (crdToDelete != null)
 {
     await client.DeleteAsync(crdToDelete);
 }
 ```
-
-## Documentation

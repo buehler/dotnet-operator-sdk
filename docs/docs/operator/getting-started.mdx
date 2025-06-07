@@ -1,0 +1,190 @@
+---
+title: Getting Started
+description: Getting Started with KubeOps
+sidebar_position: 2
+---
+
+# Getting Started with KubeOps
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download) or later
+- [Docker](https://www.docker.com/products/docker-desktop)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- A local Kubernetes cluster (like [kind](https://kind.sigs.k8s.io/) or [minikube](https://minikube.sigs.k8s.io/))
+
+:::warning Development Environment
+For local development, we recommend using `kind` or Docker Desktop as it provides a lightweight Kubernetes cluster that's perfect for operator development. Make sure your cluster is running before proceeding with the installation steps.
+:::
+
+## Installing KubeOps Templates
+
+KubeOps provides templates to help you get started quickly. Install them using the .NET CLI:
+
+```bash
+dotnet new --install KubeOps.Templates::*
+```
+
+KubeOps offers several template types:
+
+- `operator`: Standard operator with demo implementations
+- `operator-empty`: Minimal operator without web capabilities
+- `operator-web`: Operator with web server capabilities and demo implementations
+- `operator-web-empty`: Minimal operator with web server capabilities
+
+## Creating Your First Operator
+
+Let's create a new operator project using the standard template:
+
+```bash
+dotnet new operator -n MyFirstOperator
+cd MyFirstOperator
+```
+
+The template creates a complete operator project structure with:
+
+- `Program.cs`: Entry point of your operator
+- `Entities/`: Directory for your custom resources
+- `Controllers/`: Directory for your controllers
+- `Finalizers/`: Directory for your finalizers
+- `Webhooks/`: Directory for webhooks (if using web operator)
+
+## Installing the KubeOps CLI
+
+The KubeOps CLI helps you manage your operator development workflow. Install it globally:
+
+```bash
+dotnet tool install --global KubeOps.Cli
+```
+
+Or locally in your project:
+
+```bash
+dotnet new tool-manifest
+dotnet tool install --local KubeOps.Cli
+```
+
+## Using the KubeOps CLI
+
+The CLI provides several useful commands:
+
+### Generate Resources
+
+Generate all necessary Kubernetes resources for your operator:
+
+```bash
+dotnet kubeops generate operator MyOperator ./MyFirstOperator.csproj
+```
+
+:::note Automatic Generation
+The resource generation is automatically included in the build process. You don't need to run the generate command manually unless you want to customize the output location or format.
+:::
+
+This command generates:
+
+- RBAC rules
+- Dockerfile
+- Deployment configuration
+- CRDs (Custom Resource Definitions)
+- Namespace configuration
+- Kustomization files
+
+:::warning Webhook Support
+If your operator includes webhooks, additional resources are generated:
+
+- CA and Server certificates
+- Webhook configurations
+- Service definitions
+- Secret generators
+
+Make sure to handle these certificates securely in production environments.
+:::
+
+### Install CRDs
+
+Install your operator's CRDs into your Kubernetes cluster:
+
+```bash
+dotnet kubeops install ./MyFirstOperator.csproj
+```
+
+### Uninstall CRDs
+
+Remove your operator's CRDs from the cluster:
+
+```bash
+dotnet kubeops uninstall ./MyFirstOperator.csproj
+```
+
+## Building Blocks of an Operator
+
+KubeOps operators are built using several key components:
+
+### Custom Resources (Entities)
+
+Custom resources are defined as C# classes with the `[KubernetesEntity]` attribute:
+
+```csharp
+[KubernetesEntity(Group = "demo.kubeops.dev", ApiVersion = "v1", Kind = "DemoEntity")]
+public class V1DemoEntity : CustomKubernetesEntity<V1DemoEntity.V1DemoEntitySpec, V1DemoEntity.V1DemoEntityStatus>
+{
+    public class V1DemoEntitySpec
+    {
+        public string Username { get; set; } = string.Empty;
+    }
+
+    public class V1DemoEntityStatus
+    {
+        public string DemoStatus { get; set; } = string.Empty;
+    }
+}
+```
+
+### Controllers
+
+Controllers implement the reconciliation logic for your custom resources:
+
+```csharp
+[EntityRbac(typeof(V1DemoEntity), Verbs = RbacVerb.All)]
+public class DemoController : IEntityController<V1DemoEntity>
+{
+    public Task ReconcileAsync(V1DemoEntity entity, CancellationToken cancellationToken)
+    {
+        // Implement your reconciliation logic here
+        return Task.CompletedTask;
+    }
+}
+```
+
+### Finalizers
+
+Finalizers handle cleanup when resources are deleted:
+
+```csharp
+public class DemoFinalizer : IEntityFinalizer<V1DemoEntity>
+{
+    public Task FinalizeAsync(V1DemoEntity entity, CancellationToken cancellationToken)
+    {
+        // Implement your cleanup logic here
+        return Task.CompletedTask;
+    }
+}
+```
+
+:::info Next Steps
+The following sections will dive deeper into:
+
+- [CLI Usage](./cli) - Detailed CLI commands and options
+- [Custom Resources](./building-blocks/entities) - Creating and managing custom resources
+- [Controllers](./building-blocks/controllers) - Implementing reconciliation logic
+- [Finalizers](./building-blocks/finalizer) - Handling resource cleanup
+- [Webhooks](./building-blocks/webhooks) - Implementing validation and mutation webhooks
+
+Make sure to read these sections before deploying your operator to production.
+:::
+
+:::tip Learning Path
+Take your time to understand each concept. Building operators is a complex task, but KubeOps makes it more approachable for .NET developers.
+:::

@@ -1,35 +1,25 @@
 # KubeOps Operator
 
-The `KubeOps.Operator` package provides a framework
-for building Kubernetes operators in .NET.
-It is built on top of the Kubernetes client libraries for .NET
-and provides a set of abstractions and utilities for implementing
-operators that manage custom resources in a Kubernetes cluster.
+[![NuGet](https://img.shields.io/nuget/v/KubeOps.Operator?label=NuGet&logo=nuget)](https://www.nuget.org/packages/KubeOps.Operator)
+
+The `KubeOps.Operator` package provides a framework for building Kubernetes operators in .NET. Built on top of the Kubernetes client libraries for .NET, it offers abstractions and utilities for implementing operators that manage custom resources in a Kubernetes cluster.
 
 ## Getting Started
 
-To get started with the SDK, you can install it from NuGet:
+Install the package from NuGet:
 
 ```bash
 dotnet add package KubeOps.Operator
 ```
 
-Once you have installed the package, you can create entities,
-controllers, finalizers, and more to implement your operator.
+After installation, you can create entities, controllers, finalizers, and other components to implement your operator.
 
-All resources must be added to the operator builder
-in order to be recognized by the SDK and to be used as
-operator resources. The [KubeOps.Generator](../KubeOps.Generator/README.md)
-helps with convenience methods to register everything
-at once.
+All resources must be registered with the operator builder to be recognized by the SDK and used as operator resources. The [`KubeOps.Generator`](https://buehler.github.io/dotnet-operator-sdk/docs/packages/generator) provides convenience methods to register all components at once.
 
-You'll need to use the Generic Host to run your operator.
-However, for a plain operator without webhooks, no ASP.net
-is required (in contrast to v7).
+You'll need to use the Generic Host to run your operator. For a plain operator without webhooks, ASP.NET is not required (unlike v7).
 
 ```csharp
 using KubeOps.Operator;
-
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -47,8 +37,7 @@ await host.RunAsync();
 
 ### Registering Resources
 
-When using the [KubeOps.Generator](../KubeOps.Generator/README.md),
-you can use the `RegisterResources` function:
+When using the KubeOps.Generator, you can use the `RegisterComponents` function:
 
 ```csharp
 builder.Services
@@ -56,22 +45,19 @@ builder.Services
     .RegisterComponents();
 ```
 
-Otherwise, you can register resources manually:
+Alternatively, you can register resources manually:
 
 ```csharp
 builder.Services
     .AddKubernetesOperator()
     .AddController<TestController, V1TestEntity>()
     .AddFinalizer<FirstFinalizer, V1TestEntity>("first")
-    .AddFinalizer<SecondFinalizer, V1TestEntity>("second")
+    .AddFinalizer<SecondFinalizer, V1TestEntity>("second");
 ```
 
 ### Entity
 
-To create an entity, you need to implement the
-`IKubernetesObject<V1ObjectMeta>` interface. There are convenience
-classes available to help with initialization, status and spec
-properties.
+To create an entity, implement the `IKubernetesObject<V1ObjectMeta>` interface. The SDK provides convenience classes to help with initialization, status, and spec properties.
 
 ```csharp
 [KubernetesEntity(Group = "testing.dev", ApiVersion = "v1", Kind = "TestEntity")]
@@ -79,12 +65,11 @@ public class V1TestEntity :
     CustomKubernetesEntity<V1TestEntity.EntitySpec, V1TestEntity.EntityStatus>
 {
     public override string ToString()
-    => $"Test Entity ({Metadata.Name}): {Spec.Username} ({Spec.Email})";
+        => $"Test Entity ({Metadata.Name}): {Spec.Username} ({Spec.Email})";
 
     public class EntitySpec
     {
         public string Username { get; set; } = string.Empty;
-
         public string Email { get; set; } = string.Empty;
     }
 
@@ -97,87 +82,92 @@ public class V1TestEntity :
 
 ### Controller
 
-A controller is the element that reconciles a specific entity.
-You implement controllers using the `IResourceController<TEntity>` interface.
-You can reconcile your own custom entities or other Kubernetes resources
-as long as they are registered with the operator. For a guide
-on how to reconcile external resources, refer to the
-[documentation](https://buehler.github.io/dotnet-operator-sdk/).
+A controller reconciles a specific entity type. Implement controllers using the `IEntityController<TEntity>` interface. You can reconcile custom entities or other Kubernetes resources as long as they are registered with the operator. For guidance on reconciling external resources, refer to the [documentation](https://buehler.github.io/dotnet-operator-sdk/).
 
-A simple controller could look like this:
+Example controller implementation:
 
 ```csharp
+using KubeOps.Abstractions.Controller;
+using KubeOps.Abstractions.Rbac;
+using KubeOps.KubernetesClient;
+using Microsoft.Extensions.Logging;
+
 [EntityRbac(typeof(V1TestEntity), Verbs = RbacVerb.All)]
-public class V1TestEntityController : IResourceController<V1TestEntity>
+public class V1TestEntityController : IEntityController<V1TestEntity>
 {
     private readonly IKubernetesClient _client;
     private readonly EntityFinalizerAttacher<FinalizerOne, V1TestEntity> _finalizer1;
+    private readonly ILogger<V1TestEntityController> _logger;
 
     public V1TestEntityController(
         IKubernetesClient client,
-        EntityFinalizerAttacher<FinalizerOne, V1TestEntity> finalizer1)
+        EntityFinalizerAttacher<FinalizerOne, V1TestEntity> finalizer1,
+        ILogger<V1TestEntityController> logger)
     {
         _client = client;
         _finalizer1 = finalizer1;
+        _logger = logger;
     }
 
-    public async Task ReconcileAsync(V1TestEntity entity)
+    public async Task ReconcileAsync(V1TestEntity entity, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Reconciling entity {Entity}.", entity);
 
+        // Attach finalizer and get updated entity
         entity = await _finalizer1(entity);
 
+        // Update status to indicate reconciliation in progress
         entity.Status.Status = "Reconciling";
         entity = await _client.UpdateStatus(entity);
+
+        // Update status to indicate reconciliation complete
         entity.Status.Status = "Reconciled";
         await _client.UpdateStatus(entity);
     }
-}
-```
 
-This controller attaches a specific finalizer to the entity,
-updates its status and then saves the entity.
-
-> [!CAUTION]
-> It is important to always use the returned values
-> of an entity when using modifying actions of the
-> Kubernetes client. Otherwise, you will receive
-> "HTTP CONFLICT" errors because of the resource version
-> field in the entity.
-
-> [!NOTE]
-> Do not update the entity itself in the reconcile loop.
-> It is considered bad practice to update entities
-> while reconciling them. However, the status may be updated.
-> To update entities before they are reconciled
-> (e.g. to ban certain values or change values),
-> use webhooks instead.
-
-### Finalizer
-
-A [finalizer](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/) 
-is an element for asynchronous cleanup in Kubernetes, implemented using the
-`IResourceFinalizer<TEntity>` interface.
-
-It is attached with an `EntityFinalizerAttacher` and is called
-when the entity is marked as deleted.
-
-```csharp
-public class FinalizerOne : IResourceFinalizer<V1TestEntity>
-{
-    public Task FinalizeAsync(V1TestEntity entity)
+    public Task DeletedAsync(V1TestEntity entity, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Entity {Entity} deleted.", entity);
         return Task.CompletedTask;
     }
 }
 ```
 
-> [!NOTE]
-> The controller (if you overwrote the `DeletedAsync` method)
-> will receive the notification as soon as all finalizers
-> are removed.
+This controller:
+
+1. Attaches a finalizer to the entity
+2. Updates the entity's status to indicate reconciliation is in progress
+3. Updates the status again to indicate reconciliation is complete
+4. Implements the required `DeletedAsync` method for handling deletion events
+
+> **CAUTION:**
+> Always use the returned values from modifying actions of the Kubernetes client. Failure to do so will result in "HTTP CONFLICT" errors due to the resource version field in the entity.
+
+> **NOTE:**
+> Do not update the entity itself in the reconcile loop. It is considered bad practice to update entities while reconciling them. However, the status may be updated. To update entities before they are reconciled (e.g., to validate or transform values), use webhooks instead.
+
+### Finalizer
+
+A [finalizer](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/) is a mechanism for asynchronous cleanup in Kubernetes. Implement finalizers using the `IEntityFinalizer<TEntity>` interface.
+
+Finalizers are attached using an `EntityFinalizerAttacher` and are called when the entity is marked for deletion.
+
+```csharp
+using KubeOps.Abstractions.Finalizer;
+
+public class FinalizerOne : IEntityFinalizer<V1TestEntity>
+{
+    public Task FinalizeAsync(V1TestEntity entity, CancellationToken cancellationToken)
+    {
+        // Implement cleanup logic here
+        return Task.CompletedTask;
+    }
+}
+```
+
+> **NOTE:**
+> The controller's `DeletedAsync` method will be called after all finalizers are removed.
 
 ## Documentation
 
-For more information, please visit the
-[documentation](https://buehler.github.io/dotnet-operator-sdk/).
+For more information, visit the [documentation](https://buehler.github.io/dotnet-operator-sdk/).

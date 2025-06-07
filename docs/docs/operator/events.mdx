@@ -1,0 +1,188 @@
+---
+title: Events
+description: Attach Events to your Entities
+sidebar_position: 4.5
+---
+
+# Events
+
+Events in Kubernetes are objects that provide insight into what's happening inside a cluster. They are represented by the `Corev1Event` resource and are used to track important state changes, errors, and other information about resources.
+
+## Understanding Kubernetes Events
+
+Events in Kubernetes are:
+
+- Namespaced resources
+- Automatically cleaned up after a certain time
+- Used to track state changes and errors
+- Visible through `kubectl describe` and `kubectl get events`
+
+### Event Structure
+
+A Kubernetes event contains:
+
+- **Type**: Either `Normal` or `Warning`
+- **Reason**: A short, machine-readable string
+- **Message**: A human-readable description
+- **Count**: Number of times this event has occurred
+- **FirstTimestamp**: When the event first occurred
+- **LastTimestamp**: When the event last occurred
+- **InvolvedObject**: The object the event is about
+
+## Common Event Examples
+
+Here are some typical events you might see for a Deployment:
+
+```yaml
+# Successful pod creation
+Type:    Normal
+Reason:  Scheduled
+Message: Successfully assigned default/my-deployment-5d89d9d6b8-abc12 to node-1
+
+# Image pull success
+Type:    Normal
+Reason:  Pulled
+Message: Successfully pulled image "myapp:1.0.0"
+
+# Image pull failure
+Type:    Warning
+Reason:  Failed
+Message: Failed to pull image "myapp:1.0.0": rpc error: code = Unknown desc = Error response from daemon: pull access denied for myapp, repository does not exist or may require 'docker login'
+
+# Pod startup
+Type:    Normal
+Reason:  Started
+Message: Started container myapp
+```
+
+## Publishing Events in KubeOps
+
+KubeOps provides an `EventPublisher` to create and update events for your custom resources. The publisher is available through dependency injection in your controllers.
+
+### Basic Usage
+
+```csharp
+public class DemoController(EventPublisher eventPublisher) : IEntityController<V1DemoEntity>
+{
+    public async Task ReconcileAsync(V1DemoEntity entity, CancellationToken token)
+    {
+        try
+        {
+            // Your reconciliation logic here
+            await eventPublisher(
+                entity,
+                "Reconciled",
+                "Entity was successfully reconciled",
+                EventType.Normal,
+                token);
+        }
+        catch (Exception ex)
+        {
+            await eventPublisher(
+                entity,
+                "ReconcileFailed",
+                $"Failed to reconcile entity: {ex.Message}",
+                EventType.Warning,
+                token);
+        }
+    }
+}
+```
+
+### Event Types
+
+KubeOps provides two event types:
+
+- `EventType.Normal`: For informational events
+- `EventType.Warning`: For error conditions or issues
+
+### Best Practices
+
+1. **Event Naming**:
+
+   - Use consistent, machine-readable reasons
+   - Make messages human-readable and descriptive
+   - Include relevant details in the message
+
+2. **Event Frequency**:
+
+   - Don't create too many events
+   - Use the count field to track repeated events
+   - Focus on important state changes
+
+3. **Event Content**:
+   - Include relevant error messages
+   - Add context about the operation
+   - Reference related resources
+
+### Example Scenarios
+
+1. **Resource Creation**:
+
+```csharp
+await eventPublisher(
+    entity,
+    "Created",
+    $"Created new {entity.Kind} {entity.Metadata.Name}",
+    EventType.Normal,
+    token);
+```
+
+2. **Validation Failure**:
+
+```csharp
+await eventPublisher(
+    entity,
+    "ValidationFailed",
+    $"Invalid configuration: {validationError}",
+    EventType.Warning,
+    token);
+```
+
+3. **External Service Error**:
+
+```csharp
+await eventPublisher(
+    entity,
+    "ExternalServiceError",
+    $"Failed to connect to external service: {error.Message}",
+    EventType.Warning,
+    token);
+```
+
+## Viewing Events
+
+You can view events in several ways:
+
+1. **Using kubectl**:
+
+```bash
+# List all events in a namespace
+kubectl get events
+
+# Describe a specific resource to see its events
+kubectl describe demo-entity my-entity
+```
+
+2. **Using the Kubernetes Dashboard**:
+   - Navigate to the Events section
+   - Filter by namespace and resource type
+
+## Common Pitfalls
+
+1. **Too Many Events**:
+
+   - Creating events for every small change
+   - Not using the count field for repeated events
+   - Creating events that don't provide value
+
+2. **Poor Event Quality**:
+
+   - Unclear or inconsistent messages
+   - Missing important context
+   - Not distinguishing between normal and warning events
+
+3. **Event Timing**:
+   - Creating events too early in the process
+   - Not updating events when conditions change
+   - Missing important state transitions

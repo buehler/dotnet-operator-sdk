@@ -1,0 +1,192 @@
+---
+title: Finalizers
+description: Implementing Finalizer Logic
+sidebar_position: 3
+---
+
+# Finalizers
+
+Finalizers are a crucial mechanism in Kubernetes for ensuring proper cleanup of resources. They provide a way to guarantee that cleanup operations are completed before a resource is actually deleted from the cluster.
+
+## What are Finalizers?
+
+Finalizers are markers on resources that prevent their deletion until certain conditions are met. They are used to:
+
+- Ensure proper cleanup of dependent resources
+- Prevent accidental deletion of critical resources
+- Guarantee that cleanup operations are completed successfully
+
+## How Kubernetes Handles Finalizers
+
+When a resource is marked for deletion:
+
+1. Kubernetes adds a `deletionTimestamp` to the resource
+2. The resource remains in the cluster until all finalizers are removed
+3. Each finalizer must explicitly remove itself after completing its cleanup
+4. Only when all finalizers are removed is the resource actually deleted
+
+This mechanism ensures that cleanup operations are:
+
+- Guaranteed to run
+- Run in a controlled manner
+- Completed before resource deletion
+
+## Implementing Finalizers
+
+To implement a finalizer, create a class that implements `IEntityFinalizer<TEntity>`:
+
+```csharp
+public class DemoEntityFinalizer(
+    ILogger<DemoEntityFinalizer> logger,
+    IKubernetesClient client) : IEntityFinalizer<V1DemoEntity>
+{
+    public async Task FinalizeAsync(V1DemoEntity entity, CancellationToken token)
+    {
+        logger.LogInformation("Finalizing entity {Entity}", entity);
+
+        try
+        {
+            // Clean up resources
+            await CleanupResources(entity);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error finalizing entity {Entity}", entity);
+            throw; // Re-throw to prevent finalizer removal
+        }
+    }
+}
+```
+
+## Using Finalizers
+
+Finalizers are automatically attached to entities using the `EntityFinalizerAttacher` delegate. This delegate is injected into your controller and handles the finalizer attachment:
+
+```csharp
+[EntityRbac(typeof(V1DemoEntity), Verbs = RbacVerb.All)]
+public class V1DemoEntityController(
+    ILogger<V1DemoEntityController> logger,
+    EntityFinalizerAttacher<DemoEntityFinalizer, V1DemoEntity> finalizer)
+    : IEntityController<V1DemoEntity>
+{
+    public async Task ReconcileAsync(V1DemoEntity entity, CancellationToken token)
+    {
+        // Attach the finalizer to the entity
+        entity = await finalizer(entity, token);
+
+        // Continue with reconciliation logic
+        logger.LogInformation("Reconciling entity {Entity}", entity);
+    }
+
+    public async Task DeletedAsync(V1DemoEntity entity, CancellationToken token)
+    {
+        logger.LogInformation("Entity {Entity} was deleted", entity);
+    }
+}
+```
+
+## Best Practices
+
+### 1. Idempotency
+
+- Make finalizer logic idempotent
+- Handle cases where resources are already deleted
+- Check resource existence before attempting cleanup
+
+```csharp
+public async Task FinalizeAsync(V1DemoEntity entity, CancellationToken token)
+{
+    // Check if resources still exist before cleanup
+    var resources = await GetResources(entity);
+    if (!resources.Any())
+    {
+        // Resources already cleaned up
+        return;
+    }
+
+    // Perform cleanup
+    await CleanupResources(resources);
+}
+```
+
+### 2. Error Handling
+
+- Handle errors gracefully
+- Log errors with appropriate context
+- Consider implementing retry logic for transient failures
+
+```csharp
+public async Task FinalizeAsync(V1DemoEntity entity, CancellationToken token)
+{
+    try
+    {
+        await FinalizeInternal(entity, token);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error finalizing entity {Entity}", entity);
+        // Re-throw to prevent finalizer removal
+        throw;
+    }
+}
+```
+
+### 3. Resource Management
+
+- Clean up all resources created by the entity
+- Handle dependencies between resources
+- Consider cleanup order (e.g., delete pods before services)
+
+## Common Pitfalls
+
+### 1. Stuck Resources
+
+If a finalizer fails to complete:
+
+- The resource will remain in the cluster
+- It will be marked for deletion but never actually deleted
+- Manual intervention may be required
+
+To fix stuck resources:
+
+1. Identify the failing finalizer
+2. Fix the underlying issue
+3. Manually remove the finalizer only if necessary:
+   ```bash
+   kubectl patch <resource> <name> -p '{"metadata":{"finalizers":[]}}' --type=merge
+   ```
+
+:::warning Manual Finalizer Removal
+Only remove finalizers manually as a last resort. This can lead to orphaned resources and inconsistent cluster state.
+:::
+
+### 2. Race Conditions
+
+- Multiple finalizers running concurrently
+- Resources being deleted by other controllers
+- Network issues during cleanup
+
+Solution: Implement proper error handling and retry logic.
+
+### 3. Infinite Loops
+
+- Finalizer logic that never completes
+- Resources that can't be deleted
+- External dependencies that are unavailable
+
+Solution: Implement timeouts and fallback mechanisms.
+
+## When to Use Finalizers
+
+Use finalizers when:
+
+- Resources need guaranteed cleanup
+- External systems need to be notified of deletion
+- Dependencies need to be cleaned up in a specific order
+- Resource deletion needs to be atomic
+
+Don't use finalizers for:
+
+- Simple logging or monitoring
+- Non-critical cleanup tasks
+- Operations that can be handled by the `DeletedAsync` method in controllers

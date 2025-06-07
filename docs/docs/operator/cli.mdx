@@ -1,0 +1,156 @@
+---
+title: CLI
+description: Using the KubeOps CLI
+sidebar_position: 3
+---
+
+# Using the KubeOps CLI
+
+The KubeOps CLI is a command-line tool that helps you manage your operator development workflow. It provides commands for generating Kubernetes resources, managing CRDs, and checking cluster information.
+
+## Installation
+
+Install the CLI globally:
+
+```bash
+dotnet tool install --global KubeOps.Cli
+```
+
+Or locally in your project:
+
+```bash
+dotnet new tool-manifest
+dotnet tool install --local KubeOps.Cli
+```
+
+## Development Workflow
+
+During local development, you'll primarily use the `install` and `uninstall` commands to manage your operator's CRDs in your development cluster.
+
+### Installing CRDs
+
+To install your operator's CRDs into your development cluster:
+
+```bash
+dotnet kubeops install ./MyOperator.csproj
+```
+
+This command:
+
+- Analyzes your project for custom resources
+- Generates the necessary CRDs
+- Installs them into your current Kubernetes context
+
+:::warning Production Usage
+The `install` and `uninstall` commands are primarily intended for development purposes. In production, you should use the generated Kubernetes manifests and your preferred deployment method (e.g., Helm, Kustomize, or GitOps).
+:::
+
+### Uninstalling CRDs
+
+To remove your operator's CRDs from the development cluster:
+
+```bash
+dotnet kubeops uninstall ./MyOperator.csproj
+```
+
+This is useful when:
+
+- Testing different versions of your CRDs
+- Cleaning up after development
+- Troubleshooting CRD-related issues
+
+## Resource Generation
+
+The `generate` command creates all necessary Kubernetes resources for your operator:
+
+```bash
+dotnet kubeops generate operator MyOperator ./MyOperator.csproj
+```
+
+This generates:
+
+- RBAC rules
+- Dockerfile
+- Deployment configuration
+- CRDs
+- Namespace configuration
+- Kustomization files
+
+:::note Build Integration
+The resource generation is automatically included in the build process. You don't need to run the generate command manually unless you want to customize the output location or format. See [Build Customization](./build-customization) for details on configuring the build process.
+:::
+
+### Generation Options
+
+The generate command supports several options:
+
+```bash
+dotnet kubeops generate operator MyOperator ./MyOperator.csproj --out ./k8s --format yaml
+```
+
+Common options:
+
+- `--out`: Specify output directory
+- `--format`: Choose output format (yaml/json)
+- `--clear-out`: Clear output directory before generation
+- `--docker-image`: Specify Docker image name
+- `--docker-image-tag`: Specify Docker image tag
+
+## Cluster Information
+
+The `version` command shows information about your current Kubernetes cluster:
+
+```bash
+dotnet kubeops version
+```
+
+This displays:
+
+- Git version
+- Major version
+- Minor version
+- Platform information
+
+This is useful for:
+
+- Verifying cluster connectivity
+- Checking compatibility
+- Troubleshooting issues
+
+## Command Reference
+
+### Global Options
+
+All commands support these options:
+
+- `--force` or `-f`: Skip confirmation prompts
+- `--project`: Regex pattern to filter projects in a solution
+- `--target-framework`: Specify target framework for solution projects
+
+### Common Use Cases
+
+1. **Development Setup**:
+
+   ```bash
+   # Install CRDs for development
+   dotnet kubeops install ./MyOperator.csproj
+
+   # Generate resources for deployment
+   dotnet kubeops generate operator MyOperator ./MyOperator.csproj
+   ```
+
+2. **Testing Different Versions**:
+
+   ```bash
+   # Uninstall current version
+   dotnet kubeops uninstall ./MyOperator.csproj
+
+   # Install new version
+   dotnet kubeops install ./MyOperator.csproj
+   ```
+
+3. **Custom Resource Generation**:
+   ```bash
+   # Generate resources with custom output
+   dotnet kubeops generate operator MyOperator ./MyOperator.csproj --out ./k8s --format yaml
+   ```
