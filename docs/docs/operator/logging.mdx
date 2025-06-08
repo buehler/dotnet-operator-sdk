@@ -3,4 +3,56 @@ title: Logging
 description: Logging, Tracing and OpenTelemetry
 sidebar_position: 6
 ---
-# Logging
+# Logging, Tracing, and OpenTelemetry
+
+## 1. Logging with ILogger and Scopes
+
+In this project, logging is implemented using Microsoft's [`ILogger`](https://learn.microsoft.com/en-us/dotnet/core/extensions/logging) interface.
+This provides a standardized and flexible way to record events within the application.
+The use of scopes also allows for hierarchical organization of logs and the addition of contextual information to each log entry.
+
+### 1.1 ILogger Fundamentals
+
+The `ILogger` interface is part of [`Microsoft.Extensions.Logging`](https://www.nuget.org/packages/Microsoft.Extensions.Logging) and offers methods for logging messages
+with various severity levels (e.g., `Information`, `Warning`, `Error`).
+
+### 1.2 Using Scopes
+
+Scopes allow you to define a logical area within which all log entries are enriched with additional contextual information.
+This is particularly useful for grouping related operations or requests.
+
+By default the [ResourceWatcher](https://github.com/buehler/dotnet-operator-sdk/blob/main/src/KubeOps.Operator/Watcher/ResourceWatcher%7BTEntity%7D.cs) starts
+a new scope on every watch event received. That scope contains:
+
+- **EventType** Type of the received watch event ('Added', 'Modified', 'Deleted', 'Error', 'Bookmark')
+- **Kind** CRD Kind
+- **Namespace** CRD Namespace
+- **Name** CRD Name
+- **ResourceVersion** CRD ResourceVersion
+
+
+## 2. Tracing with System.Diagnostics and ActivitySource
+
+For distributed tracing, `System.Diagnostics` in conjunction with `ActivitySource` is used.
+This enables the creation of traces that track the flow of operations across different services.
+
+### 2.1 System.Diagnostics.ActivitySource Fundamentals
+
+`ActivitySource` is the starting point for creating `Activity` objects, which represent the individual spans of a trace.
+
+### 2.2 Trace Context and Spans
+
+Each `Activity` object represents a span in a trace.
+Spans can be nested to illustrate the hierarchy of operations.
+The trace context is automatically propagated across process boundaries when the correct exporters are configured.
+
+## 3. OpenTelemetry Configuration for Azure Logging
+
+OpenTelemetry is used to export logging and tracing data to Azure.
+Here is an example configuration that sets up the necessary exporters.
+
+### 3.1 Installing OpenTelemetry Packages
+
+Ensure that the required OpenTelemetry packages are installed:
+
+### 3.2 Example Configuration in `Program.cs` (or `Startup.cs`)
