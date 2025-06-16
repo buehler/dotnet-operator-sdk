@@ -16,7 +16,9 @@ function HomepageHeader() {
           {siteConfig.title}
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
-        <img src={LogoUrl} alt="KubeOps Logo" />
+        <div style={{ display: "inline-flex", background: "black", padding: "1rem", borderRadius: "9999px" }}>
+          <img src={LogoUrl} alt="KubeOps Logo" className={styles.logo} />
+        </div>
       </div>
     </header>
   );
@@ -25,9 +27,21 @@ function HomepageHeader() {
 export default function Home() {
   const { siteConfig } = useDocusaurusContext();
   return (
-    <Layout title={`Hello from ${siteConfig.title}`} description="Description will go into a meta tag in <head />">
+    <Layout title={`${siteConfig.title}`} description="Main page of the documentation">
       <HomepageHeader />
-      <main></main>
+      <main>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: "1rem" }}>
+          <h2>Join our Discord</h2>
+          <iframe
+            src="https://discord.com/widget?id=1384101796649242675&theme=dark"
+            width="350"
+            height="500"
+            allowtransparency="true"
+            frameborder="0"
+            sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+          ></iframe>
+        </div>
+      </main>
     </Layout>
   );
 }
