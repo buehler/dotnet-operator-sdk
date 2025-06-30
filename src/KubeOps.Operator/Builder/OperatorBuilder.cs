@@ -38,11 +38,12 @@ internal sealed class OperatorBuilder : IOperatorBuilder
 
     public IServiceCollection Services { get; }
 
-    private static Action<FusionCacheOptions> DefaultCacheConfiguration
+    private static Action<FusionCacheOptions> DefaultResourceWatcherCacheConfiguration
         => options =>
         {
+            options.CacheKeyPrefix = "rw-";
             options.DefaultEntryOptions
-                .SetDuration(Timeout.InfiniteTimeSpan);
+                .SetDuration(TimeSpan.MaxValue);
         };
 
     public IOperatorBuilder AddController<TImplementation, TEntity>()
@@ -124,7 +125,7 @@ internal sealed class OperatorBuilder : IOperatorBuilder
         Services
             .AddFusionCache(CacheConstants.CacheNames.ResourceWatcher)
             .WithOptions(
-                options => (_settings.ConfigureResourceWatcherEntityCache ?? DefaultCacheConfiguration).Invoke(options));
+                options => (_settings.ConfigureResourceWatcherEntityCache ?? DefaultResourceWatcherCacheConfiguration).Invoke(options));
 
         // Add the default configuration and the client separately. This allows external users to override either
         // just the config (e.g. for integration tests) or to replace the whole client, e.g. with a mock.

@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using System.Runtime.Serialization;
@@ -36,8 +35,6 @@ public class ResourceWatcher<TEntity>(
     : IHostedService, IAsyncDisposable, IDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> _entityLocks = new();
-
     private readonly IFusionCache _entityCache = cacheProvider.GetCache(CacheConstants.CacheNames.ResourceWatcher);
     private CancellationTokenSource _cancellationTokenSource = new();
     private uint _watcherReconnectRetries;
@@ -137,35 +134,25 @@ public class ResourceWatcher<TEntity>(
 
     protected virtual async Task OnEventAsync(WatchEventType type, TEntity entity, CancellationToken cancellationToken)
     {
-        SemaphoreSlim? semaphore;
+        MaybeValue<long?> cachedGeneration;
 
         switch (type)
         {
             case WatchEventType.Added:
-                semaphore = _entityLocks.GetOrAdd(entity.Uid(), _ => new(1, 1));
-                await semaphore.WaitAsync(cancellationToken);
+                cachedGeneration = await _entityCache.TryGetAsync<long?>(entity.Uid(), token: cancellationToken);
 
-                try
+                if (!cachedGeneration.HasValue)
                 {
-                    var cachedGeneration = await _entityCache.TryGetAsync<long?>(entity.Uid(), token: cancellationToken);
-
-                    if (!cachedGeneration.HasValue)
-                    {
-                        // Only perform reconciliation if the entity was not already in the cache.
-                        await _entityCache.SetAsync(entity.Uid(), entity.Generation() ?? 0, token: cancellationToken);
-                        await ReconcileModificationAsync(entity, cancellationToken);
-                    }
-                    else
-                    {
-                        logger.LogDebug(
-                            """Received ADDED event for entity "{Kind}/{Name}" which was already in the cache. Skip event.""",
-                            entity.Kind,
-                            entity.Name());
-                    }
+                    // Only perform reconciliation if the entity was not already in the cache.
+                    await _entityCache.SetAsync(entity.Uid(), entity.Generation() ?? 0, token: cancellationToken);
+                    await ReconcileModificationAsync(entity, cancellationToken);
                 }
-                finally
+                else
                 {
-                    semaphore.Release();
+                    logger.LogDebug(
+                        """Received ADDED event for entity "{Kind}/{Name}" which was already in the cache. Skip event.""",
+                        entity.Kind,
+                        entity.Name());
                 }
 
                 break;
@@ -173,31 +160,21 @@ public class ResourceWatcher<TEntity>(
                 switch (entity)
                 {
                     case { Metadata.DeletionTimestamp: null }:
-                        semaphore = _entityLocks.GetOrAdd(entity.Uid(), _ => new(1, 1));
-                        await semaphore.WaitAsync(cancellationToken);
+                        cachedGeneration = await _entityCache.TryGetAsync<long?>(entity.Uid(), token: cancellationToken);
 
-                        try
+                        // Check if entity spec has changed through "Generation" value increment. Skip reconcile if not changed.
+                        if (cachedGeneration.HasValue && cachedGeneration >= entity.Generation())
                         {
-                            var cachedGeneration = await _entityCache.TryGetAsync<long?>(entity.Uid(), token: cancellationToken);
-
-                            // Check if entity spec has changed through "Generation" value increment. Skip reconcile if not changed.
-                            if (cachedGeneration.HasValue && cachedGeneration >= entity.Generation())
-                            {
-                                logger.LogDebug(
-                                    """Entity "{Kind}/{Name}" modification did not modify generation. Skip event.""",
-                                    entity.Kind,
-                                    entity.Name());
-                                return;
-                            }
-
-                            // update cached generation since generation now changed
-                            await _entityCache.SetAsync(entity.Uid(), entity.Generation() ?? 1, token: cancellationToken);
-                            await ReconcileModificationAsync(entity, cancellationToken);
+                            logger.LogDebug(
+                                """Entity "{Kind}/{Name}" modification did not modify generation. Skip event.""",
+                                entity.Kind,
+                                entity.Name());
+                            return;
                         }
-                        finally
-                        {
-                            semaphore.Release();
-                        }
+
+                        // update cached generation since generation now changed
+                        await _entityCache.SetAsync(entity.Uid(), entity.Generation() ?? 1, token: cancellationToken);
+                        await ReconcileModificationAsync(entity, cancellationToken);
 
                         break;
                     case { Metadata: { DeletionTimestamp: not null, Finalizers.Count: > 0 } }:
