@@ -154,3 +154,43 @@ public class V1DemoEntity : CustomKubernetesEntity<V1DemoEntity.V1DemoEntitySpec
     }
 }
 ```
+
+## Serialization Helper: KubernetesJsonSerializer
+
+When working with custom entities, you may need to serialize or deserialize them to and from JSON, especially when interacting with the Kubernetes API or for testing purposes. KubeOps provides a helper class, `KubernetesJsonSerializer`, to make this process straightforward and consistent with Kubernetes conventions.
+
+### Example Usage
+
+#### Get the Kubernetes specific JsonSerializerOptions
+
+```csharp
+var options = KubernetesJsonSerializer.SerializerOptions;
+```
+
+#### Serialize an Entity
+
+```csharp
+var entity = new V1DemoEntity { /* ... initialize ... */ };
+string json = KubernetesJsonSerializer.Serialize(entity);
+```
+
+#### Deserialize an Entity
+
+```csharp
+string json = /* JSON string from Kubernetes */;
+var entity = KubernetesJsonSerializer.Deserialize<V1DemoEntity>(json);
+```
+
+#### With Custom JsonSerializerOptions
+
+```csharp
+var options = new JsonSerializerOptions { WriteIndented = true };
+string json = KubernetesJsonSerializer.Serialize(entity, options);
+```
+
+### API Overview
+
+- `Serialize(object value, JsonSerializerOptions? options = null)`: Serializes an object to a JSON string.
+- `Deserialize<T>(...)`: Deserializes JSON (from string, stream, `JsonDocument`, `JsonElement`, or `JsonNode`) to a strongly-typed object.
+
+This helper ensures your custom entities are always serialized and deserialized in a way that's compatible with Kubernetes expectations.
