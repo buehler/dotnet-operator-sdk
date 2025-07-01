@@ -10,7 +10,7 @@ namespace KubeOps.Operator.Builder;
 /// <summary>
 /// Provides extension methods for configuring caching related to the operator.
 /// </summary>
-public static class CacheExtensions
+internal static class CacheExtensions
 {
     /// <summary>
     /// Configures resource watcher caching for the given service collection.
@@ -21,7 +21,7 @@ public static class CacheExtensions
     /// The operator settings that optionally provide a custom configuration for the resource watcher entity cache.
     /// </param>
     /// <returns>The modified service collection with resource watcher caching configured.</returns>
-    public static IServiceCollection WithResourceWatcherCaching(this IServiceCollection services, OperatorSettings settings)
+    internal static IServiceCollection WithResourceWatcherEntityCaching(this IServiceCollection services, OperatorSettings settings)
     {
         var cacheBuilder = services
             .AddFusionCache(CacheConstants.CacheNames.ResourceWatcher);

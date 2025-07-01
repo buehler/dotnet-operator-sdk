@@ -21,8 +21,6 @@ using KubeOps.Operator.Watcher;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-using ZiggyCreatures.Caching.Fusion;
-
 namespace KubeOps.Operator.Builder;
 
 internal sealed class OperatorBuilder : IOperatorBuilder
@@ -114,7 +112,7 @@ internal sealed class OperatorBuilder : IOperatorBuilder
         Services.AddSingleton(new ActivitySource(_settings.Name));
 
         // add and configure resource watcher entity cache
-        Services.WithResourceWatcherCaching(_settings);
+        Services.WithResourceWatcherEntityCaching(_settings);
 
         // Add the default configuration and the client separately. This allows external users to override either
         // just the config (e.g. for integration tests) or to replace the whole client, e.g. with a mock.
