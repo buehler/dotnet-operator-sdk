@@ -67,7 +67,7 @@ public sealed partial class OperatorSettings
     /// This property is optional and can be used to customize caching behavior for resource watcher entities.
     /// If not set, a default cache configuration is applied.
     /// </summary>
-    public Action<FusionCacheOptions>? ConfigureResourceWatcherEntityCache { get; set; }
+    public Action<IFusionCacheBuilder>? ConfigureResourceWatcherEntityCache { get; set; }
 
     [GeneratedRegex(@"(\W|_)", RegexOptions.CultureInvariant)]
     private static partial Regex OperatorNameRegex();

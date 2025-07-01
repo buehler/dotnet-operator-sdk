@@ -38,14 +38,6 @@ internal sealed class OperatorBuilder : IOperatorBuilder
 
     public IServiceCollection Services { get; }
 
-    private static Action<FusionCacheOptions> DefaultResourceWatcherCacheConfiguration
-        => options =>
-        {
-            options.CacheKeyPrefix = "rw-";
-            options.DefaultEntryOptions
-                .SetDuration(TimeSpan.MaxValue);
-        };
-
     public IOperatorBuilder AddController<TImplementation, TEntity>()
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -122,10 +114,7 @@ internal sealed class OperatorBuilder : IOperatorBuilder
         Services.AddSingleton(new ActivitySource(_settings.Name));
 
         // add and configure resource watcher entity cache
-        Services
-            .AddFusionCache(CacheConstants.CacheNames.ResourceWatcher)
-            .WithOptions(
-                options => (_settings.ConfigureResourceWatcherEntityCache ?? DefaultResourceWatcherCacheConfiguration).Invoke(options));
+        Services.WithResourceWatcherCaching(_settings);
 
         // Add the default configuration and the client separately. This allows external users to override either
         // just the config (e.g. for integration tests) or to replace the whole client, e.g. with a mock.
