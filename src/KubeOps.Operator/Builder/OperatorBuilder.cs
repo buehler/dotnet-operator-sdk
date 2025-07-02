@@ -38,47 +38,30 @@ internal sealed class OperatorBuilder : IOperatorBuilder
 
     public IOperatorBuilder AddController<TImplementation, TEntity>()
         where TImplementation : class, IEntityController<TEntity>
-        where TEntity : IKubernetesObject<V1ObjectMeta>
-    {
-        Services.AddHostedService<EntityRequeueBackgroundService<TEntity>>();
-        Services.TryAddScoped<IEntityController<TEntity>, TImplementation>();
-        Services.TryAddSingleton(new TimedEntityQueue<TEntity>());
-        Services.TryAddTransient<IEntityRequeueFactory, KubeOpsEntityRequeueFactory>();
-        Services.TryAddTransient<EntityRequeue<TEntity>>(services =>
-            services.GetRequiredService<IEntityRequeueFactory>().Create<TEntity>());
-
-        if (_settings.EnableLeaderElection)
-        {
-            Services.AddHostedService<LeaderAwareResourceWatcher<TEntity>>();
-        }
-        else
-        {
-            Services.AddHostedService<ResourceWatcher<TEntity>>();
-        }
-
-        return this;
-    }
+        where TEntity : IKubernetesObject<V1ObjectMeta> =>
+        AddController<TImplementation, TEntity, DefaultEntityLabelSelector<TEntity>>();
 
     public IOperatorBuilder AddController<TImplementation, TEntity, TLabelSelector>()
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        where TLabelSelector : class, IEntityLabelSelector<TEntity>
+        where TLabelSelector : class, IEntityLabelSelector<TEntity, TLabelSelector>
     {
         Services.AddHostedService<EntityRequeueBackgroundService<TEntity>>();
         Services.TryAddScoped<IEntityController<TEntity>, TImplementation>();
         Services.TryAddSingleton(new TimedEntityQueue<TEntity>());
         Services.TryAddTransient<IEntityRequeueFactory, KubeOpsEntityRequeueFactory>();
-        Services.TryAddTransient<EntityRequeue<TEntity>>(services =>
-            services.GetRequiredService<IEntityRequeueFactory>().Create<TEntity>());
-        Services.TryAddSingleton<IEntityLabelSelector<TEntity>, TLabelSelector>();
+        Services.TryAddTransient<EntityRequeue<TEntity>>(
+            services => services.GetRequiredService<IEntityRequeueFactory>().Create<TEntity>()
+        );
+        Services.TryAddSingleton<IEntityLabelSelector<TEntity, TLabelSelector>, TLabelSelector>();
 
         if (_settings.EnableLeaderElection)
         {
-            Services.AddHostedService<LeaderAwareResourceWatcher<TEntity>>();
+            Services.AddHostedService<LeaderAwareResourceWatcher<TEntity, TLabelSelector>>();
         }
         else
         {
-            Services.AddHostedService<ResourceWatcher<TEntity>>();
+            Services.AddHostedService<ResourceWatcher<TEntity, TLabelSelector>>();
         }
 
         return this;
@@ -131,7 +114,9 @@ internal sealed class OperatorBuilder : IOperatorBuilder
         Services.TryAddTransient<EventPublisher>(services =>
             services.GetRequiredService<IEventPublisherFactory>().Create());
 
-        Services.AddSingleton(typeof(IEntityLabelSelector<>), typeof(DefaultEntityLabelSelector<>));
+        // Register default entity label selector for all entities
+        // Note: We cannot register the open generic types directly due to arity mismatch
+        // The registration happens in AddController when specific types are needed
 
         if (_settings.EnableLeaderElection)
         {

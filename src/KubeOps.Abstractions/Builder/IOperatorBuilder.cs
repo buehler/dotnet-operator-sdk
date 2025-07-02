@@ -42,7 +42,7 @@ public interface IOperatorBuilder
     IOperatorBuilder AddController<TImplementation, TEntity, TLabelSelector>()
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        where TLabelSelector : class, IEntityLabelSelector<TEntity>;
+        where TLabelSelector : class, IEntityLabelSelector<TEntity, TLabelSelector>;
 
     /// <summary>
     /// Add a finalizer implementation for a specific entity.

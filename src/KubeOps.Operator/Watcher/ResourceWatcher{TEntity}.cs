@@ -23,13 +23,33 @@ namespace KubeOps.Operator.Watcher;
 
 public class ResourceWatcher<TEntity>(
     ActivitySource activitySource,
-    ILogger<ResourceWatcher<TEntity>> logger,
+    ILogger<ResourceWatcher<TEntity, DefaultEntityLabelSelector<TEntity>>> logger,
     IServiceProvider provider,
     TimedEntityQueue<TEntity> requeue,
     OperatorSettings settings,
-    IEntityLabelSelector<TEntity> labelSelector,
-    IKubernetesClient client)
-    : IHostedService, IAsyncDisposable, IDisposable
+    IEntityLabelSelector<TEntity, DefaultEntityLabelSelector<TEntity>> labelSelector,
+    IKubernetesClient client
+)
+    : ResourceWatcher<TEntity, DefaultEntityLabelSelector<TEntity>>(
+        activitySource,
+        logger,
+        provider,
+        requeue,
+        settings,
+        labelSelector,
+        client
+    )
+    where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+public class ResourceWatcher<TEntity, TSelector>(
+    ActivitySource activitySource,
+    ILogger<ResourceWatcher<TEntity, TSelector>> logger,
+    IServiceProvider provider,
+    TimedEntityQueue<TEntity> requeue,
+    OperatorSettings settings,
+    IEntityLabelSelector<TEntity, TSelector> labelSelector,
+    IKubernetesClient client
+) : IHostedService, IAsyncDisposable, IDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private readonly ConcurrentDictionary<string, long> _entityCache = new();

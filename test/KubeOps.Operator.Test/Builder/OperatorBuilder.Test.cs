@@ -6,6 +6,7 @@ using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Events;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.Abstractions.Queue;
+using KubeOps.KubernetesClient;
 using KubeOps.KubernetesClient.LabelSelectors;
 using KubeOps.Operator.Builder;
 using KubeOps.Operator.Finalizer;
@@ -26,6 +27,11 @@ public class OperatorBuilderTest
     [Fact]
     public void Should_Add_Default_Resources()
     {
+        // Add controllers to trigger the label selector registrations
+        _builder.AddController<TestController, V1OperatorIntegrationTestEntity, TestLabelSelector>();
+        _builder.AddController<TestController, V1OperatorIntegrationTestEntity, TestLabelSelector2>();
+
+        // This test verifies the basic services that are registered
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(OperatorSettings) &&
             s.Lifetime == ServiceLifetime.Singleton);
@@ -33,8 +39,18 @@ public class OperatorBuilderTest
             s.ServiceType == typeof(EventPublisher) &&
             s.Lifetime == ServiceLifetime.Transient);
         _builder.Services.Should().Contain(s =>
-            s.ServiceType == typeof(IEntityLabelSelector<>) &&
-            s.ImplementationType == typeof(DefaultEntityLabelSelector<>) &&
+            s.ServiceType == typeof(IEventPublisherFactory) &&
+            s.Lifetime == ServiceLifetime.Transient);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(IKubernetesClient) &&
+            s.Lifetime == ServiceLifetime.Singleton);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(IEntityLabelSelector<V1OperatorIntegrationTestEntity, TestLabelSelector>) &&
+            s.ImplementationType == typeof(TestLabelSelector) &&
+            s.Lifetime == ServiceLifetime.Singleton);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(IEntityLabelSelector<V1OperatorIntegrationTestEntity, TestLabelSelector2>) &&
+            s.ImplementationType == typeof(TestLabelSelector2) &&
             s.Lifetime == ServiceLifetime.Singleton);
     }
 
@@ -45,16 +61,27 @@ public class OperatorBuilderTest
         var services = new ServiceCollection();
 
         // Register the default and specific implementations
-        services.AddSingleton(typeof(IEntityLabelSelector<>), typeof(DefaultEntityLabelSelector<>));
-        services.TryAddSingleton<IEntityLabelSelector<V1OperatorIntegrationTestEntity>, TestLabelSelector>();
+        services.TryAddSingleton<IEntityLabelSelector<V1OperatorIntegrationTestEntity, TestLabelSelector>, TestLabelSelector>();
+        services.TryAddSingleton<IEntityLabelSelector<V1OperatorIntegrationTestEntity, TestLabelSelector2>, TestLabelSelector2>();
+
 
         var serviceProvider = services.BuildServiceProvider();
 
-        // Act
-        var resolvedService = serviceProvider.GetRequiredService<IEntityLabelSelector<V1OperatorIntegrationTestEntity>>();
+        {
+            // Act
+            var resolvedService = serviceProvider.GetRequiredService<IEntityLabelSelector<V1OperatorIntegrationTestEntity, TestLabelSelector>>();
 
-        // Assert
-        Assert.IsType<TestLabelSelector>(resolvedService);
+            // Assert
+            Assert.IsType<TestLabelSelector>(resolvedService);
+        }
+
+        {
+            // Act
+            var resolvedService = serviceProvider.GetRequiredService<IEntityLabelSelector<V1OperatorIntegrationTestEntity, TestLabelSelector2>>();
+
+            // Assert
+            Assert.IsType<TestLabelSelector2>(resolvedService);
+        }
     }
 
     [Fact]
@@ -68,7 +95,7 @@ public class OperatorBuilderTest
             s.Lifetime == ServiceLifetime.Scoped);
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(IHostedService) &&
-            s.ImplementationType == typeof(ResourceWatcher<V1OperatorIntegrationTestEntity>) &&
+            s.ImplementationType == typeof(ResourceWatcher<V1OperatorIntegrationTestEntity, DefaultEntityLabelSelector<V1OperatorIntegrationTestEntity>>) &&
             s.Lifetime == ServiceLifetime.Singleton);
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(TimedEntityQueue<V1OperatorIntegrationTestEntity>) &&
@@ -82,6 +109,7 @@ public class OperatorBuilderTest
     public void Should_Add_Controller_Resources_With_Label_Selector()
     {
         _builder.AddController<TestController, V1OperatorIntegrationTestEntity, TestLabelSelector>();
+        _builder.AddController<TestController, V1OperatorIntegrationTestEntity, TestLabelSelector2>();
 
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(IEntityController<V1OperatorIntegrationTestEntity>) &&
@@ -89,7 +117,11 @@ public class OperatorBuilderTest
             s.Lifetime == ServiceLifetime.Scoped);
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(IHostedService) &&
-            s.ImplementationType == typeof(ResourceWatcher<V1OperatorIntegrationTestEntity>) &&
+            s.ImplementationType == typeof(ResourceWatcher<V1OperatorIntegrationTestEntity, TestLabelSelector>) &&
+            s.Lifetime == ServiceLifetime.Singleton);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(IHostedService) &&
+            s.ImplementationType == typeof(ResourceWatcher<V1OperatorIntegrationTestEntity, TestLabelSelector2>) &&
             s.Lifetime == ServiceLifetime.Singleton);
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(TimedEntityQueue<V1OperatorIntegrationTestEntity>) &&
@@ -98,8 +130,12 @@ public class OperatorBuilderTest
             s.ServiceType == typeof(EntityRequeue<V1OperatorIntegrationTestEntity>) &&
             s.Lifetime == ServiceLifetime.Transient);
         _builder.Services.Should().Contain(s =>
-            s.ServiceType == typeof(IEntityLabelSelector<V1OperatorIntegrationTestEntity>) &&
+            s.ServiceType == typeof(IEntityLabelSelector<V1OperatorIntegrationTestEntity, TestLabelSelector>) &&
             s.ImplementationType == typeof(TestLabelSelector) &&
+            s.Lifetime == ServiceLifetime.Singleton);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(IEntityLabelSelector<V1OperatorIntegrationTestEntity, TestLabelSelector2>) &&
+            s.ImplementationType == typeof(TestLabelSelector2) &&
             s.Lifetime == ServiceLifetime.Singleton);
     }
 
@@ -134,11 +170,11 @@ public class OperatorBuilderTest
 
         builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(IHostedService) &&
-            s.ImplementationType == typeof(LeaderAwareResourceWatcher<V1OperatorIntegrationTestEntity>) &&
+            s.ImplementationType == typeof(LeaderAwareResourceWatcher<V1OperatorIntegrationTestEntity, DefaultEntityLabelSelector<V1OperatorIntegrationTestEntity>>) &&
             s.Lifetime == ServiceLifetime.Singleton);
         builder.Services.Should().NotContain(s =>
             s.ServiceType == typeof(IHostedService) &&
-            s.ImplementationType == typeof(ResourceWatcher<V1OperatorIntegrationTestEntity>) &&
+            s.ImplementationType == typeof(ResourceWatcher<V1OperatorIntegrationTestEntity, DefaultEntityLabelSelector<V1OperatorIntegrationTestEntity>>) &&
             s.Lifetime == ServiceLifetime.Singleton);
     }
 
@@ -157,13 +193,27 @@ public class OperatorBuilderTest
             Task.CompletedTask;
     }
 
-    private class TestLabelSelector : IEntityLabelSelector<V1OperatorIntegrationTestEntity>
+    private class TestLabelSelector : IEntityLabelSelector<V1OperatorIntegrationTestEntity, TestLabelSelector>
     {
         public ValueTask<string?> GetLabelSelectorAsync(CancellationToken cancellationToken)
         {
             var labelSelectors = new LabelSelector[]
             {
                 new EqualsSelector("label", "value")
+            };
+
+            return ValueTask.FromResult<string?>(labelSelectors.ToExpression());
+        }
+    }
+
+    private class TestLabelSelector2 : IEntityLabelSelector<V1OperatorIntegrationTestEntity, TestLabelSelector2>
+    {
+        public ValueTask<string?> GetLabelSelectorAsync(CancellationToken cancellationToken)
+        {
+            var labelSelectors = new LabelSelector[]
+            {
+                new EqualsSelector("label", "value"),
+                new EqualsSelector("label2", "value")
             };
 
             return ValueTask.FromResult<string?>(labelSelectors.ToExpression());
