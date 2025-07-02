@@ -28,8 +28,8 @@ public class OperatorBuilderTest
     public void Should_Add_Default_Resources()
     {
         // Add controllers to trigger the label selector registrations
-        _builder.AddController<TestController, V1OperatorIntegrationTestEntity, TestLabelSelector>();
-        _builder.AddController<TestController, V1OperatorIntegrationTestEntity, TestLabelSelector2>();
+        _builder.AddController<TestControllerWithSelector<TestLabelSelector>, V1OperatorIntegrationTestEntity, TestLabelSelector>();
+        _builder.AddController<TestControllerWithSelector<TestLabelSelector2>, V1OperatorIntegrationTestEntity, TestLabelSelector2>();
 
         // This test verifies the basic services that are registered
         _builder.Services.Should().Contain(s =>
@@ -90,7 +90,7 @@ public class OperatorBuilderTest
         _builder.AddController<TestController, V1OperatorIntegrationTestEntity>();
 
         _builder.Services.Should().Contain(s =>
-            s.ServiceType == typeof(IEntityController<V1OperatorIntegrationTestEntity>) &&
+            s.ServiceType == typeof(IEntityController<V1OperatorIntegrationTestEntity, DefaultEntityLabelSelector<V1OperatorIntegrationTestEntity>>) &&
             s.ImplementationType == typeof(TestController) &&
             s.Lifetime == ServiceLifetime.Scoped);
         _builder.Services.Should().Contain(s =>
@@ -108,12 +108,16 @@ public class OperatorBuilderTest
     [Fact]
     public void Should_Add_Controller_Resources_With_Label_Selector()
     {
-        _builder.AddController<TestController, V1OperatorIntegrationTestEntity, TestLabelSelector>();
-        _builder.AddController<TestController, V1OperatorIntegrationTestEntity, TestLabelSelector2>();
+        _builder.AddController<TestControllerWithSelector<TestLabelSelector>, V1OperatorIntegrationTestEntity, TestLabelSelector>();
+        _builder.AddController<TestControllerWithSelector<TestLabelSelector2>, V1OperatorIntegrationTestEntity, TestLabelSelector2>();
 
         _builder.Services.Should().Contain(s =>
-            s.ServiceType == typeof(IEntityController<V1OperatorIntegrationTestEntity>) &&
-            s.ImplementationType == typeof(TestController) &&
+            s.ServiceType == typeof(IEntityController<V1OperatorIntegrationTestEntity, TestLabelSelector>) &&
+            s.ImplementationType == typeof(TestControllerWithSelector<TestLabelSelector>) &&
+            s.Lifetime == ServiceLifetime.Scoped);
+        _builder.Services.Should().Contain(s =>
+            s.ServiceType == typeof(IEntityController<V1OperatorIntegrationTestEntity, TestLabelSelector2>) &&
+            s.ImplementationType == typeof(TestControllerWithSelector<TestLabelSelector2>) &&
             s.Lifetime == ServiceLifetime.Scoped);
         _builder.Services.Should().Contain(s =>
             s.ServiceType == typeof(IHostedService) &&
@@ -179,6 +183,16 @@ public class OperatorBuilderTest
     }
 
     private class TestController : IEntityController<V1OperatorIntegrationTestEntity>
+    {
+        public Task ReconcileAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        public Task DeletedAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+    }
+
+    private class TestControllerWithSelector<TSelector> : IEntityController<V1OperatorIntegrationTestEntity, TSelector>
+        where TSelector : class, IEntityLabelSelector<V1OperatorIntegrationTestEntity, TSelector>
     {
         public Task ReconcileAsync(V1OperatorIntegrationTestEntity entity, CancellationToken cancellationToken) =>
             Task.CompletedTask;

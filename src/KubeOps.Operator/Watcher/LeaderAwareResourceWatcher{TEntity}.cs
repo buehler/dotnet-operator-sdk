@@ -49,6 +49,7 @@ internal class LeaderAwareResourceWatcher<TEntity, TSelector>(
     IHostApplicationLifetime hostApplicationLifetime,
     LeaderElector elector
 ) : ResourceWatcher<TEntity, TSelector>(activitySource, logger, provider, queue, settings, labelSelector, client)
+    where TSelector : class, IEntityLabelSelector<TEntity, TSelector>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private CancellationTokenSource _cts = new();

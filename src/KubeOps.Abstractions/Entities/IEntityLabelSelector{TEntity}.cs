@@ -12,4 +12,8 @@ public interface IEntityLabelSelector<TEntity, TSelf>
 {
     ValueTask<string?> GetLabelSelectorAsync(CancellationToken cancellationToken);
 }
+
+public interface IEntityLabelSelector<TEntity> : IEntityLabelSelector<TEntity, DefaultEntityLabelSelector<TEntity>>
+    where TEntity : IKubernetesObject<V1ObjectMeta>;
+
 #pragma warning restore S2326

@@ -50,6 +50,7 @@ public class ResourceWatcher<TEntity, TSelector>(
     IEntityLabelSelector<TEntity, TSelector> labelSelector,
     IKubernetesClient client
 ) : IHostedService, IAsyncDisposable, IDisposable
+    where TSelector : class, IEntityLabelSelector<TEntity, TSelector>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private readonly ConcurrentDictionary<string, long> _entityCache = new();
@@ -334,7 +335,7 @@ public class ResourceWatcher<TEntity, TSelector>(
         _entityCache.TryRemove(entity.Uid(), out _);
 
         await using var scope = provider.CreateAsyncScope();
-        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity>>();
+        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity, TSelector>>();
         await controller.DeletedAsync(entity, cancellationToken);
     }
 
@@ -375,7 +376,7 @@ public class ResourceWatcher<TEntity, TSelector>(
         // Re-queue should requested in the controller reconcile method. Invalidate any existing queues.
         requeue.Remove(entity);
         await using var scope = provider.CreateAsyncScope();
-        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity>>();
+        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity, TSelector>>();
         await controller.ReconcileAsync(entity, cancellationToken);
     }
 }
