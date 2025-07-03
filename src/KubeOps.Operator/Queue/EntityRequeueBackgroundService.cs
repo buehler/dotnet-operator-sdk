@@ -2,6 +2,7 @@
 using k8s.Models;
 
 using KubeOps.Abstractions.Controller;
+using KubeOps.Abstractions.Entities;
 using KubeOps.KubernetesClient;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -10,12 +11,13 @@ using Microsoft.Extensions.Logging;
 
 namespace KubeOps.Operator.Queue;
 
-internal sealed class EntityRequeueBackgroundService<TEntity>(
+internal sealed class EntityRequeueBackgroundService<TEntity, TSelector>(
     IKubernetesClient client,
     TimedEntityQueue<TEntity> queue,
     IServiceProvider provider,
-    ILogger<EntityRequeueBackgroundService<TEntity>> logger) : IHostedService, IDisposable, IAsyncDisposable
+    ILogger<EntityRequeueBackgroundService<TEntity, TSelector>> logger) : IHostedService, IDisposable, IAsyncDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
+    where TSelector : class, IEntityLabelSelector<TEntity, TSelector>
 {
     private readonly CancellationTokenSource _cts = new();
     private bool _disposed;
@@ -119,7 +121,7 @@ internal sealed class EntityRequeueBackgroundService<TEntity>(
         }
 
         await using var scope = provider.CreateAsyncScope();
-        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity>>();
+        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity, TSelector>>();
         await controller.ReconcileAsync(entity, cancellationToken);
     }
 }

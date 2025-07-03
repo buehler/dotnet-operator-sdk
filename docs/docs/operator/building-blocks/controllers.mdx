@@ -31,6 +31,95 @@ public class V1DemoEntityController(
 }
 ```
 
+## Label Selectors
+
+Label selectors allow you to filter which resources your controller watches based on Kubernetes labels. This is useful when you want a controller to only process resources with specific labels.
+
+### Basic Label Selector
+
+By default, controllers use the `DefaultEntityLabelSelector<TEntity>` which doesn't apply any filtering (watches all resources of the specified type).
+
+### Custom Label Selector
+
+To create a custom label selector, implement the `IEntityLabelSelector<TEntity, TSelf>` interface:
+
+```csharp
+public class V1DemoEntityLabelSelector : IEntityLabelSelector<V1DemoEntity, V1DemoEntityLabelSelector>
+{
+    public ValueTask<string?> GetLabelSelectorAsync(CancellationToken cancellationToken)
+    {
+        // Return a Kubernetes label selector string
+        return ValueTask.FromResult<string?>("app=demo,environment=production");
+    }
+}
+```
+
+### Implementing a Controller with Label Selector
+
+You can implement a controller that directly uses a custom label selector by implementing the `IEntityController<TEntity, TLabelSelector>` interface:
+
+```csharp
+public class V1DemoEntityController : IEntityController<V1DemoEntity, V1DemoEntityLabelSelector>
+{
+    private readonly ILogger<V1DemoEntityController> _logger;
+    private readonly IKubernetesClient _client;
+
+    public V1DemoEntityController(
+        ILogger<V1DemoEntityController> logger,
+        IKubernetesClient client)
+    {
+        _logger = logger;
+        _client = client;
+    }
+
+    public async Task ReconcileAsync(V1DemoEntity entity, CancellationToken token)
+    {
+        _logger.LogInformation("Reconciling entity {Entity} with custom label selector.", entity);
+        // Implement your reconciliation logic here
+    }
+
+    public async Task DeletedAsync(V1DemoEntity entity, CancellationToken token)
+    {
+        _logger.LogInformation("Deleting entity {Entity} with custom label selector.", entity);
+        // Implement your cleanup logic here
+    }
+}
+```
+
+### Using Label Selectors with Controllers
+
+There are multiple ways to register a controller with a label selector:
+
+#### New Style (Recommended)
+
+For controllers that implement `IEntityController<TEntity, TLabelSelector>` as shown above:
+
+```csharp
+// In your Startup.cs or Program.cs
+services.AddKubernetesOperator()
+    .AddController<V1DemoEntityController, V1DemoEntity, V1DemoEntityLabelSelector>();
+```
+
+#### Backward Compatibility
+
+By default, controllers that implement the simpler `IEntityController<TEntity>` interface use `DefaultEntityLabelSelector<TEntity>` behind the scenes, which doesn't apply any filtering.
+
+However, you can still use a custom label selector with these controllers:
+
+```csharp
+// Controller implementation using the simpler interface
+public class V1DemoEntityController : IEntityController<V1DemoEntity>
+{
+    // Implementation details...
+}
+
+// In your Startup.cs or Program.cs
+services.AddKubernetesOperator()
+    .AddController<V1DemoEntityController, V1DemoEntity, V1DemoEntityLabelSelector>(null);
+```
+
+The null parameter is used for method overload disambiguation. This approach allows you to use a custom label selector with controllers that implement the simpler interface, providing backward compatibility.
+
 ## Resource Watcher
 
 When you create a controller, KubeOps automatically creates a resource watcher (informer) for your entity type. This watcher:
