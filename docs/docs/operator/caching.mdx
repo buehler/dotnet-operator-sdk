@@ -6,13 +6,17 @@ sidebar_position: 7
 
 ## ResourceWatcher
 
-The `ResourceWatcher` uses an instance of `IFusionCache` to store the `.metadata.generation` value of each observed resource. The key for the cache entry is the resource's unique ID (`metadata.uid`).
+The `ResourceWatcher` uses a cache instance to store the `.metadata.generation` value of each observed resource.
+The key for the cache entry is the resource's unique ID (`metadata.uid`).
+
 The primary purpose of the cache is to skip reconciliation cycles for events that do not represent an actual change to a resource's specification (`.spec`).
 
 1. **`MODIFIED` Event Type**:
-    - Kubernetes only increments the `.metadata.generation` value of a resource when its specification (`.spec`) changes. Updates to status fields (`.status`), while also triggering a `MODIFIED` event, do not increase the `generation`.
-    - When a `MODIFIED` event arrives, the `ResourceWatcher` compares the `generation` of the incoming resource with the value stored in `FusionCache`.
-    - If the new `generation` is not greater than the cached one, the reconciliation is skipped. This is a critical optimization, as status updates can occur very frequently (e.g., from other controllers) and typically do not require action from your operator.
+    - Kubernetes only increments the `.metadata.generation` value of a resource when its specification (`.spec`) changes.
+      Updates to status fields (`.status`), while also triggering a `MODIFIED` event, do not increase the `generation`.
+    - When a `MODIFIED` event arrives, the `ResourceWatcher` compares the `generation` of the incoming resource with the value stored in the cache.
+    - If the new `generation` is not greater than the cached one, the reconciliation is skipped.
+      This is a critical optimization, as status updates can occur very frequently (e.g., from other controllers) and typically do not require action from your operator.
     - Only when the `generation` has increased is the resource forwarded for reconciliation, and the new `generation` value is stored in the cache.
 
 2. **`ADDED` Event Type**:
@@ -24,7 +28,7 @@ The primary purpose of the cache is to skip reconciliation cycles for events tha
 
 ### Default Configuration: In-Memory (L1) Cache
 
-By default, and without any extra configuration, `KubeOps` uses a simple in-memory cache for `FusionCache`.
+By default, and without any extra configuration, `KubeOps` uses a simple in-memory cache.
 
 - **Advantages**:
     - Requires zero configuration.
@@ -35,16 +39,35 @@ By default, and without any extra configuration, `KubeOps` uses a simple in-memo
 
 ### Advanced Configuration: Distributed (L2) Cache
 
-For robust use in production or HA environments, it is essential to extend `FusionCache` with a distributed L2 cache and a backplane. This ensures that all operator instances share a consistent state.
-A common setup for this involves using **Redis**.
+For robust use in production or HA environments, it could be essential to extend cache with a distributed L2 cache and a backplane.
+This ensures that all operator instances share a consistent state.
+A common setup for this involves using [**Redis**](https://github.com/redis/redis).
 
-**Steps to Configure a Distributed Cache with Redis:**
+### FusionCache
 
-1. **Add the necessary NuGet packages to your project:**
-    - `ZiggyCreatures.FusionCache.Serialization.SystemTextJson` (or another serializer)
-    - `ZiggyCreatures.FusionCache.Backplane.StackExchangeRedis`
-    - `Microsoft.Extensions.Caching.StackExchangeRedis`
+KubeOps utilizes [`FusionCache`](https://github.com/ZiggyCreatures/FusionCache/blob/main/docs/AGentleIntroduction.md) for seamless support of an L1/L2 cache.
+Via `OperatorSettings.ConfigureResourceWatcherEntityCache`, an `Action` is provided that allows extending the standard configuration or
+overwriting it with a customized version.
 
-2. **Configure the services in your `Program.cs`:**
-You need to configure `FusionCache` with a serializer, the distributed cache (L2), and a backplane. The backplane (e.g., via Redis Pub/Sub) ensures that cache invalidations (like a `SET` or `REMOVE`) are immediately propagated to all other operator pods, keeping their L1 caches in sync.
+Here is an example of what a customized configuration with an L2 cache could look like:
 
+```csharp
+builder
+    .Services
+    .AddKubernetesOperator(settings =>
+    {
+        settings.Name = OperatorName;
+        settings.ConfigureResourceWatcherEntityCache =
+            cacheBuilder =>
+                cacheBuilder
+                    .WithCacheKeyPrefix($"{CacheConstants.CacheNames.ResourceWatcher}:")
+                    .WithSerializer(_ => new FusionCacheSystemTextJsonSerializer())
+                    .WithRegisteredDistributedCache()
+                    .WithDefaultEntryOptions(options =>
+                        options.Duration = TimeSpan.MaxValue);
+    })
+```
+
+For an overview of all of FusionCache's features, we refer you to the corresponding documentation:
+
+https://github.com/ZiggyCreatures/FusionCache/blob/main/docs/CacheLevels.md
