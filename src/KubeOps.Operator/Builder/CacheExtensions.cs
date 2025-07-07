@@ -35,7 +35,7 @@ internal static class CacheExtensions
             cacheBuilder
                 .WithOptions(options =>
                 {
-                    options.CacheKeyPrefix = "rw-";
+                    options.CacheKeyPrefix = $"{CacheConstants.CacheNames.ResourceWatcher}:";
                     options.DefaultEntryOptions
                         .SetDuration(TimeSpan.MaxValue);
                 });
