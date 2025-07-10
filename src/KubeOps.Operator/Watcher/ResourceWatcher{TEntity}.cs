@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using System.Runtime.Serialization;
@@ -12,12 +11,15 @@ using KubeOps.Abstractions.Controller;
 using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Finalizer;
 using KubeOps.KubernetesClient;
+using KubeOps.Operator.Constants;
 using KubeOps.Operator.Logging;
 using KubeOps.Operator.Queue;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+using ZiggyCreatures.Caching.Fusion;
 
 namespace KubeOps.Operator.Watcher;
 
@@ -28,12 +30,12 @@ public class ResourceWatcher<TEntity>(
     TimedEntityQueue<TEntity> requeue,
     OperatorSettings settings,
     IEntityLabelSelector<TEntity> labelSelector,
+    IFusionCacheProvider cacheProvider,
     IKubernetesClient client)
     : IHostedService, IAsyncDisposable, IDisposable
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
-    private readonly ConcurrentDictionary<string, long> _entityCache = new();
-
+    private readonly IFusionCache _entityCache = cacheProvider.GetCache(CacheConstants.CacheNames.ResourceWatcher);
     private CancellationTokenSource _cancellationTokenSource = new();
     private uint _watcherReconnectRetries;
     private Task? _eventWatcher;
@@ -132,12 +134,17 @@ public class ResourceWatcher<TEntity>(
 
     protected virtual async Task OnEventAsync(WatchEventType type, TEntity entity, CancellationToken cancellationToken)
     {
+        MaybeValue<long?> cachedGeneration;
+
         switch (type)
         {
             case WatchEventType.Added:
-                if (_entityCache.TryAdd(entity.Uid(), entity.Generation() ?? 0))
+                cachedGeneration = await _entityCache.TryGetAsync<long?>(entity.Uid(), token: cancellationToken);
+
+                if (!cachedGeneration.HasValue)
                 {
                     // Only perform reconciliation if the entity was not already in the cache.
+                    await _entityCache.SetAsync(entity.Uid(), entity.Generation() ?? 0, token: cancellationToken);
                     await ReconcileModificationAsync(entity, cancellationToken);
                 }
                 else
@@ -153,10 +160,10 @@ public class ResourceWatcher<TEntity>(
                 switch (entity)
                 {
                     case { Metadata.DeletionTimestamp: null }:
-                        _entityCache.TryGetValue(entity.Uid(), out var cachedGeneration);
+                        cachedGeneration = await _entityCache.TryGetAsync<long?>(entity.Uid(), token: cancellationToken);
 
                         // Check if entity spec has changed through "Generation" value increment. Skip reconcile if not changed.
-                        if (entity.Generation() <= cachedGeneration)
+                        if (cachedGeneration.HasValue && cachedGeneration >= entity.Generation())
                         {
                             logger.LogDebug(
                                 """Entity "{Kind}/{Name}" modification did not modify generation. Skip event.""",
@@ -166,8 +173,9 @@ public class ResourceWatcher<TEntity>(
                         }
 
                         // update cached generation since generation now changed
-                        _entityCache.TryUpdate(entity.Uid(), entity.Generation() ?? 1, cachedGeneration);
+                        await _entityCache.SetAsync(entity.Uid(), entity.Generation() ?? 1, token: cancellationToken);
                         await ReconcileModificationAsync(entity, cancellationToken);
+
                         break;
                     case { Metadata: { DeletionTimestamp: not null, Finalizers.Count: > 0 } }:
                         await ReconcileFinalizersSequentialAsync(entity, cancellationToken);
@@ -311,7 +319,7 @@ public class ResourceWatcher<TEntity>(
     private async Task ReconcileDeletionAsync(TEntity entity, CancellationToken cancellationToken)
     {
         requeue.Remove(entity);
-        _entityCache.TryRemove(entity.Uid(), out _);
+        await _entityCache.RemoveAsync(entity.Uid(), token: cancellationToken);
 
         await using var scope = provider.CreateAsyncScope();
         var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity>>();
