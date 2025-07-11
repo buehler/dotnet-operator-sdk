@@ -7,9 +7,13 @@ namespace KubeOps.Abstractions.Entities;
 // An alternative would be to use a KeyedSingleton when registering this however that's only valid from .NET 8 and above.
 // Other methods are far less elegant
 #pragma warning disable S2326
-public interface IEntityLabelSelector<TEntity>
+public interface IEntityLabelSelector<TEntity, TSelf>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     ValueTask<string?> GetLabelSelectorAsync(CancellationToken cancellationToken);
 }
+
+public interface IEntityLabelSelector<TEntity> : IEntityLabelSelector<TEntity, DefaultEntityLabelSelector<TEntity>>
+    where TEntity : IKubernetesObject<V1ObjectMeta>;
+
 #pragma warning restore S2326

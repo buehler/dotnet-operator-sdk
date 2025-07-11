@@ -38,50 +38,66 @@ internal sealed class OperatorBuilder : IOperatorBuilder
 
     public IOperatorBuilder AddController<TImplementation, TEntity>()
         where TImplementation : class, IEntityController<TEntity>
+        where TEntity : IKubernetesObject<V1ObjectMeta> =>
+        AddController<TImplementation, TEntity, DefaultEntityLabelSelector<TEntity>>();
+
+    public IOperatorBuilder AddController<TImplementation, TEntity, TLabelSelector>()
+        where TImplementation : class, IEntityController<TEntity, TLabelSelector>
         where TEntity : IKubernetesObject<V1ObjectMeta>
+        where TLabelSelector : class, IEntityLabelSelector<TEntity, TLabelSelector>
     {
-        Services.AddHostedService<EntityRequeueBackgroundService<TEntity>>();
-        Services.TryAddScoped<IEntityController<TEntity>, TImplementation>();
+        Services.AddHostedService<EntityRequeueBackgroundService<TEntity, TLabelSelector>>();
+
+        // Register the implementation for the two-parameter interface
+        Services.TryAddScoped<IEntityController<TEntity, TLabelSelector>, TImplementation>();
         Services.TryAddSingleton(new TimedEntityQueue<TEntity>());
         Services.TryAddTransient<IEntityRequeueFactory, KubeOpsEntityRequeueFactory>();
-        Services.TryAddTransient<EntityRequeue<TEntity>>(services =>
-            services.GetRequiredService<IEntityRequeueFactory>().Create<TEntity>());
+        Services.TryAddTransient<EntityRequeue<TEntity>>(
+            services => services.GetRequiredService<IEntityRequeueFactory>().Create<TEntity>()
+        );
+        Services.TryAddSingleton<IEntityLabelSelector<TEntity, TLabelSelector>, TLabelSelector>();
 
         if (_settings.EnableLeaderElection)
         {
-            Services.AddHostedService<LeaderAwareResourceWatcher<TEntity>>();
+            Services.AddHostedService<LeaderAwareResourceWatcher<TEntity, TLabelSelector>>();
         }
         else
         {
-            Services.AddHostedService<ResourceWatcher<TEntity>>();
+            Services.AddHostedService<ResourceWatcher<TEntity, TLabelSelector>>();
         }
 
         return this;
     }
 
-    public IOperatorBuilder AddController<TImplementation, TEntity, TLabelSelector>()
+    // Overload for controllers that implement IEntityController<TEntity> but are being registered with a specific label selector
+    // This allows backward compatibility for users who call AddController<Controller, Entity, LabelSelector>()
+    // even when their controller only implements IEntityController<Entity>
+    public IOperatorBuilder AddController<TImplementation, TEntity, TLabelSelector>(TImplementation? _ = null)
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        where TLabelSelector : class, IEntityLabelSelector<TEntity>
+        where TLabelSelector : class, IEntityLabelSelector<TEntity, TLabelSelector>
     {
-        Services.AddHostedService<EntityRequeueBackgroundService<TEntity>>();
-        Services.TryAddScoped<IEntityController<TEntity>, TImplementation>();
-        Services.TryAddSingleton(new TimedEntityQueue<TEntity>());
-        Services.TryAddTransient<IEntityRequeueFactory, KubeOpsEntityRequeueFactory>();
-        Services.TryAddTransient<EntityRequeue<TEntity>>(services =>
-            services.GetRequiredService<IEntityRequeueFactory>().Create<TEntity>());
-        Services.TryAddSingleton<IEntityLabelSelector<TEntity>, TLabelSelector>();
-
-        if (_settings.EnableLeaderElection)
+        // Check if TImplementation actually implements IEntityController<TEntity, TLabelSelector>
+        if (typeof(IEntityController<TEntity, TLabelSelector>).IsAssignableFrom(typeof(TImplementation)))
         {
-            Services.AddHostedService<LeaderAwareResourceWatcher<TEntity>>();
-        }
-        else
-        {
-            Services.AddHostedService<ResourceWatcher<TEntity>>();
+            // If it does, call the main method
+            return AddController<TImplementation, TEntity, TLabelSelector>();
         }
 
-        return this;
+        // If the controller only implements IEntityController<TEntity>, we can only register it with DefaultEntityLabelSelector
+        // We cannot support arbitrary label selectors with controllers that don't implement the two-parameter interface
+        if (typeof(TLabelSelector) != typeof(DefaultEntityLabelSelector<TEntity>))
+        {
+            throw new InvalidOperationException(
+                $"Controller {typeof(TImplementation).Name} only implements IEntityController<{typeof(TEntity).Name}> "
+                    + $"and cannot be used with label selector {typeof(TLabelSelector).Name}. "
+                    + $"Either implement IEntityController<{typeof(TEntity).Name}, {typeof(TLabelSelector).Name}> "
+                    + $"or use AddController<{typeof(TImplementation).Name}, {typeof(TEntity).Name}>() instead."
+            );
+        }
+
+        // If TLabelSelector is DefaultEntityLabelSelector<TEntity>, delegate to the two-parameter method
+        return AddController<TImplementation, TEntity>();
     }
 
     public IOperatorBuilder AddFinalizer<TImplementation, TEntity>(string identifier)
@@ -90,9 +106,12 @@ internal sealed class OperatorBuilder : IOperatorBuilder
     {
         Services.TryAddKeyedTransient<IEntityFinalizer<TEntity>, TImplementation>(identifier);
         Services.TryAddTransient<IEventFinalizerAttacherFactory, KubeOpsEventFinalizerAttacherFactory>();
-        Services.TryAddTransient<EntityFinalizerAttacher<TImplementation, TEntity>>(services =>
-            services.GetRequiredService<IEventFinalizerAttacherFactory>()
-                .Create<TImplementation, TEntity>(identifier));
+        Services.TryAddTransient<EntityFinalizerAttacher<TImplementation, TEntity>>(
+            services =>
+                services
+                    .GetRequiredService<IEventFinalizerAttacherFactory>()
+                    .Create<TImplementation, TEntity>(identifier)
+        );
 
         return this;
     }
@@ -131,7 +150,9 @@ internal sealed class OperatorBuilder : IOperatorBuilder
         Services.TryAddTransient<EventPublisher>(services =>
             services.GetRequiredService<IEventPublisherFactory>().Create());
 
-        Services.AddSingleton(typeof(IEntityLabelSelector<>), typeof(DefaultEntityLabelSelector<>));
+        // Register default entity label selector for all entities
+        // Note: We cannot register the open generic types directly due to arity mismatch
+        // The registration happens in AddController when specific types are needed
 
         if (_settings.EnableLeaderElection)
         {
