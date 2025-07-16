@@ -310,6 +310,24 @@ public class KubernetesClient : IKubernetesClient
     }
 
     /// <inheritdoc />
+    public async Task<TEntity> PatchAsync<TEntity>(
+        V1Patch patch,
+        string name,
+        string? @namespace = null,
+        CancellationToken cancellationToken = default)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        ThrowIfDisposed();
+
+        using var client = CreateGenericClient<TEntity>();
+        return await (@namespace switch
+        {
+            not null => client.PatchNamespacedAsync<TEntity>(patch, @namespace, name, cancellationToken),
+            null => client.PatchAsync<TEntity>(patch, name, cancellationToken),
+        });
+    }
+
+    /// <inheritdoc />
     public async Task DeleteAsync<TEntity>(
         string name,
         string? @namespace = null,

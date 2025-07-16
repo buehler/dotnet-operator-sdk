@@ -1,3 +1,4 @@
+using System;
 using FluentAssertions;
 
 using k8s.Models;
@@ -161,6 +162,43 @@ public class KubernetesClientTest : IntegrationTestBase, IDisposable
             Data = new Dictionary<string, string> { { "Hello", "World" } },
         };
         _client.Delete(config);
+    }
+
+    [Fact]
+    public void Should_Patch_ConfigMap_Sync()
+    {
+        // Add
+        var config = _client.Create(
+            new V1ConfigMap
+            {
+                Kind = V1ConfigMap.KubeKind,
+                ApiVersion = V1ConfigMap.KubeApiVersion,
+                Metadata = new(name: RandomName(), namespaceProperty: "default"),
+                Data = new Dictionary<string, string> { { "foo", "bar" } },
+            });
+        _objects.Add(config);
+
+        // Add a new key using Patch(config)
+        config.Data["hello"] = "world";
+        config = _client.Patch(config);
+        config.Data.Should().ContainKey("hello").And.ContainValue("world");
+
+        // Replace a value using Patch(from, to)
+        var from = config;
+        var to = new V1ConfigMap
+        {
+            Kind = V1ConfigMap.KubeKind,
+            ApiVersion = V1ConfigMap.KubeApiVersion,
+            Metadata = from.Metadata,
+            Data = new Dictionary<string, string> { { "foo", "baz" }, { "hello", "world" } },
+        };
+        config = _client.Patch(from, to);
+        config.Data["foo"].Should().Be("baz");
+
+        // Remove a key using Patch(config)
+        config.Data.Remove("hello");
+        config = _client.Patch(config);
+        config.Data.Should().NotContainKey("hello");
     }
 
     public void Dispose()
