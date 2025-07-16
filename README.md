@@ -76,6 +76,10 @@ You can find various example operators demonstrating different features in the [
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details. This license applies to all packages in the KubeOps SDK.
 
+## .NET Foundation
+
+This project is supported by the [.NET Foundation](https://dotnetfoundation.org).
+
 ## Governance
 
 KubeOps is maintained by the repository collaborators and maintainers. We welcome community contributions and aim to foster an open and collaborative development process. Decision-making primarily occurs through GitHub issues and pull requests.
@@ -101,10 +105,3 @@ In short:
 ## Motivation
 
 KubeOps aims to provide a first-class experience for developing Kubernetes operators within the .NET ecosystem, offering an alternative to Go-based SDKs like Kubebuilder and Operator SDK, while embracing familiar C# patterns and tooling.
-
-**Why choose KubeOps?**
-
-- **Leverage your .NET Skills:** Build operators using C#, a language you already know, with access to the extensive .NET Base Class Library and NuGet ecosystem.
-- **Strong Typing & IDE Support:** Benefit from compile-time checks and rich IDE features like IntelliSense and debugging.
-- **Simplified Abstractions:** Focus on your reconciliation logic, not Kubernetes API boilerplate.
-- **Code Generation:** Reduce manual effort with generators for CRDs, RBAC, and controller/webhook registrations.
