@@ -1,4 +1,3 @@
-using System;
 using FluentAssertions;
 
 using k8s.Models;
