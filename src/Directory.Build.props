@@ -10,7 +10,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <PackageProjectUrl>https://github.com/dotnet/dotnet-operator-sdk.git</PackageProjectUrl>
+        <PackageProjectUrl>https://dotnet.github.io/dotnet-operator-sdk/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/dotnet/dotnet-operator-sdk.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageLicense>Apache-2.0</PackageLicense>
