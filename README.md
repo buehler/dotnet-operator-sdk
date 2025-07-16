@@ -2,12 +2,12 @@
 
 **Build Kubernetes Operators in .NET with Ease**
 
-[![.NET Release](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/dotnet-release.yml/badge.svg?branch=main)](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/dotnet-release.yml)
-[![Scheduled Code Security Testing](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/security-analysis.yml/badge.svg?event=schedule)](https://github.com/buehler/dotnet-operator-sdk/actions/workflows/security-analysis.yml)
+[![.NET Release](https://github.com/dotnet/dotnet-operator-sdk/actions/workflows/dotnet-release.yml/badge.svg?branch=main)](https://github.com/dotnet/dotnet-operator-sdk/actions/workflows/dotnet-release.yml)
+[![Scheduled Code Security Testing](https://github.com/dotnet/dotnet-operator-sdk/actions/workflows/security-analysis.yml/badge.svg?event=schedule)](https://github.com/dotnet/dotnet-operator-sdk/actions/workflows/security-analysis.yml)
 
 **KubeOps** is a [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) SDK designed for [.NET](https://dotnet.microsoft.com/) developers. It allows you to leverage your C# skills and the rich .NET ecosystem to build powerful Kubernetes controllers that automate the management of complex applications. KubeOps simplifies operator development by providing high-level abstractions, code generators, and helper utilities.
 
-**For comprehensive documentation, tutorials, and API references, please visit the official [KubeOps Documentation Site](https://buehler.github.io/dotnet-operator-sdk/).**
+**For comprehensive documentation, tutorials, and API references, please visit the official [KubeOps Documentation Site](https://dotnet.github.io/dotnet-operator-sdk/).**
 
 The documentation is also provided within the code itself (description of methods and classes), and each package contains a README with further information.
 
@@ -49,7 +49,7 @@ There are two ways to start building an operator with KubeOps:
 
 Both methods generate a basic operator structure with a sample custom resource, controller, and finalizer. The template approach is simpler and more direct, while the CLI provides additional commands for generating CRDs, RBAC rules, and more.
 
-For detailed tutorials and guides, visit the [KubeOps Documentation Site](https://buehler.github.io/dotnet-operator-sdk/).
+For detailed tutorials and guides, visit the [KubeOps Documentation Site](https://dotnet.github.io/dotnet-operator-sdk/).
 
 ## Packages
 
@@ -70,7 +70,7 @@ The SDK is designed to be modular. You can include only the packages you need:
 
 ## Examples
 
-You can find various example operators demonstrating different features in the [`examples/`](https://github.com/buehler/dotnet-operator-sdk/tree/main/examples/) directory of this repository.
+You can find various example operators demonstrating different features in the [`examples/`](https://github.com/dotnet/dotnet-operator-sdk/tree/main/examples/) directory of this repository.
 
 ## License
 

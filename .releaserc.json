@@ -12,7 +12,7 @@
             "apiKeyEnvVar": "NUGET_API_KEY"
           },
           {
-            "url": "https://nuget.pkg.github.com/buehler/index.json",
+            "url": "https://nuget.pkg.github.com/dotnet/index.json",
             "apiKeyEnvVar": "GH_NUGET_API_KEY"
           }
         ]
