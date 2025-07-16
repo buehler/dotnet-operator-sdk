@@ -40,9 +40,24 @@ public interface IOperatorBuilder
     /// <typeparam name="TLabelSelector">Label Selector type.</typeparam>
     /// <returns>The builder for chaining.</returns>
     IOperatorBuilder AddController<TImplementation, TEntity, TLabelSelector>()
+        where TImplementation : class, IEntityController<TEntity, TLabelSelector>
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+        where TLabelSelector : class, IEntityLabelSelector<TEntity, TLabelSelector>;
+
+    /// <summary>
+    /// Add a controller implementation for a specific entity to the operator with backward compatibility.
+    /// This overload allows controllers that implement IEntityController&lt;TEntity&gt; to be registered
+    /// with a specific label selector for backward compatibility.
+    /// </summary>
+    /// <typeparam name="TImplementation">Implementation type of the controller.</typeparam>
+    /// <typeparam name="TEntity">Entity type.</typeparam>
+    /// <typeparam name="TLabelSelector">Label Selector type.</typeparam>
+    /// <param name="_">Unused parameter for method overload disambiguation.</param>
+    /// <returns>The builder for chaining.</returns>
+    IOperatorBuilder AddController<TImplementation, TEntity, TLabelSelector>(TImplementation? _ = null)
         where TImplementation : class, IEntityController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
-        where TLabelSelector : class, IEntityLabelSelector<TEntity>;
+        where TLabelSelector : class, IEntityLabelSelector<TEntity, TLabelSelector>;
 
     /// <summary>
     /// Add a finalizer implementation for a specific entity.
@@ -76,3 +91,4 @@ public interface IOperatorBuilder
     /// <returns>The builder for chaining.</returns>
     IOperatorBuilder AddCrdInstaller(Action<CrdInstallerSettings>? configure = null);
 }
+

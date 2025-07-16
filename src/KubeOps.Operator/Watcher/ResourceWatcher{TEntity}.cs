@@ -23,13 +23,34 @@ namespace KubeOps.Operator.Watcher;
 
 public class ResourceWatcher<TEntity>(
     ActivitySource activitySource,
-    ILogger<ResourceWatcher<TEntity>> logger,
+    ILogger<ResourceWatcher<TEntity, DefaultEntityLabelSelector<TEntity>>> logger,
     IServiceProvider provider,
     TimedEntityQueue<TEntity> requeue,
     OperatorSettings settings,
-    IEntityLabelSelector<TEntity> labelSelector,
-    IKubernetesClient client)
-    : IHostedService, IAsyncDisposable, IDisposable
+    IEntityLabelSelector<TEntity, DefaultEntityLabelSelector<TEntity>> labelSelector,
+    IKubernetesClient client
+)
+    : ResourceWatcher<TEntity, DefaultEntityLabelSelector<TEntity>>(
+        activitySource,
+        logger,
+        provider,
+        requeue,
+        settings,
+        labelSelector,
+        client
+    )
+    where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+public class ResourceWatcher<TEntity, TSelector>(
+    ActivitySource activitySource,
+    ILogger<ResourceWatcher<TEntity, TSelector>> logger,
+    IServiceProvider provider,
+    TimedEntityQueue<TEntity> requeue,
+    OperatorSettings settings,
+    IEntityLabelSelector<TEntity, TSelector> labelSelector,
+    IKubernetesClient client
+) : IHostedService, IAsyncDisposable, IDisposable
+    where TSelector : class, IEntityLabelSelector<TEntity, TSelector>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private readonly ConcurrentDictionary<string, long> _entityCache = new();
@@ -314,7 +335,7 @@ public class ResourceWatcher<TEntity>(
         _entityCache.TryRemove(entity.Uid(), out _);
 
         await using var scope = provider.CreateAsyncScope();
-        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity>>();
+        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity, TSelector>>();
         await controller.DeletedAsync(entity, cancellationToken);
     }
 
@@ -355,7 +376,7 @@ public class ResourceWatcher<TEntity>(
         // Re-queue should requested in the controller reconcile method. Invalidate any existing queues.
         requeue.Remove(entity);
         await using var scope = provider.CreateAsyncScope();
-        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity>>();
+        var controller = scope.ServiceProvider.GetRequiredService<IEntityController<TEntity, TSelector>>();
         await controller.ReconcileAsync(entity, cancellationToken);
     }
 }

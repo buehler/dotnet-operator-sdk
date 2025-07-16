@@ -20,18 +20,36 @@ internal sealed class LeaderAwareResourceWatcher<TEntity>(
     IServiceProvider provider,
     TimedEntityQueue<TEntity> queue,
     OperatorSettings settings,
-    IEntityLabelSelector<TEntity> labelSelector,
+    IEntityLabelSelector<TEntity, DefaultEntityLabelSelector<TEntity>> labelSelector,
     IKubernetesClient client,
     IHostApplicationLifetime hostApplicationLifetime,
-    LeaderElector elector)
-    : ResourceWatcher<TEntity>(
+    LeaderElector elector
+)
+    : LeaderAwareResourceWatcher<TEntity, DefaultEntityLabelSelector<TEntity>>(
         activitySource,
         logger,
         provider,
         queue,
         settings,
         labelSelector,
-        client)
+        client,
+        hostApplicationLifetime,
+        elector
+    )
+    where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+internal class LeaderAwareResourceWatcher<TEntity, TSelector>(
+    ActivitySource activitySource,
+    ILogger<LeaderAwareResourceWatcher<TEntity, TSelector>> logger,
+    IServiceProvider provider,
+    TimedEntityQueue<TEntity> queue,
+    OperatorSettings settings,
+    IEntityLabelSelector<TEntity, TSelector> labelSelector,
+    IKubernetesClient client,
+    IHostApplicationLifetime hostApplicationLifetime,
+    LeaderElector elector
+) : ResourceWatcher<TEntity, TSelector>(activitySource, logger, provider, queue, settings, labelSelector, client)
+    where TSelector : class, IEntityLabelSelector<TEntity, TSelector>
     where TEntity : IKubernetesObject<V1ObjectMeta>
 {
     private CancellationTokenSource _cts = new();
