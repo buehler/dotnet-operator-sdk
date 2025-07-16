@@ -11,10 +11,6 @@ export default {
             url: "https://api.nuget.org/v3/index.json",
             apiKeyEnvVar: "NUGET_API_KEY",
           },
-          {
-            url: "https://nuget.pkg.github.com/dotnet/index.json",
-            apiKeyEnvVar: "GH_NUGET_API_KEY",
-          },
         ],
       },
     ],
