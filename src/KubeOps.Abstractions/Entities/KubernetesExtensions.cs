@@ -4,9 +4,10 @@ using k8s.Models;
 namespace KubeOps.Abstractions.Entities;
 
 /// <summary>
-/// Method extensions for <see cref="IKubernetesObject{TMetadata}"/>.
+/// Basic extensions for <see cref="IKubernetesObject{TMetadata}"/>.
+/// Extensions that target the Kubernetes Object and its metadata.
 /// </summary>
-public static class Extensions
+public static class KubernetesExtensions
 {
     /// <summary>
     /// Sets the resource version of the specified Kubernetes object to the specified value.
