@@ -59,6 +59,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebhookOperator", "examples
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.Templates", "src\KubeOps.Templates\KubeOps.Templates.csproj", "{26237038-7172-4D01-B5E1-2A5E3F6B369E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeOps.Abstractions.Test", "test\KubeOps.Abstractions.Test\KubeOps.Abstractions.Test.csproj", "{4E9EEFD6-DA44-41F2-AF02-8A7F2150AC0C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,7 @@ Global
 		{7F7744B2-CF3F-4309-9C2D-037278017D49} = {C587731F-8191-4A19-8662-B89A60FE79A1}
 		{0BFE2297-9537-49BE-8B1F-431A8ACD654D} = {DC760E69-D0EA-417F-AE38-B12D0B04DE39}
 		{26237038-7172-4D01-B5E1-2A5E3F6B369E} = {4DB01062-6DC5-4028-BB72-C0619C2F5F2E}
+		{4E9EEFD6-DA44-41F2-AF02-8A7F2150AC0C} = {C587731F-8191-4A19-8662-B89A60FE79A1}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E9A0B04E-D90E-4B94-90E0-DD3666B098FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -155,5 +158,9 @@ Global
 		{26237038-7172-4D01-B5E1-2A5E3F6B369E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26237038-7172-4D01-B5E1-2A5E3F6B369E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{26237038-7172-4D01-B5E1-2A5E3F6B369E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E9EEFD6-DA44-41F2-AF02-8A7F2150AC0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E9EEFD6-DA44-41F2-AF02-8A7F2150AC0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E9EEFD6-DA44-41F2-AF02-8A7F2150AC0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E9EEFD6-DA44-41F2-AF02-8A7F2150AC0C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

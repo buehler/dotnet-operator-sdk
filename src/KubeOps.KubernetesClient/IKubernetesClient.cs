@@ -1,4 +1,6 @@
-﻿using k8s;
+﻿using Json.Patch;
+
+using k8s;
 using k8s.Models;
 
 using KubeOps.Abstractions.Entities;
@@ -319,6 +321,142 @@ public interface IKubernetesClient : IDisposable
     /// <inheritdoc cref="UpdateStatusAsync{TEntity}"/>
     TEntity UpdateStatus<TEntity>(TEntity entity)
         where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+    /// <summary>
+    /// Patch a given entity on the Kubernetes API by calculating the diff between the current entity and the provided entity.
+    /// This method fetches the current entity from the API, computes the patch, and applies it.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
+    /// <param name="entity">The entity containing the desired updates.</param>
+    /// <param name="cancellationToken">Cancellation token to monitor for cancellation requests.</param>
+    /// <returns>The patched entity.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the entity to be patched does not exist on the API.</exception>
+    Task<TEntity> PatchAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        var currentEntity = Get<TEntity>(entity.Name(), entity.Namespace());
+        if (currentEntity is null)
+        {
+            throw new InvalidOperationException(
+                $"Cannot patch entity {typeof(TEntity).Name} with name {entity.Name()} in namespace {entity.Namespace()}: Entity does not exist.");
+        }
+
+        return PatchAsync(
+            currentEntity,
+            entity.WithResourceVersion(currentEntity.ResourceVersion()),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Patch a given entity on the Kubernetes API by calculating the diff between two provided entities.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
+    /// <param name="from">The current/original entity.</param>
+    /// <param name="to">The updated entity with desired changes.</param>
+    /// <param name="cancellationToken">Cancellation token to monitor for cancellation requests.</param>
+    /// <returns>The patched entity.</returns>
+    Task<TEntity> PatchAsync<TEntity>(TEntity from, TEntity to, CancellationToken cancellationToken = default)
+        where TEntity : IKubernetesObject<V1ObjectMeta> =>
+        PatchAsync(from, from.CreateJsonPatch(to), cancellationToken);
+
+    /// <summary>
+    /// Patch a given entity on the Kubernetes API using a <see cref="JsonPatch"/> object.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
+    /// <param name="entity">The entity to patch.</param>
+    /// <param name="patch">The <see cref="JsonPatch"/> representing the changes to apply.</param>
+    /// <param name="cancellationToken">Cancellation token to monitor for cancellation requests.</param>
+    /// <returns>The patched entity.</returns>
+    Task<TEntity> PatchAsync<TEntity>(TEntity entity, JsonPatch patch, CancellationToken cancellationToken = default)
+        where TEntity : IKubernetesObject<V1ObjectMeta> =>
+        PatchAsync(entity, patch.ToKubernetesPatch(), cancellationToken);
+
+    /// <summary>
+    /// Patch a given entity on the Kubernetes API using a <see cref="V1Patch"/> object.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
+    /// <param name="entity">The entity to patch.</param>
+    /// <param name="patch">The <see cref="V1Patch"/> representing the changes to apply.</param>
+    /// <param name="cancellationToken">Cancellation token to monitor for cancellation requests.</param>
+    /// <returns>The patched entity.</returns>
+    Task<TEntity> PatchAsync<TEntity>(TEntity entity, V1Patch patch, CancellationToken cancellationToken = default)
+        where TEntity : IKubernetesObject<V1ObjectMeta> =>
+        PatchAsync<TEntity>(patch, entity.Name(), entity.Namespace(), cancellationToken);
+
+    /// <summary>
+    /// Patch a given entity on the Kubernetes API by name and namespace using a <see cref="V1Patch"/> object.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
+    /// <param name="patch">The <see cref="V1Patch"/> representing the changes to apply.</param>
+    /// <param name="name">The name of the entity to patch.</param>
+    /// <param name="namespace">The namespace of the entity to patch (if applicable).</param>
+    /// <param name="cancellationToken">Cancellation token to monitor for cancellation requests.</param>
+    /// <returns>The patched entity.</returns>
+    Task<TEntity> PatchAsync<TEntity>(
+        V1Patch patch,
+        string name,
+        string? @namespace = null,
+        CancellationToken cancellationToken = default)
+        where TEntity : IKubernetesObject<V1ObjectMeta>;
+
+    /// <summary>
+    /// Patch a given entity on the Kubernetes API by calculating the diff between the current entity and the provided entity.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
+    /// <param name="entity">The entity containing the desired updates.</param>
+    /// <returns>The patched entity.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the entity to be patched does not exist on the API.</exception>
+    TEntity Patch<TEntity>(TEntity entity)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+        => PatchAsync(entity).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Patch a given entity on the Kubernetes API by calculating the diff between two provided entities.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
+    /// <param name="from">The current/original entity.</param>
+    /// <param name="to">The updated entity with desired changes.</param>
+    /// <returns>The patched entity.</returns>
+    TEntity Patch<TEntity>(TEntity from, TEntity to)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+        => PatchAsync(from, to).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Patch a given entity on the Kubernetes API using a <see cref="JsonPatch"/> object.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
+    /// <param name="entity">The entity to patch.</param>
+    /// <param name="patch">The <see cref="JsonPatch"/> representing the changes to apply.</param>
+    /// <returns>The patched entity.</returns>
+    TEntity Patch<TEntity>(TEntity entity, JsonPatch patch)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+        => PatchAsync(entity, patch).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Patch a given entity on the Kubernetes API using a <see cref="V1Patch"/> object.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
+    /// <param name="entity">The entity to patch.</param>
+    /// <param name="patch">The <see cref="V1Patch"/> representing the changes to apply.</param>
+    /// <returns>The patched entity.</returns>
+    TEntity Patch<TEntity>(TEntity entity, V1Patch patch)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+        => PatchAsync(entity, patch).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Patch a given entity on the Kubernetes API by name and namespace using a <see cref="V1Patch"/> object.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
+    /// <param name="patch">The <see cref="V1Patch"/> representing the changes to apply.</param>
+    /// <param name="name">The name of the entity to patch.</param>
+    /// <param name="namespace">The namespace of the entity to patch (if applicable).</param>
+    /// <returns>The patched entity.</returns>
+    TEntity Patch<TEntity>(
+        V1Patch patch,
+        string name,
+        string? @namespace = null)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+        => PatchAsync<TEntity>(patch, name, @namespace).GetAwaiter().GetResult();
 
     /// <inheritdoc cref="Delete{TEntity}(TEntity)"/>
     /// <returns>A task that completes when the call was made.</returns>

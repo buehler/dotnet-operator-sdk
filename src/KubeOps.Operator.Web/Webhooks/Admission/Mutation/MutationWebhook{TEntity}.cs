@@ -1,6 +1,8 @@
 using k8s;
 using k8s.Models;
 
+using KubeOps.Abstractions.Entities;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -104,11 +106,11 @@ public abstract class MutationWebhook<TEntity> : ControllerBase
         [FromBody] AdmissionRequest<TEntity> request,
         CancellationToken cancellationToken)
     {
-        var original = JsonDiffer.GetNode(request.Request.Operation switch
+        var original = request.Request.Operation switch
         {
-            CreateOperation or UpdateOperation => request.Request.Object!,
-            _ => request.Request.OldObject!,
-        });
+            CreateOperation or UpdateOperation => request.Request.Object!.ToNode(),
+            _ => request.Request.OldObject!.ToNode(),
+        };
 
         var result = request.Request.Operation switch
         {

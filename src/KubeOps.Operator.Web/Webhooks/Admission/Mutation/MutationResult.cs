@@ -1,7 +1,11 @@
 using System.Text.Json.Nodes;
 
+using Json.Patch;
+
 using k8s;
 using k8s.Models;
+
+using KubeOps.Abstractions.Entities;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -70,7 +74,9 @@ public record MutationResult<TEntity>(TEntity? ModifiedObject = default) : IActi
                     Status = Status,
                     Warnings = Warnings.ToArray(),
                     PatchType = ModifiedObject is null ? null : JsonPatch,
-                    Patch = ModifiedObject is null ? null : OriginalObject!.Base64Diff(ModifiedObject),
+                    Patch = ModifiedObject is null
+                        ? null
+                        : OriginalObject!.CreatePatch(ModifiedObject.ToNode()).ToBase64String(),
                 },
             });
     }
