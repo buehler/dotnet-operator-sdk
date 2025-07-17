@@ -188,4 +188,13 @@ public class JsonPatchExtensionsTest
         diff.ToJsonString().Should().Contain("/spec/template/spec/containers/1");
         diff.ToJsonString().Should().Contain("remove");
     }
+
+    [Fact]
+    public void GetJsonDiff_Filters_Metadata_Fields()
+    {
+        var from = new V1ConfigMap { Metadata = new V1ObjectMeta { Name = "test", ResourceVersion = "1" } };
+        var to = new V1ConfigMap { Metadata = new V1ObjectMeta { Name = "test", ResourceVersion = "2" } };
+        var diff = from.CreateJsonPatch(to);
+        diff.Operations.Should().HaveCount(0);
+    }
 }
