@@ -8,9 +8,9 @@ namespace KubeOps.Cli;
 
 internal static class Arguments
 {
-    public static readonly Argument<FileInfo?> SolutionOrProjectFile = new(
-        "sln/csproj file",
-        () =>
+    public static readonly Argument<FileInfo> SolutionOrProjectFile = new("sln/csproj file")
+    {
+        DefaultValueFactory = result =>
         {
             var projectFile
                 = Directory.EnumerateFiles(
@@ -24,20 +24,26 @@ internal static class Arguments
                         "*.sln")
                     .Select(f => new FileInfo(f))
                     .FirstOrDefault();
-
-            return (projectFile, slnFile) switch
+            var file = (projectFile, slnFile) switch
             {
                 ({ } prj, _) => prj,
                 (_, { } sln) => sln,
                 _ => null,
             };
-        },
-        "A solution or project file where entities are located. " +
-        "If omitted, the current directory is searched for a *.csproj or *.sln file. " +
-        "If an *.sln file is used, all projects in the solution (with the newest framework) will be searched for entities. " +
-        "This behaviour can be filtered by using the --project and --target-framework option.");
 
-    public static readonly Argument<string> OperatorName = new(
-        "name",
-        "Name of the operator.");
+            if (file is not null)
+            {
+                return file;
+            }
+
+            result.AddError("No solution or project file found in the current directory, and none was provided.");
+            return new FileInfo("not-found");
+        },
+        Description = "A solution or project file where entities are located. " +
+                      "If omitted, the current directory is searched for a *.csproj or *.sln file. " +
+                      "If an *.sln file is used, all projects in the solution (with the newest framework) will be searched for entities. " +
+                      "This behaviour can be filtered by using the --project and --target-framework option.",
+    };
+
+    public static readonly Argument<string> OperatorName = new("name") { Description = "Name of the operator.", };
 }

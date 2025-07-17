@@ -17,9 +17,8 @@ internal static class Generate
             {
                 OperatorGenerator.Command,
             };
-            cmd.AddAlias("gen");
-            cmd.AddAlias("g");
-            cmd.SetHandler(ctx => ctx.HelpBuilder.Write(cmd, Console.Out));
+            cmd.Aliases.Add("gen");
+            cmd.Aliases.Add("g");
 
             return cmd;
         }
