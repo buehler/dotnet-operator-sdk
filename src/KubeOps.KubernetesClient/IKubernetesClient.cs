@@ -329,13 +329,19 @@ public interface IKubernetesClient : IDisposable
     /// <summary>
     /// Patch a given entity on the Kubernetes API by calculating the diff between the current entity and the provided entity.
     /// This method fetches the current entity from the API, computes the patch, and applies it.
+    /// The patch does return the same object if there were no changes detected.
+    /// If no operationsFilter is provided, the default filter (<see cref="JsonPatchExtensions.DefaultOperationsFilter"/> is applied.
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="entity">The entity containing the desired updates.</param>
+    /// <param name="operationsFilter">The filter that is applied to the <see cref="PatchOperation"/>s in the <see cref="JsonPatch"/> to determine if changes are present.</param>
     /// <param name="cancellationToken">Cancellation token to monitor for cancellation requests.</param>
     /// <returns>The patched entity.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the entity to be patched does not exist on the API.</exception>
-    Task<TEntity> PatchAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default)
+    Task<TEntity> PatchAsync<TEntity>(
+        TEntity entity,
+        Func<IReadOnlyList<PatchOperation>, IReadOnlyList<PatchOperation>>? operationsFilter = null,
+        CancellationToken cancellationToken = default)
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         var currentEntity = Get<TEntity>(entity.Name(), entity.Namespace());
@@ -347,21 +353,35 @@ public interface IKubernetesClient : IDisposable
 
         return PatchAsync(
             currentEntity,
-            entity.WithResourceVersion(currentEntity.ResourceVersion()),
+            entity,
+            operationsFilter,
             cancellationToken);
     }
 
     /// <summary>
     /// Patch a given entity on the Kubernetes API by calculating the diff between two provided entities.
+    /// Returns the patched entity if changes were detected, otherwise returns the original entity.
+    /// Detection of changes is done by creating a <see cref="JsonPatch"/> object
+    /// and then applying the operationsFilter. Defaults to the <see cref="JsonPatchExtensions.DefaultOperationsFilter"/>.
     /// </summary>
     /// <typeparam name="TEntity">The type of the Kubernetes entity.</typeparam>
     /// <param name="from">The current/original entity.</param>
     /// <param name="to">The updated entity with desired changes.</param>
+    /// <param name="operationsFilter">The filter that is applied to the <see cref="PatchOperation"/>s in the <see cref="JsonPatch"/> to determine if changes are present.</param>
     /// <param name="cancellationToken">Cancellation token to monitor for cancellation requests.</param>
     /// <returns>The patched entity.</returns>
-    Task<TEntity> PatchAsync<TEntity>(TEntity from, TEntity to, CancellationToken cancellationToken = default)
-        where TEntity : IKubernetesObject<V1ObjectMeta> =>
-        PatchAsync(from, from.CreateJsonPatch(to), cancellationToken);
+    Task<TEntity> PatchAsync<TEntity>(
+        TEntity from,
+        TEntity to,
+        Func<IReadOnlyList<PatchOperation>, IReadOnlyList<PatchOperation>>? operationsFilter = null,
+        CancellationToken cancellationToken = default)
+        where TEntity : IKubernetesObject<V1ObjectMeta>
+    {
+        var patch = from.CreateJsonPatch(to, operationsFilter);
+        return patch.Operations.Count == 0
+            ? Task.FromResult(from)
+            : PatchAsync(from, from.CreateJsonPatch(to), cancellationToken);
+    }
 
     /// <summary>
     /// Patch a given entity on the Kubernetes API using a <see cref="JsonPatch"/> object.
