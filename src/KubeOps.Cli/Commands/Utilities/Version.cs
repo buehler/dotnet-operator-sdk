@@ -19,8 +19,8 @@ internal static class Version
             var cmd = new Command(
                 "api-version",
                 "Prints the actual server version of the connected kubernetes cluster.");
-            cmd.AddAlias("av");
-            cmd.SetHandler(() =>
+            cmd.Aliases.Add("av");
+            cmd.SetAction(_ =>
                 Handler(AnsiConsole.Console, new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig())));
 
             return cmd;

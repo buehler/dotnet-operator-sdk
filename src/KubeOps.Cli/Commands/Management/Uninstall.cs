@@ -30,20 +30,20 @@ internal static class Uninstall
                     Options.TargetFramework,
                     Arguments.SolutionOrProjectFile,
                 };
-            cmd.AddAlias("u");
-            cmd.SetHandler(ctx => Handler(
+            cmd.Aliases.Add("u");
+            cmd.SetAction(result => Handler(
                 AnsiConsole.Console,
                 new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig()),
-                ctx));
+                result));
 
             return cmd;
         }
     }
 
-    internal static async Task Handler(IAnsiConsole console, IKubernetes client, InvocationContext ctx)
+    internal static async Task<int> Handler(IAnsiConsole console, IKubernetes client, ParseResult parseResult)
     {
-        var file = ctx.ParseResult.GetValueForArgument(Arguments.SolutionOrProjectFile);
-        var force = ctx.ParseResult.GetValueForOption(Options.Force);
+        var file = parseResult.GetValue(Arguments.SolutionOrProjectFile);
+        var force = parseResult.GetValue(Options.Force);
 
         var parser = file switch
         {
@@ -51,8 +51,8 @@ internal static class Uninstall
             { Extension: ".sln", Exists: true } => await AssemblyLoader.ForSolution(
                 console,
                 file,
-                ctx.ParseResult.GetValueForOption(Options.SolutionProjectRegex),
-                ctx.ParseResult.GetValueForOption(Options.TargetFramework)),
+                parseResult.GetValue(Options.SolutionProjectRegex),
+                parseResult.GetValue(Options.TargetFramework)),
             { Exists: false } => throw new FileNotFoundException($"The file {file.Name} does not exist."),
             _ => throw new NotSupportedException("Only *.csproj and *.sln files are supported."),
         };
@@ -62,15 +62,13 @@ internal static class Uninstall
         if (crds.Count == 0)
         {
             console.WriteLine("No CRDs found. Exiting.");
-            ctx.ExitCode = ExitCodes.Success;
-            return;
+            return ExitCodes.Success;
         }
 
         console.WriteLine($"Found {crds.Count} CRDs.");
         if (!force && !await console.ConfirmAsync("[red]Should the CRDs be uninstalled?[/]", false))
         {
-            ctx.ExitCode = ExitCodes.Aborted;
-            return;
+            return ExitCodes.Aborted;
         }
 
         console.WriteLine($"""Starting uninstall from cluster with url "{client.BaseUri}".""");
@@ -109,5 +107,7 @@ internal static class Uninstall
                 throw;
             }
         }
+
+        return ExitCodes.Success;
     }
 }

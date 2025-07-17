@@ -30,20 +30,20 @@ internal static class Install
                     Options.TargetFramework,
                     Arguments.SolutionOrProjectFile,
                 };
-            cmd.AddAlias("i");
-            cmd.SetHandler(ctx => Handler(
+            cmd.Aliases.Add("i");
+            cmd.SetAction(result => Handler(
                 AnsiConsole.Console,
                 new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig()),
-                ctx));
+                result));
 
             return cmd;
         }
     }
 
-    internal static async Task Handler(IAnsiConsole console, IKubernetes client, InvocationContext ctx)
+    internal static async Task<int> Handler(IAnsiConsole console, IKubernetes client, ParseResult parseResult)
     {
-        var file = ctx.ParseResult.GetValueForArgument(Arguments.SolutionOrProjectFile);
-        var force = ctx.ParseResult.GetValueForOption(Options.Force);
+        var file = parseResult.GetValue(Arguments.SolutionOrProjectFile);
+        var force = parseResult.GetValue(Options.Force);
 
         var parser = file switch
         {
@@ -51,8 +51,8 @@ internal static class Install
             { Extension: ".sln", Exists: true } => await AssemblyLoader.ForSolution(
                 console,
                 file,
-                ctx.ParseResult.GetValueForOption(Options.SolutionProjectRegex),
-                ctx.ParseResult.GetValueForOption(Options.TargetFramework)),
+                parseResult.GetValue(Options.SolutionProjectRegex),
+                parseResult.GetValue(Options.TargetFramework)),
             { Exists: false } => throw new FileNotFoundException($"The file {file.Name} does not exist."),
             _ => throw new NotSupportedException("Only *.csproj and *.sln files are supported."),
         };
@@ -62,8 +62,7 @@ internal static class Install
         if (crds.Count == 0)
         {
             console.WriteLine("No CRDs found. Exiting.");
-            ctx.ExitCode = ExitCodes.Success;
-            return;
+            return ExitCodes.Success;
         }
 
         console.WriteLine($"Found {crds.Count} CRDs.");
@@ -84,8 +83,7 @@ internal static class Install
                             $"""[yellow]CRD "{crd.Spec.Group}/{crd.Spec.Names.Kind}" already exists.[/]""");
                         if (!force && !await console.ConfirmAsync("[yellow]Should the CRD be overwritten?[/]"))
                         {
-                            ctx.ExitCode = ExitCodes.Aborted;
-                            return;
+                            return ExitCodes.Aborted;
                         }
 
                         crd.Metadata.ResourceVersion = existing.ResourceVersion();
@@ -112,5 +110,7 @@ internal static class Install
                 throw;
             }
         }
+
+        return ExitCodes.Success;
     }
 }
