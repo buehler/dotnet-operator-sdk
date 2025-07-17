@@ -12,24 +12,30 @@
     <PropertyGroup>
         <PackageProjectUrl>https://dotnet.github.io/dotnet-operator-sdk/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/dotnet/dotnet-operator-sdk.git</RepositoryUrl>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageLicense>Apache-2.0</PackageLicense>
         <PackageIcon>icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     </PropertyGroup>
 
     <PropertyGroup>
         <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    </PropertyGroup>
+
     <ItemGroup>
         <None Include="README.md"
-            Pack="true"
-            PackagePath="\" />
+              Pack="true"
+              PackagePath="\"/>
         <None Include="$(MSBuildThisFileDirectory)\..\LICENSE"
-            Pack="true"
-            PackagePath="\" />
+              Pack="true"
+              PackagePath="\"/>
         <None Include="$(MSBuildThisFileDirectory)\..\res\icon.png">
             <Pack>true</Pack>
             <PackagePath>\</PackagePath>
@@ -39,16 +45,17 @@
 
     <ItemGroup>
         <PackageReference Include="StyleCop.Analyzers"
-            Version="1.2.0-beta.556"
-            PrivateAssets="all"
-            Condition="$(MSBuildProjectExtension) == '.csproj'" />
+                          Version="1.2.0-beta.556"
+                          PrivateAssets="all"
+                          Condition="$(MSBuildProjectExtension) == '.csproj'"/>
         <PackageReference Include="SonarAnalyzer.CSharp"
-            Version="10.14.0.120626"
-            PrivateAssets="all"
-            Condition="$(MSBuildProjectExtension) == '.csproj'" />
+                          Version="10.14.0.120626"
+                          PrivateAssets="all"
+                          Condition="$(MSBuildProjectExtension) == '.csproj'"/>
         <PackageReference Include="Roslynator.Analyzers"
-            Version="4.13.1"
-            PrivateAssets="All" />
+                          Version="4.13.1"
+                          PrivateAssets="All"/>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
     </ItemGroup>
 
     <ItemGroup>
