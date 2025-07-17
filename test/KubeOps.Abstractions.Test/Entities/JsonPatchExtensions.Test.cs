@@ -4,6 +4,7 @@
 
 using FluentAssertions;
 
+using k8s;
 using k8s.Models;
 
 using KubeOps.Abstractions.Entities;
@@ -192,7 +193,8 @@ public class JsonPatchExtensionsTest
     [Fact]
     public void GetJsonDiff_Filters_Metadata_Fields()
     {
-        var from = new V1ConfigMap { Metadata = new V1ObjectMeta { Name = "test", ResourceVersion = "1" } };
+        var from = new V1ConfigMap { Metadata = new V1ObjectMeta { Name = "test", ResourceVersion = "1" } }
+            .Initialize();
         var to = new V1ConfigMap { Metadata = new V1ObjectMeta { Name = "test", ResourceVersion = "2" } };
         var diff = from.CreateJsonPatch(to);
         diff.Operations.Should().HaveCount(0);

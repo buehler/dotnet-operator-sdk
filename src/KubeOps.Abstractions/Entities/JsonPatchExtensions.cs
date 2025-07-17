@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information.
 
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -16,6 +17,9 @@ namespace KubeOps.Abstractions.Entities;
 /// <summary>
 /// Method extensions for JSON diffing between two entities (<see cref="IKubernetesObject{TMetadata}"/>).
 /// </summary>
+[RequiresPreviewFeatures("JsonPatch extensions are a preview feature and may change in the future." +
+                         "Because maybe the default filtering does not catch all volatile and non-impactful" +
+                         "properties.")]
 public static class JsonPatchExtensions
 {
     /// <summary>
@@ -46,6 +50,9 @@ public static class JsonPatchExtensions
         "/metadata/resourceVersion",
         "/metadata/selfLink",
         "/metadata/uid",
+        "/status",
+        "/kind",
+        "/apiVersion",
     ];
 
     /// <summary>
@@ -64,7 +71,9 @@ public static class JsonPatchExtensions
     /// </list>
     /// </summary>
     public static readonly Func<IReadOnlyList<PatchOperation>, IReadOnlyList<PatchOperation>> DefaultOperationsFilter =
-        operations => operations.Where(o => !DefaultIgnoredProperties.Contains(o.Path.ToString())).ToList();
+        operations =>
+            operations.Where(o => !DefaultIgnoredProperties.Any(ignored => o.Path.ToString().StartsWith(ignored)))
+                .ToList();
 
     /// <summary>
     /// Convert a <see cref="IKubernetesObject{TMetadata}"/> into a <see cref="JsonNode"/>.

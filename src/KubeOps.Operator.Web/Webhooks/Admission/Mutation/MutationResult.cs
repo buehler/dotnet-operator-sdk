@@ -68,6 +68,7 @@ public record MutationResult<TEntity>(TEntity? ModifiedObject = default) : IActi
             return;
         }
 
+#pragma warning disable CA2252 // TODO: as soon as patch is fully stable, remove this.
         await response.WriteAsJsonAsync(
             new AdmissionResponse
             {
@@ -83,5 +84,6 @@ public record MutationResult<TEntity>(TEntity? ModifiedObject = default) : IActi
                         : OriginalObject!.CreatePatch(ModifiedObject.ToNode()).ToBase64String(),
                 },
             });
+#pragma warning restore CA2252
     }
 }
