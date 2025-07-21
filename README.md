@@ -3,6 +3,7 @@
 **Build Kubernetes Operators in .NET with Ease**
 
 [![.NET Release](https://github.com/dotnet/dotnet-operator-sdk/actions/workflows/dotnet-release.yml/badge.svg?branch=main)](https://github.com/dotnet/dotnet-operator-sdk/actions/workflows/dotnet-release.yml)
+[![.NET Pre-Release](https://github.com/dotnet/dotnet-operator-sdk/actions/workflows/dotnet-pre-release.yml/badge.svg)](https://github.com/dotnet/dotnet-operator-sdk/actions/workflows/dotnet-pre-release.yml)
 [![Scheduled Code Security Testing](https://github.com/dotnet/dotnet-operator-sdk/actions/workflows/security-analysis.yml/badge.svg?event=schedule)](https://github.com/dotnet/dotnet-operator-sdk/actions/workflows/security-analysis.yml)
 
 **KubeOps** is a [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) SDK designed for [.NET](https://dotnet.microsoft.com/) developers. It allows you to leverage your C# skills and the rich .NET ecosystem to build powerful Kubernetes controllers that automate the management of complex applications. KubeOps simplifies operator development by providing high-level abstractions, code generators, and helper utilities.

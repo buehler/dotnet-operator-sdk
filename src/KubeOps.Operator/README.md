@@ -1,6 +1,7 @@
 # KubeOps Operator
 
 [![NuGet](https://img.shields.io/nuget/v/KubeOps.Operator?label=NuGet&logo=nuget)](https://www.nuget.org/packages/KubeOps.Operator)
+[![NuGet Pre-Release](https://img.shields.io/nuget/vpre/KubeOps.Operator?label=NuGet&logo=nuget)](https://www.nuget.org/packages/KubeOps.Operator)
 
 The `KubeOps.Operator` package provides a framework for building Kubernetes operators in .NET. Built on top of the Kubernetes client libraries for .NET, it offers abstractions and utilities for implementing operators that manage custom resources in a Kubernetes cluster.
 
