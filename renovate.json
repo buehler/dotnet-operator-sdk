@@ -11,8 +11,11 @@
   "automerge": true,
   "timezone": "Europe/Zurich",
   "schedule": ["after 9pm", "before 6am"],
-  "ignorePaths": ["examples/"],
   "packageRules": [
+    {
+      "matchFileNames": ["examples/**/*"],
+      "enabled": false
+    },
     {
       "matchManagers": ["dotnet"],
       "matchDepNames": ["Microsoft.CodeAnalysis.CSharp"],
@@ -20,19 +23,20 @@
       "enabled": false
     },
     {
+      "matchFileNames": ["**/*"],
+      "semanticCommitType": "deps"
+    },
+    {
       "matchFileNames": ["src/**/*"],
-      "semanticCommitType": "fix",
-      "semanticCommitScope": "dependencies"
+      "semanticCommitScope": "core"
     },
     {
       "matchFileNames": ["test/**/*"],
-      "semanticCommitType": "chore",
-      "semanticCommitScope": "test dependencies"
+      "semanticCommitScope": "test"
     },
     {
       "matchFileNames": ["docs/**/*"],
-      "semanticCommitType": "chore",
-      "semanticCommitScope": "docs dependencies"
+      "semanticCommitScope": "docs"
     }
   ]
 }
