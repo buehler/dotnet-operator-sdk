@@ -18,6 +18,21 @@
       "matchDepNames": ["Microsoft.CodeAnalysis.CSharp"],
       "matchFileNames": ["KubeOps.Generator.csproj"],
       "enabled": false
+    },
+    {
+      "matchFileNames": ["src/**/*"],
+      "semanticCommitType": "fix",
+      "semanticCommitScope": "dependencies"
+    },
+    {
+      "matchFileNames": ["test/**/*"],
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "test dependencies"
+    },
+    {
+      "matchFileNames": ["docs/**/*"],
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "docs dependencies"
     }
   ]
 }
